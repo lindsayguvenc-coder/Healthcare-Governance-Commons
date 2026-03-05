@@ -367,7 +367,7 @@ const DOC_LIBRARY = [
   {
     id: "guvenc-ecg-2025",
     title: "ECG Arrhythmia Detection Governance Demo: Stop Mechanism Implementation with MIMIC-IV",
-    type: "practitioner", source: "L. Guvenc / GitHub", year: "2025",
+    type: "practitioner", source: "Lindsay LaMere Guvenc / GitHub", year: "2025",
     url: "https://github.com/lindsayguvenc-coder/ecg-governance-demo",
     nodes: ["stop","validation","watcher"],
     abstract: "Concrete implementation of a governance framework for ECG arrhythmia detection AI using MIMIC-IV data. Demonstrates Westgard-adapted stop thresholds, authority matrix for hard stop activation, and escalation protocol design. The only publicly available example of CLIA QC principles applied to AI inference monitoring in a clinical diagnostic aid context.",
@@ -375,7 +375,7 @@ const DOC_LIBRARY = [
   {
     id: "westgard-ml-adaptation",
     title: "Westgard Multi-Rule Framework Adapted for ML Inference Monitoring: QC Principles for Clinical AI",
-    type: "practitioner", source: "L. Guvenc / Governance Commons", year: "2025",
+    type: "practitioner", source: "Lindsay LaMere Guvenc / Governance Commons", year: "2025",
     url: null,
     nodes: ["stop","watcher","h1"],
     abstract: "Translation of Westgard 2-of-3s, 4-1s, and 10-x rules from laboratory QC into ML inference monitoring context. Core argument: whoever signs the corrective action owns the governance decision — authority follows existing accountability structures rather than creating new ones. Addresses the fixed vs. adaptive threshold debate by proposing population-stratified control limits as a bridge position.",
@@ -429,19 +429,19 @@ const DOC_LIBRARY = [
 const CHAT_THREADS = {
   stop: [
     {
-      author: "L. Guvenc · CLS II / AI Governance",
+      author: "Lindsay LaMere Guvenc · CLS II / AI Governance",
       time: "Mar 2025",
       text: "The QC threshold problem in clinical AI is structurally identical to Westgard multi-rule design. The 2-of-3s rule maps directly to: if 2 of 3 consecutive inference confidence scores fall below threshold, escalate. The 4-1s maps to sustained drift. We don't need new frameworks — we need to translate the ones that already work.",
       gem: true,
     },
     {
-      author: "L. Guvenc · CLS II / AI Governance",
+      author: "Lindsay LaMere Guvenc · CLS II / AI Governance",
       time: "Mar 2025",
       text: "Key unresolved: Westgard rules assume calibrated, comparable measurements from a stable analytic process. ML confidence scores are not that — they're model-specific, not cross-vendor comparable, and can shift with data distribution. The adaptation works conceptually but requires per-deployment calibration first. That calibration step is currently missing from every deployment checklist I've seen.",
       gem: false,
     },
     {
-      author: "L. Guvenc · CLS II / AI Governance",
+      author: "Lindsay LaMere Guvenc · CLS II / AI Governance",
       time: "Mar 2025",
       text: "From the ECG governance demo: the hard stop fired twice in retrospective MIMIC-IV validation — both on data quality failures (missing lead configurations), not model confidence failures. Implication: data validation stops may be more practically important than confidence threshold stops, at least for diagnostic aid tools. Worth separating these in the stop condition registry.",
       gem: true,
@@ -449,13 +449,13 @@ const CHAT_THREADS = {
   ],
   h2: [
     {
-      author: "L. Guvenc · CLS II / AI Governance",
+      author: "Lindsay LaMere Guvenc · CLS II / AI Governance",
       time: "Feb 2025",
       text: "The authority problem in clinical AI has a direct analog in laboratory medicine. Under CLIA, the laboratory director holds corrective action authority — full stop, regardless of what the instrument vendor or the hospital administration wants. The principle that works: authority follows existing accountability structures. Whoever already owns corrective action in your governance system should own AI governance authority for that domain.",
       gem: true,
     },
     {
-      author: "L. Guvenc · CLS II / AI Governance",
+      author: "Lindsay LaMere Guvenc · CLS II / AI Governance",
       time: "Feb 2025",
       text: "The gap I keep finding: institutions build AI governance committees but don't pre-assign who has Tier 3 (suspend) and Tier 4 (terminate) authority. Everyone agrees those tiers should exist. Nobody wants to put a name on them before something goes wrong. That reluctance is itself a governance failure — and it's the most common one.",
       gem: false,
@@ -463,7 +463,7 @@ const CHAT_THREADS = {
   ],
   override: [
     {
-      author: "L. Guvenc · CLS II / AI Governance",
+      author: "Lindsay LaMere Guvenc · CLS II / AI Governance",
       time: "Jan 2025",
       text: "Khera et al (JAMA 2023) frames this well: automation bias errors are compounded by time pressure. This means override design in high-acuity settings (ED triage, ICU monitoring) has to account for the fact that the clinical environment itself reduces the cognitive bandwidth available to question the AI. Override needs to be nearly frictionless in those contexts — the governance cost shifts to the review cycle, not the point of care.",
       gem: true,
@@ -471,7 +471,7 @@ const CHAT_THREADS = {
   ],
   watcher: [
     {
-      author: "L. Guvenc · CLS II / AI Governance",
+      author: "Lindsay LaMere Guvenc · CLS II / AI Governance",
       time: "Feb 2025",
       text: "The monitoring gap that nobody talks about: each vendor monitors their own model's performance. The institution has no independent view. This is like letting the instrument manufacturer run your QC program. It would never pass a CAP inspection. The watcher layer is the institution's independent monitoring infrastructure — it has to exist outside the vendor relationship.",
       gem: true,
@@ -479,7 +479,7 @@ const CHAT_THREADS = {
   ],
   commons: [
     {
-      author: "L. Guvenc · CLS II / AI Governance",
+      author: "Lindsay LaMere Guvenc · CLS II / AI Governance",
       time: "Mar 2025",
       text: "This tool is the prototype for what the commons could look like. The gap it fills: everyone is producing governance documents. Nobody has built the connective tissue that makes them findable, relatable, and usable in context. The map is the artifact.",
       gem: true,
