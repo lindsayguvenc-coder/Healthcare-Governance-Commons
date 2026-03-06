@@ -1144,6 +1144,395 @@ function NodeDetail({ nodeId }) {
   );
 }
 
+// ─── LAYER 4: INTAKE PANEL ───────────────────────────────────────────────────
+function IntakePanel() {
+  const [unlocked, setUnlocked] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState(false);
+  const [mode, setMode] = useState("url");
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [userDocs, setUserDocs] = useState([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [sessionPassword, setSessionPassword] = useState("");
+
+  const existingLibrarySummary = DOC_LIBRARY.map(d =>
+    `[${d.id}] ${d.title} (${d.source}, ${d.year}) — ${d.abstract.slice(0, 120)}…`
+  ).join("\n");
+
+  const nodeList = TAXONOMY_NODES.map(n =>
+    `${n.id}: ${n.label} (${n.loop} loop) — ${n.question}`
+  ).join("\n");
+
+  // Load persisted docs once unlocked
+  const loadDocs = async (pwd) => {
+    setLoadingDocs(true);
+    try {
+      const res = await fetch("/api/documents", {
+        headers: { "x-intake-password": pwd },
+      });
+      if (res.status === 401) {
+        setUnlocked(false);
+        setPasswordError(true);
+        return;
+      }
+      const data = await res.json();
+      setUserDocs(data.documents || []);
+    } catch (e) {
+      // silently fail on load
+    } finally {
+      setLoadingDocs(false);
+    }
+  };
+
+  const handleUnlock = async () => {
+    setPasswordError(false);
+    const res = await fetch("/api/documents", {
+      headers: { "x-intake-password": passwordInput },
+    });
+    if (res.status === 401) {
+      setPasswordError(true);
+      return;
+    }
+    const data = await res.json();
+    setSessionPassword(passwordInput);
+    setUserDocs(data.documents || []);
+    setUnlocked(true);
+  };
+
+  const handleAnalyze = async () => {
+    if (!input.trim()) return;
+    setLoading(true);
+    setResult(null);
+    setError(null);
+
+    const allDocsSummary = [
+      existingLibrarySummary,
+      ...userDocs.map(d => `[user:${d.title}] ${d.title} (${d.source}, ${d.year}) — ${(d.abstract||"").slice(0,120)}…`)
+    ].join("\n");
+
+    try {
+      const res = await fetch("/api/synthesize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          system: `You are a document intake assistant for a clinical AI governance commons. Analyze the document and respond ONLY in this exact JSON format, no other text:
+{
+  "title": "...",
+  "source": "...",
+  "year": "...",
+  "type": "regulation|peer-reviewed|guideline|practitioner|report",
+  "abstract": "2-3 sentence abstract in your own words",
+  "overlap": {
+    "exists": true/false,
+    "overlappingDocs": ["doc-id or title"],
+    "overlapSummary": "what is already covered",
+    "whatIsNew": "what this adds that isn't already in the library"
+  },
+  "suggestedNodes": ["node-id-1", "node-id-2"],
+  "routingRationale": "one sentence explaining why"
+}`,
+          messages: [{
+            role: "user",
+            content: `EXISTING LIBRARY:\n${allDocsSummary}\n\nTAXONOMY NODES:\n${nodeList}\n\n${mode === "url" ? "URL" : "TEXT"}:\n${input}`,
+          }],
+        }),
+      });
+
+      if (!res.ok) throw new Error(`API error ${res.status}`);
+      const data = await res.json();
+      const text = data.content?.find(b => b.type === "text")?.text;
+      if (!text) throw new Error("No response");
+      const clean = text.replace(/```json|```/g, "").trim();
+      setResult(JSON.parse(clean));
+    } catch (e) {
+      setError(e.message.includes("JSON") ? "Could not parse — try again" : e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!result) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/documents", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-intake-password": sessionPassword,
+        },
+        body: JSON.stringify({ ...result, sourceInput: input }),
+      });
+      if (!res.ok) throw new Error("Save failed");
+      await loadDocs(sessionPassword);
+      setResult(null);
+      setInput("");
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (index) => {
+    try {
+      await fetch("/api/documents", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "x-intake-password": sessionPassword,
+        },
+        body: JSON.stringify({ index }),
+      });
+      await loadDocs(sessionPassword);
+    } catch (e) {
+      // silently fail
+    }
+  };
+
+  // ── PASSWORD GATE ──
+  if (!unlocked) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", padding: 40 }}>
+        <div style={{ width: 340, background: C.surface2, border: `1px solid ${C.border}`, borderRadius: 8, padding: 28 }}>
+          <div style={{ fontFamily: C.serif, fontSize: 18, color: C.text, marginBottom: 6 }}>Private Workspace</div>
+          <div style={{ fontFamily: C.mono, fontSize: 11, color: C.textDimmer, lineHeight: 1.6, marginBottom: 20 }}>
+            Document intake is private. Enter your workspace password to continue.
+          </div>
+          <input
+            type="password"
+            value={passwordInput}
+            onChange={e => setPasswordInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleUnlock()}
+            placeholder="Password"
+            style={{
+              width: "100%", padding: "9px 12px", borderRadius: 4, marginBottom: 10,
+              background: C.surface3, border: `1px solid ${passwordError ? C.red : C.border}`,
+              color: C.text, fontFamily: C.mono, fontSize: 12, outline: "none",
+            }}
+          />
+          {passwordError && (
+            <div style={{ fontFamily: C.mono, fontSize: 10, color: C.red, marginBottom: 8 }}>
+              Incorrect password
+            </div>
+          )}
+          <button onClick={handleUnlock} style={{
+            width: "100%", padding: "9px", borderRadius: 4, cursor: "pointer",
+            background: C.commons + "20", border: `1px solid ${C.commons}50`,
+            color: C.commons, fontFamily: C.mono, fontSize: 11, fontWeight: 700,
+          }}>Unlock →</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── MAIN INTAKE UI ──
+  return (
+    <div style={{ padding: "24px", maxWidth: 800, margin: "0 auto" }}>
+      <div style={{ marginBottom: 20, display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ fontFamily: C.serif, fontSize: 20, color: C.text, marginBottom: 4 }}>Add Document</div>
+          <div style={{ fontFamily: C.mono, fontSize: 11, color: C.textDimmer, lineHeight: 1.6 }}>
+            Drop a URL or paste text. Checks overlap with existing library, suggests taxonomy routing, saves persistently.
+          </div>
+        </div>
+        <button onClick={() => setUnlocked(false)} style={{
+          padding: "4px 10px", borderRadius: 3, cursor: "pointer",
+          background: "transparent", border: `1px solid ${C.border}`,
+          color: C.textDimmer, fontFamily: C.mono, fontSize: 9,
+        }}>lock</button>
+      </div>
+
+      {/* Mode toggle */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
+        {[{ id: "url", label: "↗ URL" }, { id: "paste", label: "✎ Paste text" }].map(m => (
+          <button key={m.id} onClick={() => setMode(m.id)} style={{
+            padding: "6px 14px", borderRadius: 4, cursor: "pointer",
+            background: mode === m.id ? C.commons + "20" : "transparent",
+            border: `1px solid ${mode === m.id ? C.commons + "60" : C.border}`,
+            color: mode === m.id ? C.commons : C.textDim,
+            fontFamily: C.mono, fontSize: 10, fontWeight: 700,
+          }}>{m.label}</button>
+        ))}
+      </div>
+
+      {mode === "url" ? (
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder="https://pubmed.ncbi.nlm.nih.gov/... or any URL"
+          style={{
+            width: "100%", padding: "10px 14px", borderRadius: 4,
+            background: C.surface2, border: `1px solid ${C.border}`,
+            color: C.text, fontFamily: C.mono, fontSize: 12, outline: "none", marginBottom: 12,
+          }}
+        />
+      ) : (
+        <textarea
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder="Paste abstract, notes, or any text about the document…"
+          rows={8}
+          style={{
+            width: "100%", padding: "10px 14px", borderRadius: 4,
+            background: C.surface2, border: `1px solid ${C.border}`,
+            color: C.text, fontFamily: C.mono, fontSize: 12, outline: "none",
+            resize: "vertical", marginBottom: 12,
+          }}
+        />
+      )}
+
+      <button onClick={handleAnalyze} disabled={loading || !input.trim()} style={{
+        padding: "8px 20px", borderRadius: 4, cursor: loading ? "not-allowed" : "pointer",
+        background: C.commons + "20", border: `1px solid ${C.commons}60`,
+        color: C.commons, fontFamily: C.mono, fontSize: 11, fontWeight: 700, marginBottom: 24,
+      }}>
+        {loading ? "Analyzing…" : "◉ Analyze"}
+      </button>
+
+      {error && (
+        <div style={{ padding: "10px 14px", background: C.redDim, border: `1px solid ${C.red}30`, borderRadius: 4, fontFamily: C.mono, fontSize: 11, color: C.red, marginBottom: 16 }}>
+          {error}
+        </div>
+      )}
+
+      {/* Analysis result */}
+      {result && (
+        <div style={{ background: C.surface2, border: `1px solid ${C.borderBright}`, borderRadius: 6, overflow: "hidden", marginBottom: 24 }}>
+          <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.border}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <span style={{ fontFamily: C.mono, fontSize: 9, color: C.handoff, background: C.handoffDim, border: `1px solid ${C.handoff}30`, borderRadius: 2, padding: "2px 6px", fontWeight: 700 }}>
+                {result.type?.toUpperCase()}
+              </span>
+              <span style={{ fontFamily: C.mono, fontSize: 10, color: C.textDim }}>{result.source} · {result.year}</span>
+            </div>
+            <div style={{ fontSize: 14, color: C.text, fontWeight: 500, lineHeight: 1.4 }}>{result.title}</div>
+          </div>
+
+          <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.border}` }}>
+            <div style={{ fontFamily: C.mono, fontSize: 9, color: C.internal, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 6 }}>ABSTRACT</div>
+            <div style={{ fontSize: 12, color: C.textDim, lineHeight: 1.7 }}>{result.abstract}</div>
+          </div>
+
+          <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.border}`, background: result.overlap?.exists ? C.handoffDim : C.externalDim }}>
+            <div style={{ fontFamily: C.mono, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 6, color: result.overlap?.exists ? C.handoff : C.external }}>
+              {result.overlap?.exists ? "⚡ OVERLAP DETECTED" : "✓ NO SIGNIFICANT OVERLAP"}
+            </div>
+            {result.overlap?.exists ? (
+              <>
+                <div style={{ fontSize: 11.5, color: C.textDim, lineHeight: 1.6, marginBottom: 4 }}>
+                  <strong style={{ color: C.text }}>Already covered by:</strong> {result.overlap.overlappingDocs?.join(", ")}
+                </div>
+                <div style={{ fontSize: 11.5, color: C.textDim, lineHeight: 1.6, marginBottom: 4 }}>
+                  <strong style={{ color: C.text }}>Overlap:</strong> {result.overlap.overlapSummary}
+                </div>
+                <div style={{ fontSize: 11.5, color: C.textDim, lineHeight: 1.6 }}>
+                  <strong style={{ color: C.external }}>What's new:</strong> {result.overlap.whatIsNew}
+                </div>
+              </>
+            ) : (
+              <div style={{ fontSize: 11.5, color: C.textDim, lineHeight: 1.6 }}>
+                This document covers ground not yet in the library. Worth adding.
+              </div>
+            )}
+          </div>
+
+          <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.border}` }}>
+            <div style={{ fontFamily: C.mono, fontSize: 9, color: C.external, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 8 }}>ROUTES TO</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+              {result.suggestedNodes?.map(nid => {
+                const node = TAXONOMY_NODES.find(n => n.id === nid);
+                if (!node) return null;
+                const lm = LOOP_META[node.loop];
+                return (
+                  <span key={nid} style={{
+                    padding: "3px 9px", borderRadius: 3,
+                    background: lm.color + "15", border: `1px solid ${lm.color}35`,
+                    color: lm.color, fontFamily: C.mono, fontSize: 10,
+                  }}>{node.icon} {node.label}</span>
+                );
+              })}
+            </div>
+            <div style={{ fontSize: 11, color: C.textDimmer, fontStyle: "italic" }}>{result.routingRationale}</div>
+          </div>
+
+          <div style={{ padding: "12px 16px", display: "flex", gap: 8 }}>
+            <button onClick={handleSave} disabled={saving} style={{
+              padding: "7px 16px", borderRadius: 4, cursor: saving ? "not-allowed" : "pointer",
+              background: C.external + "20", border: `1px solid ${C.external}50`,
+              color: C.external, fontFamily: C.mono, fontSize: 10, fontWeight: 700,
+            }}>{saving ? "Saving…" : "+ Save to library"}</button>
+            <button onClick={() => setResult(null)} style={{
+              padding: "7px 16px", borderRadius: 4, cursor: "pointer",
+              background: "transparent", border: `1px solid ${C.border}`,
+              color: C.textDim, fontFamily: C.mono, fontSize: 10,
+            }}>Discard</button>
+          </div>
+        </div>
+      )}
+
+      {/* Persisted user library */}
+      {loadingDocs ? (
+        <div style={{ fontFamily: C.mono, fontSize: 11, color: C.textDimmer }}>Loading your library…</div>
+      ) : userDocs.length > 0 && (
+        <div>
+          <div style={{ fontFamily: C.mono, fontSize: 9, color: C.textDimmer, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 10 }}>
+            YOUR LIBRARY ({userDocs.length} documents)
+          </div>
+          {userDocs.map((d, i) => (
+            <div key={i} style={{
+              padding: "10px 14px", background: C.surface2, border: `1px solid ${C.border}`,
+              borderRadius: 4, marginBottom: 6, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12,
+            }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontFamily: C.mono, fontSize: 9, color: C.handoff, background: C.handoffDim, border: `1px solid ${C.handoff}30`, borderRadius: 2, padding: "1px 5px", fontWeight: 700 }}>
+                    {d.type?.toUpperCase()}
+                  </span>
+                  <span style={{ fontFamily: C.mono, fontSize: 10, color: C.textDim }}>{d.source} · {d.year}</span>
+                  <span style={{ fontFamily: C.mono, fontSize: 9, color: C.textDimmer }}>{new Date(d.addedAt).toLocaleDateString()}</span>
+                </div>
+                <div style={{ fontSize: 12.5, color: C.text, marginBottom: 4 }}>{d.title}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {d.suggestedNodes?.map(nid => {
+                    const node = TAXONOMY_NODES.find(n => n.id === nid);
+                    if (!node) return null;
+                    return (
+                      <span key={nid} style={{
+                        fontFamily: C.mono, fontSize: 9, color: LOOP_META[node.loop].color,
+                        background: LOOP_META[node.loop].color + "10",
+                        border: `1px solid ${LOOP_META[node.loop].color}25`,
+                        borderRadius: 2, padding: "1px 5px",
+                      }}>{node.icon} {node.label}</span>
+                    );
+                  })}
+                </div>
+              </div>
+              <button onClick={() => handleDelete(i)} style={{
+                padding: "3px 8px", borderRadius: 3, cursor: "pointer", flexShrink: 0,
+                background: "transparent", border: `1px solid ${C.border}`,
+                color: C.textDimmer, fontFamily: C.mono, fontSize: 9,
+              }}>✕</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {userDocs.length === 0 && !loadingDocs && (
+        <div style={{ fontFamily: C.mono, fontSize: 11, color: C.textDimmer, lineHeight: 1.7 }}>
+          Your personal library is empty. Add your first document above — it will persist across sessions.
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function GovernanceCommons() {
   const [activeLayer, setActiveLayer] = useState("taxonomy"); // docs | taxonomy | matrix
@@ -1170,6 +1559,7 @@ export default function GovernanceCommons() {
             { id: "docs",     label: "① Doc Repository" },
             { id: "taxonomy", label: "② Taxonomy Navigator" },
             { id: "matrix",   label: "③ Commons Matrix" },
+            { id: "intake",   label: "④ Add Document" },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveLayer(tab.id)} style={{
               padding: "7px 14px", borderRadius: 4, cursor: "pointer",
@@ -1233,6 +1623,13 @@ export default function GovernanceCommons() {
         {activeLayer === "matrix" && (
           <div style={{ flex: 1, overflowY: "auto" }}>
             <MatrixBridge linkedConcept="stop"/>
+          </div>
+        )}
+
+        {/* ── LAYER: INTAKE ── */}
+        {activeLayer === "intake" && (
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            <IntakePanel/>
           </div>
         )}
       </div>
