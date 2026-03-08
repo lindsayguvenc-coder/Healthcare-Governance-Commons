@@ -6,8 +6,9 @@ let redis;
 function getRedis() {
   if (!redis) {
     redis = new Redis(process.env.REDIS_URL, {
-      tls: process.env.REDIS_URL?.startsWith("rediss://") ? { rejectUnauthorized: false } : undefined,
       maxRetriesPerRequest: 3,
+      connectTimeout: 10000,
+      lazyConnect: false,
     });
   }
   return redis;
@@ -19,7 +20,12 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const client = getRedis();
+  let client;
+  try {
+    client = getRedis();
+  } catch (err) {
+    return res.status(500).json({ error: "Redis init failed: " + err.message });
+  }
 
   if (req.method === "GET") {
     try {
@@ -27,7 +33,7 @@ export default async function handler(req, res) {
       const docs = raw ? JSON.parse(raw) : [];
       return res.status(200).json({ documents: docs });
     } catch (err) {
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: "GET failed: " + err.message });
     }
   }
 
@@ -43,7 +49,7 @@ export default async function handler(req, res) {
       await client.set(DOCS_KEY, JSON.stringify(updated));
       return res.status(200).json({ success: true, total: updated.length });
     } catch (err) {
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: "POST failed: " + err.message });
     }
   }
 
@@ -56,7 +62,7 @@ export default async function handler(req, res) {
       await client.set(DOCS_KEY, JSON.stringify(updated));
       return res.status(200).json({ success: true, total: updated.length });
     } catch (err) {
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: "DELETE failed: " + err.message });
     }
   }
 
