@@ -1050,6 +1050,234 @@ function MatrixBridge({ linkedConcept }) {
   );
 }
 
+// ─── FACETIOUS COLLABORATOR ──────────────────────────────────────────────────
+const ROLES = [
+  {
+    id: "clin-ops",
+    label: "Clinical Ops",
+    icon: "🏥",
+    voice: "Operational realist. Has been handed frameworks that looked great on paper and failed on the floor. Asks about coverage, workflows, and what happens at 2am.",
+    color: "#38bdf8",
+  },
+  {
+    id: "clinician",
+    label: "Clinician",
+    icon: "🩺",
+    voice: "Point-of-care practitioner. Skeptical of anything that adds cognitive load during high-acuity moments. Asks whether the AI output is actually usable in context and who's responsible when they disagree with it.",
+    color: "#10b981",
+  },
+  {
+    id: "patient",
+    label: "Patient",
+    icon: "🧑",
+    voice: "The person the system is ostensibly for. Asks whether they were consulted, whether they can opt out, what happens if the algorithm is wrong about them, and who they talk to.",
+    color: "#c084fc",
+  },
+  {
+    id: "compliance",
+    label: "Compliance / Legal",
+    icon: "⚖️",
+    voice: "Liability-focused. Asks about documentation trails, regulatory exposure, what happens when a decision is challenged post-incident, and whether any of this has been through legal review.",
+    color: "#f59e0b",
+  },
+  {
+    id: "risk",
+    label: "Risk",
+    icon: "🛡️",
+    voice: "Enterprise risk manager. Asks about failure modes, insurance implications, what the institution's exposure is if this goes wrong, and whether risk has formally signed off.",
+    color: "#f43f5e",
+  },
+  {
+    id: "patient-safety",
+    label: "Patient Safety",
+    icon: "🔒",
+    voice: "Quality and safety officer. Asks what the harm profile looks like, whether near-misses will be captured, and whether there's a reporting pathway when the AI contributes to an adverse event.",
+    color: "#fb923c",
+  },
+  {
+    id: "exec",
+    label: "Executive Leadership",
+    icon: "📊",
+    voice: "C-suite or VP level. Asks about strategic rationale, resource requirements, who owns this long-term, and what the institution is committing to when it deploys this.",
+    color: "#e879f9",
+  },
+  {
+    id: "vendor",
+    label: "Vendor",
+    icon: "🏢",
+    voice: "The AI system's vendor. Asks what the institution is actually responsible for versus what they cover, what contract terms govern governance obligations, and whether the institution's requirements are technically feasible.",
+    color: "#94a3b8",
+  },
+  {
+    id: "ai-eng",
+    label: "AI Engineering",
+    icon: "🧠",
+    voice: "ML engineer or data scientist. Asks whether the model was validated on this population, whether the confidence scores are calibrated, what distribution shift looks like, and who owns retraining.",
+    color: "#67e8f9",
+  },
+  {
+    id: "enterprise-it",
+    label: "Enterprise IT",
+    icon: "🖧",
+    voice: "Infrastructure and integration owner. Asks how this connects to the EHR, who owns the integration when it breaks, whether this is on the approved vendor list, and what the downtime protocol is.",
+    color: "#86efac",
+  },
+  {
+    id: "ethics",
+    label: "Ethics",
+    icon: "◎",
+    voice: "Clinical or organizational ethicist. Asks who benefits from this deployment, who bears the cost if it's wrong, whether equity implications have been assessed, and under what conditions the institution should stop even if performance metrics look fine.",
+    color: "#fde68a",
+  },
+];
+
+function FacetiousCollaborator({ node }) {
+  const [activeRole, setActiveRole] = useState(ROLES[0].id);
+  const [loading, setLoading] = useState(false);
+  const [responses, setResponses] = useState({});
+  const [error, setError] = useState(null);
+
+  const role = ROLES.find(r => r.id === activeRole);
+  const currentResponse = responses[`${node.id}-${activeRole}`];
+
+  const linkedDocs = DOC_LIBRARY.filter(d => d.nodes.includes(node.id));
+
+  const handleGenerate = async () => {
+    const key = `${node.id}-${activeRole}`;
+    setLoading(true);
+    setError(null);
+
+    const docContext = linkedDocs.map(d => `- ${d.title} (${d.source}, ${d.year}): ${d.abstract}`).join("\n");
+
+    try {
+      const res = await fetch("/api/synthesize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          system: `You are a governance dissenter playing the role of: ${role.label}.
+
+Voice profile: ${role.voice}
+
+Your job is NOT to be supportive or comprehensive. Your job is to ask the 3-5 most uncomfortable questions this role would ask about this governance node — the ones that usually don't get asked in the room, or that get smoothed over. Be specific, direct, and role-accurate. No preamble. No "great framework!" Just the questions this person would actually ask, in the voice they would actually use.
+
+Format: A short sharp intro sentence (what this role cares about at this node), then 3-5 numbered questions. Each question should be 1-2 sentences. Don't soften them.`,
+          messages: [{
+            role: "user",
+            content: `GOVERNANCE NODE: ${node.label}
+Core question: ${node.question}
+Known contention: ${node.contention}
+Known gap: ${node.gap}
+Components: ${node.components.join(", ")}
+
+LINKED DOCUMENTS (${linkedDocs.length}):
+${docContext || "None yet linked to this node."}
+
+Generate the ${role.label} perspective.`,
+          }],
+        }),
+      });
+
+      if (!res.ok) throw new Error(`API error ${res.status}`);
+      const data = await res.json();
+      const text = data.content?.find(b => b.type === "text")?.text;
+      if (!text) throw new Error("No response");
+      setResponses(prev => ({ ...prev, [key]: text }));
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ padding: "16px", borderTop: `1px solid ${C.border}` }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <div>
+          <div style={{ fontFamily: C.mono, fontSize: 9, color: C.red, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 3 }}>
+            ⚡ FACETIOUS COLLABORATOR
+          </div>
+          <div style={{ fontSize: 11, color: C.textDimmer, lineHeight: 1.5 }}>
+            The questions that don't get asked in the room.
+          </div>
+        </div>
+        <button onClick={handleGenerate} disabled={loading} style={{
+          padding: "5px 12px", borderRadius: 4, cursor: loading ? "not-allowed" : "pointer",
+          background: loading ? C.surface3 : C.red + "15",
+          border: `1px solid ${C.red}40`,
+          color: loading ? C.textDimmer : C.red,
+          fontFamily: C.mono, fontSize: 9, fontWeight: 700,
+        }}>
+          {loading ? "asking…" : currentResponse ? "↺ re-ask" : "◉ ask"}
+        </button>
+      </div>
+
+      {/* Role tabs — scrollable row */}
+      <div style={{ display: "flex", gap: 4, overflowX: "auto", paddingBottom: 8, marginBottom: 12, scrollbarWidth: "none" }}>
+        {ROLES.map(r => (
+          <button key={r.id} onClick={() => setActiveRole(r.id)} style={{
+            padding: "5px 10px", borderRadius: 3, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0,
+            background: activeRole === r.id ? r.color + "18" : "transparent",
+            border: `1px solid ${activeRole === r.id ? r.color + "60" : C.border}`,
+            color: activeRole === r.id ? r.color : C.textDim,
+            fontFamily: C.mono, fontSize: 9, fontWeight: activeRole === r.id ? 700 : 400,
+            transition: "all 0.1s",
+          }}>
+            {r.icon} {r.label}
+            {responses[`${node.id}-${r.id}`] && (
+              <span style={{ marginLeft: 4, color: r.color, opacity: 0.7 }}>·</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Role voice description */}
+      <div style={{ padding: "8px 10px", background: C.surface3, border: `1px solid ${C.border}`, borderRadius: 4, marginBottom: 12 }}>
+        <div style={{ fontFamily: C.mono, fontSize: 9, color: role.color, fontWeight: 700, marginBottom: 4 }}>
+          {role.icon} {role.label.toUpperCase()}
+        </div>
+        <div style={{ fontSize: 11, color: C.textDimmer, lineHeight: 1.6, fontStyle: "italic" }}>
+          {role.voice}
+        </div>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div style={{ padding: "8px 10px", background: C.redDim, border: `1px solid ${C.red}30`, borderRadius: 4, fontFamily: C.mono, fontSize: 10, color: C.red, marginBottom: 10 }}>
+          {error}
+        </div>
+      )}
+
+      {/* Loading */}
+      {loading && (
+        <div style={{ fontFamily: C.mono, fontSize: 11, color: C.textDimmer, fontStyle: "italic", lineHeight: 1.7 }}>
+          {role.icon} {role.label} is in the room…
+        </div>
+      )}
+
+      {/* Response */}
+      {!loading && currentResponse && (
+        <div style={{
+          fontSize: 12.5, color: C.text, lineHeight: 1.85,
+          borderLeft: `2px solid ${role.color}50`, paddingLeft: 12,
+          whiteSpace: "pre-wrap",
+        }}>
+          {currentResponse}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && !currentResponse && !error && (
+        <div style={{ fontFamily: C.mono, fontSize: 11, color: C.textDimmer, lineHeight: 1.7 }}>
+          Select a role above, then hit "◉ ask" to generate the questions this stakeholder would bring to the {node.label} node — the ones that don't usually make it into the governance document.
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── NODE DETAIL PANEL ───────────────────────────────────────────────────────
 function NodeDetail({ nodeId }) {
   const node = TAXONOMY_NODES.find(n => n.id === nodeId);
@@ -1136,6 +1364,9 @@ function NodeDetail({ nodeId }) {
 
         {/* AI curation */}
         <AICurationPanel node={node}/>
+
+        {/* Facetious Collaborator */}
+        <FacetiousCollaborator node={node}/>
 
         {/* Collab chat */}
         <CollabChat node={node}/>
