@@ -1,50 +1,59 @@
-import { kv } from "@vercel/kv";
+import Redis from "ioredis";
 
 const DOCS_KEY = "user_documents";
 
+let redis;
+function getRedis() {
+  if (!redis) {
+    redis = new Redis(process.env.REDIS_URL, {
+      tls: process.env.REDIS_URL?.startsWith("rediss://") ? { rejectUnauthorized: false } : undefined,
+      maxRetriesPerRequest: 3,
+    });
+  }
+  return redis;
+}
+
 export default async function handler(req, res) {
-  // Password check for all operations
   const password = req.headers["x-intake-password"];
   if (!password || password !== process.env.INTAKE_PASSWORD) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  // GET — load all user-added documents
+  const client = getRedis();
+
   if (req.method === "GET") {
     try {
-      const docs = await kv.get(DOCS_KEY);
-      return res.status(200).json({ documents: docs || [] });
+      const raw = await client.get(DOCS_KEY);
+      const docs = raw ? JSON.parse(raw) : [];
+      return res.status(200).json({ documents: docs });
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
   }
 
-  // POST — save a new document
   if (req.method === "POST") {
     try {
       const newDoc = req.body;
       if (!newDoc || !newDoc.title) {
         return res.status(400).json({ error: "Invalid document" });
       }
-
-      // Load existing, append new, save back
-      const existing = await kv.get(DOCS_KEY) || [];
+      const raw = await client.get(DOCS_KEY);
+      const existing = raw ? JSON.parse(raw) : [];
       const updated = [...existing, { ...newDoc, addedAt: new Date().toISOString() }];
-      await kv.set(DOCS_KEY, updated);
-
+      await client.set(DOCS_KEY, JSON.stringify(updated));
       return res.status(200).json({ success: true, total: updated.length });
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
   }
 
-  // DELETE — remove a document by index
   if (req.method === "DELETE") {
     try {
       const { index } = req.body;
-      const existing = await kv.get(DOCS_KEY) || [];
+      const raw = await client.get(DOCS_KEY);
+      const existing = raw ? JSON.parse(raw) : [];
       const updated = existing.filter((_, i) => i !== index);
-      await kv.set(DOCS_KEY, updated);
+      await client.set(DOCS_KEY, JSON.stringify(updated));
       return res.status(200).json({ success: true, total: updated.length });
     } catch (err) {
       return res.status(500).json({ error: err.message });
