@@ -1382,6 +1382,7 @@ function IntakePanel() {
   const [passwordError, setPasswordError] = useState(false);
   const [mode, setMode] = useState("url");
   const [input, setInput] = useState("");
+  const [fileData, setFileData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState(null);
@@ -1434,8 +1435,21 @@ function IntakePanel() {
     setUnlocked(true);
   };
 
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result.split(",")[1];
+      const mediaType = file.type || "application/pdf";
+      setFileData({ base64, mediaType, name: file.name });
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleAnalyze = async () => {
-    if (!input.trim()) return;
+    if (mode !== "file" && !input.trim()) return;
+    if (mode === "file" && !fileData) return;
     setLoading(true);
     setResult(null);
     setError(null);
@@ -1446,6 +1460,23 @@ function IntakePanel() {
     ].join("\n");
 
     try {
+      // Build message content — PDF or text
+      let userContent;
+      if (mode === "file" && fileData) {
+        userContent = [
+          {
+            type: "document",
+            source: { type: "base64", media_type: fileData.mediaType, data: fileData.base64 },
+          },
+          {
+            type: "text",
+            text: `EXISTING LIBRARY:\n${allDocsSummary}\n\nTAXONOMY NODES:\n${nodeList}\n\nAnalyze this document and return the JSON.`,
+          },
+        ];
+      } else {
+        userContent = `EXISTING LIBRARY:\n${allDocsSummary}\n\nTAXONOMY NODES:\n${nodeList}\n\n${mode === "url" ? "URL" : "TEXT"}:\n${input}`;
+      }
+
       const res = await fetch("/api/synthesize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1470,7 +1501,7 @@ function IntakePanel() {
 }`,
           messages: [{
             role: "user",
-            content: `EXISTING LIBRARY:\n${allDocsSummary}\n\nTAXONOMY NODES:\n${nodeList}\n\n${mode === "url" ? "URL" : "TEXT"}:\n${input}`,
+            content: userContent,
           }],
         }),
       });
@@ -1582,8 +1613,8 @@ function IntakePanel() {
 
       {/* Mode toggle */}
       <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
-        {[{ id: "url", label: "↗ URL" }, { id: "paste", label: "✎ Paste text" }].map(m => (
-          <button key={m.id} onClick={() => setMode(m.id)} style={{
+        {[{ id: "url", label: "↗ URL" }, { id: "paste", label: "✎ Paste text" }, { id: "file", label: "📎 PDF / file" }].map(m => (
+          <button key={m.id} onClick={() => { setMode(m.id); setInput(""); setFileData(null); setResult(null); }} style={{
             padding: "6px 14px", borderRadius: 4, cursor: "pointer",
             background: mode === m.id ? C.commons + "20" : "transparent",
             border: `1px solid ${mode === m.id ? C.commons + "60" : C.border}`,
@@ -1593,7 +1624,7 @@ function IntakePanel() {
         ))}
       </div>
 
-      {mode === "url" ? (
+      {mode === "url" && (
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -1604,7 +1635,9 @@ function IntakePanel() {
             color: C.text, fontFamily: C.mono, fontSize: 12, outline: "none", marginBottom: 12,
           }}
         />
-      ) : (
+      )}
+
+      {mode === "paste" && (
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -1619,7 +1652,36 @@ function IntakePanel() {
         />
       )}
 
-      <button onClick={handleAnalyze} disabled={loading || !input.trim()} style={{
+      {mode === "file" && (
+        <div style={{
+          width: "100%", padding: "20px 14px", borderRadius: 4, marginBottom: 12,
+          background: C.surface2, border: `1px dashed ${fileData ? C.external : C.border}`,
+          textAlign: "center", cursor: "pointer",
+        }}
+          onClick={() => document.getElementById("file-upload-input").click()}
+        >
+          <input
+            id="file-upload-input"
+            type="file"
+            accept=".pdf,.txt,.md"
+            onChange={handleFileSelect}
+            style={{ display: "none" }}
+          />
+          {fileData ? (
+            <div>
+              <div style={{ fontFamily: C.mono, fontSize: 11, color: C.external, marginBottom: 4 }}>✓ {fileData.name}</div>
+              <div style={{ fontFamily: C.mono, fontSize: 9, color: C.textDimmer }}>Click to replace</div>
+            </div>
+          ) : (
+            <div>
+              <div style={{ fontFamily: C.mono, fontSize: 11, color: C.textDim, marginBottom: 4 }}>Click to select a PDF or text file</div>
+              <div style={{ fontFamily: C.mono, fontSize: 9, color: C.textDimmer }}>Supports PDF, .txt, .md</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <button onClick={handleAnalyze} disabled={loading || (mode === "file" ? !fileData : !input.trim())} style={{
         padding: "8px 20px", borderRadius: 4, cursor: loading ? "not-allowed" : "pointer",
         background: C.commons + "20", border: `1px solid ${C.commons}60`,
         color: C.commons, fontFamily: C.mono, fontSize: 11, fontWeight: 700, marginBottom: 24,
