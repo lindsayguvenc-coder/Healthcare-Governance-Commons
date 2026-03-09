@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Governance Commons · Checklist Index</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #141720;
+    --surface3: #0d1019;
+    --border: #2a2d3a;
+    --accent: #b49eff;
+    --accent2: #7eb8f7;
+    --accent3: #f77e7e;
+    --accent4: #e8c547;
+    --accent5: #7ef7c0;
+    --accent6: #f7a87e;
+    --text: #e2e4ed;
+    --muted: #6b7080;
+    --checked-border: #4a3a8a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 48px 24px;
+  }
+
+  .container { max-width: 1040px; margin: 0 auto; }
+
+  header {
+    margin-bottom: 56px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 36px;
+  }
+
+  .label {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: clamp(28px, 4vw, 44px);
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  h1 em { font-style: italic; color: var(--accent); }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.8;
+    max-width: 680px;
+    margin-bottom: 28px;
+  }
+
+  /* Matrix legend */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 0;
+  }
+
+  .legend-item {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 3px;
+    border: 1px solid;
+  }
+
+  .col-authority { color: var(--accent); border-color: rgba(180,158,255,0.3); background: rgba(180,158,255,0.07); }
+  .col-escalation { color: var(--accent2); border-color: rgba(126,184,247,0.3); background: rgba(126,184,247,0.07); }
+  .col-stop { color: var(--accent3); border-color: rgba(247,126,126,0.3); background: rgba(247,126,126,0.07); }
+  .col-monitoring { color: var(--accent5); border-color: rgba(126,247,192,0.3); background: rgba(126,247,192,0.07); }
+  .col-audit { color: var(--accent4); border-color: rgba(232,197,71,0.3); background: rgba(232,197,71,0.07); }
+  .col-override { color: var(--accent6); border-color: rgba(247,168,126,0.3); background: rgba(247,168,126,0.07); }
+  .col-validation { color: #c4e87e; border-color: rgba(196,232,126,0.3); background: rgba(196,232,126,0.07); }
+
+  /* Checklist cards */
+  .cards { display: grid; grid-template-columns: 1fr; gap: 32px; margin-bottom: 64px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: #3a3d50; }
+
+  .card-header {
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface3);
+  }
+
+  .card-label {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .card-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 22px;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+
+  .card-title em { font-style: italic; color: var(--accent); }
+
+  .card-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 600px;
+  }
+
+  .card-body { padding: 20px 28px 24px; }
+
+  /* Sections table */
+  .sections-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .section-row {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+
+  .section-row-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .section-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .phase-badge {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 8px;
+    border: 1px solid;
+    flex-shrink: 0;
+  }
+
+  .phase-pre { color: var(--accent5); border-color: rgba(126,247,192,0.3); background: rgba(126,247,192,0.06); }
+  .phase-post { color: var(--accent4); border-color: rgba(232,197,71,0.3); background: rgba(232,197,71,0.06); }
+  .phase-both { color: var(--accent); border-color: rgba(180,158,255,0.3); background: rgba(180,158,255,0.06); }
+
+  .matrix-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .matrix-tag {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    border-top: 1px solid var(--border);
+    background: var(--surface3);
+  }
+
+  .footer-meta {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .footer-meta span { color: var(--accent); }
+
+  /* Notes section */
+  .notes-section {
+    margin-top: 64px;
+    border-top: 1px solid var(--border);
+    padding-top: 40px;
+  }
+
+  .notes-title {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .note-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+  }
+
+  .note-card-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .note-card-text {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .note-card-text strong { color: var(--text); font-weight: 500; }
+
+  /* Matrix map section */
+  .matrix-section {
+    margin-top: 48px;
+    border-top: 1px solid var(--border);
+    padding-top: 40px;
+  }
+
+  .matrix-title {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+
+  .matrix-table th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface3);
+  }
+
+  .matrix-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  .matrix-table tr:last-child td { border-bottom: none; }
+
+  .matrix-table tr:hover td { background: rgba(255,255,255,0.01); }
+
+  .row-checklist {
+    font-size: 10px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .cell-items {
+    font-size: 11px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  .cell-items .item { margin-bottom: 2px; }
+  .cell-items .item::before { content: '— '; color: var(--muted); }
+
+  .empty-cell { color: var(--border); font-size: 10px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="label">Governance Commons · Checklist Integration</div>
+    <h1>Three Checklists,<br>One <em>Governance Matrix</em></h1>
+    <p class="subtitle">Each checklist was built as a standalone deployment tool. This index shows how their sections map to the Governance Commons matrix — authority, escalation, stop mechanisms, monitoring, audit, override, and validation — and at which governance phase each applies. Use this to navigate between checklists by the dimension you are working on, not just the document you happen to have open.</p>
+    <div class="legend">
+      <div class="legend-item col-authority">Authority</div>
+      <div class="legend-item col-escalation">Escalation</div>
+      <div class="legend-item col-stop">Stop Mechanisms</div>
+      <div class="legend-item col-monitoring">Monitoring</div>
+      <div class="legend-item col-audit">Audit</div>
+      <div class="legend-item col-override">Override</div>
+      <div class="legend-item col-validation">Validation</div>
+    </div>
+  </header>
+
+  <div class="cards">
+
+    <!-- CARD 1: Governance Checklist -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-label">Checklist 01 · governance_checklist.html</div>
+        <div class="card-title">Healthcare AI <em>Governance</em> Checklist</div>
+        <p class="card-desc">The core governance instrument. Covers the full operational lifecycle from authority matrix definition through human oversight design. Most sections are pre-deployment but stop mechanisms and monitoring apply continuously.</p>
+      </div>
+      <div class="card-body">
+        <div class="sections-grid">
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Authority Matrix & Decision Rights</div>
+              <div class="phase-badge phase-pre">Pre-deploy</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-authority">Authority</div>
+              <div class="matrix-tag col-validation">Validation</div>
+            </div>
+          </div>
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Escalation Tiers & Routing Logic</div>
+              <div class="phase-badge phase-pre">Pre-deploy</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-escalation">Escalation</div>
+              <div class="matrix-tag col-authority">Authority</div>
+              <div class="matrix-tag col-validation">Validation</div>
+            </div>
+          </div>
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Stop Mechanisms & Automated Triggers</div>
+              <div class="phase-badge phase-both">Pre + Post</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-stop">Stop Mechanisms</div>
+              <div class="matrix-tag col-authority">Authority</div>
+              <div class="matrix-tag col-audit">Audit</div>
+            </div>
+          </div>
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Performance Monitoring & Drift Detection</div>
+              <div class="phase-badge phase-post">Post-deploy</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-monitoring">Monitoring</div>
+              <div class="matrix-tag col-stop">Stop Mechanisms</div>
+              <div class="matrix-tag col-validation">Validation</div>
+            </div>
+          </div>
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Audit Trails & Documentation</div>
+              <div class="phase-badge phase-both">Pre + Post</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-audit">Audit</div>
+              <div class="matrix-tag col-authority">Authority</div>
+            </div>
+          </div>
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Human Oversight & Override Protocols</div>
+              <div class="phase-badge phase-both">Pre + Post</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-override">Override</div>
+              <div class="matrix-tag col-escalation">Escalation</div>
+              <div class="matrix-tag col-monitoring">Monitoring</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="footer-meta"><span>6 sections</span> · 5 of 7 Commons dimensions covered · Primary instrument for authority, escalation, stop, override</div>
+      </div>
+    </div>
+
+    <!-- CARD 2: Bias & Demographics -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-label">Checklist 02 · bias_demographics_checklist.html</div>
+        <div class="card-title">Bias & <em>Demographic</em> Fairness Checklist</div>
+        <p class="card-desc">Primarily a pre-deployment data and model evaluation instrument. Maps primarily to the validation and monitoring columns of the Commons matrix, with specific relevance to the authority column for fairness definition decisions.</p>
+      </div>
+      <div class="card-body">
+        <div class="sections-grid">
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Race & Ethnicity</div>
+              <div class="phase-badge phase-pre">Pre-deploy</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-validation">Validation</div>
+              <div class="matrix-tag col-monitoring">Monitoring</div>
+            </div>
+          </div>
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Socioeconomic & Insurance Status</div>
+              <div class="phase-badge phase-pre">Pre-deploy</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-validation">Validation</div>
+              <div class="matrix-tag col-monitoring">Monitoring</div>
+            </div>
+          </div>
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Geographic & Site Bias</div>
+              <div class="phase-badge phase-pre">Pre-deploy</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-validation">Validation</div>
+              <div class="matrix-tag col-audit">Audit</div>
+            </div>
+          </div>
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Historical Bias in Labels & Diagnoses</div>
+              <div class="phase-badge phase-pre">Pre-deploy</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-validation">Validation</div>
+              <div class="matrix-tag col-audit">Audit</div>
+            </div>
+          </div>
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Algorithmic Bias & Model Fairness</div>
+              <div class="phase-badge phase-both">Pre + Post</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-validation">Validation</div>
+              <div class="matrix-tag col-monitoring">Monitoring</div>
+              <div class="matrix-tag col-authority">Authority</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="footer-meta"><span>5 sections</span> · 4 of 7 Commons dimensions covered · Primary instrument for fairness validation and subgroup monitoring</div>
+      </div>
+    </div>
+
+    <!-- CARD 3: Data Quality -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-label">Checklist 03 · healthcare_data_checklist_v2.html</div>
+        <div class="card-title">Healthcare Data Quality<br><em>&amp; Provenance</em> Checklist</div>
+        <p class="card-desc">The data layer instrument. Governs what enters the system before training and what enters at inference. Covers the dimensions the other two checklists assume are handled — and rarely are. The audit and monitoring columns of the Commons matrix have no solid foundation without this one.</p>
+      </div>
+      <div class="card-body">
+        <div class="sections-grid">
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Source & Provenance</div>
+              <div class="phase-badge phase-pre">Pre-deploy</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-audit">Audit</div>
+              <div class="matrix-tag col-authority">Authority</div>
+              <div class="matrix-tag col-validation">Validation</div>
+            </div>
+          </div>
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Completeness & Missingness</div>
+              <div class="phase-badge phase-pre">Pre-deploy</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-validation">Validation</div>
+              <div class="matrix-tag col-audit">Audit</div>
+            </div>
+          </div>
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Label Quality & Ground Truth</div>
+              <div class="phase-badge phase-pre">Pre-deploy</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-validation">Validation</div>
+              <div class="matrix-tag col-audit">Audit</div>
+            </div>
+          </div>
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Data Pipeline Integrity</div>
+              <div class="phase-badge phase-both">Pre + Post</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-monitoring">Monitoring</div>
+              <div class="matrix-tag col-stop">Stop Mechanisms</div>
+              <div class="matrix-tag col-validation">Validation</div>
+            </div>
+          </div>
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Access, Consent & Governance Rights</div>
+              <div class="phase-badge phase-both">Pre + Post</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-authority">Authority</div>
+              <div class="matrix-tag col-audit">Audit</div>
+            </div>
+          </div>
+
+          <div class="section-row">
+            <div class="section-row-header">
+              <div class="section-name">Representativeness & Deployment Fit</div>
+              <div class="phase-badge phase-pre">Pre-deploy</div>
+            </div>
+            <div class="matrix-tags">
+              <div class="matrix-tag col-validation">Validation</div>
+              <div class="matrix-tag col-monitoring">Monitoring</div>
+              <div class="matrix-tag col-stop">Stop Mechanisms</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="footer-meta"><span>6 sections</span> · 5 of 7 Commons dimensions covered · Primary instrument for provenance, pipeline integrity, and consent authority</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Matrix mapping table -->
+  <div class="matrix-section">
+    <div class="matrix-title">Commons Dimension → Checklist Cross-Reference</div>
+    <table class="matrix-table">
+      <thead>
+        <tr>
+          <th style="width:160px">Commons Column</th>
+          <th>Primary Checklist Sections</th>
+          <th style="width:120px">Governance Phase</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="legend-item col-authority" style="font-size:9px;padding:2px 7px">Authority</span></td>
+          <td>
+            <div class="cell-items">
+              <div class="item">Authority Matrix & Decision Rights <span class="row-checklist">(Governance)</span></div>
+              <div class="item">Access, Consent & Governance Rights <span class="row-checklist">(Data)</span></div>
+              <div class="item">Algorithmic Bias — fairness definition ownership <span class="row-checklist">(Bias)</span></div>
+            </div>
+          </td>
+          <td style="color:var(--accent5);font-size:10px">Pre-deploy</td>
+        </tr>
+        <tr>
+          <td><span class="legend-item col-escalation" style="font-size:9px;padding:2px 7px">Escalation</span></td>
+          <td>
+            <div class="cell-items">
+              <div class="item">Escalation Tiers & Routing Logic <span class="row-checklist">(Governance)</span></div>
+              <div class="item">Human Oversight & Override Protocols — tier routing <span class="row-checklist">(Governance)</span></div>
+            </div>
+          </td>
+          <td style="color:var(--accent5);font-size:10px">Pre-deploy</td>
+        </tr>
+        <tr>
+          <td><span class="legend-item col-stop" style="font-size:9px;padding:2px 7px">Stop Mechanisms</span></td>
+          <td>
+            <div class="cell-items">
+              <div class="item">Stop Mechanisms & Automated Triggers <span class="row-checklist">(Governance)</span></div>
+              <div class="item">Data Pipeline Integrity — schema drift triggers <span class="row-checklist">(Data)</span></div>
+              <div class="item">Representativeness — population mismatch hard stops <span class="row-checklist">(Data)</span></div>
+            </div>
+          </td>
+          <td style="color:var(--accent);font-size:10px">Pre + Post</td>
+        </tr>
+        <tr>
+          <td><span class="legend-item col-monitoring" style="font-size:9px;padding:2px 7px">Monitoring</span></td>
+          <td>
+            <div class="cell-items">
+              <div class="item">Performance Monitoring & Drift Detection <span class="row-checklist">(Governance)</span></div>
+              <div class="item">Data Pipeline Integrity — input distribution monitoring <span class="row-checklist">(Data)</span></div>
+              <div class="item">Algorithmic Bias — ongoing fairness monitoring <span class="row-checklist">(Bias)</span></div>
+            </div>
+          </td>
+          <td style="color:var(--accent4);font-size:10px">Post-deploy</td>
+        </tr>
+        <tr>
+          <td><span class="legend-item col-audit" style="font-size:9px;padding:2px 7px">Audit</span></td>
+          <td>
+            <div class="cell-items">
+              <div class="item">Audit Trails & Documentation <span class="row-checklist">(Governance)</span></div>
+              <div class="item">Source & Provenance <span class="row-checklist">(Data)</span></div>
+              <div class="item">Label Quality & Ground Truth <span class="row-checklist">(Data)</span></div>
+              <div class="item">Geographic & Site Bias — documentation <span class="row-checklist">(Bias)</span></div>
+            </div>
+          </td>
+          <td style="color:var(--accent);font-size:10px">Pre + Post</td>
+        </tr>
+        <tr>
+          <td><span class="legend-item col-override" style="font-size:9px;padding:2px 7px">Override</span></td>
+          <td>
+            <div class="cell-items">
+              <div class="item">Human Oversight & Override Protocols <span class="row-checklist">(Governance)</span></div>
+            </div>
+            <div style="margin-top:6px;font-size:10px;color:var(--accent3)">⚠ Least-covered dimension across all three checklists. Override protocol design is currently concentrated in one section.</div>
+          </td>
+          <td style="color:var(--accent);font-size:10px">Pre + Post</td>
+        </tr>
+        <tr>
+          <td><span class="legend-item col-validation" style="font-size:9px;padding:2px 7px">Validation</span></td>
+          <td>
+            <div class="cell-items">
+              <div class="item">Escalation Tiers — clinical validation of thresholds <span class="row-checklist">(Governance)</span></div>
+              <div class="item">Completeness & Missingness <span class="row-checklist">(Data)</span></div>
+              <div class="item">Label Quality & Ground Truth <span class="row-checklist">(Data)</span></div>
+              <div class="item">Representativeness & Deployment Fit <span class="row-checklist">(Data)</span></div>
+              <div class="item">Algorithmic Bias & Model Fairness <span class="row-checklist">(Bias)</span></div>
+            </div>
+          </td>
+          <td style="color:var(--accent5);font-size:10px">Pre-deploy</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Use notes -->
+  <div class="notes-section">
+    <div class="notes-title">Integration Notes for the Commons</div>
+    <div class="notes-grid">
+
+      <div class="note-card">
+        <div class="note-card-label" style="color:var(--accent3)">Gap: Override</div>
+        <div class="note-card-text">Override protocol is currently only in the Governance checklist. As a Commons dimension it should span all three — data pipeline overrides (who can bypass a schema alert?), fairness threshold overrides (who can authorize deploying below the minimum subgroup performance threshold?), and label quality overrides (who can approve training on a dataset with known label bias?). These are authority questions that belong in the authority matrix but live upstream of it.</div>
+      </div>
+
+      <div class="note-card">
+        <div class="note-card-label" style="color:var(--accent4)">Format for Commons</div>
+        <div class="note-card-text">These checklists are <strong>linear deployment tools</strong> in their current form. To live inside the Commons matrix they need a tag field on each section: which Commons column, which governance phase, which use case type. The data to do that tagging is in this index. The next step is adding those tags as filterable metadata inside each checklist so a user navigating the matrix can reach the relevant checks directly.</div>
+      </div>
+
+      <div class="note-card">
+        <div class="note-card-label" style="color:var(--accent5)">Dual-Loop Alignment</div>
+        <div class="note-card-text">The Governance checklist maps mostly to the <strong>internal technical loop</strong> (is it behaving as designed?). The Data and Bias checklists map mostly to the <strong>external human governance loop</strong> (is what it was designed to do still appropriate?). That split is structural — and it means a complete governance review requires both, not just the one you reached for first.</div>
+      </div>
+
+      <div class="note-card">
+        <div class="note-card-label" style="color:var(--accent2)">Saida Harle connection</div>
+        <div class="note-card-text">Her "structural invalidation triggers" concept maps to three specific checklist sections: Stop Mechanisms, Data Pipeline Integrity, and Representativeness & Deployment Fit. All three define conditions under which prior authorization becomes invalid. The Governance checklist names the trigger. The Data checklist defines what state change fires it. That's the boundary architecture she's describing — and these checklists together operationalize it.</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
