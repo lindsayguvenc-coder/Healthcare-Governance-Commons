@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/community-weaving", "destination": "/community-weaving/index.html" }
+  ]
+}
