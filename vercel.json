@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/community-weaving", "destination": "/community-weaving/index.html" }
+    { "source": "/community-weaving", "destination": "/community-weaving/index.html" },
     { "source": "/transition", "destination": "/transition/index.html" }
   ]
 }
