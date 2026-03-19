@@ -34,7 +34,6 @@
 
   .container { max-width: 1040px; margin: 0 auto; }
 
-  /* NAV */
   nav {
     display: flex;
     align-items: center;
@@ -65,7 +64,6 @@
     border-radius: 2px;
   }
 
-  /* HEADER */
   header { margin-bottom: 72px; }
 
   .series-label {
@@ -85,10 +83,7 @@
     letter-spacing: -0.01em;
   }
 
-  h1 em {
-    font-style: italic;
-    color: var(--accent);
-  }
+  h1 em { font-style: italic; color: var(--accent); }
 
   .header-desc {
     color: var(--muted);
@@ -114,7 +109,6 @@
 
   .meta-item span { color: var(--text); }
 
-  /* METHODOLOGY PILLS */
   .pills {
     display: flex;
     flex-wrap: wrap;
@@ -136,7 +130,6 @@
   .pill.accent2 { border-color: var(--accent2); color: var(--accent2); }
   .pill.accent5 { border-color: var(--accent5); color: var(--accent5); }
 
-  /* EPISODES */
   .episodes-header {
     font-size: 11px;
     letter-spacing: 0.2em;
@@ -167,7 +160,6 @@
   }
 
   .episode:hover { background: var(--surface); border-color: var(--border); }
-
   .episode.published { cursor: pointer; }
   .episode.published:hover { border-color: var(--accent); }
 
@@ -182,8 +174,6 @@
   }
 
   .episode.published .ep-number { color: var(--accent); }
-
-  .ep-body {}
 
   .ep-label {
     font-size: 10px;
@@ -203,7 +193,6 @@
   }
 
   .ep-title em { font-style: italic; color: var(--accent); }
-
   .episode.published:hover .ep-title { color: var(--accent); }
 
   .ep-desc {
@@ -212,6 +201,9 @@
     color: var(--muted);
     max-width: 560px;
   }
+
+  .ep-desc a { color: var(--accent); text-decoration: none; }
+  .ep-desc a:hover { text-decoration: underline; }
 
   .ep-status {
     display: flex;
@@ -254,10 +246,8 @@
   }
 
   .episode.published:hover .download-link { opacity: 1; }
-
   .download-link::before { content: "↓"; }
 
-  /* ABOUT THE METHOD */
   .method-section {
     background: var(--surface2);
     border: 1px solid var(--border);
@@ -283,11 +273,7 @@
     margin-top: 28px;
   }
 
-  .method-card {
-    border-left: 2px solid var(--border);
-    padding-left: 16px;
-  }
-
+  .method-card { border-left: 2px solid var(--border); padding-left: 16px; }
   .method-card.a1 { border-color: var(--accent); }
   .method-card.a2 { border-color: var(--accent2); }
   .method-card.a5 { border-color: var(--accent5); }
@@ -301,13 +287,8 @@
     margin-bottom: 8px;
   }
 
-  .method-card-text {
-    font-size: 11px;
-    line-height: 1.8;
-    color: var(--text);
-  }
+  .method-card-text { font-size: 11px; line-height: 1.8; color: var(--text); }
 
-  /* RECURSIVE NOTE */
   .recursive {
     border: 1px solid var(--accent);
     border-radius: 4px;
@@ -319,54 +300,26 @@
     align-items: flex-start;
   }
 
-  .recursive-icon {
-    font-size: 24px;
-    line-height: 1;
-    flex-shrink: 0;
-    color: var(--accent);
-    padding-top: 2px;
-  }
+  .recursive-icon { font-size: 24px; line-height: 1; flex-shrink: 0; color: var(--accent); padding-top: 2px; }
 
-  .recursive-text {
-    font-size: 11px;
-    line-height: 1.9;
-    color: var(--muted);
-  }
-
+  .recursive-text { font-size: 11px; line-height: 1.9; color: var(--muted); }
   .recursive-text strong { color: var(--accent); font-weight: 500; }
 
-  /* FOOTER */
   footer {
     padding-top: 32px;
     border-top: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: gap;
+    flex-wrap: wrap;
     gap: 16px;
   }
 
-  .footer-left {
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-  }
-
-  .footer-left a {
-    color: var(--accent);
-    text-decoration: none;
-  }
-
+  .footer-left { font-size: 10px; letter-spacing: 0.1em; color: var(--muted); }
+  .footer-left a { color: var(--accent); text-decoration: none; }
   .footer-left a:hover { text-decoration: underline; }
+  .footer-right { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
 
-  .footer-right {
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  /* HOVER ANIMATION */
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
@@ -381,19 +334,16 @@
   .episode:nth-child(6) { animation-delay: 0.3s; }
   .episode:nth-child(7) { animation-delay: 0.35s; }
   .episode:nth-child(8) { animation-delay: 0.4s; }
-
 </style>
 </head>
 <body>
 <div class="container">
 
-  <!-- NAV -->
   <nav>
     <a href="/" class="nav-home">← <span>Governance Commons</span></a>
     <span class="nav-tag">Series</span>
   </nav>
 
-  <!-- HEADER -->
   <header>
     <div class="series-label">Community Weaving</div>
     <h1>A methodology for<br>domains with <em>no map yet</em></h1>
@@ -402,8 +352,8 @@
     </p>
     <div class="header-meta">
       <span class="meta-item">Author <span>Lindsay LaMere Guvenc</span></span>
-      <span class="meta-item">Episodes <span>8 planned</span></span>
-      <span class="meta-item">Status <span>Publishing in public</span></span>
+      <span class="meta-item">Episodes <span>8 of 8 published</span></span>
+      <span class="meta-item">Status <span>Complete</span></span>
     </div>
     <div class="pills">
       <span class="pill active">Governance</span>
@@ -414,7 +364,6 @@
     </div>
   </header>
 
-  <!-- RECURSIVE NOTE -->
   <div class="recursive">
     <div class="recursive-icon">⟳</div>
     <div class="recursive-text">
@@ -422,12 +371,10 @@
     </div>
   </div>
 
-  <!-- EPISODES -->
   <div class="episodes-header">Episodes</div>
 
   <div class="episode-list">
 
-    <!-- EP 01 - PUBLISHED -->
     <div class="episode published" onclick="window.open('/community_weaving_ep01.docx')">
       <div class="ep-number">01</div>
       <div class="ep-body">
@@ -441,7 +388,6 @@
       </div>
     </div>
 
-    <!-- EP 02 -->
     <div class="episode published" onclick="window.open('/community_weaving_ep02.pdf')">
       <div class="ep-number">02</div>
       <div class="ep-body">
@@ -455,7 +401,6 @@
       </div>
     </div>
 
-    <!-- EP 03 -->
     <div class="episode published" onclick="window.open('/community_weaving_ep03.pdf')">
       <div class="ep-number">03</div>
       <div class="ep-body">
@@ -469,7 +414,6 @@
       </div>
     </div>
 
-    <!-- EP 04 -->
     <div class="episode published" onclick="window.open('/community_weaving_ep04.pdf')">
       <div class="ep-number">04</div>
       <div class="ep-body">
@@ -483,7 +427,6 @@
       </div>
     </div>
 
-    <!-- EP 05 -->
     <div class="episode published" onclick="window.open('/community_weaving_ep05.pdf')">
       <div class="ep-number">05</div>
       <div class="ep-body">
@@ -497,7 +440,6 @@
       </div>
     </div>
 
-    <!-- EP 06 -->
     <div class="episode published" onclick="window.open('/community_weaving_ep06.pdf')">
       <div class="ep-number">06</div>
       <div class="ep-body">
@@ -511,35 +453,34 @@
       </div>
     </div>
 
-    <!-- EP 07 -->
-    <div class="episode">
+    <div class="episode published" onclick="window.open('/ep07_governance_architecture.pdf')">
       <div class="ep-number">07</div>
       <div class="ep-body">
-        <div class="ep-label">Planned</div>
-        <div class="ep-title">Democratized development</div>
-        <div class="ep-desc">Governance as an equity issue. What open source did for software, what Wikipedia did for knowledge — and what Community Weaving can do for governance infrastructure.</div>
+        <div class="ep-label">Published</div>
+        <div class="ep-title">What it actually <em>looks like</em></div>
+        <div class="ep-desc">The governance architecture made visible. Two loops, four handoff nodes, one stop mechanism — every component described, every interface defined. Interactive version at <a href="/architecture">/architecture</a>.</div>
       </div>
       <div class="ep-status">
-        <span class="status-badge coming">Pending</span>
+        <span class="status-badge live">Live</span>
+        <a class="download-link" href="/ep07_governance_architecture.pdf">Read</a>
       </div>
     </div>
 
-    <!-- EP 08 -->
-    <div class="episode">
+    <div class="episode published" onclick="window.open('/ep08_the_recursive_close.pdf')">
       <div class="ep-number">08</div>
       <div class="ep-body">
-        <div class="ep-label">Planned</div>
+        <div class="ep-label">Published</div>
         <div class="ep-title">The recursive close</div>
-        <div class="ep-desc">The series is the method. What it means that you just read a paper about collaborative, public, friction-loving knowledge-building — built collaboratively, in public, with friction.</div>
+        <div class="ep-desc">The series is the method. The Commons is the thing it describes. What it means that you just read eight episodes of collaborative, public, friction-positive knowledge-building — built collaboratively, in public, with friction visible.</div>
       </div>
       <div class="ep-status">
-        <span class="status-badge coming">Pending</span>
+        <span class="status-badge live">Live</span>
+        <a class="download-link" href="/ep08_the_recursive_close.pdf">Read</a>
       </div>
     </div>
 
   </div>
 
-  <!-- ABOUT THE METHOD -->
   <div class="method-section">
     <h2>About the <em>method</em></h2>
     <p style="font-size:11px; line-height:1.9; color:var(--muted); max-width:640px;">
@@ -565,7 +506,6 @@
     </div>
   </div>
 
-  <!-- FOOTER -->
   <footer>
     <div class="footer-left">
       Part of the <a href="/">Healthcare Governance Commons</a> · Built in public by Lindsay LaMere Guvenc
