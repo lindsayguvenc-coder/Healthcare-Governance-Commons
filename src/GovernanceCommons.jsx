@@ -1635,18 +1635,29 @@ export default function GovernanceCommons() {
           ))}
         </div>
 
-        {/* ── Community Weaving series link ── */}
-        <a href="/community-weaving" style={{
-          padding: "7px 14px", borderRadius: 4, cursor: "pointer",
-          background: "transparent",
-          border: `1px solid ${C.commons}40`,
-          color: C.commons,
-          fontFamily: C.mono, fontSize: 10, fontWeight: 400,
-          letterSpacing: "0.05em",
-          textDecoration: "none",
-          whiteSpace: "nowrap",
-          flexShrink: 0,
-        }}>Community Weaving →</a>
+        {/* ── External nav links ── */}
+        <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+          <a href="/community-weaving" style={{
+            padding: "7px 14px", borderRadius: 4, cursor: "pointer",
+            background: "transparent",
+            border: `1px solid ${C.commons}40`,
+            color: C.commons,
+            fontFamily: C.mono, fontSize: 10, fontWeight: 400,
+            letterSpacing: "0.05em",
+            textDecoration: "none",
+            whiteSpace: "nowrap",
+          }}>Community Weaving →</a>
+          <a href="/tools" style={{
+            padding: "7px 14px", borderRadius: 4, cursor: "pointer",
+            background: "transparent",
+            border: `1px solid #7ef7c040`,
+            color: "#7ef7c0",
+            fontFamily: C.mono, fontSize: 10, fontWeight: 400,
+            letterSpacing: "0.05em",
+            textDecoration: "none",
+            whiteSpace: "nowrap",
+          }}>Tools →</a>
+        </div>
 
         {/* Loop filter pills */}
         {activeLayer === "taxonomy" && (
