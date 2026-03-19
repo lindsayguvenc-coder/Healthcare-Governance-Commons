@@ -34,13 +34,6 @@ const LOOP_META = {
   commons:  { label: "Gov. Commons",    color: C.commons,   question: "Is the governance infrastructure itself current?" },
 };
 
-// ─── SINGLE SOURCE OF TRUTH ──────────────────────────────────────────────────
-// matrixReady: true  → node appears as a row in the matrix (promoted concept)
-// matrixReady: false → node lives in taxonomy only (emerging / not yet promoted)
-// matrixUseCases: which use-case columns are populated for this concept
-// To add a new concept to the matrix: add it here, set matrixReady: true, list useCases.
-// Matrix auto-derives its axes from this data. Nothing else needs to change.
-
 const ALL_USE_CASES = [
   { id: "diagnostic", label: "Diagnostic Aid"  },
   { id: "screening",  label: "Screening Tool"  },
@@ -138,7 +131,7 @@ const TAXONOMY_NODES = [
     contention: "Appropriate panel composition — who must be present for different trigger types",
     gap: "No defined review panel composition standard.",
     mandatory: true,
-    matrixReady: false, // overlaps with H1; not yet promoted as separate matrix row
+    matrixReady: false,
     matrixLabel: null,
     matrixUseCases: [],
   },
@@ -164,7 +157,7 @@ const TAXONOMY_NODES = [
     contention: "How to handle threshold changes mid-deployment without operational disruption",
     gap: "Threshold review is ad hoc or absent in current deployments.",
     mandatory: true,
-    matrixReady: false, // emerging — needs more documentation before promotion
+    matrixReady: false,
     matrixLabel: null,
     matrixUseCases: [],
   },
@@ -177,7 +170,7 @@ const TAXONOMY_NODES = [
     contention: "Tier 3/4 authority is politically difficult to assign — institutions resist hard stop authority",
     gap: "Hard stop authority is formally unassigned at most institutions. Fallback protocols often do not exist at deployment.",
     mandatory: true,
-    matrixReady: false, // represented via H2 in matrix; not yet a separate row
+    matrixReady: false,
     matrixLabel: null,
     matrixUseCases: [],
   },
@@ -235,64 +228,49 @@ const TAXONOMY_NODES = [
   },
 ];
 
-// ─── DERIVED MATRIX AXES (auto-computed from taxonomy) ───────────────────────
-// To promote a taxonomy node to the matrix: set matrixReady: true above.
-// To add a new use case: add it to ALL_USE_CASES above.
-// Nothing below needs to change.
 const MATRIX_CONCEPTS = TAXONOMY_NODES
   .filter(n => n.matrixReady && n.matrixLabel)
   .map(n => ({ id: n.id, label: n.matrixLabel, icon: n.icon, loop: n.loop }));
 
 const MATRIX_USECASES = ALL_USE_CASES;
 
-// ─── MATRIX CELLS ─────────────────────────────────────────────────────────────
-// Keys: "{taxonomyNodeId}-{useCaseId}"
-// When a node gets matrixReady:true, its cells appear automatically.
-// status: live | sparse | gap
 const MATRIX_CELLS = {
-  // h2 (Threshold Authority) → Authority Matrix concept
   "h2-diagnostic":          { d:4,c:2,x:2,v:3, status:"live",   summary:"Who decides routing threshold? FDA 510(k) predicate logic applies." },
   "h2-screening":           { d:3,c:1,x:1,v:2, status:"live",   summary:"Population-level screening authority differs from individual clinical decisions." },
   "h2-monitoring":          { d:2,c:1,x:0,v:1, status:"sparse", summary:"Ongoing authority for model drift is often unclear post-deployment." },
   "h2-triage":              { d:3,c:2,x:2,v:2, status:"live",   summary:"Time-critical decisions require pre-defined authority chains." },
   "h2-treatment":           { d:2,c:0,x:3,v:1, status:"sparse", summary:"Prescribing authority cannot be delegated to algorithm." },
   "h2-admin":               { d:1,c:1,x:0,v:1, status:"sparse", summary:"Workflow AI authority is lower stakes but underdocumented." },
-  // h1 (Escalation Gate) → Escalation Tiers concept
   "h1-diagnostic":          { d:3,c:2,x:1,v:3, status:"live",   summary:"Confidence score → routing tier mapping. When does low-confidence flag human?" },
   "h1-screening":           { d:2,c:1,x:1,v:1, status:"sparse", summary:"FP/FN asymmetry drives routing logic." },
   "h1-monitoring":          { d:2,c:2,x:2,v:2, status:"live",   summary:"Statistical control limits as escalation triggers. Westgard adapted to ML." },
   "h1-triage":              { d:4,c:3,x:2,v:3, status:"live",   summary:"Time-critical escalation with defined information package." },
   "h1-treatment":           { d:1,c:0,x:2,v:0, status:"gap",    summary:"No clear examples of treatment escalation protocols in deployed systems." },
   "h1-admin":               { d:1,c:1,x:0,v:1, status:"sparse", summary:"Workflow disruption escalation less studied." },
-  // stop (Stop Mechanisms)
   "stop-diagnostic":        { d:5,c:3,x:3,v:4, status:"live",   summary:"Hard stop conditions: data quality failure, confidence below threshold, EHR mismatch." },
   "stop-screening":         { d:3,c:2,x:2,v:2, status:"live",   summary:"Population-level stops vs. individual result suppression." },
   "stop-monitoring":        { d:3,c:1,x:1,v:2, status:"live",   summary:"Automated drift detection triggers." },
   "stop-triage":            { d:2,c:1,x:2,v:1, status:"sparse", summary:"Stop in time-critical context is itself a patient safety event." },
   "stop-treatment":         { d:1,c:0,x:3,v:0, status:"gap",    summary:"Critical gap. No agreed framework for treatment recommendation stops." },
   "stop-admin":             { d:1,c:1,x:0,v:1, status:"sparse", summary:"Ops AI stops create workflow disruption." },
-  // watcher (Performance Monitoring & Drift Detection)
   "watcher-diagnostic":     { d:4,c:2,x:1,v:2, status:"live",   summary:"Post-deployment performance tracking. Retrospective accuracy vs. real-time drift." },
   "watcher-screening":      { d:3,c:2,x:1,v:2, status:"live",   summary:"Population shift detection. Subgroup drift." },
   "watcher-monitoring":     { d:2,c:0,x:0,v:1, status:"sparse", summary:"Monitoring of monitoring tools — mostly conceptual." },
   "watcher-triage":         { d:2,c:1,x:1,v:1, status:"sparse", summary:"Triage accuracy monitoring complicated by outcome attribution." },
   "watcher-treatment":      { d:2,c:1,x:2,v:1, status:"sparse", summary:"Clinical outcome tracking. Long attribution chains." },
   "watcher-admin":          { d:1,c:1,x:0,v:0, status:"gap",    summary:"Admin AI monitoring almost undocumented." },
-  // h4 (Dispute Resolution Return) → Audit Trails concept
   "h4-diagnostic":          { d:3,c:2,x:0,v:2, status:"live",   summary:"FDA expects documentation of training data lineage." },
   "h4-screening":           { d:2,c:1,x:0,v:1, status:"sparse", summary:"Screening audit aligns mostly with standard EHR documentation." },
   "h4-monitoring":          { d:2,c:0,x:0,v:1, status:"sparse", summary:"Monitoring data as audit artifact." },
   "h4-triage":              { d:2,c:1,x:0,v:1, status:"sparse", summary:"ED triage audit complexity — multiple AI touchpoints." },
   "h4-treatment":           { d:1,c:0,x:1,v:0, status:"gap",    summary:"Treatment recommendation audit: underdeveloped." },
   "h4-admin":               { d:1,c:0,x:0,v:0, status:"gap",    summary:"No standard." },
-  // override (Human Oversight & Override Protocols)
   "override-diagnostic":    { d:4,c:3,x:3,v:4, status:"live",   summary:"Clinician override of algorithmic recommendation. Logged? Reviewed? Fed back?" },
   "override-screening":     { d:2,c:1,x:1,v:2, status:"sparse", summary:"Override logic differs when screening is async vs. real-time." },
   "override-monitoring":    { d:2,c:1,x:1,v:1, status:"sparse", summary:"Override of automated monitoring alerts." },
   "override-triage":        { d:3,c:2,x:2,v:3, status:"live",   summary:"Override in time-critical context. Documentation burden vs. speed of care." },
   "override-treatment":     { d:2,c:1,x:3,v:2, status:"sparse", summary:"Highly contested. Most active area of governance debate." },
   "override-admin":         { d:1,c:0,x:0,v:0, status:"gap",    summary:"Admin override tracking largely absent." },
-  // validation (Deployment Readiness & Validation)
   "validation-diagnostic":  { d:5,c:3,x:2,v:3, status:"live",   summary:"Clinical + analytical validation, EHR integration testing, FDA clearance." },
   "validation-screening":   { d:4,c:2,x:1,v:2, status:"live",   summary:"Population representativeness. Training-serving skew." },
   "validation-monitoring":  { d:2,c:1,x:0,v:1, status:"sparse", summary:"Validation of monitoring infrastructure itself." },
@@ -301,11 +279,7 @@ const MATRIX_CELLS = {
   "validation-admin":       { d:1,c:1,x:0,v:1, status:"sparse", summary:"Admin AI validation: no standard framework." },
 };
 
-// ─── REAL DOCUMENT LIBRARY ───────────────────────────────────────────────────
-// Sources verified as of March 2026. All FDA docs are public domain.
-// Academic papers cited with full attribution for reference use.
 const DOC_LIBRARY = [
-  // ── FDA REGULATORY ──
   {
     id: "fda-pccp-2024",
     title: "Marketing Submission Recommendations for a Predetermined Change Control Plan for AI-Enabled Device Software Functions",
@@ -346,7 +320,6 @@ const DOC_LIBRARY = [
     nodes: ["authority","stop","validation","h2"],
     abstract: "Defines which clinical decision support software is excluded from FDA device regulation under 21st Century Cures Act. Key for authority matrix: tools that display information for clinician interpretation vs. tools that replace clinical judgment have different regulatory — and governance — requirements.",
   },
-  // ── AUTOMATION BIAS & OVERRIDE ──
   {
     id: "khera-jama-2023",
     title: "Automation Bias and Assistive AI: Risk of Harm From AI-Driven Clinical Decision Support",
@@ -363,7 +336,6 @@ const DOC_LIBRARY = [
     nodes: ["override","watcher"],
     abstract: "Goddard, Roudsari & Wyatt. Foundational systematic review establishing automation bias as a measurable, predictable phenomenon in clinical decision support. Key finding: overall performance improves with CDSS use, but CDSS introduces new error types that are systematically missed. Override design must account for both under-reliance and over-reliance failure modes.",
   },
-  // ── STOP MECHANISMS / ECG GOVERNANCE ──
   {
     id: "guvenc-ecg-2025",
     title: "ECG Arrhythmia Detection Governance Demo: Stop Mechanism Implementation with MIMIC-IV",
@@ -380,7 +352,6 @@ const DOC_LIBRARY = [
     nodes: ["stop","watcher","h1"],
     abstract: "Translation of Westgard 2-of-3s, 4-1s, and 10-x rules from laboratory QC into ML inference monitoring context. Core argument: whoever signs the corrective action owns the governance decision — authority follows existing accountability structures rather than creating new ones. Addresses the fixed vs. adaptive threshold debate by proposing population-stratified control limits as a bridge position.",
   },
-  // ── IHI PATIENT SAFETY ──
   {
     id: "ihi-leape-2024",
     title: "Bringing Safety to AI: Adapting Patient Safety Principles to Artificial Intelligence in Health Care",
@@ -389,7 +360,6 @@ const DOC_LIBRARY = [
     nodes: ["stop","authority","escalation","h1"],
     abstract: "IHI framework applying established patient safety principles (Just Culture, high reliability, safety I/II) to clinical AI deployment. Argues that AI governance requires the same structural elements as patient safety programs: clear authority, non-punitive error reporting, stop mechanisms, and prospective hazard analysis. Most directly applicable to stop mechanism and authority tier design.",
   },
-  // ── AUTHORITY / GOVERNANCE FRAMEWORKS ──
   {
     id: "haip-principles-2024",
     title: "Health AI Partnership: Principles for Responsible AI Governance in Health Systems",
@@ -406,7 +376,6 @@ const DOC_LIBRARY = [
     nodes: ["authority","override","validation"],
     abstract: "AMA policy framework for physician-AI interaction. Key governance principle: AI systems must support physician decision-making authority, not replace it. Explicit on override rights and documentation requirements. Distinguishes between decision support (physician retains authority) and autonomous AI (different governance regime).",
   },
-  // ── MONITORING & DRIFT ──
   {
     id: "haug-nejm-2023",
     title: "Artificial Intelligence and Machine Learning in Clinical Medicine, 2023",
@@ -425,7 +394,6 @@ const DOC_LIBRARY = [
   },
 ];
 
-// ─── CHAT THREADS (real, attributed) ────────────────────────────────────────
 const CHAT_THREADS = {
   stop: [
     {
@@ -487,9 +455,6 @@ const CHAT_THREADS = {
   ],
 };
 
-// ─── AI NODE CONTEXT (sent to API for synthesis) ────────────────────────────
-// Each entry provides structured context for the Claude synthesis call.
-// In production, the API call receives this plus linked doc abstracts.
 const NODE_CONTEXT = {
   stop: {
     keyDocs: ["fda-pccp-2024","fda-gmlp-2021","guvenc-ecg-2025","westgard-ml-adaptation","ihi-leape-2024"],
@@ -549,7 +514,6 @@ function StatusDot({ status }) {
   );
 }
 
-// ─── LAYER 1: DOC REPOSITORY VIEW ────────────────────────────────────────────
 function DocRepository({ onNavigate }) {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -682,7 +646,6 @@ function DocRepository({ onNavigate }) {
   );
 }
 
-// ─── LAYER 2: TAXONOMY NAVIGATOR ─────────────────────────────────────────────
 function TaxonomyNavigator({ activeNodeId, onSelectNode, loopFilter }) {
   const grouped = ["internal","handoff","external","commons"].map(loop => ({
     loop,
@@ -740,7 +703,6 @@ function TaxonomyNavigator({ activeNodeId, onSelectNode, loopFilter }) {
   );
 }
 
-// ─── LAYER 3: AI CURATION PANEL ──────────────────────────────────────────────
 function AICurationPanel({ node }) {
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState(null);
@@ -750,7 +712,6 @@ function AICurationPanel({ node }) {
   const lm = LOOP_META[node.loop];
   const ctx = NODE_CONTEXT[node.id];
 
-  // Build context string from linked doc abstracts
   const buildContext = () => {
     const linkedDocs = ctx
       ? DOC_LIBRARY.filter(d => ctx.keyDocs.includes(d.id))
@@ -874,13 +835,11 @@ Be direct and specific. Avoid generic statements about "the importance of govern
         </div>
       )}
 
-      {/* Points of contention */}
       <div style={{ marginTop: 12, padding: "8px 10px", background: C.handoffDim, border: `1px solid ${C.handoff}25`, borderRadius: 4 }}>
         <div style={{ fontFamily: C.mono, fontSize: 9, color: C.handoff, fontWeight: 700, marginBottom: 4, letterSpacing: "0.08em" }}>⚡ KNOWN CONTENTION</div>
         <div style={{ fontSize: 11.5, color: C.textDim, lineHeight: 1.5 }}>{node.contention}</div>
       </div>
 
-      {/* Gap */}
       <div style={{ marginTop: 6, padding: "8px 10px", background: C.redDim, border: `1px solid ${C.red}25`, borderRadius: 4 }}>
         <div style={{ fontFamily: C.mono, fontSize: 9, color: C.red, fontWeight: 700, marginBottom: 4, letterSpacing: "0.08em" }}>⬜ KNOWN GAP</div>
         <div style={{ fontSize: 11.5, color: C.textDim, lineHeight: 1.5 }}>{node.gap}</div>
@@ -889,7 +848,6 @@ Be direct and specific. Avoid generic statements about "the importance of govern
   );
 }
 
-// ─── LAYER 4: COLLABORATIVE CHAT ─────────────────────────────────────────────
 function CollabChat({ node }) {
   const [messages, setMessages] = useState(CHAT_THREADS[node.id] || []);
   const [input, setInput] = useState("");
@@ -977,7 +935,6 @@ function CollabChat({ node }) {
   );
 }
 
-// ─── MATRIX BRIDGE ───────────────────────────────────────────────────────────
 function MatrixBridge({ linkedConcept }) {
   const [activeConcept, setActiveConcept] = useState(linkedConcept || MATRIX_CONCEPTS[2].id);
   const [activeUseCase, setActiveUseCase] = useState("diagnostic");
@@ -988,7 +945,6 @@ function MatrixBridge({ linkedConcept }) {
         GOVERNANCE COMMONS MATRIX — use case × concept
       </div>
 
-      {/* Concept selector */}
       <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 10 }}>
         {MATRIX_CONCEPTS.map(c => (
           <button key={c.id} onClick={() => setActiveConcept(c.id)} style={{
@@ -1001,7 +957,6 @@ function MatrixBridge({ linkedConcept }) {
         ))}
       </div>
 
-      {/* Use case row */}
       <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
         {MATRIX_USECASES.map(uc => {
           const key = `${activeConcept}-${uc.id}`;
@@ -1032,7 +987,6 @@ function MatrixBridge({ linkedConcept }) {
         })}
       </div>
 
-      {/* Selected cell detail */}
       {(() => {
         const key = `${activeConcept}-${activeUseCase}`;
         const cell = MATRIX_CELLS[key];
@@ -1068,85 +1022,18 @@ function MatrixBridge({ linkedConcept }) {
   );
 }
 
-// ─── FACETIOUS COLLABORATOR ──────────────────────────────────────────────────
 const ROLES = [
-  {
-    id: "clin-ops",
-    label: "Clinical Ops",
-    icon: "🏥",
-    voice: "Operational realist. Has been handed frameworks that looked great on paper and failed on the floor. Asks about coverage, workflows, and what happens at 2am.",
-    color: "#38bdf8",
-  },
-  {
-    id: "clinician",
-    label: "Clinician",
-    icon: "🩺",
-    voice: "Point-of-care practitioner. Skeptical of anything that adds cognitive load during high-acuity moments. Asks whether the AI output is actually usable in context and who's responsible when they disagree with it.",
-    color: "#10b981",
-  },
-  {
-    id: "patient",
-    label: "Patient",
-    icon: "🧑",
-    voice: "The person the system is ostensibly for. Asks whether they were consulted, whether they can opt out, what happens if the algorithm is wrong about them, and who they talk to.",
-    color: "#c084fc",
-  },
-  {
-    id: "compliance",
-    label: "Compliance / Legal",
-    icon: "⚖️",
-    voice: "Liability-focused. Asks about documentation trails, regulatory exposure, what happens when a decision is challenged post-incident, and whether any of this has been through legal review.",
-    color: "#f59e0b",
-  },
-  {
-    id: "risk",
-    label: "Risk",
-    icon: "🛡️",
-    voice: "Enterprise risk manager. Asks about failure modes, insurance implications, what the institution's exposure is if this goes wrong, and whether risk has formally signed off.",
-    color: "#f43f5e",
-  },
-  {
-    id: "patient-safety",
-    label: "Patient Safety",
-    icon: "🔒",
-    voice: "Quality and safety officer. Asks what the harm profile looks like, whether near-misses will be captured, and whether there's a reporting pathway when the AI contributes to an adverse event.",
-    color: "#fb923c",
-  },
-  {
-    id: "exec",
-    label: "Executive Leadership",
-    icon: "📊",
-    voice: "C-suite or VP level. Asks about strategic rationale, resource requirements, who owns this long-term, and what the institution is committing to when it deploys this.",
-    color: "#e879f9",
-  },
-  {
-    id: "vendor",
-    label: "Vendor",
-    icon: "🏢",
-    voice: "The AI system's vendor. Asks what the institution is actually responsible for versus what they cover, what contract terms govern governance obligations, and whether the institution's requirements are technically feasible.",
-    color: "#94a3b8",
-  },
-  {
-    id: "ai-eng",
-    label: "AI Engineering",
-    icon: "🧠",
-    voice: "ML engineer or data scientist. Asks whether the model was validated on this population, whether the confidence scores are calibrated, what distribution shift looks like, and who owns retraining.",
-    color: "#67e8f9",
-  },
-  {
-    id: "enterprise-it",
-    label: "Enterprise IT",
-    icon: "🖧",
-    voice: "Infrastructure and integration owner. Asks how this connects to the EHR, who owns the integration when it breaks, whether this is on the approved vendor list, and what the downtime protocol is.",
-    color: "#86efac",
-  },
-  {
-    id: "ethics",
-    label: "Ethics",
-    icon: "◎",
-    voice: "Clinical or organizational ethicist. Asks who benefits from this deployment, who bears the cost if it's wrong, whether equity implications have been assessed, and under what conditions the institution should stop even if performance metrics look fine.",
-    color: "#fde68a",
-  },
+  { id: "clin-ops", label: "Clinical Ops", icon: "🏥", voice: "Operational realist. Has been handed frameworks that looked great on paper and failed on the floor. Asks about coverage, workflows, and what happens at 2am.", color: "#38bdf8" },
+  { id: "clinician", label: "Clinician", icon: "🩺", voice: "Point-of-care practitioner. Skeptical of anything that adds cognitive load during high-acuity moments. Asks whether the AI output is actually usable in context and who's responsible when they disagree with it.", color: "#10b981" },
+  { id: "patient", label: "Patient", icon: "🧑", voice: "The person the system is ostensibly for. Asks whether they were consulted, whether they can opt out, what happens if the algorithm is wrong about them, and who they talk to.", color: "#c084fc" },
+  { id: "compliance", label: "Compliance / Legal", icon: "⚖️", voice: "Liability-focused. Asks about documentation trails, regulatory exposure, what happens when a decision is challenged post-incident, and whether any of this has been through legal review.", color: "#f59e0b" },
+  { id: "risk", label: "Risk", icon: "🛡️", voice: "Enterprise risk manager. Asks about failure modes, insurance implications, what the institution's exposure is if this goes wrong, and whether risk has formally signed off.", color: "#f43f5e" },
+  { id: "patient-safety", label: "Patient Safety", icon: "🔒", voice: "Quality and safety officer. Asks what the harm profile looks like, whether near-misses will be captured, and whether there's a reporting pathway when the AI contributes to an adverse event.", color: "#fb923c" },
+  { id: "exec", label: "Executive Leadership", icon: "📊", voice: "C-suite or VP level. Asks about strategic rationale, resource requirements, who owns this long-term, and what the institution is committing to when it deploys this.", color: "#e879f9" },
+  { id: "vendor", label: "Vendor", icon: "🏢", voice: "The AI system's vendor. Asks what the institution is actually responsible for versus what they cover, what contract terms govern governance obligations, and whether the institution's requirements are technically feasible.", color: "#94a3b8" },
+  { id: "ai-eng", label: "AI Engineering", icon: "🧠", voice: "ML engineer or data scientist. Asks whether the model was validated on this population, whether the confidence scores are calibrated, what distribution shift looks like, and who owns retraining.", color: "#67e8f9" },
+  { id: "enterprise-it", label: "Enterprise IT", icon: "🖧", voice: "Infrastructure and integration owner. Asks how this connects to the EHR, who owns the integration when it breaks, whether this is on the approved vendor list, and what the downtime protocol is.", color: "#86efac" },
+  { id: "ethics", label: "Ethics", icon: "◎", voice: "Clinical or organizational ethicist. Asks who benefits from this deployment, who bears the cost if it's wrong, whether equity implications have been assessed, and under what conditions the institution should stop even if performance metrics look fine.", color: "#fde68a" },
 ];
 
 function FacetiousCollaborator({ node }) {
@@ -1157,7 +1044,6 @@ function FacetiousCollaborator({ node }) {
 
   const role = ROLES.find(r => r.id === activeRole);
   const currentResponse = responses[`${node.id}-${activeRole}`];
-
   const linkedDocs = DOC_LIBRARY.filter(d => d.nodes.includes(node.id));
 
   const handleGenerate = async () => {
@@ -1211,15 +1097,10 @@ Generate the ${role.label} perspective.`,
 
   return (
     <div style={{ padding: "16px", borderTop: `1px solid ${C.border}` }}>
-      {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <div>
-          <div style={{ fontFamily: C.mono, fontSize: 9, color: C.red, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 3 }}>
-            ⚡ FACETIOUS COLLABORATOR
-          </div>
-          <div style={{ fontSize: 11, color: C.textDimmer, lineHeight: 1.5 }}>
-            The questions that don't get asked in the room.
-          </div>
+          <div style={{ fontFamily: C.mono, fontSize: 9, color: C.red, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 3 }}>⚡ FACETIOUS COLLABORATOR</div>
+          <div style={{ fontSize: 11, color: C.textDimmer, lineHeight: 1.5 }}>The questions that don't get asked in the room.</div>
         </div>
         <button onClick={handleGenerate} disabled={loading} style={{
           padding: "5px 12px", borderRadius: 4, cursor: loading ? "not-allowed" : "pointer",
@@ -1232,7 +1113,6 @@ Generate the ${role.label} perspective.`,
         </button>
       </div>
 
-      {/* Role tabs — scrollable row */}
       <div style={{ display: "flex", gap: 4, overflowX: "auto", paddingBottom: 8, marginBottom: 12, scrollbarWidth: "none" }}>
         {ROLES.map(r => (
           <button key={r.id} onClick={() => setActiveRole(r.id)} style={{
@@ -1244,49 +1124,32 @@ Generate the ${role.label} perspective.`,
             transition: "all 0.1s",
           }}>
             {r.icon} {r.label}
-            {responses[`${node.id}-${r.id}`] && (
-              <span style={{ marginLeft: 4, color: r.color, opacity: 0.7 }}>·</span>
-            )}
+            {responses[`${node.id}-${r.id}`] && <span style={{ marginLeft: 4, color: r.color, opacity: 0.7 }}>·</span>}
           </button>
         ))}
       </div>
 
-      {/* Role voice description */}
       <div style={{ padding: "8px 10px", background: C.surface3, border: `1px solid ${C.border}`, borderRadius: 4, marginBottom: 12 }}>
-        <div style={{ fontFamily: C.mono, fontSize: 9, color: role.color, fontWeight: 700, marginBottom: 4 }}>
-          {role.icon} {role.label.toUpperCase()}
-        </div>
-        <div style={{ fontSize: 11, color: C.textDimmer, lineHeight: 1.6, fontStyle: "italic" }}>
-          {role.voice}
-        </div>
+        <div style={{ fontFamily: C.mono, fontSize: 9, color: role.color, fontWeight: 700, marginBottom: 4 }}>{role.icon} {role.label.toUpperCase()}</div>
+        <div style={{ fontSize: 11, color: C.textDimmer, lineHeight: 1.6, fontStyle: "italic" }}>{role.voice}</div>
       </div>
 
-      {/* Error */}
       {error && (
-        <div style={{ padding: "8px 10px", background: C.redDim, border: `1px solid ${C.red}30`, borderRadius: 4, fontFamily: C.mono, fontSize: 10, color: C.red, marginBottom: 10 }}>
-          {error}
-        </div>
+        <div style={{ padding: "8px 10px", background: C.redDim, border: `1px solid ${C.red}30`, borderRadius: 4, fontFamily: C.mono, fontSize: 10, color: C.red, marginBottom: 10 }}>{error}</div>
       )}
 
-      {/* Loading */}
       {loading && (
         <div style={{ fontFamily: C.mono, fontSize: 11, color: C.textDimmer, fontStyle: "italic", lineHeight: 1.7 }}>
           {role.icon} {role.label} is in the room…
         </div>
       )}
 
-      {/* Response */}
       {!loading && currentResponse && (
-        <div style={{
-          fontSize: 12.5, color: C.text, lineHeight: 1.85,
-          borderLeft: `2px solid ${role.color}50`, paddingLeft: 12,
-          whiteSpace: "pre-wrap",
-        }}>
+        <div style={{ fontSize: 12.5, color: C.text, lineHeight: 1.85, borderLeft: `2px solid ${role.color}50`, paddingLeft: 12, whiteSpace: "pre-wrap" }}>
           {currentResponse}
         </div>
       )}
 
-      {/* Empty state */}
       {!loading && !currentResponse && !error && (
         <div style={{ fontFamily: C.mono, fontSize: 11, color: C.textDimmer, lineHeight: 1.7 }}>
           Select a role above, then hit "◉ ask" to generate the questions this stakeholder would bring to the {node.label} node — the ones that don't usually make it into the governance document.
@@ -1296,20 +1159,14 @@ Generate the ${role.label} perspective.`,
   );
 }
 
-// ─── NODE DETAIL PANEL ───────────────────────────────────────────────────────
 function NodeDetail({ nodeId }) {
   const node = TAXONOMY_NODES.find(n => n.id === nodeId);
   if (!node) return <div style={{ padding: 24, color: C.textDimmer, fontFamily: C.mono, fontSize: 12 }}>Select a node</div>;
 
   const lm = LOOP_META[node.loop];
-  const linkedDocs = [
-    { title: "FDA CDS Software Order", type: "regulation", source: "FDA" },
-    { title: "Westgard ML Adaptation", type: "preprint", source: "arXiv" },
-  ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      {/* Header */}
       <div style={{ padding: "18px 16px 14px", borderBottom: `1px solid ${C.border}`, background: C.surface2 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 8 }}>
           <span style={{ fontFamily: C.mono, fontSize: 20, color: lm.color, lineHeight: 1 }}>{node.icon}</span>
@@ -1321,10 +1178,7 @@ function NodeDetail({ nodeId }) {
         <div style={{ fontFamily: C.mono, fontSize: 11, color: C.textDim, fontStyle: "italic", lineHeight: 1.5 }}>{node.question}</div>
       </div>
 
-      {/* Scrollable body */}
       <div style={{ flex: 1, overflowY: "auto" }}>
-
-        {/* Components */}
         <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.border}` }}>
           <div style={{ fontFamily: C.mono, fontSize: 9, color: lm.color, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 8 }}>COMPONENTS</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
@@ -1338,7 +1192,6 @@ function NodeDetail({ nodeId }) {
           </div>
         </div>
 
-        {/* Linked documents */}
         <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.border}` }}>
           <div style={{ fontFamily: C.mono, fontSize: 9, color: C.internal, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 8 }}>
             LINKED DOCUMENTS <span style={{ color: C.textDimmer, fontWeight: 400 }}>({node.documents.length})</span>
@@ -1350,20 +1203,13 @@ function NodeDetail({ nodeId }) {
           ))}
         </div>
 
-        {/* Matrix status + bridge */}
         <div style={{ borderBottom: `1px solid ${C.border}` }}>
           <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ fontFamily: C.mono, fontSize: 9, color: C.external, fontWeight: 700, letterSpacing: "0.1em" }}>
-              COMMONS MATRIX
-            </div>
+            <div style={{ fontFamily: C.mono, fontSize: 9, color: C.external, fontWeight: 700, letterSpacing: "0.1em" }}>COMMONS MATRIX</div>
             {node.matrixReady ? (
-              <span style={{ fontFamily: C.mono, fontSize: 9, color: C.external, background: C.externalDim, border: `1px solid ${C.external}40`, borderRadius: 3, padding: "2px 7px" }}>
-                ↗ promoted · row in matrix
-              </span>
+              <span style={{ fontFamily: C.mono, fontSize: 9, color: C.external, background: C.externalDim, border: `1px solid ${C.external}40`, borderRadius: 3, padding: "2px 7px" }}>↗ promoted · row in matrix</span>
             ) : (
-              <span style={{ fontFamily: C.mono, fontSize: 9, color: C.textDimmer, background: C.surface3, border: `1px solid ${C.border}`, borderRadius: 3, padding: "2px 7px" }}>
-                taxonomy-only · not yet promoted
-              </span>
+              <span style={{ fontFamily: C.mono, fontSize: 9, color: C.textDimmer, background: C.surface3, border: `1px solid ${C.border}`, borderRadius: 3, padding: "2px 7px" }}>taxonomy-only · not yet promoted</span>
             )}
           </div>
           {node.matrixReady ? (
@@ -1380,20 +1226,14 @@ function NodeDetail({ nodeId }) {
           )}
         </div>
 
-        {/* AI curation */}
         <AICurationPanel node={node}/>
-
-        {/* Facetious Collaborator */}
         <FacetiousCollaborator node={node}/>
-
-        {/* Collab chat */}
         <CollabChat node={node}/>
       </div>
     </div>
   );
 }
 
-// ─── LAYER 4: INTAKE PANEL ───────────────────────────────────────────────────
 function IntakePanel() {
   const [unlocked, setUnlocked] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
@@ -1417,36 +1257,23 @@ function IntakePanel() {
     `${n.id}: ${n.label} (${n.loop} loop) — ${n.question}`
   ).join("\n");
 
-  // Load persisted docs once unlocked
   const loadDocs = async (pwd) => {
     setLoadingDocs(true);
     try {
       const res = await fetch("/api/documents", {
         headers: { "x-intake-password": pwd },
       });
-      if (res.status === 401) {
-        setUnlocked(false);
-        setPasswordError(true);
-        return;
-      }
+      if (res.status === 401) { setUnlocked(false); setPasswordError(true); return; }
       const data = await res.json();
       setUserDocs(data.documents || []);
-    } catch (e) {
-      // silently fail on load
-    } finally {
-      setLoadingDocs(false);
-    }
+    } catch (e) {}
+    finally { setLoadingDocs(false); }
   };
 
   const handleUnlock = async () => {
     setPasswordError(false);
-    const res = await fetch("/api/documents", {
-      headers: { "x-intake-password": passwordInput },
-    });
-    if (res.status === 401) {
-      setPasswordError(true);
-      return;
-    }
+    const res = await fetch("/api/documents", { headers: { "x-intake-password": passwordInput } });
+    if (res.status === 401) { setPasswordError(true); return; }
     const data = await res.json();
     setSessionPassword(passwordInput);
     setUserDocs(data.documents || []);
@@ -1468,9 +1295,7 @@ function IntakePanel() {
   const handleAnalyze = async () => {
     if (mode !== "file" && !input.trim()) return;
     if (mode === "file" && !fileData) return;
-    setLoading(true);
-    setResult(null);
-    setError(null);
+    setLoading(true); setResult(null); setError(null);
 
     const allDocsSummary = [
       existingLibrarySummary,
@@ -1478,18 +1303,11 @@ function IntakePanel() {
     ].join("\n");
 
     try {
-      // Build message content — PDF or text
       let userContent;
       if (mode === "file" && fileData) {
         userContent = [
-          {
-            type: "document",
-            source: { type: "base64", media_type: fileData.mediaType, data: fileData.base64 },
-          },
-          {
-            type: "text",
-            text: `EXISTING LIBRARY:\n${allDocsSummary}\n\nTAXONOMY NODES:\n${nodeList}\n\nAnalyze this document and return the JSON.`,
-          },
+          { type: "document", source: { type: "base64", media_type: fileData.mediaType, data: fileData.base64 } },
+          { type: "text", text: `EXISTING LIBRARY:\n${allDocsSummary}\n\nTAXONOMY NODES:\n${nodeList}\n\nAnalyze this document and return the JSON.` },
         ];
       } else {
         userContent = `EXISTING LIBRARY:\n${allDocsSummary}\n\nTAXONOMY NODES:\n${nodeList}\n\n${mode === "url" ? "URL" : "TEXT"}:\n${input}`;
@@ -1517,10 +1335,7 @@ function IntakePanel() {
   "suggestedNodes": ["node-id-1", "node-id-2"],
   "routingRationale": "one sentence explaining why"
 }`,
-          messages: [{
-            role: "user",
-            content: userContent,
-          }],
+          messages: [{ role: "user", content: userContent }],
         }),
       });
 
@@ -1543,56 +1358,38 @@ function IntakePanel() {
     try {
       const res = await fetch("/api/documents", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-intake-password": sessionPassword,
-        },
+        headers: { "Content-Type": "application/json", "x-intake-password": sessionPassword },
         body: JSON.stringify({ ...result, sourceInput: input }),
       });
       if (!res.ok) throw new Error("Save failed");
       await loadDocs(sessionPassword);
-      setResult(null);
-      setInput("");
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setSaving(false);
-    }
+      setResult(null); setInput("");
+    } catch (e) { setError(e.message); }
+    finally { setSaving(false); }
   };
 
   const handleDelete = async (index) => {
     try {
       await fetch("/api/documents", {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          "x-intake-password": sessionPassword,
-        },
+        headers: { "Content-Type": "application/json", "x-intake-password": sessionPassword },
         body: JSON.stringify({ index }),
       });
       await loadDocs(sessionPassword);
-    } catch (e) {
-      // silently fail
-    }
+    } catch (e) {}
   };
 
   const handlePromote = async (index) => {
     try {
       await fetch("/api/documents", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-intake-password": sessionPassword,
-        },
+        headers: { "Content-Type": "application/json", "x-intake-password": sessionPassword },
         body: JSON.stringify({ index }),
       });
       await loadDocs(sessionPassword);
-    } catch (e) {
-      // silently fail
-    }
+    } catch (e) {}
   };
 
-  // ── PASSWORD GATE ──
   if (!unlocked) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", padding: 40 }}>
@@ -1602,8 +1399,7 @@ function IntakePanel() {
             Document intake is private. Enter your workspace password to continue.
           </div>
           <input
-            type="password"
-            value={passwordInput}
+            type="password" value={passwordInput}
             onChange={e => setPasswordInput(e.target.value)}
             onKeyDown={e => e.key === "Enter" && handleUnlock()}
             placeholder="Password"
@@ -1613,11 +1409,7 @@ function IntakePanel() {
               color: C.text, fontFamily: C.mono, fontSize: 12, outline: "none",
             }}
           />
-          {passwordError && (
-            <div style={{ fontFamily: C.mono, fontSize: 10, color: C.red, marginBottom: 8 }}>
-              Incorrect password
-            </div>
-          )}
+          {passwordError && <div style={{ fontFamily: C.mono, fontSize: 10, color: C.red, marginBottom: 8 }}>Incorrect password</div>}
           <button onClick={handleUnlock} style={{
             width: "100%", padding: "9px", borderRadius: 4, cursor: "pointer",
             background: C.commons + "20", border: `1px solid ${C.commons}50`,
@@ -1628,7 +1420,6 @@ function IntakePanel() {
     );
   }
 
-  // ── MAIN INTAKE UI ──
   return (
     <div style={{ padding: "24px", maxWidth: 800, margin: "0 auto" }}>
       <div style={{ marginBottom: 20, display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
@@ -1645,7 +1436,6 @@ function IntakePanel() {
         }}>lock</button>
       </div>
 
-      {/* Mode toggle */}
       <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
         {[{ id: "url", label: "↗ URL" }, { id: "paste", label: "✎ Paste text" }, { id: "file", label: "📎 PDF / file" }].map(m => (
           <button key={m.id} onClick={() => { setMode(m.id); setInput(""); setFileData(null); setResult(null); }} style={{
@@ -1659,48 +1449,23 @@ function IntakePanel() {
       </div>
 
       {mode === "url" && (
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
+        <input value={input} onChange={e => setInput(e.target.value)}
           placeholder="https://pubmed.ncbi.nlm.nih.gov/... or any URL"
-          style={{
-            width: "100%", padding: "10px 14px", borderRadius: 4,
-            background: C.surface2, border: `1px solid ${C.border}`,
-            color: C.text, fontFamily: C.mono, fontSize: 12, outline: "none", marginBottom: 12,
-          }}
+          style={{ width: "100%", padding: "10px 14px", borderRadius: 4, background: C.surface2, border: `1px solid ${C.border}`, color: C.text, fontFamily: C.mono, fontSize: 12, outline: "none", marginBottom: 12 }}
         />
       )}
 
       {mode === "paste" && (
-        <textarea
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          placeholder="Paste abstract, notes, or any text about the document…"
-          rows={8}
-          style={{
-            width: "100%", padding: "10px 14px", borderRadius: 4,
-            background: C.surface2, border: `1px solid ${C.border}`,
-            color: C.text, fontFamily: C.mono, fontSize: 12, outline: "none",
-            resize: "vertical", marginBottom: 12,
-          }}
+        <textarea value={input} onChange={e => setInput(e.target.value)}
+          placeholder="Paste abstract, notes, or any text about the document…" rows={8}
+          style={{ width: "100%", padding: "10px 14px", borderRadius: 4, background: C.surface2, border: `1px solid ${C.border}`, color: C.text, fontFamily: C.mono, fontSize: 12, outline: "none", resize: "vertical", marginBottom: 12 }}
         />
       )}
 
       {mode === "file" && (
-        <div style={{
-          width: "100%", padding: "20px 14px", borderRadius: 4, marginBottom: 12,
-          background: C.surface2, border: `1px dashed ${fileData ? C.external : C.border}`,
-          textAlign: "center", cursor: "pointer",
-        }}
-          onClick={() => document.getElementById("file-upload-input").click()}
-        >
-          <input
-            id="file-upload-input"
-            type="file"
-            accept=".pdf,.txt,.md"
-            onChange={handleFileSelect}
-            style={{ display: "none" }}
-          />
+        <div style={{ width: "100%", padding: "20px 14px", borderRadius: 4, marginBottom: 12, background: C.surface2, border: `1px dashed ${fileData ? C.external : C.border}`, textAlign: "center", cursor: "pointer" }}
+          onClick={() => document.getElementById("file-upload-input").click()}>
+          <input id="file-upload-input" type="file" accept=".pdf,.txt,.md" onChange={handleFileSelect} style={{ display: "none" }} />
           {fileData ? (
             <div>
               <div style={{ fontFamily: C.mono, fontSize: 11, color: C.external, marginBottom: 4 }}>✓ {fileData.name}</div>
@@ -1724,52 +1489,36 @@ function IntakePanel() {
       </button>
 
       {error && (
-        <div style={{ padding: "10px 14px", background: C.redDim, border: `1px solid ${C.red}30`, borderRadius: 4, fontFamily: C.mono, fontSize: 11, color: C.red, marginBottom: 16 }}>
-          {error}
-        </div>
+        <div style={{ padding: "10px 14px", background: C.redDim, border: `1px solid ${C.red}30`, borderRadius: 4, fontFamily: C.mono, fontSize: 11, color: C.red, marginBottom: 16 }}>{error}</div>
       )}
 
-      {/* Analysis result */}
       {result && (
         <div style={{ background: C.surface2, border: `1px solid ${C.borderBright}`, borderRadius: 6, overflow: "hidden", marginBottom: 24 }}>
           <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.border}` }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <span style={{ fontFamily: C.mono, fontSize: 9, color: C.handoff, background: C.handoffDim, border: `1px solid ${C.handoff}30`, borderRadius: 2, padding: "2px 6px", fontWeight: 700 }}>
-                {result.type?.toUpperCase()}
-              </span>
+              <span style={{ fontFamily: C.mono, fontSize: 9, color: C.handoff, background: C.handoffDim, border: `1px solid ${C.handoff}30`, borderRadius: 2, padding: "2px 6px", fontWeight: 700 }}>{result.type?.toUpperCase()}</span>
               <span style={{ fontFamily: C.mono, fontSize: 10, color: C.textDim }}>{result.source} · {result.year}</span>
             </div>
             <div style={{ fontSize: 14, color: C.text, fontWeight: 500, lineHeight: 1.4 }}>{result.title}</div>
           </div>
-
           <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.border}` }}>
             <div style={{ fontFamily: C.mono, fontSize: 9, color: C.internal, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 6 }}>ABSTRACT</div>
             <div style={{ fontSize: 12, color: C.textDim, lineHeight: 1.7 }}>{result.abstract}</div>
           </div>
-
           <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.border}`, background: result.overlap?.exists ? C.handoffDim : C.externalDim }}>
             <div style={{ fontFamily: C.mono, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 6, color: result.overlap?.exists ? C.handoff : C.external }}>
               {result.overlap?.exists ? "⚡ OVERLAP DETECTED" : "✓ NO SIGNIFICANT OVERLAP"}
             </div>
             {result.overlap?.exists ? (
               <>
-                <div style={{ fontSize: 11.5, color: C.textDim, lineHeight: 1.6, marginBottom: 4 }}>
-                  <strong style={{ color: C.text }}>Already covered by:</strong> {result.overlap.overlappingDocs?.join(", ")}
-                </div>
-                <div style={{ fontSize: 11.5, color: C.textDim, lineHeight: 1.6, marginBottom: 4 }}>
-                  <strong style={{ color: C.text }}>Overlap:</strong> {result.overlap.overlapSummary}
-                </div>
-                <div style={{ fontSize: 11.5, color: C.textDim, lineHeight: 1.6 }}>
-                  <strong style={{ color: C.external }}>What's new:</strong> {result.overlap.whatIsNew}
-                </div>
+                <div style={{ fontSize: 11.5, color: C.textDim, lineHeight: 1.6, marginBottom: 4 }}><strong style={{ color: C.text }}>Already covered by:</strong> {result.overlap.overlappingDocs?.join(", ")}</div>
+                <div style={{ fontSize: 11.5, color: C.textDim, lineHeight: 1.6, marginBottom: 4 }}><strong style={{ color: C.text }}>Overlap:</strong> {result.overlap.overlapSummary}</div>
+                <div style={{ fontSize: 11.5, color: C.textDim, lineHeight: 1.6 }}><strong style={{ color: C.external }}>What's new:</strong> {result.overlap.whatIsNew}</div>
               </>
             ) : (
-              <div style={{ fontSize: 11.5, color: C.textDim, lineHeight: 1.6 }}>
-                This document covers ground not yet in the library. Worth adding.
-              </div>
+              <div style={{ fontSize: 11.5, color: C.textDim, lineHeight: 1.6 }}>This document covers ground not yet in the library. Worth adding.</div>
             )}
           </div>
-
           <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.border}` }}>
             <div style={{ fontFamily: C.mono, fontSize: 9, color: C.external, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 8 }}>ROUTES TO</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
@@ -1777,18 +1526,11 @@ function IntakePanel() {
                 const node = TAXONOMY_NODES.find(n => n.id === nid);
                 if (!node) return null;
                 const lm = LOOP_META[node.loop];
-                return (
-                  <span key={nid} style={{
-                    padding: "3px 9px", borderRadius: 3,
-                    background: lm.color + "15", border: `1px solid ${lm.color}35`,
-                    color: lm.color, fontFamily: C.mono, fontSize: 10,
-                  }}>{node.icon} {node.label}</span>
-                );
+                return <span key={nid} style={{ padding: "3px 9px", borderRadius: 3, background: lm.color + "15", border: `1px solid ${lm.color}35`, color: lm.color, fontFamily: C.mono, fontSize: 10 }}>{node.icon} {node.label}</span>;
               })}
             </div>
             <div style={{ fontSize: 11, color: C.textDimmer, fontStyle: "italic" }}>{result.routingRationale}</div>
           </div>
-
           <div style={{ padding: "12px 16px", display: "flex", gap: 8 }}>
             <button onClick={handleSave} disabled={saving} style={{
               padding: "7px 16px", borderRadius: 4, cursor: saving ? "not-allowed" : "pointer",
@@ -1804,24 +1546,16 @@ function IntakePanel() {
         </div>
       )}
 
-      {/* Persisted user library */}
       {loadingDocs ? (
         <div style={{ fontFamily: C.mono, fontSize: 11, color: C.textDimmer }}>Loading your library…</div>
       ) : userDocs.length > 0 && (
         <div>
-          <div style={{ fontFamily: C.mono, fontSize: 9, color: C.textDimmer, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 10 }}>
-            YOUR LIBRARY ({userDocs.length} documents)
-          </div>
+          <div style={{ fontFamily: C.mono, fontSize: 9, color: C.textDimmer, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 10 }}>YOUR LIBRARY ({userDocs.length} documents)</div>
           {userDocs.map((d, i) => (
-            <div key={i} style={{
-              padding: "10px 14px", background: C.surface2, border: `1px solid ${C.border}`,
-              borderRadius: 4, marginBottom: 6, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12,
-            }}>
+            <div key={i} style={{ padding: "10px 14px", background: C.surface2, border: `1px solid ${C.border}`, borderRadius: 4, marginBottom: 6, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontFamily: C.mono, fontSize: 9, color: C.handoff, background: C.handoffDim, border: `1px solid ${C.handoff}30`, borderRadius: 2, padding: "1px 5px", fontWeight: 700 }}>
-                    {d.type?.toUpperCase()}
-                  </span>
+                  <span style={{ fontFamily: C.mono, fontSize: 9, color: C.handoff, background: C.handoffDim, border: `1px solid ${C.handoff}30`, borderRadius: 2, padding: "1px 5px", fontWeight: 700 }}>{d.type?.toUpperCase()}</span>
                   <span style={{ fontFamily: C.mono, fontSize: 10, color: C.textDim }}>{d.source} · {d.year}</span>
                   <span style={{ fontFamily: C.mono, fontSize: 9, color: C.textDimmer }}>{new Date(d.addedAt).toLocaleDateString()}</span>
                 </div>
@@ -1830,14 +1564,7 @@ function IntakePanel() {
                   {d.suggestedNodes?.map(nid => {
                     const node = TAXONOMY_NODES.find(n => n.id === nid);
                     if (!node) return null;
-                    return (
-                      <span key={nid} style={{
-                        fontFamily: C.mono, fontSize: 9, color: LOOP_META[node.loop].color,
-                        background: LOOP_META[node.loop].color + "10",
-                        border: `1px solid ${LOOP_META[node.loop].color}25`,
-                        borderRadius: 2, padding: "1px 5px",
-                      }}>{node.icon} {node.label}</span>
-                    );
+                    return <span key={nid} style={{ fontFamily: C.mono, fontSize: 9, color: LOOP_META[node.loop].color, background: LOOP_META[node.loop].color + "10", border: `1px solid ${LOOP_META[node.loop].color}25`, borderRadius: 2, padding: "1px 5px" }}>{node.icon} {node.label}</span>;
                   })}
                 </div>
               </div>
@@ -1871,7 +1598,7 @@ function IntakePanel() {
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function GovernanceCommons() {
-  const [activeLayer, setActiveLayer] = useState("taxonomy"); // docs | taxonomy | matrix
+  const [activeLayer, setActiveLayer] = useState("taxonomy");
   const [activeNodeId, setActiveNodeId] = useState("stop");
   const [loopFilter, setLoopFilter] = useState("all");
 
@@ -1908,6 +1635,19 @@ export default function GovernanceCommons() {
           ))}
         </div>
 
+        {/* ── Community Weaving series link ── */}
+        <a href="/community-weaving" style={{
+          padding: "7px 14px", borderRadius: 4, cursor: "pointer",
+          background: "transparent",
+          border: `1px solid ${C.commons}40`,
+          color: C.commons,
+          fontFamily: C.mono, fontSize: 10, fontWeight: 400,
+          letterSpacing: "0.05em",
+          textDecoration: "none",
+          whiteSpace: "nowrap",
+          flexShrink: 0,
+        }}>Community Weaving →</a>
+
         {/* Loop filter pills */}
         {activeLayer === "taxonomy" && (
           <div style={{ display: "flex", gap: 4 }}>
@@ -1930,39 +1670,29 @@ export default function GovernanceCommons() {
       {/* Body */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
 
-        {/* ── LAYER: DOC REPO ── */}
         {activeLayer === "docs" && (
           <div style={{ flex: 1, overflowY: "auto" }}>
             <DocRepository onNavigate={handleNavigate}/>
           </div>
         )}
 
-        {/* ── LAYER: TAXONOMY ── */}
         {activeLayer === "taxonomy" && (
           <>
-            {/* Left: taxonomy nav */}
             <div style={{ width: 280, flexShrink: 0, borderRight: `1px solid ${C.border}`, overflowY: "auto", background: C.surface }}>
-              <TaxonomyNavigator
-                activeNodeId={activeNodeId}
-                onSelectNode={id => setActiveNodeId(id)}
-                loopFilter={loopFilter}
-              />
+              <TaxonomyNavigator activeNodeId={activeNodeId} onSelectNode={id => setActiveNodeId(id)} loopFilter={loopFilter}/>
             </div>
-            {/* Right: node detail */}
             <div style={{ flex: 1, overflowY: "auto" }}>
               <NodeDetail nodeId={activeNodeId}/>
             </div>
           </>
         )}
 
-        {/* ── LAYER: MATRIX ── */}
         {activeLayer === "matrix" && (
           <div style={{ flex: 1, overflowY: "auto" }}>
             <MatrixBridge linkedConcept="stop"/>
           </div>
         )}
 
-        {/* ── LAYER: INTAKE ── */}
         {activeLayer === "intake" && (
           <div style={{ flex: 1, overflowY: "auto" }}>
             <IntakePanel/>
