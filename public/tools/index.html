@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tools · Governance Commons</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300;1,9..144,600&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #141720;
+    --border: #2a2d3a;
+    --accent: #b49eff;
+    --accent2: #7eb8f7;
+    --accent3: #f77e7e;
+    --accent4: #e8c547;
+    --accent5: #7ef7c0;
+    --accent6: #f7a87e;
+    --text: #e2e4ed;
+    --muted: #6b7080;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 48px 24px;
+  }
+
+  .container { max-width: 1040px; margin: 0 auto; }
+
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 64px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-home {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-home:hover { color: var(--accent); }
+  .nav-home span { color: var(--accent); }
+
+  .nav-links {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .nav-link {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-link:hover { color: var(--accent); }
+
+  .nav-tag {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent5);
+    border: 1px solid var(--accent5);
+    padding: 4px 10px;
+    border-radius: 2px;
+  }
+
+  header { margin-bottom: 64px; }
+
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent5);
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: clamp(32px, 5vw, 60px);
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h1 em { font-style: italic; color: var(--accent5); }
+
+  .header-desc {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.9;
+    max-width: 580px;
+  }
+
+  /* Tool grid */
+  .tools-header {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+    gap: 2px;
+    margin-bottom: 64px;
+  }
+
+  @media (max-width: 520px) {
+    .tools-grid { grid-template-columns: 1fr; }
+  }
+
+  .tool-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 32px;
+    text-decoration: none;
+    display: block;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tool-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .tool-card:hover {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  .tool-card:hover::before { opacity: 1; }
+
+  .tool-card.c-amber::before  { background: linear-gradient(90deg, var(--accent4), transparent); }
+  .tool-card.c-purple::before { background: linear-gradient(90deg, var(--accent), transparent); }
+  .tool-card.c-blue::before   { background: linear-gradient(90deg, var(--accent2), transparent); }
+  .tool-card.c-green::before  { background: linear-gradient(90deg, var(--accent5), transparent); }
+
+  .tool-card:hover.c-amber  { border-color: var(--accent4); }
+  .tool-card:hover.c-purple { border-color: var(--accent); }
+  .tool-card:hover.c-blue   { border-color: var(--accent2); }
+  .tool-card:hover.c-green  { border-color: var(--accent5); }
+
+  .tool-num {
+    font-family: 'Fraunces', serif;
+    font-size: 40px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 20px;
+    transition: color 0.2s;
+  }
+
+  .tool-card.c-amber  .tool-num { color: var(--accent4); }
+  .tool-card.c-purple .tool-num { color: var(--accent); }
+  .tool-card.c-blue   .tool-num { color: var(--accent2); }
+  .tool-card.c-green  .tool-num { color: var(--accent5); }
+
+  .tool-tag {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .tool-card.c-amber  .tool-tag { color: var(--accent4); }
+  .tool-card.c-purple .tool-tag { color: var(--accent); }
+  .tool-card.c-blue   .tool-tag { color: var(--accent2); }
+  .tool-card.c-green  .tool-tag { color: var(--accent5); }
+
+  .tool-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: clamp(18px, 2.5vw, 24px);
+    line-height: 1.2;
+    color: var(--text);
+    margin-bottom: 12px;
+    transition: color 0.2s;
+  }
+
+  .tool-title em { font-style: italic; }
+  .tool-card.c-amber  .tool-title em { color: var(--accent4); }
+  .tool-card.c-purple .tool-title em { color: var(--accent); }
+  .tool-card.c-blue   .tool-title em { color: var(--accent2); }
+  .tool-card.c-green  .tool-title em { color: var(--accent5); }
+
+  .tool-desc {
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .tool-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .tool-status {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 2px;
+  }
+
+  .status-live {
+    background: rgba(126, 247, 192, 0.1);
+    border: 1px solid var(--accent5);
+    color: var(--accent5);
+  }
+
+  .status-coming {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .tool-arrow {
+    font-size: 18px;
+    color: var(--muted);
+    transition: color 0.2s, transform 0.2s;
+  }
+
+  .tool-card:hover .tool-arrow { transform: translate(3px, -3px); }
+  .tool-card.c-amber:hover  .tool-arrow { color: var(--accent4); }
+  .tool-card.c-purple:hover .tool-arrow { color: var(--accent); }
+  .tool-card.c-blue:hover   .tool-arrow { color: var(--accent2); }
+  .tool-card.c-green:hover  .tool-arrow { color: var(--accent5); }
+
+  /* Inputs note */
+  .note-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px 32px;
+    margin-bottom: 64px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .note-icon {
+    font-size: 20px;
+    color: var(--accent5);
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+
+  .note-text {
+    font-size: 11px;
+    line-height: 1.9;
+    color: var(--muted);
+  }
+
+  .note-text strong { color: var(--text); font-weight: 500; }
+
+  /* Footer */
+  footer {
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .footer-left { font-size: 10px; letter-spacing: 0.1em; color: var(--muted); }
+  .footer-left a { color: var(--accent); text-decoration: none; }
+  .footer-left a:hover { text-decoration: underline; }
+  .footer-right { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .tool-card { animation: fadeIn 0.4s ease both; }
+  .tool-card:nth-child(1) { animation-delay: 0.05s; }
+  .tool-card:nth-child(2) { animation-delay: 0.1s; }
+  .tool-card:nth-child(3) { animation-delay: 0.15s; }
+  .tool-card:nth-child(4) { animation-delay: 0.2s; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <nav>
+    <a href="/" class="nav-home">← <span>Governance Commons</span></a>
+    <div class="nav-links">
+      <a href="/community-weaving" class="nav-link">Community Weaving</a>
+      <a href="/transition" class="nav-link">Human Transition</a>
+      <span class="nav-tag">Tools</span>
+    </div>
+  </nav>
+
+  <header>
+    <div class="section-label">Interactive Tools</div>
+    <h1>Governance infrastructure<br>you can <em>actually use</em></h1>
+    <p class="header-desc">
+      Frameworks are only as good as what they help you do. These tools are the Commons made operational — AI-powered, grounded in the governance architecture, built for practitioners working in real conditions.
+    </p>
+  </header>
+
+  <div class="note-box">
+    <div class="note-icon">◎</div>
+    <div class="note-text">
+      <strong>All tools are AI-powered and run directly in your browser.</strong> No account required. Your inputs are not stored. Each tool is built on the governance frameworks documented in the Commons and the Community Weaving series — they are the infrastructure, made interactive.
+    </div>
+  </div>
+
+  <div class="tools-header">Tools</div>
+
+  <div class="tools-grid">
+
+    <!-- Disagreement Unpacker -->
+    <a href="/transition#disagreement-unpacker" class="tool-card c-amber">
+      <div class="tool-num">01</div>
+      <div class="tool-tag">AI-Powered · Human Transition Framework</div>
+      <div class="tool-title">The <em>Disagreement Unpacker</em></div>
+      <p class="tool-desc">Disagreement is not a problem to resolve — it's information about the system. Describe a real disagreement and the tool walks through five unpacking lenses: hidden assumptions, values in tension, lived experience, risk models, and time horizons. Returns a structured map and a synthesis.</p>
+      <div class="tool-meta">
+        <span class="tool-status status-live">Live</span>
+        <span class="tool-arrow">↗</span>
+      </div>
+    </a>
+
+    <!-- Architecture Explorer -->
+    <a href="/architecture" class="tool-card c-purple">
+      <div class="tool-num">02</div>
+      <div class="tool-tag">Interactive · Community Weaving — Episode 07</div>
+      <div class="tool-title">The Governance <em>Architecture</em></div>
+      <p class="tool-desc">The dual-loop governance architecture made interactive. Two loops, four handoff nodes, one stop mechanism — every component clickable with a full description of what it does and why it exists. The visual companion to the series.</p>
+      <div class="tool-meta">
+        <span class="tool-status status-live">Live</span>
+        <span class="tool-arrow">↗</span>
+      </div>
+    </a>
+
+    <!-- Container Health Check -->
+    <a href="/transition#container-health-check" class="tool-card c-blue">
+      <div class="tool-num">03</div>
+      <div class="tool-tag">AI-Powered · Human Transition Framework</div>
+      <div class="tool-title">Container <em>Health Check</em></div>
+      <p class="tool-desc">Describe your governance container and the tool assesses it against five properties — legitimacy without capture, psychological safety, time insulation, cross-domain intimacy, and narrative incubation — and flags which failure modes are active or at risk.</p>
+      <div class="tool-meta">
+        <span class="tool-status status-live">Live</span>
+        <span class="tool-arrow">↗</span>
+      </div>
+    </a>
+
+    <!-- Charter Builder -->
+    <a href="/transition#charter-builder" class="tool-card c-green">
+      <div class="tool-num">04</div>
+      <div class="tool-tag">AI-Powered · Human Transition Framework</div>
+      <div class="tool-title">The <em>Charter Builder</em></div>
+      <p class="tool-desc">Answer five questions about your context and the tool generates a draft governance charter — all six principles translated into specific rules, metrics, and failsafes for your domain. Copyable and downloadable.</p>
+      <div class="tool-meta">
+        <span class="tool-status status-live">Live</span>
+        <span class="tool-arrow">↗</span>
+      </div>
+    </a>
+
+    <!-- Governance Consultation -->
+    <a href="/consultation" class="tool-card" style="border-color: var(--accent2); grid-column: 1 / -1;">
+      <div class="tool-num" style="color: var(--accent2);">05</div>
+      <div class="tool-tag" style="color: var(--accent2);">Structured Assessment · 360 Intake · Governance Readiness</div>
+      <div class="tool-title">Governance <em style="color: var(--accent2);">Assessment</em></div>
+      <p class="tool-desc">A structured 9-section intake that maps your organization's full governance context — people, infrastructure, culture, risk calibration, change management — to every Commons taxonomy node. Returns node-by-node recommendations, gap ratings, contention points, and a dissent surface for each relevant governance component. The most comprehensive tool in the Commons.</p>
+      <div class="tool-meta">
+        <span class="tool-status status-live">Live</span>
+        <span class="tool-arrow" style="color: var(--accent2);">↗</span>
+      </div>
+    </a>
+
+  </div>
+
+  <footer>
+    <div class="footer-left">
+      Part of the <a href="/">Healthcare Governance Commons</a> · Built by Lindsay LaMere Guvenc · See also: <a href="/community-weaving">Community Weaving Series</a>
+    </div>
+    <div class="footer-right">healthcare-governance-commons.vercel.app/tools</div>
+  </footer>
+
+</div>
+</body>
+</html>
