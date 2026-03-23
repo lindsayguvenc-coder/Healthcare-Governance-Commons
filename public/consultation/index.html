@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Governance Assessment · Healthcare Governance Commons</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300;1,9..144,600&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #141720;
+    --surface3: #0d1019;
+    --border: #2a2d3a;
+    --border-bright: #3d4155;
+    --accent: #b49eff;
+    --accent2: #7eb8f7;
+    --accent3: #f77e7e;
+    --accent4: #e8c547;
+    --accent5: #7ef7c0;
+    --accent6: #f7a87e;
+    --text: #e2e4ed;
+    --muted: #6b7080;
+    --critical: #f77e7e;
+    --moderate: #e8c547;
+    --adequate: #7ef7c0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+  }
+
+  /* ── LAYOUT ── */
+  .app { display: flex; flex-direction: column; min-height: 100vh; }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .topbar-left { display: flex; flex-direction: column; gap: 2px; }
+  .topbar-title { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 300; color: var(--text); }
+  .topbar-sub { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+  .topbar-right { display: flex; gap: 16px; align-items: center; }
+  .nav-link { font-size: 10px; letter-spacing: 0.1em; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .nav-link:hover { color: var(--accent); }
+
+  .main { flex: 1; display: flex; overflow: hidden; }
+
+  /* ── PROGRESS SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    overflow-y: auto;
+    padding: 24px 0;
+  }
+
+  .sidebar-label {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 20px;
+    margin-bottom: 16px;
+  }
+
+  .section-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-left: 2px solid transparent;
+  }
+
+  .section-step:hover { background: var(--surface2); }
+  .section-step.active { border-left-color: var(--accent); background: var(--surface2); }
+  .section-step.completed { border-left-color: var(--accent5); }
+
+  .step-num {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--border-bright);
+    line-height: 1;
+    flex-shrink: 0;
+    padding-top: 2px;
+    transition: color 0.15s;
+  }
+  .section-step.active .step-num { color: var(--accent); }
+  .section-step.completed .step-num { color: var(--accent5); }
+
+  .step-info {}
+  .step-name { font-size: 11px; color: var(--muted); line-height: 1.3; transition: color 0.15s; }
+  .section-step.active .step-name { color: var(--text); }
+  .section-step.completed .step-name { color: var(--accent5); }
+  .step-count { font-size: 9px; color: var(--muted); margin-top: 2px; }
+
+  .sidebar-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 20px;
+  }
+
+  .sidebar-result-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    border-left: 2px solid transparent;
+  }
+  .sidebar-result-step.active { border-left-color: var(--accent2); background: var(--surface2); }
+  .sidebar-result-label { font-size: 11px; color: var(--muted); }
+  .sidebar-result-step.active .sidebar-result-label { color: var(--accent2); }
+
+  /* ── CONTENT AREA ── */
+  .content { flex: 1; overflow-y: auto; padding: 40px 48px; max-width: 740px; }
+
+  /* ── INTRO SCREEN ── */
+  .intro-screen { max-width: 620px; }
+  .intro-tag { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent5); margin-bottom: 16px; }
+  .intro-title { font-family: 'Fraunces', serif; font-size: clamp(28px, 4vw, 42px); font-weight: 300; line-height: 1.1; margin-bottom: 20px; }
+  .intro-title em { font-style: italic; color: var(--accent5); }
+  .intro-desc { font-size: 12px; line-height: 1.9; color: var(--muted); margin-bottom: 32px; }
+
+  .unknown-note {
+    padding: 16px 20px;
+    background: rgba(180, 158, 255, 0.06);
+    border: 1px solid rgba(180, 158, 255, 0.2);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 32px;
+  }
+
+  .start-btn {
+    background: transparent;
+    border: 1px solid var(--accent5);
+    color: var(--accent5);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 14px 32px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .start-btn:hover { background: rgba(126, 247, 192, 0.08); }
+
+  /* ── SECTION HEADER ── */
+  .section-header { margin-bottom: 32px; }
+  .section-num { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .section-title { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 300; margin-bottom: 8px; }
+  .section-desc { font-size: 11px; line-height: 1.8; color: var(--muted); }
+
+  /* ── QUESTIONS ── */
+  .question-block { margin-bottom: 28px; }
+
+  .question-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .question-text {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  .question-note {
+    font-size: 10px;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+
+  /* Select */
+  .q-select {
+    width: 100%;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 11px 14px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7080' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+  .q-select:focus { border-color: var(--accent); }
+  .q-select option { background: var(--surface); }
+
+  /* Multi-select checkboxes */
+  .checkbox-group { display: flex; flex-direction: column; gap: 6px; }
+  .checkbox-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 12px;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .checkbox-item:hover { border-color: var(--border-bright); background: var(--surface2); }
+  .checkbox-item.checked { border-color: var(--accent); background: rgba(180, 158, 255, 0.06); }
+  .checkbox-item input { display: none; }
+  .checkbox-box {
+    width: 14px; height: 14px;
+    border: 1px solid var(--border-bright);
+    border-radius: 2px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .checkbox-item.checked .checkbox-box {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .checkbox-item.checked .checkbox-box::after { content: '✓'; font-size: 9px; color: var(--bg); }
+  .checkbox-label { font-size: 11px; color: var(--muted); line-height: 1.4; transition: color 0.15s; }
+  .checkbox-item.checked .checkbox-label { color: var(--text); }
+
+  /* Textarea */
+  .q-textarea {
+    width: 100%;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    line-height: 1.7;
+    padding: 12px 14px;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .q-textarea:focus { border-color: var(--accent); }
+  .q-textarea::placeholder { color: var(--muted); }
+
+  /* ── NAVIGATION ── */
+  .section-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .nav-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover { border-color: var(--border-bright); color: var(--text); }
+
+  .nav-btn-primary {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-btn-primary:hover { background: rgba(180, 158, 255, 0.08); }
+  .nav-btn-primary.green { border-color: var(--accent5); color: var(--accent5); }
+  .nav-btn-primary.green:hover { background: rgba(126, 247, 192, 0.08); }
+  .nav-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .progress-text { font-size: 10px; color: var(--muted); }
+
+  /* ── SUBSECTION HEADER ── */
+  .subsection-header {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin: 24px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(126, 184, 247, 0.2);
+  }
+
+  /* ── LOADING ── */
+  .generating-screen { text-align: center; padding: 80px 40px; }
+  .generating-title { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 300; margin-bottom: 16px; color: var(--text); }
+  .generating-sub { font-size: 11px; color: var(--muted); line-height: 1.8; margin-bottom: 40px; }
+  .generating-nodes { display: flex; flex-direction: column; gap: 8px; max-width: 360px; margin: 0 auto; }
+  .node-progress {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-size: 11px;
+    color: var(--muted);
+    transition: all 0.3s;
+  }
+  .node-progress.active { border-color: var(--accent); color: var(--text); }
+  .node-progress.done { border-color: var(--accent5); color: var(--accent5); }
+  .node-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-bright); flex-shrink: 0; transition: background 0.3s; }
+  .node-progress.active .node-dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .node-progress.done .node-dot { background: var(--accent5); }
+
+  /* ── RESULTS ── */
+  .results-header { margin-bottom: 32px; }
+  .results-tag { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent2); margin-bottom: 12px; }
+  .results-title { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 300; margin-bottom: 8px; }
+  .results-org { font-size: 11px; color: var(--muted); }
+
+  .triage-summary {
+    display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap;
+  }
+  .triage-pill {
+    padding: 6px 14px; border-radius: 3px;
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+  }
+  .triage-pill.critical { background: rgba(247,126,126,0.12); border: 1px solid var(--critical); color: var(--critical); }
+  .triage-pill.moderate { background: rgba(232,197,71,0.12); border: 1px solid var(--moderate); color: var(--moderate); }
+  .triage-pill.adequate { background: rgba(126,247,192,0.12); border: 1px solid var(--adequate); color: var(--adequate); }
+
+  .node-result {
+    margin-bottom: 32px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: visible;
+  }
+
+  .node-result-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+
+  .node-result-title { font-size: 14px; font-weight: 500; color: var(--text); }
+  .node-result-loop { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+  .node-triage { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px; font-weight: 700; }
+  .node-triage.critical { background: rgba(247,126,126,0.12); border: 1px solid var(--critical); color: var(--critical); }
+  .node-triage.moderate { background: rgba(232,197,71,0.12); border: 1px solid var(--moderate); color: var(--moderate); }
+  .node-triage.adequate { background: rgba(126,247,192,0.12); border: 1px solid var(--adequate); color: var(--adequate); }
+
+  .node-result-body { padding: 20px; display: none; }
+  .node-result-body.open { display: block; }
+
+  .result-element { margin-bottom: 20px; }
+  .result-element-label {
+    font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 8px; font-weight: 700;
+  }
+  .result-element-label.dissent { color: var(--accent3); }
+  .result-element-label.rec { color: var(--accent5); }
+  .result-element-text {
+    font-size: 12px; line-height: 1.85; color: var(--text);
+    white-space: pre-wrap;
+  }
+
+  .result-divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  .copy-results-btn {
+    margin-top: 32px;
+    background: transparent;
+    border: 1px solid var(--accent2);
+    color: var(--accent2);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .copy-results-btn:hover { background: rgba(126,184,247,0.08); }
+
+  .restart-btn {
+    margin-top: 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: 12px;
+  }
+  .restart-btn:hover { border-color: var(--border-bright); color: var(--text); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .question-block { animation: fadeIn 0.25s ease both; }
+
+  @media (max-width: 700px) {
+    .sidebar { display: none; }
+    .content { padding: 24px; }
+  }
+
+  /* ── RADAR CHART ── */
+  .radar-section {
+    margin-bottom: 40px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 28px 32px;
+  }
+  .radar-title {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .radar-subtitle {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 18px;
+    color: var(--text);
+    margin-bottom: 24px;
+  }
+  .radar-subtitle em { font-style: italic; color: var(--accent); }
+  .radar-legend {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .radar-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .radar-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .radar-legend-dot.critical { background: var(--critical); }
+  .radar-legend-dot.moderate { background: var(--moderate); }
+  .radar-legend-dot.adequate { background: var(--adequate); }
+  #radarCanvas { max-width: 520px; margin: 0 auto; display: block; }
+
+  /* ── PDF BUTTON ── */
+  .pdf-btn {
+    margin-top: 12px;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: 12px;
+  }
+  .pdf-btn:hover { background: rgba(180,158,255,0.08); }
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    @page { margin: 18mm 20mm; size: letter; }
+    body { background: #fff !important; color: #111 !important; font-size: 11px; }
+    .topbar, .sidebar, .section-nav, .copy-results-btn, .restart-btn, .pdf-btn { display: none !important; }
+    .main { display: block !important; overflow: visible !important; }
+    .content { padding: 0 !important; overflow: visible !important; }
+    .results-header { margin-bottom: 24px; }
+    .results-title { color: #111 !important; font-size: 22px; }
+    .results-org { color: #555 !important; }
+    .results-tag { color: #555 !important; border-color: #bbb !important; }
+    .radar-section { background: #f8f8f8 !important; border-color: #ddd !important; page-break-after: always; }
+    .radar-title { color: #555 !important; }
+    .radar-subtitle { color: #111 !important; }
+    .radar-legend-item { color: #555 !important; }
+    .triage-pill { border: 1px solid #999 !important; }
+    .triage-pill.critical { background: #fde8e8 !important; color: #c0392b !important; border-color: #c0392b !important; }
+    .triage-pill.moderate { background: #fef9e7 !important; color: #7d6608 !important; border-color: #b7950b !important; }
+    .triage-pill.adequate { background: #eafaf1 !important; color: #1e8449 !important; border-color: #1e8449 !important; }
+    .node-result { border: 1px solid #ddd !important; page-break-inside: avoid; margin-bottom: 20px; overflow: visible !important; }
+    .node-result-header { background: #f4f4f4 !important; cursor: default; }
+    .node-result-title { color: #111 !important; }
+    .node-result-loop { color: #666 !important; }
+    .node-triage.critical { background: #fde8e8 !important; color: #c0392b !important; border-color: #c0392b !important; }
+    .node-triage.moderate { background: #fef9e7 !important; color: #7d6608 !important; border-color: #b7950b !important; }
+    .node-triage.adequate { background: #eafaf1 !important; color: #1e8449 !important; border-color: #1e8449 !important; }
+    .node-result-body { display: block !important; padding: 16px !important; }
+    .result-element-label { color: #333 !important; }
+    .result-element-text { color: #111 !important; font-size: 11px; }
+    .result-divider { border-color: #e0e0e0 !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Governance Assessment</div>
+      <div class="topbar-sub">Healthcare Governance Commons · Structured Governance Assessment Tool</div>
+    </div>
+    <div class="topbar-right">
+      <a href="/" class="nav-link">Commons</a>
+      <a href="/tools" class="nav-link">All Tools</a>
+      <a href="/community-weaving" class="nav-link">Series</a>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-label">Sections</div>
+      <div id="section-steps"></div>
+      <hr class="sidebar-divider">
+      <div class="sidebar-result-step" id="result-step">
+        <div class="sidebar-result-label">Assessment Output</div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content" id="content">
+      <!-- dynamically rendered -->
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+
+const SECTIONS = [
+  {
+    id: 1, name: "Organization Baseline",
+    desc: "Who you are, where you are, and the general shape of your AI environment.",
+    questions: [
+      { id: "orgType", text: "What type of organization is this?", type: "select",
+        options: ["Academic medical center","Community hospital / health system","Critical access hospital","Payer / health plan","Ambulatory / specialty practice","Other"] },
+      { id: "bedCount", text: "Approximate number of staffed inpatient beds (if applicable)?", type: "select",
+        options: ["Under 100","100–299","300–499","500–999","1000+","Not applicable","Unknown"] },
+      { id: "toolsDeployed", text: "How many AI tools are currently deployed in clinical or operational workflows?", type: "select",
+        options: ["None yet","1–2","3–5","6–10","More than 10","Unknown"] },
+      { id: "aiStance", text: "How would you characterize your organization's current stance toward clinical AI deployment?", type: "select",
+        options: ["Cautious — waiting for more evidence","Exploratory — evaluating options","Actively deploying — multiple tools in use","Reactive — deploying due to vendor contracts or competitive pressure","Unsure"] },
+      { id: "governanceOwner", text: "Who currently has primary ownership of AI governance at your organization?", type: "multi",
+        options: ["CMIO / CMO office","CIO / IT leadership","Quality / Patient Safety","Compliance / Legal","Dedicated AI governance committee","No clear owner","Other","Unknown"] },
+      { id: "siteScope", text: "Is this a single-site or multisite deployment?", type: "select",
+        options: ["Single site","Multisite — same health system","Multisite — across systems or networks","Unknown"] },
+    ]
+  },
+  {
+    id: 2, name: "People & Authority",
+    desc: "Who holds decision authority, who is represented, and whether authority is formally assigned before it is needed.",
+    questions: [
+      { id: "haltAuthority", text: "Is there a named individual with formal authority to halt a deployed AI tool?", type: "select",
+        options: ["Yes, named and documented","Yes, but informal / assumed","No, this has not been assigned","Unknown"] },
+      { id: "clinicianRep", text: "Are frontline clinicians who use AI tools regularly represented in governance decisions?", type: "select",
+        options: ["Yes, they have formal seats","Occasionally, on an ad hoc basis","Not currently","Unknown"] },
+      { id: "patientRep", text: "Are patients or patient advocates represented in AI governance?", type: "select",
+        options: ["Yes, formally","Informally / occasionally","No","Not yet but planned","Unknown"] },
+      { id: "vendorRole", text: "What is the vendor's role in your governance process?", type: "select",
+        options: ["Arms-length — vendor is not part of governance decisions","Consultative — vendor is invited to provide input","Participatory — vendor has a seat at the governance table","Unclear / not defined","Unknown"] },
+      { id: "disagreementProcess", text: "How are disagreements about AI deployment decisions currently resolved?", type: "select",
+        options: ["Formal process with defined escalation","Consensus-based, informal","Senior leader decides","No defined process","Unknown"] },
+      { id: "priorAccountability", text: "Has anyone been held formally accountable for an AI-related adverse event or near-miss at your organization?", type: "select",
+        options: ["Yes","No","We have not had an AI-related adverse event","Unknown"] },
+    ]
+  },
+  {
+    id: 3, name: "Risk Management",
+    desc: "How your organization currently identifies, manages, and learns from risk — independent of AI specifically.",
+    questions: [
+      { id: "riskFramework", text: "What risk management framework does your organization use?", type: "multi",
+        options: ["FMEA (Failure Mode and Effects Analysis)","Proactive Risk Assessment (PRA)","Root Cause Analysis (RCA)","SAFER guides (Joint Commission)","ISO 31000","Internal framework","No formal framework","Unknown"] },
+      { id: "incidentSystem", text: "What incident reporting system does your organization use?", type: "select",
+        options: ["Midas+ (Conduent)","RL Solutions / RL6","RLDatix","Quantros / Riskmaster","Datix","Epic Safety Reporting (Incident Reporting module)","Press Ganey Safety Reporting","Internal / homegrown system","None","Unknown"] },
+      { id: "aiReportingPathway", text: "Is there a defined pathway for reporting AI-related incidents or near-misses?", type: "select",
+        options: ["Yes, AI incidents have a specific reporting category","AI incidents are reported under general incident categories","No defined pathway","Unknown"] },
+      { id: "riskOwner", text: "Who owns risk management, and do they have a defined relationship with AI governance?", type: "text",
+        placeholder: "e.g. VP Quality, reports separately from AI governance committee..." },
+      { id: "proactiveRisk", text: "How frequently does your organization conduct proactive risk assessments for new technology deployments?", type: "select",
+        options: ["Routinely, for all new clinical technology","Selectively, for high-risk tools only","Reactively, after incidents","Rarely or never","Unknown"] },
+    ]
+  },
+  {
+    id: 4, name: "Technical Monitoring",
+    desc: "What is watching your AI tools — and who owns that watching.",
+    subsections: true,
+    questions: [
+      { id: "vendorMonitoring", text: "Does your AI vendor provide performance monitoring reports? If yes, how frequently and to whom?", type: "text",
+        placeholder: "e.g. Monthly dashboard to CMIO, or no formal reports provided...",
+        subsection: "Vendor / Platform Monitoring" },
+      { id: "ehrPlatform", text: "What EHR platform does your organization use?", type: "select",
+        options: ["Epic","Oracle Health (Cerner)","MEDITECH","Allscripts","Athenahealth","Other","Multiple platforms","Unknown"],
+        subsection: "Vendor / Platform Monitoring" },
+      { id: "ehrMonitoring", text: "Does your EHR platform provide AI performance monitoring tools?", type: "select",
+        options: ["Yes, and we use them actively","Yes, but we do not use them regularly","No","Unknown"],
+        subsection: "Vendor / Platform Monitoring",
+        showIf: (a) => a.ehrPlatform && a.ehrPlatform !== "Unknown" },
+      { id: "independentMonitoring", text: "Does your organization have any institution-owned monitoring of AI tool performance independent of the vendor?", type: "select",
+        options: ["Yes, we have an independent monitoring process","No, we rely on vendor-provided reports only","In development","Unknown"],
+        subsection: "Institutional Independent Monitoring",
+        showIf: (a) => a.toolsDeployed !== "None yet" },
+      { id: "monitoringDetails", text: "If yes: who runs the institutional monitoring, and what triggers a review or escalation?", type: "text",
+        placeholder: "e.g. Quality team runs monthly review, Westgard-adapted thresholds...",
+        subsection: "Institutional Independent Monitoring",
+        showIf: (a) => a.independentMonitoring === "Yes, we have an independent monitoring process" },
+      { id: "thresholdsDefined", text: "Are performance thresholds defined for your deployed AI tools?", type: "select",
+        options: ["Yes, documented thresholds exist","Informally understood but not documented","No thresholds defined","Unknown"],
+        subsection: "Institutional Independent Monitoring",
+        showIf: (a) => a.toolsDeployed !== "None yet" },
+      { id: "scheduledReview", text: "Does your organization have a scheduled review of deployed AI tools on a regular cadence, independent of incidents?", type: "select",
+        options: ["Yes — and we know how often and who convenes it","Yes — but it is informal or irregular","No scheduled review exists","Unknown"],
+        subsection: "Institutional Independent Monitoring" },
+    ]
+  },
+  {
+    id: 5, name: "IT & Data Infrastructure",
+    desc: "Integration depth, data governance, and who is responsible for what when things connect.",
+    questions: [
+      { id: "integrationDepth", text: "How is your primary AI tool integrated into clinical workflows?", type: "select",
+        options: ["Deeply integrated — embedded in EHR workflow","Partially integrated — requires manual steps to access output","External / bolted on — accessed separately from EHR","Varies by tool","Unknown"] },
+      { id: "dataGovernanceOwner", text: "Who owns data governance at your organization?", type: "select",
+        options: ["Dedicated data governance office","IT / informatics leadership","Quality / analytics team","No defined owner","Unknown"] },
+      { id: "dataQualityProgram", text: "Is there a data quality or data stewardship program in place?", type: "select",
+        options: ["Yes, formal program","Informal / emerging","No","Unknown"] },
+      { id: "cisoRole", text: "Does your CISO or security officer have a defined role in AI tool deployment decisions?", type: "select",
+        options: ["Yes, formal review process","Informally involved","No defined role","Unknown"] },
+      { id: "hipaaGovernance", text: "How is AI tool data governed with respect to HIPAA / patient privacy?", type: "select",
+        options: ["Formal BAA and privacy review process for all AI tools","Handled case by case","No defined process","Unknown"] },
+    ]
+  },
+  {
+    id: 6, name: "Culture of Safety",
+    desc: "Anchored to existing survey data where possible — avoids self-report bias.",
+    questions: [
+      { id: "safetySurvey", text: "Which culture of safety survey does your organization use?", type: "select",
+        options: ["AHRQ SOPS (Surveys on Patient Safety Culture)","Press Ganey Safety Culture","Leapfrog Safety Culture Survey","Joint Commission internal survey","Other standardized survey","We do not conduct safety culture surveys","Unknown"] },
+      { id: "safetyScore", text: "What was your most recent overall safety culture score or composite rating?", type: "select",
+        options: ["Top quartile / high performer","Average / mid-range","Below average","We do not benchmark against external data","Unknown / not available"],
+        showIf: (a) => a.safetySurvey !== "We do not conduct safety culture surveys" },
+      { id: "safetyTrajectory", text: "Compared to the previous survey cycle, has your safety culture score improved, declined, or stayed the same?", type: "select",
+        options: ["Improved","Stayed the same","Declined","First survey / no prior data","Unknown"],
+        showIf: (a) => a.safetySurvey !== "We do not conduct safety culture surveys" },
+      { id: "safetyParticipation", text: "What was your most recent survey response / participation rate?", type: "select",
+        options: ["80% or above","60–79%","40–59%","Below 40%","Unknown / not tracked"],
+        showIf: (a) => a.safetySurvey !== "We do not conduct safety culture surveys" },
+      { id: "lowestDomains", text: "Which safety culture domains scored lowest in your most recent survey?", type: "multi",
+        options: ["Communication openness (staff speak up freely)","Feedback and communication about error","Non-punitive response to error (staff not penalized for reporting mistakes)","Staffing","Management support for patient safety","Teamwork within units","Teamwork across units / handoffs","Unknown / not assessed at domain level"],
+        showIf: (a) => a.safetySurvey !== "We do not conduct safety culture surveys" },
+      { id: "aiConcernPathway", text: "How are staff currently expected to report concerns about an AI tool's behavior or output?", type: "select",
+        options: ["Formal pathway exists (incident report, designated contact)","Informal (tell your manager)","No defined pathway","Unknown"] },
+      { id: "staffConcernImpact", text: "Has a staff concern about an AI tool ever changed a deployment or governance decision?", type: "select",
+        options: ["Yes","No","Unknown"] },
+    ]
+  },
+  {
+    id: 7, name: "Risk Calibration",
+    desc: "How your organization thinks about what could go wrong — and its tolerance for acting on that thinking.",
+    questions: [
+      { id: "highestStakes", text: "What is the highest-stakes AI deployment decision your organization has faced or expects to face?", type: "text",
+        placeholder: "e.g. Whether to halt a tool mid-deployment when safety signals are ambiguous..." },
+      { id: "fearedFailure", text: "What failure mode are you most concerned about?", type: "multi",
+        options: ["Direct patient harm from incorrect AI output","Automation bias — clinicians deferring to AI inappropriately","Regulatory / compliance exposure","Reputational harm","Operational disruption","Equity / bias — tool performing differently across patient populations","Unknown"] },
+      { id: "priorAdverseEvent", text: "Has your organization experienced an AI-related adverse event, near-miss, or unexpected tool behavior?", type: "select",
+        options: ["Yes — and it was formally reported and reviewed","Yes — but it was not formally reviewed","No","Unknown"] },
+      { id: "pauseTolerance", text: "How much tolerance exists for pausing or rolling back a deployed AI tool if concerns arise?", type: "select",
+        options: ["High — we would pause quickly if warranted","Moderate — depends on severity of concern","Low — significant pressure to keep tools running","Unknown"] },
+      { id: "governanceFraming", text: "Is AI governance primarily framed at your organization as a compliance function or a patient safety function?", type: "select",
+        options: ["Primarily compliance","Primarily patient safety","Both, integrated","Neither — not formally framed","Unknown"] },
+    ]
+  },
+  {
+    id: 8, name: "Change Management",
+    desc: "What you already know about where this is going and who will shape it.",
+    questions: [
+      { id: "anticipatedResistance", text: "Where do you anticipate resistance to this AI deployment, and from whom?", type: "multi",
+        options: ["Frontline nursing staff","Physicians / hospitalists","Administration / finance","IT / informatics","Compliance / legal","Union / labor","Patients / community","No significant resistance anticipated","Unknown"] },
+      { id: "staffDriver", text: "What is the primary driver for this deployment from a staff perspective?", type: "select",
+        options: ["Workload reduction","Clinical quality improvement","Required by leadership","Unclear to staff","Active staff resistance","Unknown"] },
+      { id: "providerDriver", text: "What is the primary driver from a provider / physician perspective?", type: "select",
+        options: ["Clinical decision support","Efficiency / time savings","Required / mandated","Skepticism — not provider-driven","Active provider resistance","Unknown"] },
+      { id: "qualityDriver", text: "What is the primary driver from a quality / patient safety perspective?", type: "select",
+        options: ["Reduction in adverse events or near-misses","Improvement in clinical outcomes metrics","Regulatory or accreditation requirement","Quality team was not involved in the decision","Active quality / safety concerns about the tool","Unknown"] },
+      { id: "financialDriver", text: "What is the primary driver from a financial / administrative perspective?", type: "select",
+        options: ["Cost reduction","Revenue cycle improvement","Regulatory compliance","Competitive positioning","Contract obligation with vendor","Unknown"] },
+      { id: "champion", text: "Is there an identified champion for this deployment?", type: "select",
+        options: ["Yes, named and actively engaged","Yes, but passive / nominal","No identified champion","Unknown"] },
+      { id: "resistor", text: "Is there an identified resistor or skeptic whose concerns should be addressed?", type: "select",
+        options: ["Yes, known and engaged","Yes, but not yet engaged","No significant resistor identified","Unknown"] },
+      { id: "priorFailures", text: "What has failed at your organization in previous clinical technology deployments — and why?", type: "text",
+        placeholder: "e.g. EHR optimization project stalled due to lack of physician champion, no rollback plan..." },
+      { id: "shadowAiPolicy", text: "Does your organization have a policy addressing unsanctioned AI use by staff?", type: "select",
+        options: ["Yes, formal policy","In development","No","Unknown"] },
+      { id: "shadowAiUnderstood", text: "Has your organization made any effort to understand what unsanctioned AI tools staff are currently using?", type: "select",
+        options: ["Yes — formal or informal survey conducted","No","Unknown"] },
+    ]
+  },
+  {
+    id: 9, name: "Project Specific",
+    desc: "The specific deployment this assessment is about.",
+    questions: [
+      { id: "toolType", text: "What type of AI tool is this?", type: "select",
+        options: ["Diagnostic Aid","Screening Tool","Monitoring Tool","Triage Tool","Treatment Recommendation","Administrative / Operational AI","Other / hybrid"] },
+      { id: "clinicalPopulation", text: "What clinical population does this tool affect? (Who)", type: "text",
+        placeholder: "e.g. Adult inpatients, pediatric ED, oncology patients, all patients system-wide..." },
+      { id: "careSetting", text: "What care setting does this tool operate in? (Where)", type: "text",
+        placeholder: "e.g. Emergency department, ICU, inpatient general medicine, ambulatory..." },
+      { id: "deploymentStage", text: "What stage is this deployment currently at?", type: "select",
+        options: ["Evaluating / pre-procurement","Approved but not yet deployed","Actively deploying / go-live phase","Deployed and monitoring","Deployed with active concerns"] },
+      { id: "sharedTaxonomy", text: "When the AI tool flags something as high risk or actionable — is that term defined the same way by the model, clinical staff, and your governance process?", type: "select",
+        options: ["Yes, shared definitions are documented","Partially — some alignment but not formalized","No, different stakeholders interpret outputs differently","We have not discussed this","Unknown"],
+        showIf: (a) => a.deploymentStage !== "Evaluating / pre-procurement" },
+      { id: "governanceDocumented", text: "Are your AI governance decisions documented and retained — including the original deployment rationale and any changes since go-live?", type: "select",
+        options: ["Yes, formally documented and retained","Informal records only","No documentation","Unknown"],
+        showIf: (a) => a.deploymentStage !== "Evaluating / pre-procurement" },
+      { id: "signOffStatus", text: "Who has formally signed off on this deployment? Who has not yet signed off?", type: "text",
+        placeholder: "e.g. CMIO and IT signed off, Quality has not reviewed, compliance pending..." },
+      { id: "success90day", text: "What does success look like at 90 days?", type: "text",
+        placeholder: "Be specific: what would you see, measure, or hear?" },
+      { id: "success1year", text: "What does success look like at 1 year?", type: "text", placeholder: "" },
+      { id: "measurementApproach", text: "How will you measure it? What data source?", type: "text", placeholder: "" },
+      { id: "successAuthority", text: "Who decides if the deployment is working — and do all key stakeholders agree on that?", type: "text", placeholder: "" },
+      { id: "failureDefinition", text: "What would cause you to conclude the deployment has failed?", type: "text",
+        placeholder: "What specific signal, threshold, or event would trigger that conclusion?" },
+      { id: "successCommunicated", text: "Has success been defined and communicated to frontline staff who use the tool daily?", type: "select",
+        options: ["Yes, explicitly communicated","Partially — some staff know, not all","No","Unknown"],
+        showIf: (a) => a.deploymentStage !== "Evaluating / pre-procurement" },
+      { id: "unsolvedQuestion", text: "Is there anything about this deployment that you have not yet found a governance answer to?", type: "text",
+        placeholder: "This often produces the most useful input." },
+    ]
+  }
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let currentSection = -1; // -1 = intro, 0-8 = sections, 9 = generating, 10 = results
+let answers = {};
+let results = [];
+
+// ── BRANCHING ─────────────────────────────────────────────────────────────
+function shouldShow(q) {
+  if (!q.showIf) return true;
+  return q.showIf(answers);
+}
+
+function getVisibleQuestions(sectionIdx) {
+  return SECTIONS[sectionIdx].questions.filter(q => shouldShow(q));
+}
+
+// ── SIDEBAR ───────────────────────────────────────────────────────────────
+function renderSidebar() {
+  const steps = document.getElementById('section-steps');
+  steps.innerHTML = '';
+  SECTIONS.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'section-step' +
+      (i === currentSection ? ' active' : '') +
+      (i < currentSection ? ' completed' : '');
+    div.onclick = () => { if (i < currentSection || i === currentSection) goToSection(i); };
+    const vq = currentSection > i ? getVisibleQuestions(i).length : s.questions.length;
+    div.innerHTML = `
+      <div class="step-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="step-info">
+        <div class="step-name">${s.name}</div>
+        <div class="step-count">${vq} questions</div>
+      </div>`;
+    steps.appendChild(div);
+  });
+
+  const resultStep = document.getElementById('result-step');
+  resultStep.className = 'sidebar-result-step' + (currentSection === 10 ? ' active' : '');
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function render() {
+  renderSidebar();
+  const content = document.getElementById('content');
+
+  if (currentSection === -1) { renderIntro(content); return; }
+  if (currentSection >= 0 && currentSection < 9) { renderSection(content, currentSection); return; }
+  if (currentSection === 9) { renderGenerating(content); return; }
+  if (currentSection === 10) { renderResults(content); return; }
+}
+
+function renderIntro(content) {
+  content.innerHTML = `
+    <div class="intro-screen">
+      <div class="intro-tag">Structured Assessment · Healthcare Governance Commons</div>
+      <h1 class="intro-title">Clinical AI Governance<br><em>Assessment</em></h1>
+      <p class="intro-desc">
+        A structured 360-degree intake that maps your organization's governance context to the Commons taxonomy — returning node-by-node recommendations, gap analysis, contention points, and a dissent surface for every relevant governance component.<br><br>
+        9 sections. Approximately 35–55 questions depending on your context. Assessment generation takes 3–5 minutes — it runs a structured analysis across 10 governance nodes. Designed for clinical operations leaders and AI governance practitioners.
+      </p>
+      <div class="unknown-note">
+        <strong>If you don't know the answer to a question, select "Unknown" — that is a valid and useful answer.</strong> Unknown responses are governance signals. There are no wrong answers here, only incomplete pictures.
+      </div>
+      <div style="padding: 12px 16px; background: transparent; border: 1px solid var(--border); border-radius: 4px; font-size: 10px; line-height: 1.8; color: var(--muted); margin-bottom: 32px;">
+        <strong style="color: var(--text);">This is a structured assessment tool, not professional advice.</strong> Output is generated by AI based on the Healthcare Governance Commons framework and your intake responses. It does not constitute legal, clinical, compliance, or consulting advice. Review all outputs with qualified professionals before acting on them.
+      </div>
+      <button class="start-btn" onclick="goToSection(0)">Begin assessment →</button>
+    </div>`;
+}
+
+function renderSection(content, idx) {
+  const section = SECTIONS[idx];
+  const visibleQs = getVisibleQuestions(idx);
+  let currentSubsection = null;
+
+  let html = `
+    <div class="section-header">
+      <div class="section-num">Section ${idx + 1} of 9</div>
+      <div class="section-title">${section.name}</div>
+      <div class="section-desc">${section.desc}</div>
+    </div>`;
+
+  visibleQs.forEach((q, qi) => {
+    if (section.subsections && q.subsection && q.subsection !== currentSubsection) {
+      currentSubsection = q.subsection;
+      html += `<div class="subsection-header">${q.subsection}</div>`;
+    }
+    html += renderQuestion(q, qi);
+  });
+
+  const isLast = idx === 8;
+  html += `
+    <div class="section-nav">
+      <button class="nav-btn" onclick="goToSection(${idx - 1})" ${idx === 0 ? 'disabled' : ''}>← Back</button>
+      <span class="progress-text">${visibleQs.length} questions</span>
+      <button class="nav-btn-primary ${isLast ? 'green' : ''}" onclick="${isLast ? 'startGeneration()' : `goToSection(${idx + 1})`}">
+        ${isLast ? 'Generate assessment →' : 'Next section →'}
+      </button>
+    </div>`;
+
+  content.innerHTML = html;
+  content.scrollTop = 0;
+
+  // Restore values
+  visibleQs.forEach(q => {
+    if (q.type === 'select') {
+      const el = document.getElementById(q.id);
+      if (el && answers[q.id]) el.value = answers[q.id];
+    } else if (q.type === 'multi') {
+      const val = answers[q.id] || [];
+      document.querySelectorAll(`[data-group="${q.id}"]`).forEach(item => {
+        if (val.includes(item.dataset.value)) item.classList.add('checked');
+      });
+    } else if (q.type === 'text') {
+      const el = document.getElementById(q.id);
+      if (el && answers[q.id]) el.value = answers[q.id];
+    }
+  });
+}
+
+function renderQuestion(q, idx) {
+  let input = '';
+  if (q.type === 'select') {
+    const opts = ['Unknown', ...q.options.filter(o => o !== 'Unknown')]
+      .map(o => `<option value="${o}">${o}</option>`).join('');
+    input = `<select class="q-select" id="${q.id}" onchange="setAnswer('${q.id}', this.value)">
+      <option value="">— Select —</option>${q.options.map(o => `<option value="${o}">${o}</option>`).join('')}
+    </select>`;
+  } else if (q.type === 'multi') {
+    input = `<div class="checkbox-group">` +
+      q.options.map(o => `
+        <div class="checkbox-item" data-group="${q.id}" data-value="${o}" onclick="toggleMulti('${q.id}', '${o.replace(/'/g,"\\'")}', this)">
+          <div class="checkbox-box"></div>
+          <div class="checkbox-label">${o}</div>
+        </div>`).join('') + `</div>`;
+  } else {
+    input = `<textarea class="q-textarea" id="${q.id}" placeholder="${q.placeholder || ''}" oninput="setAnswer('${q.id}', this.value)"></textarea>`;
+  }
+
+  return `<div class="question-block">
+    <div class="question-label">Q${idx + 1}</div>
+    <div class="question-text">${q.text}</div>
+    ${input}
+  </div>`;
+}
+
+// ── ANSWER HANDLERS ───────────────────────────────────────────────────────
+function setAnswer(id, value) {
+  answers[id] = value;
+}
+
+function toggleMulti(id, value, el) {
+  if (!answers[id]) answers[id] = [];
+  const arr = answers[id];
+  const i = arr.indexOf(value);
+  if (i === -1) { arr.push(value); el.classList.add('checked'); }
+  else { arr.splice(i, 1); el.classList.remove('checked'); }
+}
+
+function goToSection(idx) {
+  if (idx < -1 || idx > 10) return;
+  currentSection = idx;
+  render();
+}
+
+// ── GENERATION ────────────────────────────────────────────────────────────
+const RELEVANT_NODES = [
+  { id: "watcher", label: "Performance Monitor", loop: "Internal Technical Loop",
+    question: "Is it behaving as designed?",
+    contention: "What thresholds are appropriate — and who has authority to set them",
+    gap: "No cross-vendor institution-level monitoring layer exists. Each vendor monitors itself." },
+  { id: "h1", label: "Escalation Gate", loop: "Handoff Zone",
+    question: "Has an internal signal crossed into human decision territory?",
+    contention: "What response window is clinically and operationally appropriate",
+    gap: "No defined escalation protocol in standard vendor contracts." },
+  { id: "h2", label: "Threshold Authority", loop: "Handoff Zone",
+    question: "Has the external loop revised operating parameters for the internal loop?",
+    contention: "How quickly threshold revisions must be implemented after authorization",
+    gap: "No versioned threshold registry with rationale exists in current deployments." },
+  { id: "authority", label: "Authority Tiers", loop: "External Human Loop",
+    question: "What action is this governance body authorized to take?",
+    contention: "Tier 3/4 authority is politically difficult to assign — institutions resist hard stop authority",
+    gap: "Hard stop authority is formally unassigned at most institutions." },
+  { id: "stop", label: "Stop Mechanisms", loop: "External Human Loop",
+    question: "What conditions mandate halting the AI system?",
+    contention: "Fixed vs. dynamic confidence thresholds for automated stops",
+    gap: "Hard stop authority is formally unassigned at most institutions." },
+  { id: "override", label: "Human Override Protocols", loop: "External Human Loop",
+    question: "How are clinician overrides logged, reviewed, and fed back?",
+    contention: "Too-easy override leads to automation complacency. Too-hard leads to alarm fatigue workarounds.",
+    gap: "No standard for what override rate is healthy vs. a signal of system failure." },
+  { id: "validation", label: "Deployment Readiness & Validation", loop: "External Human Loop",
+    question: "Has this AI system met the bar for clinical deployment?",
+    contention: "RCT vs. real-world evidence as validation standard — no consensus",
+    gap: "Admin AI validation has no standard framework." },
+  { id: "norm", label: "Normalization / Shared Taxonomy", loop: "Internal Technical Loop",
+    question: "Is output translatable to a common schema? Do stakeholders share definitions?",
+    contention: "Who owns and maintains the schema — and how vendor compliance is enforced",
+    gap: "No industry standard exists. Shared definitions across stakeholder groups are rarely formalized." },
+  { id: "h4", label: "Audit Trails & Documentation", loop: "Handoff Zone",
+    question: "Has adjudication produced a system state change? Are decisions documented?",
+    contention: "What model status changes can be mandated vs. recommended",
+    gap: "No structured dispute return pathway exists. Governance decisions are often undocumented." },
+  { id: "commons", label: "Governance Infrastructure", loop: "Governance Commons",
+    question: "Is the governance infrastructure itself current, neutral, and authoritative?",
+    contention: "Funding, staffing, and authority source for the commons itself",
+    gap: "Shared governance infrastructure for clinical AI does not exist at the field level." },
+];
+
+async function startGeneration() {
+  currentSection = 9;
+  render();
+
+  const nodeEls = document.querySelectorAll('.node-progress');
+  results = [];
+
+  for (let i = 0; i < RELEVANT_NODES.length; i++) {
+    const node = RELEVANT_NODES[i];
+    if (nodeEls[i]) nodeEls[i].classList.add('active');
+
+    try {
+      const context = buildContext(node);
+      const response = await fetch('/api/consult', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: SYSTEM_PROMPT,
+          messages: [{ role: 'user', content: context }]
+        })
+      });
+      const data = await response.json();
+      const text = data.content?.map(b => b.text || '').join('') || '';
+      results.push({ node, text });
+    } catch (e) {
+      results.push({ node, text: 'Error generating assessment for this node. Please try again.' });
+    }
+
+    if (nodeEls[i]) { nodeEls[i].classList.remove('active'); nodeEls[i].classList.add('done'); }
+  }
+
+  currentSection = 10;
+  render();
+}
+
+function renderGenerating(content) {
+  const nodeList = RELEVANT_NODES.map(n =>
+    `<div class="node-progress" id="np-${n.id}"><div class="node-dot"></div><span>${n.label}</span></div>`
+  ).join('');
+
+  content.innerHTML = `
+    <div class="generating-screen">
+      <div class="generating-title">Generating your assessment</div>
+      <p class="generating-sub">Analyzing your intake responses against each Commons governance node.<br>This takes 3–5 minutes — analyzing your responses across 10 governance nodes.</p>
+      <div class="generating-nodes">${nodeList}</div>
+    </div>`;
+}
+
+function renderResults(content) {
+  const org = answers.orgType || "Your organization";
+  const tool = answers.toolType || "your AI deployment";
+
+  let triageCounts = { critical: 0, moderate: 0, adequate: 0 };
+  results.forEach(r => {
+    const t = getTriage(r.text);
+    if (t) triageCounts[t]++;
+  });
+
+  const triageSummary = Object.entries(triageCounts)
+    .filter(([,v]) => v > 0)
+    .map(([k,v]) => `<span class="triage-pill ${k}">${v} ${k}</span>`)
+    .join('');
+
+  const nodeResults = results.map((r, i) => {
+    const triage = getTriage(r.text);
+    const sections = parseResultSections(r.text);
+    return `
+      <div class="node-result">
+        <div class="node-result-header" onclick="toggleNode(${i})">
+          <div>
+            <div class="node-result-title">${r.node.label}</div>
+            <div class="node-result-loop">${r.node.loop}</div>
+          </div>
+          ${triage ? `<div class="node-triage ${triage}">${triage}</div>` : ''}
+        </div>
+        <div class="node-result-body" id="node-body-${i}">
+          ${sections.convergence ? `<div class="result-element"><div class="result-element-label">Field Convergence</div><div class="result-element-text">${sections.convergence}</div></div><hr class="result-divider">` : ''}
+          ${sections.contention ? `<div class="result-element"><div class="result-element-label">Contention</div><div class="result-element-text">${sections.contention}</div></div><hr class="result-divider">` : ''}
+          ${sections.gap ? `<div class="result-element"><div class="result-element-label">Governance Gap</div><div class="result-element-text">${sections.gap}</div></div><hr class="result-divider">` : ''}
+          ${sections.insight ? `<div class="result-element"><div class="result-element-label">Practitioner Insight</div><div class="result-element-text">${sections.insight}</div></div><hr class="result-divider">` : ''}
+          ${sections.recommendation ? `<div class="result-element"><div class="result-element-label rec">Organization-Specific Recommendation</div><div class="result-element-text">${sections.recommendation}</div></div><hr class="result-divider">` : ''}
+          ${sections.dissent ? `<div class="result-element"><div class="result-element-label dissent">Dissent Surface</div><div class="result-element-text">${sections.dissent}</div></div>` : ''}
+          ${!sections.convergence ? `<div class="result-element"><div class="result-element-text">${r.text}</div></div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  // Build radar data
+  const triageToScore = { critical: 1, moderate: 2, adequate: 3, null: 0 };
+  const radarLabels = results.map(r => r.node.label);
+  const radarData = results.map(r => triageToScore[getTriage(r.text)] || 0);
+  const radarColors = results.map(r => {
+    const t = getTriage(r.text);
+    if (t === 'critical') return '#f77e7e';
+    if (t === 'moderate') return '#e8c547';
+    if (t === 'adequate') return '#7ef7c0';
+    return '#6b7080';
+  });
+
+  content.innerHTML = `
+    <div class="results-header">
+      <div class="results-tag">Assessment Complete</div>
+      <div class="results-title">Governance Assessment Report</div>
+      <div class="results-org">${org} · ${tool}</div>
+    </div>
+    <div class="triage-summary">${triageSummary}</div>
+
+    <div class="radar-section" id="radar-section">
+      <div class="radar-title">Governance Gap Profile</div>
+      <div class="radar-subtitle">Node-by-node <em>readiness map</em></div>
+      <canvas id="radarCanvas" width="520" height="520"></canvas>
+      <div class="radar-legend">
+        <div class="radar-legend-item"><div class="radar-legend-dot adequate"></div>Adequately Addressed</div>
+        <div class="radar-legend-item"><div class="radar-legend-dot moderate"></div>Moderate Gap</div>
+        <div class="radar-legend-item"><div class="radar-legend-dot critical"></div>Critical Gap</div>
+      </div>
+    </div>
+
+    ${nodeResults}
+    <div>
+      <button class="copy-results-btn" onclick="copyResults()">Copy full report</button>
+      <button class="pdf-btn" onclick="downloadPDF()">Download PDF</button>
+      <button class="restart-btn" onclick="restartConsultation()">Start new assessment</button>
+    </div>`;
+
+  // Render radar chart after DOM is ready
+  requestAnimationFrame(() => {
+    const canvas = document.getElementById('radarCanvas');
+    if (!canvas || typeof Chart === 'undefined') return;
+    const isDark = true;
+    new Chart(canvas, {
+      type: 'radar',
+      data: {
+        labels: radarLabels,
+        datasets: [{
+          label: 'Governance Readiness',
+          data: radarData,
+          backgroundColor: 'rgba(180,158,255,0.12)',
+          borderColor: '#b49eff',
+          borderWidth: 1.5,
+          pointBackgroundColor: radarColors,
+          pointBorderColor: radarColors,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          r: {
+            min: 0,
+            max: 3,
+            ticks: {
+              stepSize: 1,
+              display: false,
+            },
+            grid: { color: 'rgba(42,45,58,0.8)' },
+            angleLines: { color: 'rgba(42,45,58,0.8)' },
+            pointLabels: {
+              color: '#9da3b4',
+              font: { family: 'DM Mono, monospace', size: 10 },
+              padding: 12,
+            },
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const scores = ['', 'Critical Gap', 'Moderate Gap', 'Adequately Addressed'];
+                return ' ' + (scores[ctx.raw] || 'Not assessed');
+              }
+            },
+            backgroundColor: '#1a1d27',
+            titleColor: '#e2e4ed',
+            bodyColor: '#9da3b4',
+            borderColor: '#2a2d3a',
+            borderWidth: 1,
+          }
+        }
+      }
+    });
+  });
+}
+
+function toggleNode(i) {
+  const body = document.getElementById('node-body-' + i);
+  body.classList.toggle('open');
+}
+
+function getTriage(text) {
+  const lower = text.toLowerCase();
+  if (lower.includes('critical gap')) return 'critical';
+  if (lower.includes('moderate gap')) return 'moderate';
+  if (lower.includes('adequately addressed')) return 'adequate';
+  return null;
+}
+
+function parseResultSections(text) {
+  const sections = {};
+  const patterns = [
+    ['convergence', /1\.\s*FIELD CONVERGENCE\n([\s\S]*?)(?=\n2\.|$)/i],
+    ['contention', /2\.\s*CONTENTION\n([\s\S]*?)(?=\n3\.|$)/i],
+    ['gap', /3\.\s*GOVERNANCE GAP\n([\s\S]*?)(?=\n4\.|$)/i],
+    ['insight', /4\.\s*PRACTITIONER INSIGHT\n([\s\S]*?)(?=\n5\.|$)/i],
+    ['recommendation', /5\.\s*ORGANIZATION-SPECIFIC RECOMMENDATION\n([\s\S]*?)(?=\n6\.|$)/i],
+    ['dissent', /6\.\s*DISSENT SURFACE\n([\s\S]*?)$/i],
+  ];
+  patterns.forEach(([key, pattern]) => {
+    const match = text.match(pattern);
+    if (match) sections[key] = match[1].trim();
+  });
+  return sections;
+}
+
+function copyResults() {
+  const text = results.map(r => `=== ${r.node.label} ===\n${r.text}`).join('\n\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-results-btn');
+    btn.textContent = 'Copied ✓';
+    setTimeout(() => { btn.textContent = 'Copy full report'; }, 2000);
+  });
+}
+
+function downloadPDF() {
+  // Expand all node bodies before printing
+  document.querySelectorAll('.node-result-body').forEach(b => b.classList.add('open'));
+  window.print();
+}
+
+function restartConsultation() {
+  answers = {};
+  results = [];
+  currentSection = -1;
+  render();
+}
+
+function buildContext(node) {
+  const a = answers;
+  return `NODE: ${node.label}
+LOOP: ${node.loop}
+GOVERNANCE QUESTION: ${node.question}
+KNOWN CONTENTION: ${node.contention}
+KNOWN GAP: ${node.gap}
+
+ORGANIZATION INTAKE:
+Type: ${a.orgType || "Unknown"} | Size: ${a.bedCount || "Unknown"} | Tools deployed: ${a.toolsDeployed || "Unknown"}
+AI stance: ${a.aiStance || "Unknown"} | Governance owner: ${Array.isArray(a.governanceOwner) ? a.governanceOwner.join(", ") : (a.governanceOwner || "Unknown")}
+Site scope: ${a.siteScope || "Unknown"}
+
+Authority: Halt authority named: ${a.haltAuthority || "Unknown"} | Clinician rep: ${a.clinicianRep || "Unknown"}
+Vendor role: ${a.vendorRole || "Unknown"} | Disagreement process: ${a.disagreementProcess || "Unknown"}
+
+Risk management: ${Array.isArray(a.riskFramework) ? a.riskFramework.join(", ") : (a.riskFramework || "Unknown")}
+Incident system: ${a.incidentSystem || "Unknown"} | AI reporting pathway: ${a.aiReportingPathway || "Unknown"}
+Proactive risk assessment: ${a.proactiveRisk || "Unknown"}
+
+Vendor monitoring: ${a.vendorMonitoring || "Unknown"} | EHR platform: ${a.ehrPlatform || "Unknown"}
+Independent monitoring: ${a.independentMonitoring || "Unknown"} | Thresholds defined: ${a.thresholdsDefined || "Unknown"}
+Scheduled review: ${a.scheduledReview || "Unknown"}
+
+Data governance owner: ${a.dataGovernanceOwner || "Unknown"} | Integration depth: ${a.integrationDepth || "Unknown"}
+
+Safety survey: ${a.safetySurvey || "Unknown"} | Score: ${a.safetyScore || "Unknown"} | Trajectory: ${a.safetyTrajectory || "Unknown"}
+Participation: ${a.safetyParticipation || "Unknown"} | Lowest domains: ${Array.isArray(a.lowestDomains) ? a.lowestDomains.join(", ") : (a.lowestDomains || "Unknown")}
+AI concern pathway: ${a.aiConcernPathway || "Unknown"} | Staff concern ever changed decision: ${a.staffConcernImpact || "Unknown"}
+
+Highest stakes: ${a.highestStakes || "Unknown"} | Feared failure: ${Array.isArray(a.fearedFailure) ? a.fearedFailure.join(", ") : (a.fearedFailure || "Unknown")}
+Prior adverse event: ${a.priorAdverseEvent || "Unknown"} | Pause tolerance: ${a.pauseTolerance || "Unknown"}
+Governance framing: ${a.governanceFraming || "Unknown"}
+
+Anticipated resistance: ${Array.isArray(a.anticipatedResistance) ? a.anticipatedResistance.join(", ") : (a.anticipatedResistance || "Unknown")}
+Staff driver: ${a.staffDriver || "Unknown"} | Provider driver: ${a.providerDriver || "Unknown"}
+Quality driver: ${a.qualityDriver || "Unknown"} | Financial driver: ${a.financialDriver || "Unknown"}
+Champion: ${a.champion || "Unknown"} | Resistor: ${a.resistor || "Unknown"}
+Prior failures: ${a.priorFailures || "Unknown"}
+Shadow AI policy: ${a.shadowAiPolicy || "Unknown"} | Shadow AI understood: ${a.shadowAiUnderstood || "Unknown"}
+
+Tool type: ${a.toolType || "Unknown"} | Population: ${a.clinicalPopulation || "Unknown"} | Setting: ${a.careSetting || "Unknown"}
+Stage: ${a.deploymentStage || "Unknown"} | Shared taxonomy: ${a.sharedTaxonomy || "Unknown"}
+Governance documented: ${a.governanceDocumented || "Unknown"} | Sign-off status: ${a.signOffStatus || "Unknown"}
+90-day success: ${a.success90day || "Unknown"} | 1-year success: ${a.success1year || "Unknown"}
+Measurement: ${a.measurementApproach || "Unknown"} | Success authority: ${a.successAuthority || "Unknown"}
+Failure definition: ${a.failureDefinition || "Unknown"} | Success communicated to staff: ${a.successCommunicated || "Unknown"}
+Unsolved question: ${a.unsolvedQuestion || "Unknown"}
+
+Please produce the six-element consultation output for this node as it applies to this specific organization. Format each element with its number and label on its own line, e.g. "1. FIELD CONVERGENCE" followed by the content.`;
+}
+
+const SYSTEM_PROMPT = `You are a clinical AI governance consultation specialist working within the Healthcare Governance Commons framework. Your job is to synthesize governance knowledge for a specific Commons node and apply it directly to a specific organization's context, as described in their intake responses.
+
+For each node, produce a structured output with six elements. Be direct and specific throughout. Avoid generic statements about "the importance of governance." Name actual problems, actual stakeholders, actual structural gaps. Write for clinical operations leaders and healthcare AI governance professionals who are trying to act, not just understand.
+
+IMPORTANT: Respond in plain English only. No non-English characters under any circumstances.
+
+Format your response with each element clearly labeled:
+
+1. FIELD CONVERGENCE
+What has the field actually converged on at this node? Be honest about how much or how little consensus exists.
+
+2. CONTENTION
+Where do credible sources genuinely disagree? Name the actual fault lines — not "there is debate" but what the debate is and what is at stake.
+
+3. GOVERNANCE GAP
+What is the most important piece of governance infrastructure missing at this node — in the field generally, and specifically for this organization based on their intake?
+
+4. PRACTITIONER INSIGHT
+What practitioner knowledge is particularly valuable or novel at this node? If any insight is genuinely novel, say so explicitly.
+
+5. ORGANIZATION-SPECIFIC RECOMMENDATION
+Based on this organization's specific intake responses, what does the evidence and the Commons framework suggest as the highest-priority next step at this node? Frame this as a recommendation, not a directive — the organization will make its own decisions. Describe what this step involves, who might be best positioned to own it, and what progress could look like at 90 days. Acknowledge where there are legitimate reasons to sequence differently. End this section with one of these exact ratings on its own line:
+CRITICAL GAP
+MODERATE GAP
+ADEQUATELY ADDRESSED
+
+6. DISSENT SURFACE
+Based on the organization's intake responses — their stakeholder drivers, anticipated resistance, and change management context — surface the legitimate concerns that will come from the room at this node.
+
+For each concern: name the stakeholder group, state the concern honestly as a signal worth taking seriously, describe what taking it seriously looks like in practice, and note the change management implication.
+
+Always consider whether workforce impact concerns are relevant at this node — even if not explicitly flagged in the intake. Staff, union, and labor concerns about AI deployment frequently include: fear of role elimination or scope reduction, concern that AI performance monitoring will be used to evaluate individual workers rather than the system, worry that efficiency gains will translate to staffing cuts rather than improved care conditions, and distrust of governance processes that were designed without worker input. These are not irrational fears — they are historically grounded. If these concerns are plausible at this node given the organization's context, surface them explicitly and frame them as legitimate signals that deserve a real answer, not reassurance. "We have no plans for layoffs" is not a governance response. A governance response describes what structural commitments exist to protect workforce interests as AI is deployed.
+
+The goal is not to prepare the organization to win arguments. It is to help them walk into the room ready to listen — because the concerns that surface in governance conversations are almost always legitimate signals about the system.`;
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
