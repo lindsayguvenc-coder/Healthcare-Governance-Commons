@@ -392,6 +392,133 @@ const DOC_LIBRARY = [
     nodes: ["watcher","commons","stop"],
     abstract: "Apollo Research evaluation framework for deployed AI systems. Documents the structural gap between how AI systems behave in controlled evaluations vs. real-world deployment. Directly relevant to watcher layer design: monitoring must account for behavioral drift under distribution shift, not just performance drift on held-out test sets.",
   },
+  // ── COMMUNITY WEAVING SERIES ──────────────────────────────────────────────
+// Add these entries to DOC_LIBRARY in GovernanceCommons.jsx
+// Paste after the last existing entry (apollo-2024)
+
+  {
+    id: "cw-ep01",
+    title: "Community Weaving Episode 01: The Loom is Missing",
+    type: "practitioner", source: "Lindsay LaMere Guvenc / Healthcare Governance Commons", year: "2025",
+    url: "/community_weaving_ep01.docx",
+    nodes: ["commons"],
+    abstract: "Opening episode of the Community Weaving series. Identifies five domains where knowledge outpaces coordination — clinical AI, pandemic preparedness, climate adaptation, democratic renewal, and economic transition. Names the structural gap underneath all of them: the missing container for collaborative governance work. Establishes the loom metaphor that anchors the series.",
+  },
+  {
+    id: "cw-ep02",
+    title: "Community Weaving Episode 02: Why the Tools We Have Fail",
+    type: "practitioner", source: "Lindsay LaMere Guvenc / Healthcare Governance Commons", year: "2025",
+    url: "/community_weaving_ep02.pdf",
+    nodes: ["commons", "h2"],
+    abstract: "Diagnoses why linear tools — checklists, frameworks, maturity models — break down in high-stakes, multi-dimensional domains. Argues that the failure is structural, not implementational: these tools were designed for stable, well-mapped problems and cannot hold the complexity of domains where the map doesn't exist yet. Directly relevant to authority matrix design and threshold authority.",
+  },
+  {
+    id: "cw-ep03",
+    title: "Community Weaving Episode 03: The Loom",
+    type: "practitioner", source: "Lindsay LaMere Guvenc / Healthcare Governance Commons", year: "2025",
+    url: "/community_weaving_ep03.pdf",
+    nodes: ["commons"],
+    abstract: "Defines Community Weaving as a methodology and traces its historical instances across domains and centuries. Argues that the loom — the container for collaborative, friction-positive knowledge-building — keeps getting built independently by people who never knew each other's work, because the need is structural. Foundational document for the Commons architecture.",
+  },
+  {
+    id: "cw-ep04",
+    title: "Community Weaving Episode 04: The Commons as Proof of Concept",
+    type: "practitioner", source: "Lindsay LaMere Guvenc / Healthcare Governance Commons", year: "2025",
+    url: "/community_weaving_ep04.pdf",
+    nodes: ["commons", "watcher"],
+    abstract: "Documents what building the Healthcare Governance Commons actually revealed — about clinical AI governance gaps, about the infrastructure problem, and about the method itself. The Commons is simultaneously the subject of the series and an instance of the methodology it describes. Key for understanding the dual-loop architecture as a lived design decision rather than a theoretical framework.",
+  },
+  {
+    id: "cw-ep05",
+    title: "Community Weaving Episode 05: The Shared Mental Model Problem",
+    type: "practitioner", source: "Lindsay LaMere Guvenc / Healthcare Governance Commons", year: "2025",
+    url: "/community_weaving_ep05.pdf",
+    nodes: ["norm", "h2"],
+    abstract: "Argues that lexicon is coordination infrastructure — that a shared definition is not the same as a shared mental model, and that the gap between them is where most governance breakdowns actually occur. Directly relevant to the normalization layer and threshold authority nodes. The taxonomy/lexicon component of the internal technical loop is the structural answer to the problem this episode names.",
+  },
+  {
+    id: "cw-ep06",
+    title: "Community Weaving Episode 06: Disagreement as Data",
+    type: "practitioner", source: "Lindsay LaMere Guvenc / Healthcare Governance Commons", year: "2025",
+    url: "/community_weaving_ep06.pdf",
+    nodes: ["h2", "adjudicate"],
+    abstract: "Reframes disagreement as the most important signal a governance system produces — not a problem to resolve but information about the system. Introduces the five unpacking lenses: hidden assumptions, values in tension, lived experience, risk models, and time horizons. Foundational document for the dissent layer and dispute adjudication nodes. Companion to the Disagreement Unpacker tool.",
+  },
+  {
+    id: "cw-ep07",
+    title: "Community Weaving Episode 07: What it Actually Looks Like",
+    type: "practitioner", source: "Lindsay LaMere Guvenc / Healthcare Governance Commons", year: "2025",
+    url: "/community_weaving_ep07.pdf",
+    nodes: ["watcher", "h1", "h2", "h3", "h4", "stop", "authority", "commons"],
+    abstract: "The architecture episode. Describes the full dual-loop governance framework — internal technical loop (AI model, performance monitor, taxonomy, institutional memory) and external human governance loop (clinical judgment, authority matrix, dissent layer, decision trigger layer) — with all four handoff nodes and the stop mechanism. The most directly applicable episode for practitioners building governance infrastructure. Interactive version available at /architecture.",
+  },
+  {
+    id: "cw-ep08",
+    title: "Community Weaving Episode 08: The Recursive Close",
+    type: "practitioner", source: "Lindsay LaMere Guvenc / Healthcare Governance Commons", year: "2025",
+    url: "/community_weaving_ep08.pdf",
+    nodes: ["commons"],
+    abstract: "Closing episode of the series. Argues that the series itself is the method — built in public, iteratively, with friction visible. The Commons is the thing it describes: the dual-loop architecture it documents is the architecture it runs on. Frames clinical AI governance as a container problem, not a technology problem, and positions the Commons as a translation layer making existing safety science accessible to practitioners who need it now.",
+  },
+
+// ── GOVERNANCE COMMONS TOOLS ──────────────────────────────────────────────
+// The tools themselves as practitioner documents
+
+  {
+    id: "tool-disagreement-unpacker",
+    title: "The Disagreement Unpacker: AI-Powered Conflict Analysis Tool",
+    type: "practitioner", source: "Lindsay LaMere Guvenc / Healthcare Governance Commons", year: "2025",
+    url: "/transition#disagreement-unpacker",
+    nodes: ["h2", "adjudicate"],
+    abstract: "Interactive AI-powered tool implementing the Disagreement as Data methodology from Community Weaving Episode 06. Takes a described disagreement and returns a structured map across five lenses: hidden assumptions, values in tension, lived experience, risk models, and time horizons. Includes synthesis and facilitator move. Directly applicable to threshold authority disputes and dispute adjudication processes. Available at /transition.",
+  },
+  {
+    id: "tool-container-health-check",
+    title: "Container Health Check: AI-Powered Governance Container Assessment",
+    type: "practitioner", source: "Lindsay LaMere Guvenc / Healthcare Governance Commons", year: "2025",
+    url: "/transition#container-health-check",
+    nodes: ["commons", "authority"],
+    abstract: "Interactive AI-powered tool that assesses a governance container against five Good Container properties — legitimacy without capture, psychological safety for radical honesty, time insulated from urgency, cross-domain intimacy, and narrative incubation — and flags which of five failure modes are active or at risk. Returns health scores per property with concrete recommendations. Available at /transition.",
+  },
+  {
+    id: "tool-charter-builder",
+    title: "The Charter Builder: AI-Powered Governance Charter Generator",
+    type: "practitioner", source: "Lindsay LaMere Guvenc / Healthcare Governance Commons", year: "2025",
+    url: "/transition#charter-builder",
+    nodes: ["commons", "authority", "h2"],
+    abstract: "Interactive AI-powered tool that generates a draft governance charter by translating six core principles — dignity before efficiency, psychological safety, disagreement as data, radical honesty, equity and representation, and dual-horizon discipline — into specific rules, metrics, and failsafes for the user's exact context. Takes five inputs about context, domain, stakes, failure mode concerns, and required stakeholders. Output is copyable. Available at /transition.",
+  },
+  {
+    id: "tool-architecture-explorer",
+    title: "The Governance Architecture: Interactive Dual-Loop Explorer",
+    type: "practitioner", source: "Lindsay LaMere Guvenc / Healthcare Governance Commons", year: "2025",
+    url: "/architecture",
+    nodes: ["watcher", "h1", "h2", "h3", "h4", "stop", "authority", "commons"],
+    abstract: "Interactive visualization of the full dual-loop clinical AI governance architecture. Every component — eight loop nodes, four handoff nodes, stop mechanism, and failover protocol — is clickable with a detail panel showing what it does and why it exists. Companion to Community Weaving Episode 07. Designed as a reference tool for practitioners building or evaluating governance infrastructure. Available at /architecture.",
+  },
+
+// ── GOVERNANCE MECHANISMS INDEX ──────────────────────────────────────────
+
+  {
+    id: "governance-mechanisms-index",
+    title: "Governance Mechanisms Index: Cross-Domain Reference — What Held, What Failed, Where",
+    type: "practitioner", source: "Lindsay LaMere Guvenc / Healthcare Governance Commons", year: "2025",
+    url: "/governance_mechanisms_index.pdf",
+    nodes: ["stop", "watcher", "h1", "adjudicate", "authority", "commons"],
+    abstract: "Cross-domain reference index of governance mechanisms across aviation, nuclear, laboratory medicine, financial services, pharmaceutical, and software engineering — indexed by mechanism type, loop location, and observed outcome. Each entry documents where the mechanism held, where it failed, and the honest complexity. Identifies five cross-domain structural patterns: separation from enforcement, distributed liability, explicit stop conditions, loop-level specificity, and transparency gaps. The most directly applicable cross-domain reference in the Commons library for practitioners designing clinical AI governance infrastructure.",
+  },
+
+// ── HEALTHCARE DATA CHECKLIST ─────────────────────────────────────────────
+// Already in commons as a file — registering here for Doc Repository visibility
+
+  {
+    id: "hc-data-checklist",
+    title: "Healthcare AI Governance Checklist: Deployment Readiness",
+    type: "practitioner", source: "Lindsay LaMere Guvenc / Healthcare Governance Commons", year: "2025",
+    url: "/checklist.html",
+    nodes: ["validation", "stop", "h2", "authority"],
+    abstract: "Structured deployment readiness checklist for clinical AI tools. Covers validation requirements, authority assignment, stop mechanism definition, monitoring infrastructure, and escalation pathway design. Adapted from CLIA/CAP quality control frameworks and high-reliability organization principles. Designed for use at H1 Deploy handoff — the governance contract activation point.",
+  },
 ];
 
 const CHAT_THREADS = {
