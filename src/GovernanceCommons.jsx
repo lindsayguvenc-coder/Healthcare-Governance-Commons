@@ -1738,14 +1738,15 @@ export default function GovernanceCommons() {
   return (
     <div style={{ background: C.bg, minHeight: "100vh", color: C.text, display: "flex", flexDirection: "column" }}>
 
-      {/* Top bar */}
-      <div style={{ borderBottom: `1px solid ${C.border}`, padding: "16px 24px", display: "flex", alignItems: "center", gap: 20, background: C.surface, flexShrink: 0 }}>
+{/* Top bar */}
+      <div style={{ borderBottom: `1px solid ${C.border}`, padding: "16px 24px", display: "flex", alignItems: "center", gap: 20, background: C.surface, flexShrink: 0, flexWrap: "wrap" }} className="topbar">
         <div>
           <div style={{ fontFamily: C.serif, fontSize: 18, fontWeight: 400, color: C.text, letterSpacing: "0.01em" }}>Governance Commons</div>
           <div style={{ fontFamily: C.mono, fontSize: 10, color: C.textDimmer, letterSpacing: "0.08em", marginTop: 2 }}>CLINICAL AI GOVERNANCE INFRASTRUCTURE · LIVING MAP</div>
         </div>
 
-        <div style={{ display: "flex", gap: 2, marginLeft: "auto" }}>
+        {/* Desktop nav — hidden on mobile */}
+        <div className="desktop-nav" style={{ display: "flex", gap: 2, marginLeft: "auto" }}>
           {[
             { id: "docs",     label: "① Doc Repository" },
             { id: "taxonomy", label: "② Taxonomy Navigator" },
@@ -1763,8 +1764,8 @@ export default function GovernanceCommons() {
           ))}
         </div>
 
-        {/* ── External nav links ── */}
-        <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+        {/* Desktop external links — hidden on mobile */}
+        <div className="desktop-nav" style={{ display: "flex", gap: 6, flexShrink: 0 }}>
           <a href="/community-weaving" style={{
             padding: "7px 14px", borderRadius: 4, cursor: "pointer",
             background: "transparent",
@@ -1787,9 +1788,9 @@ export default function GovernanceCommons() {
           }}>Tools →</a>
         </div>
 
-        {/* Loop filter pills */}
+        {/* Desktop loop filter pills — hidden on mobile */}
         {activeLayer === "taxonomy" && (
-          <div style={{ display: "flex", gap: 4 }}>
+          <div className="desktop-nav" style={{ display: "flex", gap: 4 }}>
             {["all", "internal", "handoff", "external", "commons"].map(f => {
               const color = f === "all" ? C.textDim : LOOP_META[f]?.color;
               return (
@@ -1802,6 +1803,120 @@ export default function GovernanceCommons() {
                 }}>{f}</button>
               );
             })}
+          </div>
+        )}
+
+        {/* Hamburger button — mobile only */}
+        <button
+          className="hamburger-btn"
+          onClick={() => setMenuOpen(o => !o)}
+          style={{
+            display: "none",
+            marginLeft: "auto",
+            background: "transparent",
+            border: `1px solid ${C.border}`,
+            borderRadius: 4,
+            color: C.text,
+            fontFamily: C.mono,
+            fontSize: 18,
+            width: 40,
+            height: 36,
+            cursor: "pointer",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >{menuOpen ? "✕" : "☰"}</button>
+
+        {/* Mobile drawer */}
+        {menuOpen && (
+          <div className="mobile-drawer" style={{
+            position: "fixed",
+            top: 0, left: 0, right: 0, bottom: 0,
+            zIndex: 1000,
+            display: "flex",
+            flexDirection: "column",
+          }}>
+            {/* Backdrop */}
+            <div
+              onClick={() => setMenuOpen(false)}
+              style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)" }}
+            />
+            {/* Panel */}
+            <div style={{
+              position: "relative",
+              zIndex: 1,
+              background: C.surface,
+              borderBottom: `1px solid ${C.border}`,
+              padding: "16px 20px 24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ fontFamily: C.mono, fontSize: 9, color: C.textDimmer, letterSpacing: "0.12em", textTransform: "uppercase" }}>Navigation</div>
+                <button onClick={() => setMenuOpen(false)} style={{
+                  background: "transparent", border: "none", color: C.textDim,
+                  fontFamily: C.mono, fontSize: 16, cursor: "pointer", padding: "4px 8px",
+                }}>✕</button>
+              </div>
+
+              {/* Tab buttons */}
+              {[
+                { id: "docs",     label: "① Doc Repository" },
+                { id: "taxonomy", label: "② Taxonomy Navigator" },
+                { id: "matrix",   label: "③ Commons Matrix" },
+                { id: "intake",   label: "④ Add Document" },
+              ].map(tab => (
+                <button key={tab.id} onClick={() => { setActiveLayer(tab.id); setMenuOpen(false); }} style={{
+                  padding: "11px 14px", borderRadius: 4, cursor: "pointer", textAlign: "left",
+                  background: activeLayer === tab.id ? C.commons + "20" : C.surface2,
+                  border: `1px solid ${activeLayer === tab.id ? C.commons + "60" : C.border}`,
+                  color: activeLayer === tab.id ? C.commons : C.textDim,
+                  fontFamily: C.mono, fontSize: 12, fontWeight: activeLayer === tab.id ? 700 : 400,
+                  letterSpacing: "0.05em",
+                }}>{tab.label}</button>
+              ))}
+
+              {/* Divider */}
+              <div style={{ borderTop: `1px solid ${C.border}`, margin: "4px 0" }} />
+
+              {/* External links */}
+              <a href="/community-weaving" style={{
+                padding: "11px 14px", borderRadius: 4, display: "block",
+                background: C.surface2, border: `1px solid ${C.commons}40`,
+                color: C.commons, fontFamily: C.mono, fontSize: 12,
+                textDecoration: "none", letterSpacing: "0.05em",
+              }}>Community Weaving →</a>
+              <a href="/tools" style={{
+                padding: "11px 14px", borderRadius: 4, display: "block",
+                background: C.surface2, border: `1px solid #7ef7c040`,
+                color: "#7ef7c0", fontFamily: C.mono, fontSize: 12,
+                textDecoration: "none", letterSpacing: "0.05em",
+              }}>Tools →</a>
+
+              {/* Loop filter pills — only if taxonomy active */}
+              {activeLayer === "taxonomy" && (
+                <>
+                  <div style={{ borderTop: `1px solid ${C.border}`, margin: "4px 0" }} />
+                  <div style={{ fontFamily: C.mono, fontSize: 9, color: C.textDimmer, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>Filter by loop</div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {["all", "internal", "handoff", "external", "commons"].map(f => {
+                      const color = f === "all" ? C.textDim : LOOP_META[f]?.color;
+                      return (
+                        <button key={f} onClick={() => { setLoopFilter(f); setMenuOpen(false); }} style={{
+                          padding: "6px 12px", borderRadius: 3, cursor: "pointer",
+                          background: loopFilter === f ? color + "20" : C.surface3,
+                          border: `1px solid ${loopFilter === f ? color + "50" : C.border}`,
+                          color: loopFilter === f ? color : C.textDimmer,
+                          fontFamily: C.mono, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em",
+                        }}>{f}</button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>
