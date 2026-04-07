@@ -1728,6 +1728,7 @@ export default function GovernanceCommons() {
   const [activeLayer, setActiveLayer] = useState("taxonomy");
   const [activeNodeId, setActiveNodeId] = useState("stop");
   const [loopFilter, setLoopFilter] = useState("all");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleNavigate = (layer, nodeId) => {
     setActiveLayer(layer);
