@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Notice — Healthcare Governance Commons</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1a1a2e;
+      --purple: #7c5cbf;
+      --purple-light: #f3f0ff;
+      --muted: #6b7080;
+      --border: #e0e0e0;
+      --amber-bg: #fff8e1;
+      --amber-border: #f0a500;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 16px;
+    }
+
+    /* Header */
+    .header {
+      border-bottom: 2px solid var(--purple);
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .wordmark {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--purple);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    .wordmark:hover {
+      opacity: 0.8;
+    }
+
+    /* Main content */
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 60px 40px 80px;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 48px;
+    }
+
+    .section {
+      margin-bottom: 48px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--purple);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    p {
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    ul {
+      margin: 0 0 16px 24px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    /* Callout box */
+    .callout {
+      background: var(--purple-light);
+      border-left: 4px solid var(--purple);
+      padding: 20px 24px;
+      margin: 24px 0;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .callout p {
+      margin-bottom: 0;
+    }
+
+    /* Warning box */
+    .warning {
+      background: var(--amber-bg);
+      border-left: 4px solid var(--amber-border);
+      padding: 20px 24px;
+      margin: 24px 0;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .warning p {
+      margin-bottom: 0;
+    }
+
+    /* Incident response */
+    .incident-steps {
+      counter-reset: step;
+      list-style: none;
+      margin-left: 0;
+    }
+
+    .incident-steps li {
+      counter-increment: step;
+      padding-left: 40px;
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .incident-steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 28px;
+      height: 28px;
+      background: var(--purple);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    /* Last updated */
+    .last-updated {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .footer a {
+      color: var(--purple);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 40px 24px 60px;
+      }
+      .header {
+        padding: 16px 24px;
+      }
+      .footer {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <a href="/" class="wordmark">Healthcare Governance Commons</a>
+    <a href="/tools" class="wordmark" style="font-weight: 400; text-transform: none; font-size: 13px;">← Tools</a>
+  </header>
+
+  <main class="container">
+
+    <h1 class="page-title">Privacy Notice</h1>
+    <p class="page-subtitle">How the Healthcare Governance Commons handles submitted information.</p>
+
+    <div class="callout">
+      <p><strong>The short version:</strong> This tool is designed to process vendor documents and organizational context — not patient data. We have technical safeguards to detect and block potential PHI, but the primary responsibility for ensuring submissions are free of patient-identifiable information rests with the submitting organization.</p>
+    </div>
+
+    <section class="section">
+      <h2 class="section-title">What This Tool Collects</h2>
+      <p>The Validation Protocol Generator collects two categories of information:</p>
+      <ul>
+        <li><strong>Uploaded documents</strong> — Model cards, validation studies, Instructions for Use, and FDA clearance documents submitted for protocol generation.</li>
+        <li><strong>Elicitation responses</strong> — Answers to structured questions about your organization, patient population, monitoring infrastructure, and governance posture.</li>
+      </ul>
+      <p>The Peer Challenge Registry additionally collects challenge methodology submissions from participating organizations.</p>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">What This Tool Is Not For</h2>
+
+      <div class="warning">
+        <p><strong>This tool is not designed to receive, process, or store protected health information (PHI) as defined under HIPAA.</strong> Validation protocol documents — model cards, validation studies, IFUs, and 510(k) summaries — are vendor-generated documents that should not contain patient-level data. If you are uploading an internally-generated document, review it for patient-identifiable information before submitting.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">PHI Safeguards</h2>
+      <p>The Commons implements the following technical safeguards to reduce the risk of accidental PHI submission:</p>
+      <ul>
+        <li><strong>PHI pattern detection</strong> — All uploaded documents and free text inputs are scanned for common PHI patterns before processing. High-confidence matches are blocked. Medium-confidence matches generate a warning requiring acknowledgment.</li>
+        <li><strong>PDF-only uploads</strong> — Document uploads are restricted to PDF format, reducing the risk of structured patient data files being submitted accidentally.</li>
+        <li><strong>Metadata stripping</strong> — PDF metadata (author, institution, creation date, embedded properties) is stripped from uploaded documents before storage.</li>
+        <li><strong>Attestation requirement</strong> — Submitters must explicitly confirm that uploaded documents do not contain PHI before upload proceeds.</li>
+      </ul>
+      <p>These safeguards reduce risk but do not guarantee PHI-free submissions. Pattern detection has known limitations — it may miss PHI in unusual formats or embedded images, and may generate false positives on non-PHI content.</p>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">How Submitted Information Is Used</h2>
+      <ul>
+        <li>Uploaded documents are processed to extract named fields for protocol generation.</li>
+        <li>Elicitation responses are used to generate your organization's validation protocol document.</li>
+        <li>Generated protocol documents are not stored — they are produced on demand and delivered as downloadable PDFs.</li>
+        <li>Peer Challenge Registry submissions are stored to maintain the registry directory and facilitate peer connections.</li>
+        <li>Aggregate, non-identifying usage patterns may be used to improve the Commons framework.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Data Retention</h2>
+      <ul>
+        <li>Session data from elicitation responses is retained for 72 hours to support session resumption, then deleted.</li>
+        <li>Uploaded documents are processed and not retained beyond the active session.</li>
+        <li>Peer Challenge Registry entries are retained until the contributing organization requests removal.</li>
+        <li>PHI scan logs (which record scan outcomes but never document content) are retained for 30 days.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Incident Response — If PHI Is Discovered</h2>
+      <p>If PHI is identified in a submitted document or response after processing has begun, the Commons will take the following steps:</p>
+      <ol class="incident-steps">
+        <li><strong>Immediate deletion</strong> — The affected submission is deleted from all storage systems.</li>
+        <li><strong>User notification</strong> — The submitting organization is notified that PHI was identified and that the submission has been deleted.</li>
+        <li><strong>Incident log</strong> — The incident is recorded in an internal log (date, type of PHI detected, action taken) without retaining the PHI itself.</li>
+        <li><strong>Review</strong> — The Commons reviews whether safeguards need to be updated to prevent recurrence.</li>
+      </ol>
+      <p>The Commons is not a HIPAA covered entity. Organizations submitting information are responsible for ensuring their submissions comply with applicable privacy regulations.</p>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Peer Challenge Registry Submissions</h2>
+      <p>Organizations contributing to the Peer Challenge Registry share challenge methodology — not patient data. Submissions must attest that no patient-identifiable information is included. All registry submissions undergo PHI scanning before publication. Submitted methodology documents may be distilled and summarized before appearing in the public registry. Original documents are deleted after distillation if the contributing organization consents.</p>
+      <p>Organizations may request removal of their registry entry at any time.</p>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Contact</h2>
+      <p>Questions about this privacy notice or requests to remove submitted information can be directed through the Healthcare Governance Commons GitHub repository.</p>
+      <p><a href="https://github.com/lindsayguvenc-coder/Healthcare-Governance-Commons" style="color: #7c5cbf;">github.com/lindsayguvenc-coder/Healthcare-Governance-Commons</a></p>
+    </section>
+
+    <p class="last-updated">Last updated: April 2026. This notice will be updated as the Commons adds new tools and features.</p>
+
+  </main>
+
+  <footer class="footer">
+    <span>Healthcare Governance Commons</span>
+    <span>
+      <a href="/">Home</a> &nbsp;·&nbsp;
+      <a href="/tools">Tools</a> &nbsp;·&nbsp;
+      <a href="/community-weaving">Community Weaving</a>
+    </span>
+  </footer>
+
+</body>
+</html>
