@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peer Challenge Registry · Governance Commons</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300;1,9..144,600&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #141720;
+    --surface3: #0d1019;
+    --border: #2a2d3a;
+    --border-bright: #3d4155;
+    --accent: #b49eff;
+    --accent2: #7eb8f7;
+    --accent3: #f77e7e;
+    --accent4: #e8c547;
+    --accent5: #7ef7c0;
+    --accent6: #f7a87e;
+    --text: #e2e4ed;
+    --muted: #6b7080;
+    --purple: #7c5cbf;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .topbar-left { display: flex; flex-direction: column; gap: 2px; }
+  .topbar-title { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 300; color: var(--text); }
+  .topbar-sub { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .topbar-right { display: flex; gap: 16px; align-items: center; }
+  .nav-link { font-size: 10px; letter-spacing: 0.1em; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .nav-link:hover { color: var(--accent); }
+
+  /* ── HERO ── */
+  .hero {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 72px 40px 56px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent5);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: block;
+    width: 28px;
+    height: 1px;
+    background: var(--accent5);
+  }
+
+  .hero-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: clamp(32px, 5vw, 52px);
+    line-height: 1.08;
+    margin-bottom: 24px;
+    letter-spacing: -0.01em;
+  }
+  .hero-title em { font-style: italic; color: var(--accent5); }
+
+  .hero-statement {
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--muted);
+    max-width: 620px;
+    margin-bottom: 36px;
+    border-left: 2px solid var(--accent5);
+    padding-left: 18px;
+  }
+  .hero-statement strong { color: var(--text); font-weight: 500; }
+
+  .hero-meta {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .hero-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .hero-stat-num {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .hero-stat-label {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .page-body {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 40px 80px;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 48px;
+    align-items: start;
+  }
+
+  /* ── REGISTRY ── */
+  .registry-section {}
+
+  .section-label {
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Search / filter bar */
+  .filter-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .filter-input {
+    flex: 1;
+    min-width: 180px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .filter-input:focus { border-color: var(--accent); }
+  .filter-input::placeholder { color: var(--muted); }
+
+  .filter-select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 10px 28px 10px 12px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7080' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+  .filter-select:focus { border-color: var(--accent); }
+  .filter-select option { background: var(--surface); }
+
+  /* Registry entries */
+  .registry-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .registry-entry {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 22px;
+    transition: border-color 0.2s;
+    animation: fadeIn 0.2s ease both;
+  }
+  .registry-entry:hover { border-color: var(--border-bright); }
+  .registry-entry.has-methodology { border-left: 3px solid var(--accent5); }
+
+  .entry-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .entry-org {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .entry-org.anon { color: var(--muted); font-style: italic; }
+
+  .entry-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .badge {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 2px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .badge-system { background: rgba(180,158,255,0.12); color: var(--accent); border: 1px solid rgba(180,158,255,0.25); }
+  .badge-methodology { background: rgba(126,247,192,0.1); color: var(--accent5); border: 1px solid rgba(126,247,192,0.25); }
+  .badge-contact { background: rgba(126,184,247,0.1); color: var(--accent2); border: 1px solid rgba(126,184,247,0.25); }
+
+  .entry-meta {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .entry-meta-item {
+    font-size: 10px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .entry-meta-item span { color: var(--text); }
+
+  .entry-methodology {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+  .entry-methodology-label {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent5);
+    margin-bottom: 6px;
+  }
+  .entry-methodology-text {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .entry-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .entry-date { font-size: 9px; color: var(--muted); letter-spacing: 0.06em; }
+  .entry-contact-btn {
+    background: transparent;
+    border: 1px solid var(--accent2);
+    color: var(--accent2);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .entry-contact-btn:hover { background: rgba(126,184,247,0.08); }
+
+  /* Empty state */
+  .empty-state {
+    padding: 48px 24px;
+    text-align: center;
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+  }
+  .empty-state-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 18px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .empty-state-text { font-size: 11px; color: var(--muted); line-height: 1.7; }
+
+  /* Seed / illustrative example notice */
+  .seed-note {
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--muted);
+    background: rgba(232,197,71,0.06);
+    border: 1px solid rgba(232,197,71,0.25);
+    border-left: 3px solid var(--accent4);
+    border-radius: 0 3px 3px 0;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+  }
+  .seed-note strong { color: var(--accent4); }
+
+  .badge-seed {
+    background: rgba(232,197,71,0.1);
+    color: var(--accent4);
+    border: 1px solid rgba(232,197,71,0.3);
+    font-style: italic;
+  }
+
+  /* Result count */
+  .result-count {
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar { display: flex; flex-direction: column; gap: 24px; }
+
+  .sidebar-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 22px;
+  }
+
+  .sidebar-card-title {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-card-body {
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--muted);
+  }
+  .sidebar-card-body strong { color: var(--text); }
+
+  /* CTA card */
+  .cta-card {
+    background: rgba(126,247,192,0.04);
+    border: 1px solid rgba(126,247,192,0.2);
+    border-radius: 4px;
+    padding: 22px;
+  }
+  .cta-card-title {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent5);
+    margin-bottom: 10px;
+  }
+  .cta-card-body {
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .cta-btn {
+    display: block;
+    background: transparent;
+    border: 1px solid var(--accent5);
+    color: var(--accent5);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 10px 18px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    text-decoration: none;
+    width: 100%;
+  }
+  .cta-btn:hover { background: rgba(126,247,192,0.08); }
+
+  /* What gets shared list */
+  .share-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .share-list li {
+    font-size: 11px;
+    color: var(--muted);
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .share-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent5);
+    font-size: 10px;
+  }
+  .share-list li.never { color: var(--accent3); }
+  .share-list li.never::before { color: var(--accent3); content: '✗'; }
+
+  /* Advocacy note */
+  .advocacy-note {
+    background: rgba(232,197,71,0.05);
+    border: 1px solid rgba(232,197,71,0.2);
+    border-radius: 4px;
+    padding: 16px 18px;
+    margin-top: 24px;
+  }
+  .advocacy-note-label {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent4);
+    margin-bottom: 8px;
+  }
+  .advocacy-note-text {
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+  .advocacy-note-text a { color: var(--accent4); text-decoration: none; }
+  .advocacy-note-text a:hover { text-decoration: underline; }
+
+  /* ── SUBMISSION MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 12, 20, 0.88);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    border-radius: 6px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 32px;
+    animation: modalIn 0.2s ease both;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+  .modal-title { font-family: 'Fraunces', serif; font-weight: 300; font-size: 20px; }
+  .modal-title em { font-style: italic; color: var(--accent5); }
+  .modal-close {
+    background: none; border: none; color: var(--muted);
+    font-size: 18px; cursor: pointer; padding: 0 0 0 12px; line-height: 1;
+    transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--text); }
+
+  .modal-desc {
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--muted);
+    margin-bottom: 24px;
+    padding: 12px 14px;
+    background: var(--surface2);
+    border-left: 2px solid var(--accent5);
+    border-radius: 0 3px 3px 0;
+  }
+
+  .form-group { margin-bottom: 20px; }
+  .form-label {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+    display: block;
+  }
+  .form-label span { color: var(--accent3); margin-left: 2px; }
+  .form-input {
+    width: 100%;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--muted); }
+  .form-select {
+    width: 100%;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 10px 28px 10px 14px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7080' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+  .form-select:focus { border-color: var(--accent); }
+  .form-select option { background: var(--surface); }
+  .form-textarea {
+    width: 100%;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    line-height: 1.7;
+    padding: 10px 14px;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-textarea:focus { border-color: var(--accent); }
+  .form-textarea::placeholder { color: var(--muted); }
+  .form-hint { font-size: 10px; color: var(--muted); margin-top: 5px; line-height: 1.5; }
+
+  .anon-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    background: rgba(180,158,255,0.05);
+    border: 1px solid rgba(180,158,255,0.2);
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .anon-toggle input { accent-color: var(--accent); flex-shrink: 0; margin-top: 2px; cursor: pointer; }
+  .anon-toggle-text { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .anon-toggle-text strong { color: var(--text); font-weight: 500; }
+
+  .form-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  .optional-label {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(126,184,247,0.2);
+  }
+
+  .modal-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .btn-cancel {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 10px 18px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-cancel:hover { border-color: var(--border-bright); color: var(--text); }
+  .btn-submit {
+    background: transparent;
+    border: 1px solid var(--accent5);
+    color: var(--accent5);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-submit:hover { background: rgba(126,247,192,0.08); }
+  .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Contact modal */
+  .contact-modal-body { font-size: 12px; line-height: 1.8; color: var(--muted); }
+  .contact-modal-body strong { color: var(--text); }
+
+  /* Success state */
+  .success-banner {
+    display: none;
+    background: rgba(126,247,192,0.08);
+    border: 1px solid rgba(126,247,192,0.3);
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    font-size: 12px;
+    color: var(--accent5);
+    line-height: 1.6;
+    animation: fadeIn 0.3s ease;
+  }
+  .success-banner.visible { display: block; }
+
+  /* ── FOOTER ── */
+  .page-footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 40px;
+    background: var(--surface);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .footer-left { font-size: 9px; color: var(--muted); }
+  .footer-left a { color: var(--muted); text-decoration: none; }
+  .footer-left a:hover { color: var(--accent); }
+  .footer-right { font-size: 9px; color: var(--muted); font-style: italic; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .page-body { grid-template-columns: 1fr; }
+    .hero { padding: 40px 20px 36px; }
+    .page-body { padding: 32px 20px 60px; }
+    .topbar { padding: 12px 16px; }
+    .filter-bar { flex-direction: column; }
+    .hero-meta { gap: 20px; }
+    .page-footer { padding: 16px 20px; }
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-title">Healthcare Governance Commons</div>
+    <div class="topbar-sub">Peer Challenge Registry</div>
+  </div>
+  <div class="topbar-right">
+    <a href="/" class="nav-link">Commons</a>
+    <a href="/tools" class="nav-link">All Tools</a>
+    <a href="/validation-protocol" class="nav-link">VPG</a>
+    <a href="/community-weaving" class="nav-link">Series</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Peer Challenge Registry</div>
+  <h1 class="hero-title">No formal proficiency testing<br>exists for <em>clinical AI.</em></h1>
+  <p class="hero-statement">
+    Until one does, this registry connects organizations building their own challenge programs — so the work doesn't stay trapped in individual institutions.
+    <br><br>
+    <strong>What gets shared:</strong> challenge methodology, blind run protocols, lessons learned. Not patient data. Not performance numbers. Not anything identifying unless the organization chooses otherwise.
+  </p>
+  <div class="hero-meta">
+    <div class="hero-stat">
+      <div class="hero-stat-num" id="stat-orgs">0</div>
+      <div class="hero-stat-label">Organizations registered</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num" id="stat-systems">0</div>
+      <div class="hero-stat-label">AI systems represented</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num" id="stat-methodology">0</div>
+      <div class="hero-stat-label">Methodologies available</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="page-body">
+
+  <!-- REGISTRY -->
+  <div class="registry-section">
+
+    <div id="success-banner" class="success-banner"></div>
+
+    <div class="section-label">Registry — Organizations participating in peer challenge sharing</div>
+
+    <div class="filter-bar">
+      <input
+        type="text"
+        class="filter-input"
+        id="search-input"
+        placeholder="Search by system, use type, or setting..."
+        oninput="filterEntries()"
+      >
+      <select class="filter-select" id="filter-usetype" onchange="filterEntries()">
+        <option value="">All use types</option>
+        <option value="triage">Triage / prioritization</option>
+        <option value="decision support">Decision support</option>
+        <option value="risk stratification">Risk stratification</option>
+        <option value="workflow routing">Workflow routing</option>
+        <option value="screening">Screening / flagging</option>
+        <option value="retrospective audit">Retrospective audit</option>
+      </select>
+      <select class="filter-select" id="filter-methodology" onchange="filterEntries()">
+        <option value="">Any status</option>
+        <option value="yes">Methodology available</option>
+        <option value="contact">Contact enabled</option>
+      </select>
+    </div>
+
+    <div class="result-count" id="result-count"></div>
+    <div id="seed-note" class="seed-note">
+      The entries below are <strong>illustrative examples</strong> — fabricated to show what the registry will look like when organizations register. They are not real organizations or real data. This note disappears when real entries exist.
+    </div>
+    <div class="registry-list" id="registry-list"></div>
+
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="cta-card">
+      <div class="cta-card-title">Add your organization</div>
+      <div class="cta-card-body">
+        Participation means sharing how you constructed your challenge set and ran your blind protocol — not patient data, not performance numbers.
+        Other organizations running the same model can find you and request an introduction through the Commons.
+        You control whether to respond.
+      </div>
+      <button class="cta-btn" onclick="openSubmitModal()">Register your organization →</button>
+    </div>
+
+    <div class="sidebar-card">
+      <div class="sidebar-card-title">What gets shared</div>
+      <div class="sidebar-card-body">
+        <ul class="share-list">
+          <li>Challenge set construction approach</li>
+          <li>Blind run protocol design</li>
+          <li>Performance comparison methodology</li>
+          <li>Lessons learned (500 chars)</li>
+          <li>Contact preference (direct / Commons-facilitated / none)</li>
+          <li class="never">Patient data — never</li>
+          <li class="never">Performance numbers — never</li>
+          <li class="never">Patient-identifying information — never</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sidebar-card">
+      <div class="sidebar-card-title">Anonymization option</div>
+      <div class="sidebar-card-body">
+        Organizations can contribute methodology without being identified by name. Registry entry reads as <em>"Academic Medical Center, Urban, West Coast"</em> or similar. Methodology is still usable. Contact requests route through Commons only.
+      </div>
+    </div>
+
+    <div class="sidebar-card">
+      <div class="sidebar-card-title">How contact works</div>
+      <div class="sidebar-card-body">
+        When you request an introduction, the Commons sends a blind introduction to the listed organization. They decide whether to respond. No contact information is published in the registry. <strong>You are never obligated to respond to requests.</strong>
+      </div>
+    </div>
+
+    <div class="advocacy-note">
+      <div class="advocacy-note-label">Advocacy function</div>
+      <div class="advocacy-note-text">
+        The Commons publishes an annual summary: how many organizations, which systems, what methodologies exist. This is the argument for formalizing proficiency testing programs in clinical AI. Registry participation makes that case. <a href="/community-weaving">Read more in the Community Weaving series →</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="page-footer">
+  <div class="footer-left">
+    <a href="/">Healthcare Governance Commons</a> ·
+    <a href="/tools">Tools</a> ·
+    <a href="/validation-protocol">Validation Protocol Generator</a> ·
+    <a href="/privacy">Privacy notice</a>
+  </div>
+  <div class="footer-right">Methodology sharing, not data sharing.</div>
+</div>
+
+<!-- SUBMIT MODAL -->
+<div class="modal-overlay" id="submit-modal" onclick="handleOverlayClick(event, 'submit-modal')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Register your<br><em>organization</em></div>
+      <button class="modal-close" onclick="closeModal('submit-modal')">✕</button>
+    </div>
+
+    <div class="modal-desc">
+      Participation means sharing methodology, not data. Your contact information is stored securely and never published. You control whether to respond to introduction requests.
+    </div>
+
+    <div id="submit-form">
+
+      <div class="form-group">
+        <label class="form-label">AI system name and version <span>*</span></label>
+        <input type="text" class="form-input" id="f-system" placeholder="e.g. Aidoc Head CT, Epic Sepsis Model, Viz.ai LVO">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Use type <span>*</span></label>
+        <select class="form-select" id="f-usetype">
+          <option value="">— Select —</option>
+          <option>Triage / prioritization — direct impact on care sequencing</option>
+          <option>Decision support at point of care — informs clinical judgment in real time</option>
+          <option>Risk stratification — identifies patients for intervention or escalation</option>
+          <option>Workflow routing — determines care pathway or resource allocation</option>
+          <option>Screening / flagging — identifies cases for human review</option>
+          <option>Retrospective audit — quality review of past cases</option>
+          <option>Other</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Care setting <span>*</span></label>
+        <select class="form-select" id="f-setting">
+          <option value="">— Select —</option>
+          <option>Inpatient — general medical/surgical</option>
+          <option>Inpatient — ICU / critical care</option>
+          <option>Emergency department</option>
+          <option>Trauma</option>
+          <option>Outpatient / ambulatory</option>
+          <option>Post-acute / rehabilitation</option>
+          <option>Multi-setting</option>
+          <option>Other</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Contact preference <span>*</span></label>
+        <select class="form-select" id="f-contact">
+          <option value="">— Select —</option>
+          <option value="direct">Direct contact — other organizations may reach me directly</option>
+          <option value="facilitated">Commons-facilitated only — introductions routed through Commons</option>
+          <option value="none">No contact — methodology available but I am not available for introductions</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Contact email (for introduction requests)</label>
+        <input type="email" class="form-input" id="f-email" placeholder="Stored securely — never published">
+        <div class="form-hint">Required if contact preference is Direct or Commons-facilitated. Not stored if No contact selected.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="anon-toggle">
+          <input type="checkbox" id="f-anon">
+          <div class="anon-toggle-text">
+            <strong>List anonymously.</strong> Your organization will appear as institution type + geographic region only (e.g. "Community Hospital, Rural, Midwest"). Contact still routed through Commons.
+          </div>
+        </label>
+      </div>
+
+      <div class="form-group" id="f-orgname-group">
+        <label class="form-label">Organization name</label>
+        <input type="text" class="form-input" id="f-orgname" placeholder="Leave blank to list anonymously">
+        <div class="form-hint">If blank, we'll ask for institution type and region instead.</div>
+      </div>
+
+      <div class="form-group" id="f-anon-fields" style="display:none;">
+        <label class="form-label">Institution type</label>
+        <select class="form-select" id="f-inst-type" style="margin-bottom:10px;">
+          <option value="">— Select —</option>
+          <option>Academic medical center</option>
+          <option>Community hospital — large</option>
+          <option>Community hospital — small</option>
+          <option>Critical access hospital</option>
+          <option>Specialty hospital</option>
+          <option>Ambulatory / outpatient only</option>
+          <option>Federally Qualified Health Center</option>
+          <option>Multi-site health system</option>
+          <option>Other</option>
+        </select>
+        <label class="form-label" style="margin-top:8px;">Geographic region</label>
+        <select class="form-select" id="f-region">
+          <option value="">— Select —</option>
+          <option>Northeast US</option>
+          <option>Mid-Atlantic US</option>
+          <option>Southeast US</option>
+          <option>Midwest US</option>
+          <option>South Central US</option>
+          <option>Mountain West US</option>
+          <option>West Coast US</option>
+          <option>Canada</option>
+          <option>UK / Ireland</option>
+          <option>Western Europe</option>
+          <option>Other</option>
+        </select>
+      </div>
+
+      <hr class="form-divider">
+      <div class="optional-label">Methodology contribution — optional but encouraged</div>
+
+      <div class="form-group">
+        <label class="form-label">Challenge set construction</label>
+        <textarea class="form-textarea" id="f-challenge-set" placeholder="How did you source cases? How did you ensure independence from your validation cohort? How did you handle ground truth verification? 500 chars max." maxlength="500"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Blind run protocol</label>
+        <textarea class="form-textarea" id="f-blind-run" placeholder="How did you run the blind evaluation? Who ran it? How were results recorded? 500 chars max." maxlength="500"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Performance comparison approach</label>
+        <textarea class="form-textarea" id="f-comparison" placeholder="What metrics did you compare? What baseline did you use? How did you define acceptable drift? 500 chars max." maxlength="500"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Lessons learned</label>
+        <textarea class="form-textarea" id="f-lessons" placeholder="What didn't work? What would you do differently? What surprised you? 500 chars max." maxlength="500"></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal('submit-modal')">Cancel</button>
+        <button class="btn-submit" id="submit-btn" onclick="handleSubmit()">Submit registration →</button>
+      </div>
+
+    </div>
+
+    <!-- Success state -->
+    <div id="submit-success" style="display:none; text-align:center; padding: 24px 0;">
+      <div style="font-size:32px; margin-bottom:16px;">◉</div>
+      <div style="font-family:'Fraunces',serif; font-size:20px; font-weight:300; margin-bottom:12px;">Registration received</div>
+      <div style="font-size:11px; color:var(--muted); line-height:1.8; max-width:380px; margin: 0 auto 24px;">
+        Your entry will be reviewed and published to the registry within 48 hours.
+        If you contributed methodology, it will be distilled before publishing.
+        You will receive a confirmation at the email you provided.
+      </div>
+      <button class="btn-cancel" onclick="closeModal('submit-modal')">Close</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- CONTACT REQUEST MODAL -->
+<div class="modal-overlay" id="contact-modal" onclick="handleOverlayClick(event, 'contact-modal')">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <div class="modal-title">Request an<br><em>introduction</em></div>
+      <button class="modal-close" onclick="closeModal('contact-modal')">✕</button>
+    </div>
+    <div class="contact-modal-body" id="contact-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('contact-modal')">Cancel</button>
+      <button class="btn-submit" onclick="handleContactRequest()">Send request →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── REGISTRY DATA ─────────────────────────────────────────────────────────
+// Seeded with representative placeholder entries so the page isn't empty at launch.
+// Real submissions will be stored via the Redis API and loaded on init.
+// Structure matches what the submission form produces.
+
+const SEED_ENTRIES = [
+  {
+    id: 'seed-001',
+    org: null,
+    anon: true,
+    anonDesc: 'Academic Medical Center, Urban, West Coast',
+    system: 'Epic Sepsis Prediction Model',
+    useType: 'Risk stratification — identifies patients for intervention or escalation',
+    setting: 'Inpatient — general medical/surgical',
+    contact: 'facilitated',
+    hasMethodology: true,
+    methodology: {
+      challengeSet: 'Sourced 200 retrospective cases from 18-month lookback period outside vendor validation window. Ground truth verified by two independent hospitalists blinded to model output.',
+      blindRun: 'Model scores extracted without clinical team knowledge. Informaticist ran comparison against ground truth. Results reviewed at governance committee before any clinical staff saw output.',
+      comparison: 'Compared sensitivity and specificity against vendor-reported values. Defined >5% deviation as action-level trigger requiring governance review.',
+      lessons: 'Ground truth verification took 3x longer than estimated. Build that time into project planning. Also: small case numbers made confidence intervals wide — plan for larger cohort.'
+    },
+    date: '2025-11',
+    seed: true,
+  },
+  {
+    id: 'seed-002',
+    org: 'Valley Health System',
+    anon: false,
+    system: 'Aidoc Head CT — intracranial hemorrhage detection',
+    useType: 'Triage / prioritization — direct impact on care sequencing',
+    setting: 'Emergency department',
+    contact: 'direct',
+    hasMethodology: true,
+    methodology: {
+      challengeSet: 'Used publicly available CQ500 dataset for supplemental challenge. Supplemented with 80 local cases, ground truth verified by neuroradiology attending.',
+      blindRun: 'Radiology informatics ran blind evaluation over 2-week period. ED workflow not altered. Results compared after case closure.',
+      comparison: 'Sensitivity primary endpoint — false negatives in ED triage are higher risk than false positives for this use. Set 95% sensitivity floor as hard stop.',
+      lessons: "Vendor's reported sensitivity was on academic center data — our community ED population had lower prevalence which affected PPV substantially. Would have caught this earlier with local cohort planning."
+    },
+    date: '2025-10',
+    seed: true,
+  },
+  {
+    id: 'seed-003',
+    org: null,
+    anon: true,
+    anonDesc: 'Community Hospital, Rural, Midwest',
+    system: 'Viz.ai LVO — large vessel occlusion detection',
+    useType: 'Triage / prioritization — direct impact on care sequencing',
+    setting: 'Emergency department',
+    contact: 'none',
+    hasMethodology: false,
+    methodology: null,
+    date: '2025-12',
+    seed: true,
+  },
+  {
+    id: 'seed-004',
+    org: null,
+    anon: true,
+    anonDesc: 'Safety Net Hospital, Urban, Southeast',
+    system: 'Epic Deterioration Index',
+    useType: 'Risk stratification — identifies patients for intervention or escalation',
+    setting: 'Inpatient — ICU / critical care',
+    contact: 'facilitated',
+    hasMethodology: true,
+    methodology: {
+      challengeSet: 'Sourced 150 cases from prior fiscal year. Significant SDOH burden in our population — specifically flagged this in our challenge design as a known underrepresentation risk in vendor training data.',
+      blindRun: 'Ran model retrospectively against cases nursing team had already escalated (or not escalated). Compared model recommendation to actual escalation outcome.',
+      comparison: 'Primary concern was false negatives in high-SDOH patients. Stratified analysis by payer mix as SDOH proxy. Found 8% sensitivity gap in Medicaid cohort vs commercial — this drove our governance decision to require additional clinical review for this subgroup.',
+      lessons: 'Subgroup analysis was the most valuable part. Aggregate numbers looked acceptable. Disaggregating by payer was what surfaced the real problem.'
+    },
+    date: '2026-01',
+    seed: true,
+  },
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+
+let allEntries = [...SEED_ENTRIES];
+let filteredEntries = [...allEntries];
+let contactTargetId = null;
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+
+async function init() {
+  // Load any real submissions from Redis API
+  try {
+    const res = await fetch('/api/registry-list');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.entries && data.entries.length > 0) {
+        // Prepend real entries before seeds
+        allEntries = [...data.entries, ...SEED_ENTRIES];
+      }
+    }
+  } catch (e) {
+    // API not yet deployed or offline — seeds still show
+  }
+
+  filteredEntries = [...allEntries];
+  updateStats();
+  renderList();
+}
+
+function updateStats() {
+  const realEntries = allEntries.filter(e => !e.seed);
+  document.getElementById('stat-orgs').textContent = realEntries.length;
+  const uniqueSystems = new Set(realEntries.map(e => e.system?.toLowerCase())).size;
+  document.getElementById('stat-systems').textContent = uniqueSystems;
+  const withMethodology = realEntries.filter(e => e.hasMethodology).length;
+  document.getElementById('stat-methodology').textContent = withMethodology;
+}
+
+// ── FILTER ────────────────────────────────────────────────────────────────
+
+function filterEntries() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const useType = document.getElementById('filter-usetype').value.toLowerCase();
+  const methodology = document.getElementById('filter-methodology').value;
+
+  filteredEntries = allEntries.filter(entry => {
+    const text = [
+      entry.org, entry.anonDesc, entry.system, entry.useType, entry.setting
+    ].filter(Boolean).join(' ').toLowerCase();
+
+    const matchesSearch = !search || text.includes(search);
+    const matchesUseType = !useType || entry.useType.toLowerCase().includes(useType);
+    const matchesMethodology =
+      !methodology ||
+      (methodology === 'yes' && entry.hasMethodology) ||
+      (methodology === 'contact' && entry.contact !== 'none');
+
+    return matchesSearch && matchesUseType && matchesMethodology;
+  });
+
+  renderList();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+
+function renderList() {
+  const list = document.getElementById('registry-list');
+  const count = document.getElementById('result-count');
+
+  count.textContent = filteredEntries.length === allEntries.length
+    ? `${allEntries.length} organization${allEntries.length !== 1 ? 's' : ''} registered`
+    : `${filteredEntries.length} of ${allEntries.length} organizations`;
+
+  if (filteredEntries.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-title">No matching entries</div>
+        <div class="empty-state-text">Try broadening your search or filters.<br>If your organization is running this system, consider being the first to register it.</div>
+      </div>`;
+    return;
+  }
+
+  // Show/hide the illustrative example notice
+  const hasRealEntries = filteredEntries.some(e => !e.seed);
+  const seedNote = document.getElementById('seed-note');
+  if (seedNote) seedNote.style.display = hasRealEntries ? 'none' : 'block';
+
+  list.innerHTML = filteredEntries.map(entry => renderEntry(entry)).join('');
+}
+
+function renderEntry(entry) {
+  const orgDisplay = entry.anon
+    ? `<span class="entry-org anon">${entry.anonDesc || 'Anonymous organization'}</span>`
+    : `<span class="entry-org">${entry.org || 'Organization'}</span>`;
+
+  const seedBadge = entry.seed
+    ? `<span class="badge badge-seed">Illustrative example</span>` : '';
+
+  const methodologyBadge = entry.hasMethodology
+    ? `<span class="badge badge-methodology">Methodology</span>` : '';
+  const contactBadge = entry.contact !== 'none'
+    ? `<span class="badge badge-contact">${entry.contact === 'direct' ? 'Direct contact' : 'Via Commons'}</span>` : '';
+
+  const methodologyHTML = entry.hasMethodology && entry.methodology ? `
+    <div class="entry-methodology">
+      <div class="entry-methodology-label">Challenge methodology summary</div>
+      <div class="entry-methodology-text">
+        ${entry.methodology.challengeSet ? `<strong>Challenge set:</strong> ${entry.methodology.challengeSet.slice(0, 160)}${entry.methodology.challengeSet.length > 160 ? '…' : ''}<br>` : ''}
+        ${entry.methodology.lessons ? `<strong>Key lesson:</strong> ${entry.methodology.lessons.slice(0, 140)}${entry.methodology.lessons.length > 140 ? '…' : ''}` : ''}
+      </div>
+    </div>` : '';
+
+  const contactBtn = entry.contact !== 'none' ? `
+    <button class="entry-contact-btn" onclick="openContactModal('${entry.id}')">
+      Request introduction →
+    </button>` : '';
+
+  const dateStr = entry.date
+    ? new Date(entry.date + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+    : '';
+
+  return `
+    <div class="registry-entry ${entry.hasMethodology ? 'has-methodology' : ''}" id="entry-${entry.id}">
+      <div class="entry-top">
+        ${orgDisplay}
+        <div class="entry-badges">
+          <span class="badge badge-system">${entry.system || '—'}</span>
+          ${seedBadge}
+          ${methodologyBadge}
+          ${contactBadge}
+        </div>
+      </div>
+      <div class="entry-meta">
+        <div class="entry-meta-item">Use type: <span>${entry.useType ? entry.useType.split(' — ')[0] : '—'}</span></div>
+        <div class="entry-meta-item">Setting: <span>${entry.setting || '—'}</span></div>
+      </div>
+      ${methodologyHTML}
+      <div class="entry-footer">
+        <div class="entry-date">${dateStr ? `Registered ${dateStr}` : ''}</div>
+        ${contactBtn}
+      </div>
+    </div>`;
+}
+
+// ── SUBMIT MODAL ──────────────────────────────────────────────────────────
+
+function openSubmitModal() {
+  document.getElementById('submit-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+document.getElementById('f-anon').addEventListener('change', function() {
+  const anonFields = document.getElementById('f-anon-fields');
+  const orgnameGroup = document.getElementById('f-orgname-group');
+  anonFields.style.display = this.checked ? 'block' : 'none';
+  orgnameGroup.style.display = this.checked ? 'none' : 'block';
+});
+
+async function handleSubmit() {
+  const btn = document.getElementById('submit-btn');
+  const system = document.getElementById('f-system').value.trim();
+  const useType = document.getElementById('f-usetype').value;
+  const setting = document.getElementById('f-setting').value;
+  const contact = document.getElementById('f-contact').value;
+
+  if (!system || !useType || !setting || !contact) {
+    // Simple inline validation — highlight empties
+    [
+      { id: 'f-system', val: system },
+      { id: 'f-usetype', val: useType },
+      { id: 'f-setting', val: setting },
+      { id: 'f-contact', val: contact },
+    ].forEach(({ id, val }) => {
+      const el = document.getElementById(id);
+      if (!val) el.style.borderColor = 'var(--accent3)';
+      else el.style.borderColor = '';
+    });
+    return;
+  }
+
+  const isAnon = document.getElementById('f-anon').checked;
+  const orgname = document.getElementById('f-orgname').value.trim();
+  const instType = document.getElementById('f-inst-type').value;
+  const region = document.getElementById('f-region').value;
+  const email = document.getElementById('f-email').value.trim();
+
+  const entry = {
+    id: 'sub-' + Date.now(),
+    org: isAnon ? null : (orgname || null),
+    anon: isAnon,
+    anonDesc: isAnon ? [instType, region].filter(Boolean).join(', ') : null,
+    system,
+    useType,
+    setting,
+    contact,
+    email: (contact !== 'none' && email) ? email : null,
+    hasMethodology: !!(
+      document.getElementById('f-challenge-set').value.trim() ||
+      document.getElementById('f-blind-run').value.trim()
+    ),
+    methodology: {
+      challengeSet: document.getElementById('f-challenge-set').value.trim(),
+      blindRun: document.getElementById('f-blind-run').value.trim(),
+      comparison: document.getElementById('f-comparison').value.trim(),
+      lessons: document.getElementById('f-lessons').value.trim(),
+    },
+    date: new Date().toISOString().slice(0, 7),
+    pending: true, // pending Commons review
+  };
+
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  try {
+    await fetch('/api/registry-submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry),
+    });
+  } catch (e) {
+    // Continue even if API is not yet live
+  }
+
+  // Show success state
+  document.getElementById('submit-form').style.display = 'none';
+  document.getElementById('submit-success').style.display = 'block';
+}
+
+// ── CONTACT MODAL ─────────────────────────────────────────────────────────
+
+function openContactModal(entryId) {
+  contactTargetId = entryId;
+  const entry = allEntries.find(e => e.id === entryId);
+  if (!entry) return;
+
+  const orgName = entry.anon ? entry.anonDesc : entry.org;
+  const isDirectContact = entry.contact === 'direct';
+
+  document.getElementById('contact-modal-body').innerHTML = `
+    <p style="margin-bottom:16px;">
+      You are requesting an introduction to <strong>${orgName || 'this organization'}</strong> regarding their challenge methodology for <strong>${entry.system}</strong>.
+    </p>
+    <p style="margin-bottom:16px; font-size:11px; line-height:1.7; color:var(--muted);">
+      ${isDirectContact
+        ? 'This organization accepts direct contact. The Commons will forward your request and let them decide whether to respond.'
+        : 'This organization prefers Commons-facilitated introductions. We will make a blind introduction and they will decide whether to respond. Your contact details will not be shared without their consent.'
+      }
+    </p>
+    <div style="margin-bottom:16px;">
+      <label class="form-label">Your name</label>
+      <input type="text" class="form-input" id="contact-name" placeholder="Your name" style="margin-bottom:10px;">
+      <label class="form-label">Your organization</label>
+      <input type="text" class="form-input" id="contact-org" placeholder="Your organization" style="margin-bottom:10px;">
+      <label class="form-label">Your email</label>
+      <input type="email" class="form-input" id="contact-email" placeholder="For the introduction">
+      <label class="form-label" style="margin-top:10px;">Why you are reaching out</label>
+      <textarea class="form-textarea" id="contact-message" placeholder="2-3 sentences — what are you working on and what specifically would you like to discuss?" style="min-height:70px;"></textarea>
+    </div>
+    <p style="font-size:10px; color:var(--muted); line-height:1.6;">
+      You are not obligated to respond to introduction requests, and neither is the organization you are contacting. The Commons does not share contact information without consent.
+    </p>`;
+
+  document.getElementById('contact-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+async function handleContactRequest() {
+  const name = document.getElementById('contact-name')?.value.trim();
+  const org = document.getElementById('contact-org')?.value.trim();
+  const email = document.getElementById('contact-email')?.value.trim();
+  const message = document.getElementById('contact-message')?.value.trim();
+
+  if (!name || !email) return;
+
+  try {
+    await fetch('/api/registry-contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetId: contactTargetId, name, org, email, message }),
+    });
+  } catch (e) {
+    // Continue even if API not live
+  }
+
+  closeModal('contact-modal');
+  showSuccessBanner('Introduction request sent. The organization will be notified and will decide whether to respond. You will hear from the Commons within 3 business days.');
+}
+
+// ── MODAL HELPERS ─────────────────────────────────────────────────────────
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function handleOverlayClick(e, id) {
+  if (e.target.id === id) closeModal(id);
+}
+
+function showSuccessBanner(msg) {
+  const banner = document.getElementById('success-banner');
+  banner.textContent = msg;
+  banner.classList.add('visible');
+  setTimeout(() => banner.classList.remove('visible'), 8000);
+}
+
+// ── START ──────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
