@@ -1729,6 +1729,7 @@ export default function GovernanceCommons() {
   const [activeNodeId, setActiveNodeId] = useState("stop");
   const [loopFilter, setLoopFilter] = useState("all");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [nodeNavOpen, setNodeNavOpen] = useState(false);
 
   const handleNavigate = (layer, nodeId) => {
     setActiveLayer(layer);
@@ -1930,14 +1931,157 @@ export default function GovernanceCommons() {
           </div>
         )}
 
-        {activeLayer === "taxonomy" && (
+{activeLayer === "taxonomy" && (
           <>
+            {/* Desktop sidebar */}
             <div className="taxonomy-sidebar" style={{ width: 280, flexShrink: 0, borderRight: `1px solid ${C.border}`, overflowY: "auto", background: C.surface }}>
               <TaxonomyNavigator activeNodeId={activeNodeId} onSelectNode={id => setActiveNodeId(id)} loopFilter={loopFilter}/>
             </div>
-            <div className="taxonomy-content" style={{ flex: 1, overflowY: "auto" }}>
+
+            {/* Node detail + mobile sticky nav bar */}
+            <div className="taxonomy-content" style={{ flex: 1, overflowY: "auto", position: "relative" }}>
+
+              {/* Mobile sticky browse bar */}
+              <div className="mobile-node-bar" style={{
+                display: "none",
+                position: "sticky",
+                top: 0,
+                zIndex: 50,
+                background: C.surface,
+                borderBottom: `1px solid ${C.border}`,
+                padding: "10px 16px",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 10,
+              }}>
+                {(() => {
+                  const node = TAXONOMY_NODES.find(n => n.id === activeNodeId);
+                  const lm = node ? LOOP_META[node.loop] : null;
+                  return node ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+                      <span style={{ fontFamily: C.mono, fontSize: 14, color: lm.color, flexShrink: 0 }}>{node.icon}</span>
+                      <span style={{ fontSize: 12, color: C.text, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{node.label}</span>
+                    </div>
+                  ) : null;
+                })()}
+                <button
+                  onClick={() => setNodeNavOpen(true)}
+                  style={{
+                    background: C.surface2,
+                    border: `1px solid ${C.borderBright}`,
+                    borderRadius: 4,
+                    color: C.text,
+                    fontFamily: C.mono,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    padding: "6px 12px",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                    whiteSpace: "nowrap",
+                  }}
+                >☰ Browse Nodes</button>
+              </div>
+
               <NodeDetail nodeId={activeNodeId}/>
             </div>
+
+            {/* Mobile node navigator overlay */}
+            {nodeNavOpen && (
+              <div style={{
+                position: "fixed",
+                inset: 0,
+                zIndex: 200,
+                display: "flex",
+                flexDirection: "column",
+              }}>
+                {/* Backdrop */}
+                <div
+                  onClick={() => setNodeNavOpen(false)}
+                  style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.75)" }}
+                />
+                {/* Panel — full height, scrollable */}
+                <div style={{
+                  position: "relative",
+                  zIndex: 1,
+                  background: C.surface,
+                  width: "100%",
+                  maxHeight: "90vh",
+                  overflowY: "auto",
+                  display: "flex",
+                  flexDirection: "column",
+                  marginTop: "auto",
+                  borderTop: `1px solid ${C.borderBright}`,
+                  borderRadius: "12px 12px 0 0",
+                }}>
+                  {/* Handle + header */}
+                  <div style={{
+                    padding: "14px 20px 10px",
+                    borderBottom: `1px solid ${C.border}`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexShrink: 0,
+                    position: "sticky",
+                    top: 0,
+                    background: C.surface,
+                    zIndex: 1,
+                  }}>
+                    <div style={{ fontFamily: C.mono, fontSize: 9, color: C.textDimmer, letterSpacing: "0.14em", textTransform: "uppercase" }}>
+                      Taxonomy Navigator
+                    </div>
+                    <button
+                      onClick={() => setNodeNavOpen(false)}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        color: C.textDim,
+                        fontFamily: C.mono,
+                        fontSize: 16,
+                        cursor: "pointer",
+                        padding: "4px 8px",
+                      }}
+                    >✕</button>
+                  </div>
+
+                  {/* Loop filter pills */}
+                  <div style={{
+                    padding: "10px 16px",
+                    borderBottom: `1px solid ${C.border}`,
+                    display: "flex",
+                    gap: 6,
+                    flexWrap: "wrap",
+                    flexShrink: 0,
+                  }}>
+                    {["all", "internal", "handoff", "external", "commons"].map(f => {
+                      const color = f === "all" ? C.textDim : LOOP_META[f]?.color;
+                      return (
+                        <button key={f} onClick={() => setLoopFilter(f)} style={{
+                          padding: "5px 10px", borderRadius: 3, cursor: "pointer",
+                          background: loopFilter === f ? color + "20" : C.surface2,
+                          border: `1px solid ${loopFilter === f ? color + "50" : C.border}`,
+                          color: loopFilter === f ? color : C.textDimmer,
+                          fontFamily: C.mono, fontSize: 9, fontWeight: 700,
+                          textTransform: "uppercase", letterSpacing: "0.08em",
+                        }}>{f}</button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Navigator — reuses existing component */}
+                  <div style={{ flex: 1, overflowY: "auto" }}>
+                    <TaxonomyNavigator
+                      activeNodeId={activeNodeId}
+                      onSelectNode={id => {
+                        setActiveNodeId(id);
+                        setNodeNavOpen(false);
+                      }}
+                      loopFilter={loopFilter}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -1982,10 +2126,11 @@ export default function GovernanceCommons() {
           .topbar { padding: 12px 16px !important; }
         }
 
-        /* Taxonomy sidebar collapses on mobile */
+/* Taxonomy sidebar collapses on mobile, browse bar appears */
         @media (max-width: 768px) {
           .taxonomy-sidebar { display: none !important; }
-          .taxonomy-content { padding: 12px 16px !important; }
+          .taxonomy-content { padding: 0 !important; }
+          .mobile-node-bar { display: flex !important; }
         }
 
         /* Node detail panels get breathing room on mobile */
