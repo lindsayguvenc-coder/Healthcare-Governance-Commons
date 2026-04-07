@@ -1967,13 +1967,31 @@ export default function GovernanceCommons() {
         </div>
       </div>
 
-      <style>{`
+<style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap');
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #1c2a3a; border-radius: 2px; }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+        /* ── MOBILE RESPONSIVE ── */
+        @media (max-width: 768px) {
+          .desktop-nav { display: none !important; }
+          .hamburger-btn { display: flex !important; }
+          .topbar { padding: 12px 16px !important; }
+        }
+
+        /* Taxonomy sidebar collapses on mobile */
+        @media (max-width: 768px) {
+          .taxonomy-sidebar { display: none !important; }
+          .taxonomy-content { padding: 12px 16px !important; }
+        }
+
+        /* Node detail panels get breathing room on mobile */
+        @media (max-width: 480px) {
+          .topbar { gap: 10px !important; }
+        }
       `}</style>
     </div>
   );
