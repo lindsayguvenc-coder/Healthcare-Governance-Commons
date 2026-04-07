@@ -543,6 +543,109 @@
     .result-element-text { color: #111 !important; font-size: 11px; }
     .result-divider { border-color: #e0e0e0 !important; }
   }
+  /* ── MOBILE RESPONSIVE ── */
+/* Fix topbar overflow on small screens */
+@media (max-width: 768px) {
+.topbar {
+padding: 12px 16px !important;
+flex-wrap: wrap;
+gap: 8px;
+}
+.topbar-right {
+gap: 10px;
+}
+.topbar-title {
+font-size: 14px;
+}
+.topbar-sub {
+display: none;
+}
+}
+/* Sidebar already hides at 700px — keep that, tighten content padding */
+@media (max-width: 700px) {
+.content {
+padding: 20px 16px !important;
+}
+.intro-title {
+font-size: clamp(22px, 7vw, 36px) !important;
+}
+.section-title {
+font-size: 20px !important;
+}
+.start-btn {
+width: 100%;
+text-align: center;
+}
+.section-nav {
+flex-wrap: wrap;
+gap: 10px;
+}
+.nav-btn-primary,
+.nav-btn {
+flex: 1;
+text-align: center;
+min-width: 120px;
+}
+.progress-text {
+width: 100%;
+text-align: center;
+order: -1;
+}
+}
+/* Results page on mobile */
+@media (max-width: 600px) {
+.triage-summary {
+gap: 8px;
+}
+.triage-pill {
+font-size: 9px;
+padding: 4px 10px;
+}
+.node-result-header {
+padding: 12px 14px;
+flex-wrap: wrap;
+gap: 8px;
+}
+.node-result-body {
+padding: 14px !important;
+}
+.radar-section {
+padding: 20px 16px;
+}
+.copy-results-btn,
+.pdf-btn,
+.restart-btn {
+display: block;
+width: 100%;
+margin: 8px 0 0 0 !important;
+text-align: center;
+}
+.generating-screen {
+padding: 40px 20px;
+}
+.result-element-text {
+font-size: 11px;
+}
+}
+/* Checkbox groups on mobile /
+@media (max-width: 500px) {
+.checkbox-label {
+font-size: 10px;
+}
+.question-text {
+font-size: 12px;
+}
+.q-select,
+.q-textarea {
+font-size: 16px; / prevents iOS zoom on focus */
+}
+}
+/* Prevent iOS input zoom universally */
+@media (max-width: 768px) {
+input, select, textarea {
+font-size: 16px !important;
+}
+}
 </style>
 </head>
 <body>
