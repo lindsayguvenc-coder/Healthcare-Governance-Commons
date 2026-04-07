@@ -1932,7 +1932,7 @@ export default function GovernanceCommons() {
 
         {activeLayer === "taxonomy" && (
           <>
-            <div style={{ width: 280, flexShrink: 0, borderRight: `1px solid ${C.border}`, overflowY: "auto", background: C.surface }}>
+            <div className="taxonomy-sidebar" style={{ width: 280, flexShrink: 0, borderRight: `1px solid ${C.border}`, overflowY: "auto", background: C.surface }}>
               <TaxonomyNavigator activeNodeId={activeNodeId} onSelectNode={id => setActiveNodeId(id)} loopFilter={loopFilter}/>
             </div>
             <div style={{ flex: 1, overflowY: "auto" }}>
