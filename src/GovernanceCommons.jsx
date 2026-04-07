@@ -2120,14 +2120,14 @@ export default function GovernanceCommons() {
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 
         /* ── MOBILE RESPONSIVE ── */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
           .desktop-nav { display: none !important; }
           .hamburger-btn { display: flex !important; }
           .topbar { padding: 12px 16px !important; }
         }
 
 /* Taxonomy sidebar collapses on mobile, browse bar appears */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
           .taxonomy-sidebar { display: none !important; }
           .taxonomy-content { padding: 0 !important; }
           .mobile-node-bar { display: flex !important; }
