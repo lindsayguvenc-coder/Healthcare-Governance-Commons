@@ -17,6 +17,17 @@
 
 import { useState, useRef } from "react";
 
+// Inject spinner keyframes
+if (typeof document !== 'undefined') {
+  const existing = document.head.querySelector('[data-commons-spinner]');
+  if (!existing) {
+    const style = document.createElement('style');
+    style.setAttribute('data-commons-spinner', 'true');
+    style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
+  }
+}
+
 const DOCUMENT_SLOTS = [
   {
     id: "model_card",
