@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stop Mechanisms · Healthcare Governance Commons</title>
+<title>Human Override Protocols · Healthcare Governance Commons</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300;1,9..144,600&display=swap');
   :root {
@@ -125,14 +125,14 @@
     <span class="nav-sep">·</span>
     <a href="/tools" class="nav-link">Tools</a>
   </div>
-  <a href="/#taxonomy-stop" class="deeper-btn" onclick="sessionStorage.setItem('activeNode','stop'); sessionStorage.setItem('activeLayer','taxonomy'); return true;">Evidence &amp; Tools →</a>
+  <a href="/#taxonomy-override" class="deeper-btn" onclick="sessionStorage.setItem('activeNode','override'); sessionStorage.setItem('activeLayer','taxonomy'); return true;">Evidence &amp; Tools →</a>
 </div>
 
 <div class="hero">
   <div class="loop-pill">External Human Governance Loop</div>
-  <span class="node-icon">⊗</span>
-  <h1 class="node-title">Stop Mechanisms</h1>
-  <p class="node-question">What conditions mandate halting the AI system?</p>
+  <span class="node-icon">⟳</span>
+  <h1 class="node-title">Human Override Protocols</h1>
+  <p class="node-question">How are clinician overrides logged, reviewed, and fed back?</p>
 </div>
 
 <div class="main">
@@ -143,11 +143,11 @@
     <div class="card-body">
       <div class="flag flag-contention">
         <div class="flag-label">⚡ Contention</div>
-        Fixed vs. dynamic confidence thresholds for automated stops
+        Too-easy override → automation complacency. Too-hard → alarm fatigue workarounds.
       </div>
       <div class="flag flag-gap">
         <div class="flag-label">⬜ Known Gap</div>
-        Hard stop authority is formally unassigned at most institutions.
+        No standard for what override rate is healthy vs. a signal of system failure.
       </div>
     </div>
   </div>
@@ -156,8 +156,8 @@
   <div class="card">
     <div class="card-header"><span class="card-title">Components</span></div>
     <div class="card-body">
-      <div class="components-list"><span style="padding:3px 10px;border-radius:3px;background:#10b98112;border:1px solid #10b98125;font-family:var(--mono);font-size:10px;color:#10b981;">Hard stop triggers (automated)</span><span style="padding:3px 10px;border-radius:3px;background:#10b98112;border:1px solid #10b98125;font-family:var(--mono);font-size:10px;color:#10b981;">Soft stop triggers (human-initiated)</span><span style="padding:3px 10px;border-radius:3px;background:#10b98112;border:1px solid #10b98125;font-family:var(--mono);font-size:10px;color:#10b981;">Kill switch authority chain</span><span style="padding:3px 10px;border-radius:3px;background:#10b98112;border:1px solid #10b98125;font-family:var(--mono);font-size:10px;color:#10b981;">Fallback protocol activation</span></div>
-      <div style="margin-top:14px;" class="insight-block">Only deployed example of Westgard-adapted stop thresholds in clinical AI is the ECG governance demo. Fixed vs. adaptive threshold debate unresolved in the literature.</div>
+      <div class="components-list"><span style="padding:3px 10px;border-radius:3px;background:#10b98112;border:1px solid #10b98125;font-family:var(--mono);font-size:10px;color:#10b981;">Override logging (automatic)</span><span style="padding:3px 10px;border-radius:3px;background:#10b98112;border:1px solid #10b98125;font-family:var(--mono);font-size:10px;color:#10b981;">Override rate as KPI</span><span style="padding:3px 10px;border-radius:3px;background:#10b98112;border:1px solid #10b98125;font-family:var(--mono);font-size:10px;color:#10b981;">Quarterly override review</span><span style="padding:3px 10px;border-radius:3px;background:#10b98112;border:1px solid #10b98125;font-family:var(--mono);font-size:10px;color:#10b981;">Feedback pathway to model team</span></div>
+      <div style="margin-top:14px;" class="insight-block">Automation bias is a predictable system behavior, not a user failure. Override design must account for both over-reliance and under-reliance failure modes.</div>
     </div>
   </div>
 
@@ -166,31 +166,24 @@
     <div class="card-header"><span class="card-title">Key Evidence</span></div>
     <div class="card-body">
         <div style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;">
-          <div style="font-size:12px;color:var(--text);margin-bottom:4px;line-height:1.4;">FDA Predetermined Change Control Plan</div>
+          <div style="font-size:12px;color:var(--text);margin-bottom:4px;line-height:1.4;">Automation Bias and Assistive AI</div>
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
-            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">FDA · 2024</span>
-            <a href="https://www.fda.gov/regulatory-information/search-fda-guidance-documents/marketing-submission-recommendations-predetermined-change-control-plan-artificial-intelligence" target="_blank" style="color:#10b981;text-decoration:none;font-family:var(--mono);font-size:10px;">↗ Open source</a>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">JAMA / Khera et al. · 2023</span>
+            <a href="https://pubmed.ncbi.nlm.nih.gov/38112824/" target="_blank" style="color:#10b981;text-decoration:none;font-family:var(--mono);font-size:10px;">↗ Open source</a>
           </div>
         </div>
         <div style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;">
-          <div style="font-size:12px;color:var(--text);margin-bottom:4px;line-height:1.4;">ECG Arrhythmia Detection Governance Demo</div>
+          <div style="font-size:12px;color:var(--text);margin-bottom:4px;line-height:1.4;">Automation Bias: A Systematic Review</div>
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
-            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">Lindsay LaMere Guvenc · 2025</span>
-            <a href="https://github.com/lindsayguvenc-coder/ecg-governance-demo" target="_blank" style="color:#10b981;text-decoration:none;font-family:var(--mono);font-size:10px;">↗ Open source</a>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">JAMIA / Goddard et al. · 2011</span>
+            <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3240751/" target="_blank" style="color:#10b981;text-decoration:none;font-family:var(--mono);font-size:10px;">↗ Open source</a>
           </div>
         </div>
         <div style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;">
-          <div style="font-size:12px;color:var(--text);margin-bottom:4px;line-height:1.4;">Westgard ML Adaptation</div>
+          <div style="font-size:12px;color:var(--text);margin-bottom:4px;line-height:1.4;">AMA Principles for Augmented Intelligence</div>
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
-            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">Lindsay LaMere Guvenc / Commons · 2025</span>
-            <span style="color:var(--text-dimmer);font-family:var(--mono);font-size:10px;">Internal document</span>
-          </div>
-        </div>
-        <div style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;">
-          <div style="font-size:12px;color:var(--text);margin-bottom:4px;line-height:1.4;">Bringing Safety to AI</div>
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
-            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">IHI · 2024</span>
-            <a href="https://www.ihi.org/resources/white-papers/bringing-safety-ai-adapting-patient-safety-principles-artificial-intelligence-health-care" target="_blank" style="color:#10b981;text-decoration:none;font-family:var(--mono);font-size:10px;">↗ Open source</a>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">AMA · 2023</span>
+            <a href="https://www.ama-assn.org/practice-management/digital/ama-principles-augmented-intelligence-medicine" target="_blank" style="color:#10b981;text-decoration:none;font-family:var(--mono);font-size:10px;">↗ Open source</a>
           </div>
         </div></div>
   </div>
@@ -200,11 +193,7 @@
     <div class="card-header"><span class="card-title">Practitioner Insights</span></div>
     <div class="card-body">
         <div style="padding:12px 14px;background:#10b98112;border:1px solid #10b98130;border-left:3px solid #10b981;border-radius:0 4px 4px 0;margin-bottom:8px;">
-          <div style="font-size:12px;color:var(--text);line-height:1.7;">The QC threshold problem in clinical AI is structurally identical to Westgard multi-rule design. The 2-of-3s rule maps directly to: if 2 of 3 consecutive inference confidence scores fall below threshold, escalate.</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dimmer);margin-top:6px;">💎 Practitioner insight · Lindsay LaMere Guvenc</div>
-        </div>
-        <div style="padding:12px 14px;background:#10b98112;border:1px solid #10b98130;border-left:3px solid #10b981;border-radius:0 4px 4px 0;margin-bottom:8px;">
-          <div style="font-size:12px;color:var(--text);line-height:1.7;">From the ECG governance demo: the hard stop fired twice in retrospective MIMIC-IV validation — both on data quality failures, not model confidence failures. Data validation stops may be more practically important than confidence threshold stops.</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.7;">Automation bias errors are compounded by time pressure. Override design in high-acuity settings has to account for the fact that the clinical environment itself reduces the cognitive bandwidth available to question the AI.</div>
           <div style="font-family:var(--mono);font-size:9px;color:var(--text-dimmer);margin-top:6px;">💎 Practitioner insight · Lindsay LaMere Guvenc</div>
         </div></div>
   </div>
@@ -236,7 +225,7 @@
 </div>
 
 <div style="border-top:1px solid var(--border);padding:12px 32px;background:var(--surface);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-  <span style="font-family:var(--mono);font-size:9px;color:var(--text-dimmer);">Healthcare Governance Commons · Node: stop · Built by Lindsay LaMere Guvenc</span>
+  <span style="font-family:var(--mono);font-size:9px;color:var(--text-dimmer);">Healthcare Governance Commons · Node: override · Built by Lindsay LaMere Guvenc</span>
   <a href="/tools" style="font-family:var(--mono);font-size:9px;color:var(--text-dimmer);text-decoration:none;">All Tools →</a>
 </div>
 

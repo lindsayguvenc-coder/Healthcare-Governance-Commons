@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stop Mechanisms · Healthcare Governance Commons</title>
+<title>Cold Trigger Intake (H3) · Healthcare Governance Commons</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300;1,9..144,600&display=swap');
   :root {
@@ -13,7 +13,7 @@
     --surface3: #161f2e;
     --border: #1c2a3a;
     --border-bright: #2a3f57;
-    --accent: #10b981;
+    --accent: #f59e0b;
     --text: #dce8f0;
     --text-dim: #607080;
     --text-dimmer: #2d3f50;
@@ -34,26 +34,26 @@
   .nav-sep { color: var(--text-dimmer); }
   .deeper-btn {
     padding: 8px 18px; border-radius: 4px; cursor: pointer;
-    background: #10b98112; border: 1px solid #10b98150;
-    color: #10b981; font-family: var(--mono); font-size: 11px;
+    background: #f59e0b12; border: 1px solid #f59e0b50;
+    color: #f59e0b; font-family: var(--mono); font-size: 11px;
     font-weight: 700; letter-spacing: 0.06em; text-decoration: none;
     transition: all 0.2s; white-space: nowrap;
   }
-  .deeper-btn:hover { background: #10b98125; }
+  .deeper-btn:hover { background: #f59e0b25; }
 
   .hero {
     padding: 40px 32px 32px; border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, #10b98108 0%, transparent 100%);
+    background: linear-gradient(180deg, #f59e0b08 0%, transparent 100%);
   }
   .loop-pill {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 3px 10px; border-radius: 3px;
-    background: #10b98112; border: 1px solid #10b98133;
+    background: #f59e0b12; border: 1px solid #f59e0b33;
     font-family: var(--mono); font-size: 9px; font-weight: 700;
-    color: #10b981; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #f59e0b; letter-spacing: 0.1em; text-transform: uppercase;
     margin-bottom: 14px;
   }
-  .node-icon { font-size: 28px; color: #10b981; margin-bottom: 10px; display: block; }
+  .node-icon { font-size: 28px; color: #f59e0b; margin-bottom: 10px; display: block; }
   .node-title { font-family: var(--serif); font-size: clamp(24px, 4vw, 36px); font-weight: 300; color: var(--text); margin-bottom: 10px; line-height: 1.15; }
   .node-question { font-size: 14px; color: var(--text-dim); font-style: italic; line-height: 1.6; max-width: 620px; }
 
@@ -108,7 +108,7 @@
   
   .insight-block {
     padding: 12px 14px; margin-bottom: 10px;
-    background: #10b98112; border: 1px solid #10b98125;
+    background: #f59e0b12; border: 1px solid #f59e0b25;
     border-radius: 4px;
     font-size: 12px; color: var(--text-dim); line-height: 1.7;
     font-style: italic;
@@ -125,14 +125,14 @@
     <span class="nav-sep">·</span>
     <a href="/tools" class="nav-link">Tools</a>
   </div>
-  <a href="/#taxonomy-stop" class="deeper-btn" onclick="sessionStorage.setItem('activeNode','stop'); sessionStorage.setItem('activeLayer','taxonomy'); return true;">Evidence &amp; Tools →</a>
+  <a href="/#taxonomy-h3" class="deeper-btn" onclick="sessionStorage.setItem('activeNode','h3'); sessionStorage.setItem('activeLayer','taxonomy'); return true;">Evidence &amp; Tools →</a>
 </div>
 
 <div class="hero">
-  <div class="loop-pill">External Human Governance Loop</div>
-  <span class="node-icon">⊗</span>
-  <h1 class="node-title">Stop Mechanisms</h1>
-  <p class="node-question">What conditions mandate halting the AI system?</p>
+  <div class="loop-pill">Handoff Zone</div>
+  <span class="node-icon">⟳</span>
+  <h1 class="node-title">Cold Trigger Intake (H3)</h1>
+  <p class="node-question">Has an external event made the current deployment questionable?</p>
 </div>
 
 <div class="main">
@@ -143,11 +143,11 @@
     <div class="card-body">
       <div class="flag flag-contention">
         <div class="flag-label">⚡ Contention</div>
-        Fixed vs. dynamic confidence thresholds for automated stops
+        Who is responsible for monitoring external signals and how frequently
       </div>
       <div class="flag flag-gap">
         <div class="flag-label">⬜ Known Gap</div>
-        Hard stop authority is formally unassigned at most institutions.
+        Almost universally undesigned. Cold triggers have no formal entry point.
       </div>
     </div>
   </div>
@@ -156,8 +156,8 @@
   <div class="card">
     <div class="card-header"><span class="card-title">Components</span></div>
     <div class="card-body">
-      <div class="components-list"><span style="padding:3px 10px;border-radius:3px;background:#10b98112;border:1px solid #10b98125;font-family:var(--mono);font-size:10px;color:#10b981;">Hard stop triggers (automated)</span><span style="padding:3px 10px;border-radius:3px;background:#10b98112;border:1px solid #10b98125;font-family:var(--mono);font-size:10px;color:#10b981;">Soft stop triggers (human-initiated)</span><span style="padding:3px 10px;border-radius:3px;background:#10b98112;border:1px solid #10b98125;font-family:var(--mono);font-size:10px;color:#10b981;">Kill switch authority chain</span><span style="padding:3px 10px;border-radius:3px;background:#10b98112;border:1px solid #10b98125;font-family:var(--mono);font-size:10px;color:#10b981;">Fallback protocol activation</span></div>
-      <div style="margin-top:14px;" class="insight-block">Only deployed example of Westgard-adapted stop thresholds in clinical AI is the ECG governance demo. Fixed vs. adaptive threshold debate unresolved in the literature.</div>
+      <div class="components-list"><span style="padding:3px 10px;border-radius:3px;background:#f59e0b12;border:1px solid #f59e0b25;font-family:var(--mono);font-size:10px;color:#f59e0b;">FDA guidance changes</span><span style="padding:3px 10px;border-radius:3px;background:#f59e0b12;border:1px solid #f59e0b25;font-family:var(--mono);font-size:10px;color:#f59e0b;">Published evidence updates</span><span style="padding:3px 10px;border-radius:3px;background:#f59e0b12;border:1px solid #f59e0b25;font-family:var(--mono);font-size:10px;color:#f59e0b;">Peer institution incidents</span><span style="padding:3px 10px;border-radius:3px;background:#f59e0b12;border:1px solid #f59e0b25;font-family:var(--mono);font-size:10px;color:#f59e0b;">Formal intake process</span></div>
+      <div style="margin-top:14px;" class="insight-block">Cold triggers are the most commonly missing governance component. External signals — new evidence, peer incidents, FDA updates — have no formal pathway into most institutions' governance processes.</div>
     </div>
   </div>
 
@@ -166,31 +166,10 @@
     <div class="card-header"><span class="card-title">Key Evidence</span></div>
     <div class="card-body">
         <div style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;">
-          <div style="font-size:12px;color:var(--text);margin-bottom:4px;line-height:1.4;">FDA Predetermined Change Control Plan</div>
+          <div style="font-size:12px;color:var(--text);margin-bottom:4px;line-height:1.4;">AI-Enabled Device Software Functions: Lifecycle Management</div>
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
-            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">FDA · 2024</span>
-            <a href="https://www.fda.gov/regulatory-information/search-fda-guidance-documents/marketing-submission-recommendations-predetermined-change-control-plan-artificial-intelligence" target="_blank" style="color:#10b981;text-decoration:none;font-family:var(--mono);font-size:10px;">↗ Open source</a>
-          </div>
-        </div>
-        <div style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;">
-          <div style="font-size:12px;color:var(--text);margin-bottom:4px;line-height:1.4;">ECG Arrhythmia Detection Governance Demo</div>
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
-            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">Lindsay LaMere Guvenc · 2025</span>
-            <a href="https://github.com/lindsayguvenc-coder/ecg-governance-demo" target="_blank" style="color:#10b981;text-decoration:none;font-family:var(--mono);font-size:10px;">↗ Open source</a>
-          </div>
-        </div>
-        <div style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;">
-          <div style="font-size:12px;color:var(--text);margin-bottom:4px;line-height:1.4;">Westgard ML Adaptation</div>
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
-            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">Lindsay LaMere Guvenc / Commons · 2025</span>
-            <span style="color:var(--text-dimmer);font-family:var(--mono);font-size:10px;">Internal document</span>
-          </div>
-        </div>
-        <div style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;">
-          <div style="font-size:12px;color:var(--text);margin-bottom:4px;line-height:1.4;">Bringing Safety to AI</div>
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
-            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">IHI · 2024</span>
-            <a href="https://www.ihi.org/resources/white-papers/bringing-safety-ai-adapting-patient-safety-principles-artificial-intelligence-health-care" target="_blank" style="color:#10b981;text-decoration:none;font-family:var(--mono);font-size:10px;">↗ Open source</a>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">FDA · 2025</span>
+            <a href="https://www.fda.gov/regulatory-information/search-fda-guidance-documents/artificial-intelligence-enabled-device-software-functions-lifecycle-management-and-marketing" target="_blank" style="color:#f59e0b;text-decoration:none;font-family:var(--mono);font-size:10px;">↗ Open source</a>
           </div>
         </div></div>
   </div>
@@ -198,15 +177,7 @@
   <!-- Practitioner Gems -->
   <div class="card">
     <div class="card-header"><span class="card-title">Practitioner Insights</span></div>
-    <div class="card-body">
-        <div style="padding:12px 14px;background:#10b98112;border:1px solid #10b98130;border-left:3px solid #10b981;border-radius:0 4px 4px 0;margin-bottom:8px;">
-          <div style="font-size:12px;color:var(--text);line-height:1.7;">The QC threshold problem in clinical AI is structurally identical to Westgard multi-rule design. The 2-of-3s rule maps directly to: if 2 of 3 consecutive inference confidence scores fall below threshold, escalate.</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dimmer);margin-top:6px;">💎 Practitioner insight · Lindsay LaMere Guvenc</div>
-        </div>
-        <div style="padding:12px 14px;background:#10b98112;border:1px solid #10b98130;border-left:3px solid #10b981;border-radius:0 4px 4px 0;margin-bottom:8px;">
-          <div style="font-size:12px;color:var(--text);line-height:1.7;">From the ECG governance demo: the hard stop fired twice in retrospective MIMIC-IV validation — both on data quality failures, not model confidence failures. Data validation stops may be more practically important than confidence threshold stops.</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dimmer);margin-top:6px;">💎 Practitioner insight · Lindsay LaMere Guvenc</div>
-        </div></div>
+    <div class="card-body"><div style="font-family:var(--mono);font-size:11px;color:var(--text-dimmer);padding:8px 0;">No practitioner gems documented yet for this node.</div></div>
   </div>
 
   <!-- Aggregate Stats — skeleton -->
@@ -236,7 +207,7 @@
 </div>
 
 <div style="border-top:1px solid var(--border);padding:12px 32px;background:var(--surface);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-  <span style="font-family:var(--mono);font-size:9px;color:var(--text-dimmer);">Healthcare Governance Commons · Node: stop · Built by Lindsay LaMere Guvenc</span>
+  <span style="font-family:var(--mono);font-size:9px;color:var(--text-dimmer);">Healthcare Governance Commons · Node: h3 · Built by Lindsay LaMere Guvenc</span>
   <a href="/tools" style="font-family:var(--mono);font-size:9px;color:var(--text-dimmer);text-decoration:none;">All Tools →</a>
 </div>
 
