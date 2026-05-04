@@ -1928,6 +1928,23 @@ export default function GovernanceCommons() {
       {/* Body */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
 
+        {activeLayer === "home" && (
+  <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
+    <div style={{ padding: "20px 32px 12px", borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+      <div style={{ fontFamily: C.serif, fontSize: 28, fontWeight: 400, color: C.text, marginBottom: 4 }}>
+        Clinical AI Governance Infrastructure
+      </div>
+      <div style={{ fontFamily: C.mono, fontSize: 11, color: C.textDimmer, letterSpacing: "0.08em" }}>
+        Select a node to explore the governance architecture — each one leads to its knowledge base, evidence, and tools.
+      </div>
+    </div>
+    <div style={{ flex: 1, minHeight: 0 }}>
+      <ConstellationMap onSelectNode={(id) => {
+        window.location.href = `/nodes/${id}`;
+      }} />
+    </div>
+  </div>
+)}
         {activeLayer === "docs" && (
           <div style={{ flex: 1, overflowY: "auto" }}>
             <DocRepository onNavigate={handleNavigate}/>
