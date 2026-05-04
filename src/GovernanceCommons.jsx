@@ -1750,6 +1750,7 @@ export default function GovernanceCommons() {
         {/* Desktop nav — hidden on mobile */}
         <div className="desktop-nav" style={{ display: "flex", gap: 2, marginLeft: "auto" }}>
           {[
+            { id: "home",     label: "◉ Map" },          
             { id: "docs",     label: "① Doc Repository" },
             { id: "taxonomy", label: "② Taxonomy Navigator" },
             { id: "matrix",   label: "③ Commons Matrix" },
@@ -1865,6 +1866,7 @@ export default function GovernanceCommons() {
 
               {/* Tab buttons */}
               {[
+                { id: "home",     label: "◉ Map" },
                 { id: "docs",     label: "① Doc Repository" },
                 { id: "taxonomy", label: "② Taxonomy Navigator" },
                 { id: "matrix",   label: "③ Commons Matrix" },
