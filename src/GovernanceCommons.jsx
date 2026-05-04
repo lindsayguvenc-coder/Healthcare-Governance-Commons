@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import ConstellationMap from "./ConstellationMap";
 
 // ─── PALETTE ────────────────────────────────────────────────────────────────
 const C = {
@@ -1725,7 +1726,7 @@ function IntakePanel() {
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function GovernanceCommons() {
-  const [activeLayer, setActiveLayer] = useState("taxonomy");
+  const [activeLayer, setActiveLayer] = useState("home");
   const [activeNodeId, setActiveNodeId] = useState("stop");
   const [loopFilter, setLoopFilter] = useState("all");
   const [menuOpen, setMenuOpen] = useState(false);
