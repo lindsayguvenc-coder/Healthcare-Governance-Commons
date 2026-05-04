@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Governance Commons · Healthcare Governance Commons</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300;1,9..144,600&display=swap');
+  :root {
+    --bg: #07090f;
+    --surface: #0d1117;
+    --surface2: #111820;
+    --surface3: #161f2e;
+    --border: #1c2a3a;
+    --border-bright: #2a3f57;
+    --accent: #a78bfa;
+    --text: #dce8f0;
+    --text-dim: #607080;
+    --text-dimmer: #2d3f50;
+    --mono: 'DM Mono', 'Fira Code', monospace;
+    --serif: 'Fraunces', Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100vh; }
+  
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 32px; border-bottom: 1px solid var(--border);
+    background: var(--surface); flex-wrap: wrap; gap: 10px;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 16px; }
+  .nav-link { font-size: 11px; letter-spacing: 0.08em; color: var(--text-dim); text-decoration: none; transition: color 0.2s; }
+  .nav-link:hover { color: var(--accent); }
+  .nav-sep { color: var(--text-dimmer); }
+  .deeper-btn {
+    padding: 8px 18px; border-radius: 4px; cursor: pointer;
+    background: #a78bfa12; border: 1px solid #a78bfa50;
+    color: #a78bfa; font-family: var(--mono); font-size: 11px;
+    font-weight: 700; letter-spacing: 0.06em; text-decoration: none;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .deeper-btn:hover { background: #a78bfa25; }
+
+  .hero {
+    padding: 40px 32px 32px; border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #a78bfa08 0%, transparent 100%);
+  }
+  .loop-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 3px;
+    background: #a78bfa12; border: 1px solid #a78bfa33;
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    color: #a78bfa; letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .node-icon { font-size: 28px; color: #a78bfa; margin-bottom: 10px; display: block; }
+  .node-title { font-family: var(--serif); font-size: clamp(24px, 4vw, 36px); font-weight: 300; color: var(--text); margin-bottom: 10px; line-height: 1.15; }
+  .node-question { font-size: 14px; color: var(--text-dim); font-style: italic; line-height: 1.6; max-width: 620px; }
+
+  .main { max-width: 960px; margin: 0 auto; padding: 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 768px) { .main { grid-template-columns: 1fr; padding: 20px 16px; } .topbar { padding: 12px 16px; } .hero { padding: 24px 16px; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; overflow: hidden;
+  }
+  .card-full { grid-column: 1 / -1; }
+  .card-header {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-title {
+    font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700;
+  }
+  .card-body { padding: 16px; }
+
+  .flag {
+    padding: 10px 14px; border-radius: 4px; margin-bottom: 10px;
+    font-size: 12px; line-height: 1.7;
+  }
+  .flag-contention { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); border-left: 3px solid #f59e0b; }
+  .flag-gap { background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.25); border-left: 3px solid #f43f5e; }
+  .flag-label { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+  .flag-contention .flag-label { color: #f59e0b; }
+  .flag-gap .flag-label { color: #f43f5e; }
+
+  .components-list { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  /* Skeleton styles */
+  .skeleton { background: var(--surface2); border-radius: 3px; animation: shimmer 2s infinite; }
+  .skeleton-text { height: 10px; margin-bottom: 8px; }
+  .skeleton-bar { height: 32px; margin-bottom: 8px; border-radius: 4px; }
+  .skeleton-stat { height: 48px; border-radius: 4px; flex: 1; }
+  .stats-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  @keyframes shimmer {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.7; }
+  }
+  .coming-soon-label {
+    font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-dimmer); font-family: var(--mono);
+    margin-bottom: 10px; padding: 4px 8px;
+    border: 1px dashed var(--border-bright); border-radius: 3px;
+    display: inline-block;
+  }
+  
+  .insight-block {
+    padding: 12px 14px; margin-bottom: 10px;
+    background: #a78bfa12; border: 1px solid #a78bfa25;
+    border-radius: 4px;
+    font-size: 12px; color: var(--text-dim); line-height: 1.7;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="/" class="nav-link">← Map</a>
+    <span class="nav-sep">·</span>
+    <a href="/" class="nav-link">Commons</a>
+    <span class="nav-sep">·</span>
+    <a href="/tools" class="nav-link">Tools</a>
+  </div>
+  <a href="/#taxonomy-commons" class="deeper-btn" onclick="sessionStorage.setItem('activeNode','commons'); sessionStorage.setItem('activeLayer','taxonomy'); return true;">Evidence &amp; Tools →</a>
+</div>
+
+<div class="hero">
+  <div class="loop-pill">Governance Commons</div>
+  <span class="node-icon">◉</span>
+  <h1 class="node-title">Governance Commons</h1>
+  <p class="node-question">Is the governance infrastructure itself current, neutral, and authoritative?</p>
+</div>
+
+<div class="main">
+
+  <!-- Contention & Gap -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Known Contention &amp; Gap</span></div>
+    <div class="card-body">
+      <div class="flag flag-contention">
+        <div class="flag-label">⚡ Contention</div>
+        Funding, staffing, and authority source for the commons itself
+      </div>
+      <div class="flag flag-gap">
+        <div class="flag-label">⬜ Known Gap</div>
+        Does not exist. This is the work.
+      </div>
+    </div>
+  </div>
+
+  <!-- Components -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Components</span></div>
+    <div class="card-body">
+      <div class="components-list"><span style="padding:3px 10px;border-radius:3px;background:#a78bfa12;border:1px solid #a78bfa25;font-family:var(--mono);font-size:10px;color:#a78bfa;">Schema ownership + versioning</span><span style="padding:3px 10px;border-radius:3px;background:#a78bfa12;border:1px solid #a78bfa25;font-family:var(--mono);font-size:10px;color:#a78bfa;">Threshold registry</span><span style="padding:3px 10px;border-radius:3px;background:#a78bfa12;border:1px solid #a78bfa25;font-family:var(--mono);font-size:10px;color:#a78bfa;">Audit trail</span><span style="padding:3px 10px;border-radius:3px;background:#a78bfa12;border:1px solid #a78bfa25;font-family:var(--mono);font-size:10px;color:#a78bfa;">Document + process layer</span></div>
+      <div style="margin-top:14px;" class="insight-block">The commons does not exist. This tool is the prototype. The structural gap: no neutral institutional authority owns the schema, threshold registry, or taxonomy for healthcare AI governance.</div>
+    </div>
+  </div>
+
+  <!-- Key Evidence -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Key Evidence</span></div>
+    <div class="card-body">
+        <div style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;">
+          <div style="font-size:12px;color:var(--text);margin-bottom:4px;line-height:1.4;">Health AI Partnership Principles</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">HAIP · 2024</span>
+            <a href="https://healthaipartnership.org" target="_blank" style="color:#a78bfa;text-decoration:none;font-family:var(--mono);font-size:10px;">↗ Open source</a>
+          </div>
+        </div>
+        <div style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;">
+          <div style="font-size:12px;color:var(--text);margin-bottom:4px;line-height:1.4;">Community Weaving Ep 08: The Recursive Close</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">Lindsay LaMere Guvenc · 2025</span>
+            <a href="/community_weaving_ep08.pdf" target="_blank" style="color:#a78bfa;text-decoration:none;font-family:var(--mono);font-size:10px;">↗ Open source</a>
+          </div>
+        </div>
+        <div style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;">
+          <div style="font-size:12px;color:var(--text);margin-bottom:4px;line-height:1.4;">Governance Mechanisms Index</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">Lindsay LaMere Guvenc / Commons · 2025</span>
+            <a href="/governance_mechanisms_index.pdf" target="_blank" style="color:#a78bfa;text-decoration:none;font-family:var(--mono);font-size:10px;">↗ Open source</a>
+          </div>
+        </div></div>
+  </div>
+
+  <!-- Practitioner Gems -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Practitioner Insights</span></div>
+    <div class="card-body">
+        <div style="padding:12px 14px;background:#a78bfa12;border:1px solid #a78bfa30;border-left:3px solid #a78bfa;border-radius:0 4px 4px 0;margin-bottom:8px;">
+          <div style="font-size:12px;color:var(--text);line-height:1.7;">This tool is the prototype for what the commons could look like. The gap it fills: everyone is producing governance documents. Nobody has built the connective tissue that makes them findable, relatable, and usable in context. The map is the artifact.</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dimmer);margin-top:6px;">💎 Practitioner insight · Lindsay LaMere Guvenc</div>
+        </div></div>
+  </div>
+
+  <!-- Aggregate Stats — skeleton -->
+  <div class="card card-full">
+    <div class="card-header">
+      <span class="card-title">Field Activity</span>
+      <span class="coming-soon-label">Live data · coming soon</span>
+    </div>
+    <div class="card-body">
+      <div class="stats-row">
+        <div class="skeleton skeleton-stat"></div>
+        <div class="skeleton skeleton-stat"></div>
+        <div class="skeleton skeleton-stat"></div>
+        <div class="skeleton skeleton-stat"></div>
+        <div class="skeleton skeleton-stat"></div>
+      </div>
+      <div class="skeleton skeleton-text" style="width:60%;"></div>
+      <div class="skeleton skeleton-text" style="width:40%;"></div>
+      <div class="skeleton skeleton-bar"></div>
+      <div class="skeleton skeleton-bar"></div>
+      <div style="font-size:10px;color:var(--text-dimmer);font-family:var(--mono);margin-top:8px;line-height:1.6;">
+        This section will show: organizations that have hit this node · most common gap flags · maturity distribution · most downloaded outputs · emerging signals. Data populates as the Commons accumulates real governance activity.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="border-top:1px solid var(--border);padding:12px 32px;background:var(--surface);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+  <span style="font-family:var(--mono);font-size:9px;color:var(--text-dimmer);">Healthcare Governance Commons · Node: commons · Built by Lindsay LaMere Guvenc</span>
+  <a href="/tools" style="font-family:var(--mono);font-size:9px;color:var(--text-dimmer);text-decoration:none;">All Tools →</a>
+</div>
+
+<script>
+// If coming from the map via sessionStorage, redirect to taxonomy with node selected
+// This allows "Evidence & Tools →" to deep-link into the React app at the right node
+window.addEventListener('DOMContentLoaded', function() {
+  // Nothing needed here — the link uses sessionStorage to pass state to the React app
+  // GovernanceCommons.jsx can read sessionStorage.getItem('activeNode') on mount
+});
+</script>
+
+</body>
+</html>
