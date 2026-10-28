@@ -55,7 +55,7 @@ Reply with only this JSON, no other text:
 }
 
 async function readOnce(item, persona) {
-  const key = process.env.VITE_ANTHROPIC_API_KEY;
+  const key = (process.env.ANTHROPIC_API_KEY || process.env.VITE_ANTHROPIC_API_KEY);
   if (!key) throw new Error("API key not configured");
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",

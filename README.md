@@ -25,7 +25,7 @@ A working prototype of the governance commons concept: a tool that organizes cli
 
 1. Push this repo to GitHub
 2. Connect repo in Vercel dashboard
-3. Add environment variable: `VITE_ANTHROPIC_API_KEY` = your Anthropic API key
+3. Add environment variable: `ANTHROPIC_API_KEY` = your Anthropic API key (mark it Sensitive; never prefix server secrets with `VITE_`, which tells the build it is safe to publish)
 4. Deploy — build command is `npm run build`, output dir is `dist`
 
 ## Local development
