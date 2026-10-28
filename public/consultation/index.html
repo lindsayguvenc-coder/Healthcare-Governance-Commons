@@ -1114,7 +1114,7 @@ async function startGeneration() {
       const response = await fetch('/api/synthesize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: JSON.stringify({ purpose: "report",
           model: 'claude-sonnet-4-20250514',
           max_tokens: 2500,
           system: SYSTEM_PROMPT,
@@ -1429,5 +1429,6 @@ The goal is not to prepare the organization to win arguments. It is to help them
 // ── INIT ──────────────────────────────────────────────────────────────────
 render();
 </script>
+<script src="/report-pause.js"></script>
 </body>
 </html>

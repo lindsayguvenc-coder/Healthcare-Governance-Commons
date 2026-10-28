@@ -95,6 +95,9 @@ async function relay(req, res) {
   const isPrivate = Boolean(pw && process.env.INTAKE_PASSWORD && pw === process.env.INTAKE_PASSWORD);
 
   const body = req.body || {};
+  if (process.env.REPORTS_PAUSED === "1" && body.purpose === "report") {
+    return res.status(503).json({ error: "Report generation is paused while this tool is reviewed." });
+  }
   const messages = Array.isArray(body.messages) ? body.messages : null;
   if (!messages || messages.length === 0) {
     return res.status(400).json({ error: "Missing messages" });
