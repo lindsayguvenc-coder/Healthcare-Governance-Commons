@@ -1758,7 +1758,7 @@ async function generateAssessment() {
     const res = await fetch('/api/synthesize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+      body: JSON.stringify({ purpose: "report",
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2500,
         system: systemPrompt,
@@ -1921,5 +1921,6 @@ function escHtml(str) {
 // ── INIT ──────────────────────────────────────────────────────────────────────
 renderIntro();
 </script>
+<script src="/report-pause.js"></script>
 </body>
 </html>

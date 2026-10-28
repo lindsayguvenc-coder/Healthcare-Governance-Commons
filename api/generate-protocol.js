@@ -13,6 +13,9 @@ export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
+  if (process.env.REPORTS_PAUSED === "1") {
+    return res.status(503).json({ error: "Report generation is paused while this tool is reviewed." });
+  }
 
   try {
     const { logicFlags = [], gapFlags = [], documentMeta = [] } = req.body;
