@@ -15,7 +15,7 @@
 // POST { action: "unpublish", nodeId, id }: takes an approved contribution down.
 // GET ?view=published: every published contribution, newest first.
 // Weekly backup (x-backup-token): GET ?export=1 returns published contributions,
-// the decision log, and stats; POST { action: "clear-decisions", count } then
+// the decision log, stats, and how many items are waiting (a count, never content); POST { action: "clear-decisions", count } then
 // removes exactly the oldest `count` log entries that were just archived.
 const { getRedis, isPrivate, isBackup, count, domainOf, STATS_KEY, PENDING_KEY, approvedKey, NODE_IDS } = require("./_queue.js");
 const { reviewItem, REASONS } = require("./_review.js");
@@ -48,6 +48,7 @@ export default async function handler(req, res) {
         published: await allPublished(client),
         decisions: decisions.map(d => JSON.parse(d)).reverse(), // oldest first
         stats: (await client.hgetall(STATS_KEY)) || {},
+        pendingCount: await client.hlen(PENDING_KEY), // a number only, for the weekly reminder
       });
     }
     if (req.method === "POST" && req.body?.action === "clear-decisions") {
