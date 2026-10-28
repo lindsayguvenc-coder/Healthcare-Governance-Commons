@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   backup:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       SITE: https://healthcare-governance-commons.vercel.app
       BACKUP_TOKEN: ${{ secrets.BACKUP_TOKEN }}
@@ -32,7 +32,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
