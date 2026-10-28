@@ -48,6 +48,13 @@ async function underLimit(client, req) {
   } catch { return true; }
 }
 
+// The weekly backup job uses its own token (BACKUP_TOKEN), which can only
+// export and clear the archived log, never approve or publish.
+function isBackup(req) {
+  const t = req.headers["x-backup-token"];
+  return Boolean(t && process.env.BACKUP_TOKEN && t === process.env.BACKUP_TOKEN);
+}
+
 function isPrivate(req) {
   const pw = req.headers["x-intake-password"];
   return Boolean(pw && process.env.INTAKE_PASSWORD && pw === process.env.INTAKE_PASSWORD);
@@ -117,4 +124,4 @@ function domainOf(u) {
   try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return null; }
 }
 
-module.exports = { count, domainOf, STATS_KEY, getRedis, sameSite, underLimit, isPrivate, buildItem, PENDING_KEY, approvedKey, NODE_IDS };
+module.exports = { isBackup, count, domainOf, STATS_KEY, getRedis, sameSite, underLimit, isPrivate, buildItem, PENDING_KEY, approvedKey, NODE_IDS };

@@ -7,7 +7,7 @@ const PUBLIC_DOCS_KEY = "public_documents";
 let redis;
 function getRedis() {
   if (!redis) {
-    redis = new Redis(process.env.REDIS_URL, {
+    redis = new Redis(process.env.REDIS_URL || process.env.KV_URL, {
       maxRetriesPerRequest: 3,
       connectTimeout: 10000,
     });

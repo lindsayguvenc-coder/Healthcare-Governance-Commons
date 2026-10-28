@@ -985,6 +985,29 @@ function SuggestionQueue({ password }) {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [published, setPublished] = useState(null);
+  const [showPublished, setShowPublished] = useState(false);
+  const loadPublished = async () => {
+    try {
+      const r = await fetch("/api/queue?view=published", { headers: { "x-intake-password": password } });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || `Error ${r.status}`);
+      setPublished(d.items);
+    } catch (e) { setError(e.message); }
+  };
+  const unpublish = async it => {
+    setBusy(it.id);
+    try {
+      const r = await fetch("/api/queue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-intake-password": password },
+        body: JSON.stringify({ action: "unpublish", nodeId: it.nodeId, id: it.id, reason: reasons[it.id] || "other" }),
+      });
+      if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.error || `Error ${r.status}`); }
+      await loadPublished();
+    } catch (e) { setError(e.message); }
+    setBusy(null);
+  };
   const load = async () => {
     setLoading(true);
     try {
@@ -1094,6 +1117,21 @@ function SuggestionQueue({ password }) {
           </div>
         );
       })}
+      <div style={{ borderTop: `1px solid ${C.border}`, marginTop: 8, paddingTop: 10 }}>
+        <button onClick={() => { const next = !showPublished; setShowPublished(next); if (next) loadPublished(); }} style={btn(C.textDim, false)}>
+          {showPublished ? "hide published" : "show published contributions"}
+        </button>
+        {showPublished && published && published.length === 0 && <div style={{ fontFamily: C.mono, fontSize: 11, color: C.textDim, marginTop: 8 }}>Nothing published yet.</div>}
+        {showPublished && (published || []).map(it => (
+          <div key={it.id} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", padding: "8px 0", borderBottom: `1px solid ${C.border}` }}>
+            <span style={{ fontFamily: C.mono, fontSize: 10, color: kindColor[it.kind] || C.text, fontWeight: 700 }}>{it.kind.toUpperCase()}</span>
+            <span style={{ fontFamily: C.mono, fontSize: 10, color: C.textDim }}>{nodeLabel(it.nodeId)}</span>
+            <span style={{ fontSize: 12, color: C.text, flex: "1 1 240px", minWidth: 0 }}>{(it.text || "").slice(0, 140)}{(it.text || "").length > 140 ? "…" : ""}</span>
+            {reasonPicker(it.id, false)}
+            <button disabled={busy === it.id} onClick={() => unpublish(it)} style={btn(C.red, false)}>unpublish</button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

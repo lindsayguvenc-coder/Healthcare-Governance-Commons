@@ -28,9 +28,9 @@ const PUBLIC_REQUESTS_PER_HOUR = 30;
 
 let redis;
 function getRedis() {
-  if (!process.env.REDIS_URL) return null;
+  if (!process.env.REDIS_URL && !process.env.KV_URL) return null;
   if (!redis) {
-    redis = new Redis(process.env.REDIS_URL, {
+    redis = new Redis(process.env.REDIS_URL || process.env.KV_URL, {
       maxRetriesPerRequest: 1,
       connectTimeout: 5000,
     });
