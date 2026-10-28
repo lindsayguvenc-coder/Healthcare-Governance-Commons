@@ -21,5 +21,10 @@
     "api/queue.js": {
       "maxDuration": 60
     }
+  },
+  "git": {
+    "deploymentEnabled": {
+      "data-archive": false
+    }
   }
 }

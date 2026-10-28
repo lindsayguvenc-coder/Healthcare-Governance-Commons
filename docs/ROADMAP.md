@@ -10,6 +10,10 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
   internal link resolves; data files agree; the regulatory layer is under six
   months old; absolutes like "almost universally" get flagged.
 
+- **Weekly backup** (.github/workflows/weekly-backup.yml, Sunday nights):
+  published contributions, the decision log, and stats are saved to the
+  data-archive branch; only then are the archived log entries cleared.
+
 ## To build (decided Oct 27, 2026)
 - [ ] **Weekly currency scan.** Federal Register, FDA guidance, CMS, state AI
       laws, EU AI Act against `src/data/regulatory.json`. Opens a pull request
@@ -28,6 +32,10 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       independent AI reads (fit, skeptic). Agreement: one click accepts it.
       Split: Lindsay breaks the tie. Every decision is logged without content
       (suggest:decisions) so agreement and override rates can be measured.
+- [ ] **Video replays on every pull request.** tests/replay records the review
+      flow locally with mocks today. Next: run it in GitHub Actions against the
+      Vercel preview with real services and attach the video to the PR. Needs a
+      Vercel "Protection Bypass for Automation" secret added to GitHub.
 - [ ] **Multi-level escalation pathway.** Once the decision log shows Lindsay
       reliably agrees with consensus for a given type or domain, that tier can
       auto-pass with spot audits, the way a lab moves a stable assay to reduced

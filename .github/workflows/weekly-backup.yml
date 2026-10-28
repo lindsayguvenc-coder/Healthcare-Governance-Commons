@@ -1,0 +1,92 @@
+name: Weekly backup
+
+# Every Sunday night: copy published contributions, the decision log, and the
+# review stats out of Redis into dated files on the data-archive branch. Only
+# after that commit is pushed does it clear the decision-log entries it saved,
+# so nothing is ever cleared without a backup. Published contributions are
+# copied, never cleared.
+#
+# Needs one repository secret: BACKUP_TOKEN, matching the BACKUP_TOKEN
+# environment variable in Vercel. That token can only export and clear the
+# archived log; it can't approve, publish, or read the private queue.
+
+on:
+  schedule:
+    - cron: "41 6 * * 1"   # Mondays 06:41 UTC = Sunday night Pacific
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    env:
+      SITE: https://healthcare-governance-commons.vercel.app
+      BACKUP_TOKEN: ${{ secrets.BACKUP_TOKEN }}
+    steps:
+      - name: Check the token is set
+        run: |
+          if [ -z "$BACKUP_TOKEN" ]; then
+            echo "::error::BACKUP_TOKEN secret is missing, so the backup did not run. Add it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Switch to the archive branch
+        run: |
+          git config user.name "Commons backup"
+          git config user.email "backup@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin data-archive >/dev/null; then
+            git checkout data-archive
+          else
+            git checkout --orphan data-archive
+            git rm -rf . >/dev/null
+            printf "# Commons data archive\n\nWeekly backups written by .github/workflows/weekly-backup.yml. Not deployed.\n" > README.md
+          fi
+
+      - name: Export from the live site
+        run: |
+          set -euo pipefail
+          day=$(date -u +%F)
+          mkdir -p archive
+          # Doubles as the weekly database alarm: if the database is gone or
+          # unreachable, this fails and GitHub emails Lindsay. (In 2026 the free
+          # Redis database was deleted silently and nobody knew for six months.)
+          if ! curl -sfS -H "x-backup-token: $BACKUP_TOKEN" "$SITE/api/queue?export=1" -o "archive/$day.json"; then
+            echo "::error::The live site could not export. Most likely the database is unreachable or deleted. Check Vercel > Storage."
+            exit 1
+          fi
+          node -e '
+            const fs = require("fs");
+            const day = process.argv[1];
+            const d = JSON.parse(fs.readFileSync(`archive/${day}.json`, "utf8"));
+            if (!Array.isArray(d.published) || !Array.isArray(d.decisions)) { console.error("Export looks wrong; stopping before anything is cleared."); process.exit(1); }
+            fs.writeFileSync("published-latest.json", JSON.stringify(d.published, null, 1));
+            fs.writeFileSync("stats-latest.json", JSON.stringify(d.stats, null, 1));
+            fs.writeFileSync(".decisions-count", String(d.decisions.length));
+            console.log(`published: ${d.published.length} · decisions archived: ${d.decisions.length}`);
+          ' "$day"
+          echo "DAY=$day" >> "$GITHUB_ENV"
+
+      - name: Save the backup
+        run: |
+          set -euo pipefail
+          git add archive README.md published-latest.json stats-latest.json 2>/dev/null || git add archive published-latest.json stats-latest.json
+          git commit -m "Weekly backup $DAY" || echo "Nothing new to commit"
+          git push origin data-archive
+
+      - name: Clear the archived decision-log entries
+        run: |
+          set -euo pipefail
+          n=$(cat .decisions-count)
+          if [ "$n" -gt 0 ]; then
+            curl -sfS -X POST -H "x-backup-token: $BACKUP_TOKEN" -H "Content-Type: application/json" \
+              -d "{\"action\":\"clear-decisions\",\"count\":$n}" "$SITE/api/queue"
+            echo
+          else
+            echo "Decision log was empty; nothing to clear."
+          fi
