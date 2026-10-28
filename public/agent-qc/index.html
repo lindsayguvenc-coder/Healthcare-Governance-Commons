@@ -179,6 +179,7 @@ td select{width:auto;padding:4px 6px;font-size:.84rem}
             <label><input type="radio" name="ref" id="r_none" value="none">Nobody can say<small>No reference at all</small></label>
           </div>
           <div class="opts"><label><input type="checkbox" id="keyAgreed">The key is agreed by more than one person, or traced to an outside source<small>Items people disagree on get marked contested: drift only, not accuracy</small></label></div>
+          <div class="opts"><label><input type="checkbox" id="judgeSelf">The judge has been checked against itself<small>Re-scoring the same outputs gives the same scores</small></label></div>
           <div class="opts"><label><input type="checkbox" id="judgeVal">The judge has been checked against human raters<small>Agreement (κ) at least as good as humans with each other</small></label></div>
         </div>
         <aside class="ex"><span class="lab">Examples</span>
@@ -330,26 +331,26 @@ td select{width:auto;padding:4px 6px;font-size:.84rem}
     <div class="callout" id="sgOut"></div>
 
     <h2>Levey-Jennings rules, for numbers</h2>
-    <p class="sub">For any output you chart with a mean and SD: a numeric result, output tokens, an average grade. Set each rule to off, warn or reject. The numbers come from simulating 20,000 runs per setting, one control result per run.</p>
-    <div class="callout"><p><b>These numbers assume</b> roughly normal results, independent runs, and one control result per run.</p><p>Agent data often breaks this. Counts like steps can be nearly constant, and some outputs split into two groups (clean runs vs. runs with a retry). If yours is counts or pass/fail, use the count limits below instead. If it's a number, look at a histogram of your baseline first: one hump means these numbers roughly hold, two humps or a spike means they don't.</p></div>
+    <p class="sub">For any output you chart with a mean and SD: a numeric result, output tokens, an average grade. Set each rule to off, warn or reject. Detection and whole-set numbers come from simulating 40,000 runs on one fixed set of random draws, so every setting is compared on the same data. False rejections for each rule alone are exact.</p>
+    <div class="callout"><p><b>These numbers assume</b> roughly normal results, independent runs, one control result per run, and fixed sampling settings (temperature and the like) so repeats are true repeats.</p><p>They also assume the true mean and SD are known. Limits set from a 20-run baseline have an SD that's off by up to about 30%, which raises real false rejections. Use more baseline runs, or treat these numbers as a best case. The rule settings (1-2s and 4-1s as warnings, R-4s off) are choices, not standards.</p><p>Agent data often breaks this. Counts like steps can be nearly constant, and some outputs split into two groups (clean runs vs. runs with a retry). If yours is counts or pass/fail, use the count limits below instead. If it's a number, look at a histogram of your baseline first: one hump means these numbers roughly hold, two humps or a spike means they don't.</p></div>
     <div class="knobs">
-      <div class="field"><label for="k_shift">Systematic error to catch (SD)</label><input type="number" id="k_shift" value="2" min="0.5" max="5" step="0.5"><small>A shift in the mean, e.g. after a model swap</small></div>
+      <div class="field"><label for="k_shift">Systematic error to catch (SD)</label><input type="number" id="k_shift" value="1.5" min="0.5" max="5" step="0.5"><small>A shift in the mean, e.g. after a model swap</small></div>
       <div class="field"><label for="k_sdx">Random error to catch (× SD)</label><input type="number" id="k_sdx" value="2" min="1.25" max="4" step="0.25"><small>The spread grows, e.g. a less stable model</small></div>
       <div class="field"><label for="k_prev">Runs with a real error (%)</label><input type="number" id="k_prev" value="2" min="0.1" max="50" step="0.1"><small>How often something is truly wrong. Sets how much a rejection means.</small></div>
     </div>
     <div class="tiles" id="ljTiles"></div>
     <div class="callout" id="ljCallout"></div>
     <div class="tablebox"><table>
-      <thead><tr><th>Rule</th><th>Setting</th><th class="n">False rejections per run, alone</th><th class="n">Shift caught within 5 runs, alone</th><th class="n">Random error caught within 5 runs, alone</th><th class="n">Remove it: shift caught</th><th class="n">Remove it: random caught</th><th class="n">Remove it: false rejections</th></tr></thead>
+      <thead><tr><th>Rule</th><th>Setting</th><th class="n">False rejections per run, alone (exact)</th><th class="n">Shift caught within 10 runs, alone</th><th class="n">Random error caught within 10 runs, alone</th><th class="n">Remove it: shift caught</th><th class="n">Remove it: random caught</th><th class="n">Remove it: false rejections</th></tr></thead>
       <tbody id="ljRows"></tbody>
     </table></div>
     <p class="sub" style="margin:0">"Remove it" shows how the whole set changes without that rule. A rule whose removal barely moves detection is mostly catching what the others already catch.</p>
 
     <h2>Count limits, for pass/fail and rates</h2>
-    <p class="sub">For anything counted: failed runs, process errors, never-events. Chart the number of failures in each window of runs against limits from the binomial distribution.</p>
+    <p class="sub">For anything counted: failed runs, process errors, never-events. Chart the number of failures in each block of runs against limits from the binomial distribution. Blocks don't overlap: a rolling window that slides one run at a time fires far more often than these rates.</p>
     <div class="knobs">
-      <div class="field"><label for="b_p0">Baseline failure rate (%)</label><input type="number" id="b_p0" value="3" min="0" max="90" step="0.1"><small>From your baseline. If you saw zero, use the rate you ruled out.</small></div>
-      <div class="field"><label for="b_n">Window (runs)</label><input type="number" id="b_n" value="20" min="5" max="200" step="1"></div>
+      <div class="field"><label for="b_p0">Baseline failure rate (%)</label><input type="number" id="b_p0" value="3" min="0" max="90" step="0.1"><small>From your baseline. If you saw zero, use the rate you ruled out; that keeps false alarms low but loosens the limits and weakens detection.</small></div>
+      <div class="field"><label for="b_n">Block size (runs)</label><input type="number" id="b_n" value="20" min="5" max="200" step="1"></div>
       <div class="field"><label for="b_aw">Warn false-alarm target (%)</label><input type="number" id="b_aw" value="5" min="0.1" max="20" step="0.1"></div>
       <div class="field"><label for="b_ar">Reject false-alarm target (%)</label><input type="number" id="b_ar" value="0.3" min="0.01" max="10" step="0.01"></div>
       <div class="field"><label for="b_mult">Failure rate to catch (× baseline)</label><input type="number" id="b_mult" value="3" min="1.5" max="20" step="0.5"></div>
@@ -372,24 +373,24 @@ const TYPE_NAME = {binary:"Pass / fail", cat:"Choice from a set", graded:"Grade"
 const LIB = {
  accuracy:{
   binary:[
-   ["Success rate with a 95% confidence interval","Compare each run's end state to the known correct end state; chart failures per window with binomial limits.","Tasks done or not done","A single rate hides which cases fail"],
+   ["Success rate with a Wilson or Clopper-Pearson interval","Compare each run's end state to the known correct end state; chart failures per block of runs with binomial limits.","Tasks done or not done","A single rate hides which cases fail; the simple ± interval fails near 100%"],
    ["Sensitivity, specificity, PPV and NPV","Build the 2×2 against the reference: what it flags vs. what's true.","When the agent flags or screens something (risk alerts, triage)","PPV moves with how common the condition is; report it at your own prevalence"],
    ["AUROC","Ranks cases by the agent's score and checks how well it separates true from false.","When the agent outputs a score or probability","Says nothing about the threshold you actually use"],
-   ["Subgroup performance","The same measures, per population group.","Always, when people are affected","Small groups give wide intervals; report them"]],
+   ["Subgroup performance","The same measures, per population group.","Always, when people are affected","Small groups give wide intervals; report them"],
+   ["Calibration (ECE, Brier score)","Does the agent's stated confidence match how often it's right?","When it gives a probability or confidence","Needs many results per confidence band"]],
   cat:[
    ["Exact match to the key, per item","Count items right per run; score never-events separately.","Fixed set of correct answers","Overall match hides a weak category"],
    ["Confusion matrix with per-category precision and recall","Which answers get mistaken for which.","More than a few categories","Needs enough of each category to read"],
-   ["Cohen's κ against the key","Agreement corrected for chance.","Categories of uneven size","Hard to explain to non-statisticians"]],
+   ["Cohen's κ against the key","Agreement corrected for chance.","Categories of uneven size","Hard to explain; drops oddly when one category dominates"]],
   graded:[
-   ["Rubric grade from a validated judge","Grade against the expected grade; within ±1 grade acceptable.","Quality on a scale","Only as good as the judge"],
-   ["Weighted κ or ICC against expert grades","Agreement that counts near-misses as partly right.","Comparing to human graders","Needs double-graded examples"],
+   ["Rubric grade from a validated judge","Grade against the expected grade, with acceptability set by your lowest acceptable grade (question 6).","Quality on a scale","Only as good as the judge. A fixed ±1 grade rule is arbitrary: on a 1–5 scale it spans 40% of the range"],
+   ["Weighted κ, Krippendorff's α or ICC against expert grades","Agreement that counts near-misses as partly right.","Comparing to human graders","Needs double-graded examples; κ drops oddly when one grade dominates"],
    ["Mean absolute grade error","Average distance from the expert's grade.","A simple number for trend charts","Treats the scale as evenly spaced"]],
   cont:[
    ["Total error vs. allowable error","Total error = |bias| + 2 SD, compared to your allowable error. The lab's pass/fail for a method.","Any numeric output with a target","Needs a real allowable error, set from intended use"],
    ["Bland-Altman plot","Difference vs. average against the reference method; shows bias and limits of agreement.","Comparing to a reference method","Assumes the difference doesn't grow with the value (or log it)"],
    ["Deming or Passing-Bablok regression","Separates constant bias from proportional bias.","Wide range of values","Needs a spread of values across the range"],
-   ["Sigma metric","(allowable error − |bias|) ÷ SD. Sets how strict the step 2 rules need to be.","Before picking QC rules","Depends on the allowable error you choose"],
-   ["Calibration (ECE, Brier score)","Does stated confidence match the hit rate?","When it reports confidence","Needs many results per confidence band"]],
+   ["Sigma metric","(allowable error − |bias|) ÷ SD. Sets how strict the step 2 rules need to be.","Before picking QC rules","Depends on the allowable error you choose"]],
   text:[
    ["Claim-level groundedness","Split the output into claims; check each against the source.","Summaries, answers from documents","Labor-heavy unless a judge does it, then validate the judge"],
    ["Reference-guided judge","A validated judge compares the output to a reference answer; convert to pass/fail.","Open answers with a model answer","Judge errors can correlate with the agent's"],
@@ -405,7 +406,7 @@ const LIB = {
    ["Policy adherence","Required steps done (confirmation before writes, escalation when required).","Regulated or high-stakes actions","Needs written policies to check against"]]
  },
  precision:{
-  binary:[["pass^k","Chance that all k repeat runs pass. A reliable agent stays flat as k rises.","Any repeatable task","Needs many repeats per task"],
+  binary:[["pass^k","Chance that all k repeat runs pass, estimated per task as C(c,k)÷C(n,k). Falls as k rises unless success is 100%; a reliable agent falls slowly.","Any repeatable task","Needs many repeats per task"],
    ["Repeatability vs. reproducibility","Same setup back to back, vs. across days, versions and providers (CLSI EP05 split).","Before go-live and after changes","Reproducibility needs time and planned variation"]],
   cat:[["Agreement across repeat runs, per item","Share of repeats giving the same answer; flags items the agent is unsure of.","Any categorical output","Needs 20+ repeats to see 5–10% wobble"],
    ["Test-retest κ","Chance-corrected agreement between two passes.","Comparing passes or days","Two passes only"]],
@@ -419,15 +420,15 @@ const LIB = {
   agent:[["Same actions on the same input","Share of repeats with the same tool-call sequence and end state.","Tool-using agents","Different paths can be equally fine"]]
  },
  drift:{
-  binary:[["Paired before/after on the same items","Same items under both versions; analyze the differences.","Any version change","Needs the control to sit below the ceiling"],
-   ["Rate over time with binomial limits","Failures per window against warn and reject limits.","Ongoing monitoring","Slow to show small shifts"],
+  binary:[["Paired before/after on the same items","Same items under both versions; test the pass/fail flips with McNemar's test.","Any version change","Needs the control to sit below the ceiling"],
+   ["Rate over time with binomial limits","Failures per block of runs against warn and reject limits.","Ongoing monitoring","Slow to show small shifts"],
    ["CUSUM or EWMA on the rate","Accumulates small sustained shifts.","Small persistent changes","Harder to explain; tune with step 2 logic"]],
   cat:[["Mismatch rate between versions","Share of answers that changed. Catches churn even when accuracy holds.","Any version change","Says changed, not better or worse"],
    ["Answer-mix shift (PSI, Jensen-Shannon)","Compares the distribution of answers to a reference window.","Live traffic","Moves when inputs change too"]],
   graded:[["Grade trend with EWMA","Rolling mean grade; EWMA catches small sustained shifts.","Graded outputs","Judge drift looks like agent drift"]],
-  cont:[["Westgard shift and trend rules","2-2s, 4-1s and 10x catch systematic shifts.","Fixed control","Assumes roughly normal data"],
+  cont:[["Westgard shift and trend rules","2-2s, 4-1s and 10x catch systematic shifts. Limits come from the baseline SD; allowable error decides which rules to use (step 2).","Fixed control","Assumes roughly normal data"],
    ["CUSUM or EWMA","Accumulates small shifts faster than single-point rules.","Small sustained shifts","Needs tuning"],
-   ["Distribution test (KS)","Compares this period's values to the baseline's.","Live traffic","Very sensitive with big samples; pair with a size threshold"]],
+   ["Distribution test (KS)","Compares this period's values to the baseline's.","Live traffic","Flags trivial differences at large samples and assumes independent data; pair with a size threshold"]],
   text:[["Embedding drift","Distance between this period's outputs and the baseline's in meaning space.","Free text","Hard to say what changed"],
    ["Length and refusal rate","Cheap early flags.","Any text","Non-specific"]],
   image:[["Image embedding drift and overlap trend","Embedding distance to baseline; mean overlap on the control over time.","Images","Embedding shifts aren't clinical shifts"]],
@@ -440,7 +441,7 @@ function readState(){
   const types=[...document.querySelectorAll('#types input:checked')].map(i=>i.value);
   const val=n=>{const x=document.querySelector(`input[name=${n}]:checked`);return x?x.value:""};
   const num=id=>{const v=$(id).value.trim();return v===""?null:Number(v)};
-  return {types, ref:val("ref"), keyAgreed:$("keyAgreed").checked, judgeVal:$("judgeVal").checked, sev:val("sev"), watch:val("watch"),
+  return {types, ref:val("ref"), keyAgreed:$("keyAgreed").checked, judgeVal:$("judgeVal").checked, judgeSelf:$("judgeSelf").checked, sev:val("sev"), watch:val("watch"),
     maLive:$("maLive").checked, worries:["swap","silent","prompt","input"].filter(w=>$("c_"+w).checked),
     reportable:$("reportable").value.trim(), crit:$("critVals").value.split("\n").map(x=>x.trim()).filter(Boolean),
     critWho:$("critWho").value.trim(), critMins:num("critMins"), stopPct:num("stopPct"), minGrade:$("minGrade").value.trim(), lo:num("rangeLo"), hi:num("rangeHi"), allowErr:num("allowErr"),
@@ -449,6 +450,7 @@ function readState(){
 }
 
 // Zero failures in n runs rules out a failure rate p at confidence c when (1-p)^n <= 1-c.
+const needRuns1 = (p,c=95) => { if(!p) return null; const a=1-c/100, q=p/100; for(let n=2;n<100000;n++){ const P=Math.pow(1-q,n)+n*q*Math.pow(1-q,n-1); if(P<=a) return n; } return null; };
 const needRuns = (p,c=95) => p ? Math.ceil(Math.log(1-c/100)/Math.log(1-p/100)) : null;
 const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
@@ -502,12 +504,12 @@ function render(){
     {label:"Never-events written down", crit:s.sev==="harm", applies:s.sev!=="low", ok:s.never.length>0, fix:"List what rejects a run regardless of score (question 7)."},
     {label:"Cutoffs have a written source", ok:!!s.cutSrc&&s.cutSrc!=="gut", fix:"Tie each cutoff to a guideline, expert sign-off or past performance."},
     {label:"Control has items near the cutoff", applies:repeats, ok:s.nearCut==="yes", fix:"Add harder items until baseline accuracy sits below 100%."},
-    {label:needT?`Baseline verifies your target: under ${s.rare}% failure (${needT} runs)`:"Target failure rate set", ok:!!needT&&s.planned!=null&&s.planned>=needT, fix:needT?`Plan at least ${needT} runs; you have ${s.planned??0}.`:"Set your target in question 8."},
-    {label:`Baseline verifies the vendor's claim: under ${s.vendor}% failure (${needV} runs)`, applies:!!needV, ok:!!needV&&s.planned!=null&&s.planned>=needV, fix:`Plan at least ${needV} runs to check their number, or record that the claim is unverified.`},
+    {label:needT?`Baseline is big enough for your target, if zero failures are seen: rules out ${s.rare}% or higher (${needT} runs)`:"Target failure rate set", ok:!!needT&&s.planned!=null&&s.planned>=needT, fix:needT?`Plan at least ${needT} runs; you have ${s.planned??0}.`:"Set your target in question 8."},
+    {label:`Baseline is big enough to check the vendor's claim, if zero failures are seen: rules out ${s.vendor}% or higher (${needV} runs)`, applies:!!needV, ok:!!needV&&s.planned!=null&&s.planned>=needV, fix:`Plan at least ${needV} runs to check their number, or record that the claim is unverified.`},
     {label:"Your target is at least as strict as the vendor's claim", applies:!!needV&&!!needT, ok:!!needV&&!!needT&&s.rare<=s.vendor, fix:"Your target is looser than what the vendor promises. Fine, but then a pass doesn't confirm their claim."}
   ];
-  const baseLine = (n,p,who)=>`<span class="num">${n}</span> runs with zero failures rule out ${who} ${p}% failure rate at ${s.conf}% confidence.`;
-  const aBody = measures("accuracy",s) + (need?`<div class="base"><span class="lbl">Baseline</span><br>${needT?baseLine(needT,s.rare,"your"):""}${needT&&needV?"<br>":""}${needV?baseLine(needV,s.vendor,"the vendor's"):""}<br><span style="color:var(--muted);font-size:.8rem">This bounds failures on the inputs in your control set only. Real traffic needs its own evidence. It also assumes runs are independent; repeats of the same input can fail together. Each failure you do see raises the count. Size the baseline to the stricter of the two.</span></div>`:"");
+  const baseLine = (n,p,who)=>`<span class="num">${n}</span> runs with zero failures rule out a failure rate of ${p}% or higher (${who}) at ${s.conf}% confidence. With one failure you'd need ${needRuns1(p,s.conf)}.`;
+  const aBody = measures("accuracy",s) + (need?`<div class="base"><span class="lbl">Baseline</span><br>${needT?baseLine(needT,s.rare,"your target"):""}${needT&&needV?"<br>":""}${needV?baseLine(needV,s.vendor,"vendor claim"):""}<br><span style="color:var(--muted);font-size:.8rem">This bounds failures on the inputs in your control set only. Real traffic needs its own evidence. It also assumes runs are independent, but repeats of the same items fail together: 100 runs of an 11-item list carry closer to 11 items' worth of evidence about new inputs. Each failure you do see raises the count. Size the baseline to the stricter of the two.</span></div>`:"");
 
   // Precision
   const pTraps=[];
@@ -518,7 +520,7 @@ function render(){
     {label:"At least 20 repeats in the baseline", applies:repeats, ok:s.planned!=null&&s.planned>=20, fix:"Plan 20 or more repeat runs."},
     {label:"Minimum agreement set", applies:s.types.some(t=>t!=="cont"), ok:s.minAgree!=null, fix:"Set how often the same input must get the same answer (question 8)."},
     {label:"Allowable imprecision set for numbers", applies:s.types.includes("cont"), ok:s.allowErr!=null, fix:"Set an allowable error (question 6)."},
-    {label:"Judge's own consistency checked", applies:judgeBased&&s.ref!=="none", ok:s.judgeVal, fix:"Re-score the same outputs with the judge and measure its agreement with itself."}
+    {label:"Judge's own consistency checked", applies:judgeBased&&s.ref!=="none", ok:s.judgeSelf, fix:"Re-score the same outputs with the judge and measure its agreement with itself."}
   ];
 
   // Drift
@@ -548,97 +550,91 @@ function render(){
 // One control result per run, in SD units from the baseline mean.
 // Rules look back across runs, like a Levey-Jennings chart with one control.
 
-function rng(seed){ // mulberry32: same numbers every time, so results don't jitter
+function rng(seed){ // mulberry32: same draws every time
   return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed);
     t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; };
 }
 function gaussFrom(r){ let u=0,v=0; while(u===0)u=r(); while(v===0)v=r();
   return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
-
-// Each rule checks the window ending at the newest point (xs[xs.length-1]).
+function normTail(x){ // P(Z > x), Abramowitz-Stegun 26.2.17
+  const t=1/(1+0.2316419*Math.abs(x)), d=0.3989422804014327*Math.exp(-x*x/2);
+  const q=d*t*(0.319381530+t*(-0.356563782+t*(1.781477937+t*(-1.821255978+t*1.330274429))));
+  return x>=0?q:1-q; }
 const RULES = {
-  "1-2s":{name:"1-2s", desc:"One result beyond ±2 SD", fire:xs=>Math.abs(xs.at(-1))>2},
-  "1-3s":{name:"1-3s", desc:"One result beyond ±3 SD", fire:xs=>Math.abs(xs.at(-1))>3},
-  "2-2s":{name:"2-2s", desc:"Two in a row beyond 2 SD, same side", fire:xs=>xs.length>=2&&((xs.at(-1)>2&&xs.at(-2)>2)||(xs.at(-1)<-2&&xs.at(-2)<-2))},
-  "R-4s":{name:"R-4s", desc:"Two in a row, one above +2 SD and one below −2 SD", fire:xs=>xs.length>=2&&((xs.at(-1)>2&&xs.at(-2)<-2)||(xs.at(-1)<-2&&xs.at(-2)>2))},
-  "4-1s":{name:"4-1s", desc:"Four in a row beyond 1 SD, same side", fire:xs=>xs.length>=4&&(xs.slice(-4).every(x=>x>1)||xs.slice(-4).every(x=>x<-1))},
-  "10x":{name:"10x", desc:"Ten in a row on the same side of the mean", fire:xs=>xs.length>=10&&(xs.slice(-10).every(x=>x>0)||xs.slice(-10).every(x=>x<0))}
+  "1-2s":{desc:"One result beyond ±2 SD. Used here as a warning, a common modern choice.", fire:(x,i)=>Math.abs(x[i])>2},
+  "1-3s":{desc:"One result beyond ±3 SD", fire:(x,i)=>Math.abs(x[i])>3},
+  "2-2s":{desc:"Two in a row beyond 2 SD, same side", fire:(x,i)=>i>=1&&((x[i]>2&&x[i-1]>2)||(x[i]<-2&&x[i-1]<-2))},
+  "R-4s":{desc:"Nonstandard here. Westgard defines it within one run across two control levels; with one control per run it's applied across consecutive runs. Off by default.", fire:(x,i)=>i>=1&&((x[i]>2&&x[i-1]<-2)||(x[i]<-2&&x[i-1]>2))},
+  "4-1s":{desc:"Four in a row beyond 1 SD, same side. Used here as a warning, a common choice.", fire:(x,i)=>{ if(i<3) return false; let up=true,dn=true; for(let k=i-3;k<=i;k++){ if(!(x[k]>1)) up=false; if(!(x[k]<-1)) dn=false; } return up||dn; }},
+  "10x":{desc:"Ten in a row on the same side of the mean", fire:(x,i)=>{ if(i<9) return false; let up=true,dn=true; for(let k=i-9;k<=i;k++){ if(!(x[k]>0)) up=false; if(!(x[k]<0)) dn=false; } return up||dn; }}
 };
 const RULE_ORDER=["1-2s","1-3s","2-2s","R-4s","4-1s","10x"];
-
-// Simulate. mode: rules {key:"off"|"warn"|"reject"}.
-// Returns per-run probabilities for: false rejection (in control), detection of a
-// systematic shift (first errored run, and within 5), detection of random error (same).
+// Exact false rejection per run for each rule alone (stable in-control history).
+const Q1=normTail(1), Q2=normTail(2), Q3=normTail(3);
+const EXACT_PFR={"1-2s":2*Q2,"1-3s":2*Q3,"2-2s":2*Q2*Q2,"R-4s":2*Q2*Q2,"4-1s":2*Math.pow(Q1,4),"10x":2*Math.pow(0.5,10)};
+const H=10, K=10, TRIALS=40000;
+let ZB=null; // one fixed block of draws, reused by every rule set, so comparisons are paired
+function zblock(){ if(ZB) return ZB; const r=rng(7), n=TRIALS*(H+1+K); ZB=new Float64Array(n); for(let i=0;i<n;i++) ZB[i]=gaussFrom(r); return ZB; }
+// Returns per-run false rejection and warning rates (in control), and detection of a
+// systematic shift and of random error: on the first errored run, and within K runs.
 function evaluate(mode, opts){
-  const {shift=2, sdx=2, trials=20000, seed=7} = opts||{};
-  const active = RULE_ORDER.filter(k=>mode[k]&&mode[k]!=="off");
-  const rejectSet = active.filter(k=>mode[k]==="reject");
-  const warnSet = active.filter(k=>mode[k]==="warn");
-  const H=10; // in-control history before the evaluated run
-  const r=rng(seed);
-  let fr=0, fw=0, s1=0, s5=0, r1=0, r5=0;
-  const anyFires=(set,xs)=>set.some(k=>RULES[k].fire(xs));
-  for(let t=0;t<trials;t++){
-    const hist=[]; for(let i=0;i<H;i++) hist.push(gaussFrom(r));
-    // in control
-    const ic=hist.concat([gaussFrom(r)]);
-    if(anyFires(rejectSet,ic)) fr++;
-    if(anyFires(warnSet,ic)) fw++;
-    // systematic shift starting now
-    let xs=hist.slice(), got=false;
-    for(let j=0;j<5;j++){ xs.push(gaussFrom(r)+shift); if(anyFires(rejectSet,xs)){ if(j===0) s1++; got=true; break; } }
-    if(got) s5++;
-    // random error (SD multiplied) starting now
-    xs=hist.slice(); got=false;
-    for(let j=0;j<5;j++){ xs.push(gaussFrom(r)*sdx); if(anyFires(rejectSet,xs)){ if(j===0) r1++; got=true; break; } }
-    if(got) r5++;
+  const {shift=2, sdx=2} = opts||{};
+  const rej=RULE_ORDER.filter(k=>mode[k]==="reject").map(k=>RULES[k].fire);
+  const wrn=RULE_ORDER.filter(k=>mode[k]==="warn").map(k=>RULES[k].fire);
+  const z=zblock(), W=H+1+K, xs=new Float64Array(H+K), ic=new Float64Array(H+1);
+  let fr=0,fw=0,s1=0,sK=0,r1=0,rK=0;
+  const any=(fs,x,i)=>{ for(const f of fs) if(f(x,i)) return true; return false; };
+  for(let t=0;t<TRIALS;t++){
+    const b=t*W;
+    for(let i=0;i<=H;i++) ic[i]=z[b+i];
+    if(any(rej,ic,H)) fr++;
+    if(any(wrn,ic,H)) fw++;
+    for(let i=0;i<H;i++) xs[i]=z[b+i];
+    for(let j=0;j<K;j++){ xs[H+j]=z[b+H+1+j]+shift; if(any(rej,xs,H+j)){ if(j===0) s1++; sK++; break; } }
+    for(let j=0;j<K;j++){ xs[H+j]=z[b+H+1+j]*sdx; if(any(rej,xs,H+j)){ if(j===0) r1++; rK++; break; } }
   }
-  return {pfr:fr/trials, warn:fw/trials, sys1:s1/trials, sys5:s5/trials, rnd1:r1/trials, rnd5:r5/trials};
+  return {pfr:fr/TRIALS, warn:fw/TRIALS, sys1:s1/TRIALS, sysK:sK/TRIALS, rnd1:r1/TRIALS, rndK:rK/TRIALS};
 }
-
-// Binomial helpers for count charts (fails in a rolling window of n runs).
+// Binomial helpers for count charts (failures in non-overlapping blocks of n runs).
 function lnC(n,k){ let s=0; for(let i=1;i<=k;i++) s+=Math.log(n-k+i)-Math.log(i); return s; }
-function binomTail(n,p,k){ // P(X >= k)
-  if(k<=0) return 1; if(p<=0) return 0; if(p>=1) return 1;
-  let s=0; for(let i=k;i<=n;i++) s+=Math.exp(lnC(n,i)+i*Math.log(p)+(n-i)*Math.log(1-p)); return Math.min(1,s);
-}
-function limitFor(n,p,alpha){ // smallest k with P(X>=k) <= alpha
-  for(let k=0;k<=n+1;k++) if(binomTail(n,p,k)<=alpha) return k; return n+1;
-}
+function binomTail(n,p,k){ if(k<=0) return 1; if(p<=0) return 0; if(p>=1) return 1;
+  let s=0; for(let i=k;i<=n;i++) s+=Math.exp(lnC(n,i)+i*Math.log(p)+(n-i)*Math.log(1-p)); return Math.min(1,s); }
+function limitFor(n,p,alpha){ for(let k=0;k<=n+1;k++) if(binomTail(n,p,k)<=alpha) return k; return n+1; }
 
-
-
-const LJ_DEFAULT={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"reject","4-1s":"warn","10x":"reject"};
+const LJ_DEFAULT={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"off","4-1s":"warn","10x":"reject"};
 let ljMode={...LJ_DEFAULT};
 const pct=(x,d=1)=>(x*100).toFixed(d)+"%";
 const sgn=(x,d=1)=>{const v=x*100; if(Math.abs(v)<0.05) return `<span>0.0</span>`; return `<span class="${v<0?'neg':'pos'}">${v>0?'+':''}${v.toFixed(d)}</span>`;};
+let aloneCache={key:null,val:null};
 function renderLJ(){
-  const o={shift:Number($("k_shift").value)||2, sdx:Number($("k_sdx").value)||2, trials:20000, seed:7};
+  const o={shift:Number($("k_shift").value)||2, sdx:Number($("k_sdx").value)||2};
   const prev=(Number($("k_prev").value)||2)/100;
   const full=evaluate(ljMode,o);
-  const alone={}, without={};
-  RULE_ORDER.forEach(k=>{ alone[k]=evaluate({[k]:"reject"},o);
-    if(ljMode[k]==="reject"){ const m={...ljMode}; m[k]="off"; without[k]=evaluate(m,o); } });
-  const ped=full.sys5, ppv = (prev*full.sys1+ (1-prev)*full.pfr)>0 ? prev*full.sys1/(prev*full.sys1+(1-prev)*full.pfr) : 0;
+  const ck=o.shift+"|"+o.sdx;
+  if(aloneCache.key!==ck){ const v={}; RULE_ORDER.forEach(k=>{ v[k]=evaluate({[k]:"reject"},o); v[k].pfr=EXACT_PFR[k]; }); aloneCache={key:ck,val:v}; }
+  const alone=aloneCache.val, without={};
+  RULE_ORDER.forEach(k=>{ if(ljMode[k]==="reject"){ const m={...ljMode}; m[k]="off"; without[k]=evaluate(m,o); } });
+  const se=1.96*Math.sqrt(full.pfr*(1-full.pfr)/TRIALS);
+  const den=prev*full.sys1+(1-prev)*full.pfr, ppv=den>0?prev*full.sys1/den:0;
   $("ljTiles").innerHTML=[
-    ["False rejections",pct(full.pfr,2),"per in-control run"],
+    ["False rejections",pct(full.pfr,2),`per in-control run (± ${(se*100).toFixed(2)} from simulation)`],
     ["Warnings",pct(full.warn,1),"per in-control run"],
-    [`Shift of ${o.shift} SD`,pct(full.sys1,0)+" → "+pct(full.sys5,0),"caught on 1st run → within 5"],
-    [`Random error × ${o.sdx}`,pct(full.rnd1,0)+" → "+pct(full.rnd5,0),"caught on 1st run → within 5"],
-    ["A rejection is real",pct(ppv,0),`when ${pct(prev,1)} of runs have a shift`]
+    [`Shift of ${o.shift} SD`,pct(full.sys1,0)+" → "+pct(full.sysK,0),`caught on 1st run → within ${K}`],
+    [`Random error × ${o.sdx}`,pct(full.rnd1,0)+" → "+pct(full.rndK,0),`caught on 1st run → within ${K}`],
+    ["Illustration: rejections that are true",pct(ppv,0),`if ${pct(prev,1)} of runs carry exactly a ${o.shift} SD shift and nothing else (first-run detection)`]
   ].map(t=>`<div class="tile"><span class="lbl">${t[0]}</span><span class="v">${t[1]}</span><span class="s">${t[2]}</span></div>`).join("");
   const rej=RULE_ORDER.filter(k=>ljMode[k]==="reject");
-  const sum=f=>rej.reduce((a,k)=>a+alone[k][f],0);
+  const indep=f=>1-rej.reduce((a,k)=>a*(1-alone[k][f]),1);
   $("ljCallout").innerHTML = rej.length<2 ? `<p>Turn on two or more reject rules to see how they combine.</p>` :
-    `<p><b>The rules don't add up.</b> Your ${rej.length} reject rules, each run alone, add up to ${pct(sum("sys5"),0)} for catching the shift. Together they catch it ${pct(full.sys5,0)} of the time. For random error: ${pct(sum("rnd5"),0)} added vs. ${pct(full.rnd5,0)} together.</p>
-     <p><b>False rejections nearly do add up:</b> ${pct(sum("pfr"),2)} added vs. ${pct(full.pfr,2)} together. Stacking rules costs false alarms faster than it buys detection, because the rules read the same points and catch the same errors.</p>`;
+    `<p><b>The rules overlap.</b> If your ${rej.length} reject rules caught errors independently, together they'd catch the shift ${pct(indep("sysK"),0)} of the time within ${K} runs. They actually catch it ${pct(full.sysK,0)}. For random error: ${pct(indep("rndK"),0)} if independent vs. ${pct(full.rndK,0)} actual. The gap is overlap: the rules read the same points and catch the same errors.</p>
+     <p><b>False rejections:</b> ${pct(indep("pfr"),2)} if independent vs. ${pct(full.pfr,2)} actual. At rates this small the two are close whether or not rules overlap, so the useful reading is the cost of each rule in the table below.</p>`;
   $("ljRows").innerHTML = RULE_ORDER.map(k=>{
     const m=ljMode[k], a=alone[k], w=without[k];
     const sel=`<select data-rule="${k}" aria-label="${k} setting">${["off","warn","reject"].map(v=>`<option value="${v}"${v===m?" selected":""}>${v}</option>`).join("")}</select>`;
-    const rem = w ? `<td class="n">${sgn(w.sys5-full.sys5)}</td><td class="n">${sgn(w.rnd5-full.rnd5)}</td><td class="n">${sgn(w.pfr-full.pfr,2)}</td>`
+    const rem = w ? `<td class="n">${sgn(w.sysK-full.sysK)}</td><td class="n">${sgn(w.rndK-full.rndK)}</td><td class="n">${sgn(w.pfr-full.pfr,2)}</td>`
                   : `<td class="n" colspan="3" style="text-align:left;color:var(--muted)">${m==="warn"?"Warn only. Doesn't reject.":"Off"}</td>`;
-    return `<tr class="${m==="off"?"off":""}"><td><b>${k}</b><span class="d">${RULES[k].desc}</span></td><td>${sel}</td><td class="n">${pct(a.pfr,2)}</td><td class="n">${pct(a.sys5,0)}</td><td class="n">${pct(a.rnd5,0)}</td>${rem}</tr>`;
-  }).join("") + `<tr class="sum"><td>Whole set</td><td></td><td class="n">${pct(full.pfr,2)}</td><td class="n">${pct(full.sys5,0)}</td><td class="n">${pct(full.rnd5,0)}</td><td colspan="3"></td></tr>`;
+    return `<tr class="${m==="off"?"off":""}"><td><b>${k}</b><span class="d">${RULES[k].desc}</span></td><td>${sel}</td><td class="n">${pct(a.pfr,2)}</td><td class="n">${pct(a.sysK,0)}</td><td class="n">${pct(a.rndK,0)}</td>${rem}</tr>`;
+  }).join("") + `<tr class="sum"><td>Whole set</td><td></td><td class="n">${pct(full.pfr,2)}</td><td class="n">${pct(full.sysK,0)}</td><td class="n">${pct(full.rndK,0)}</td><td colspan="3"></td></tr>`;
   document.querySelectorAll("#ljRows select").forEach(el=>el.onchange=()=>{ ljMode[el.dataset.rule]=el.value; renderLJ(); });
 }
 function renderBinom(){
@@ -652,12 +648,12 @@ function renderBinom(){
   $("bTiles").innerHTML=[
     ["Warn at",`${kw}+ fails`,`in ${n} runs · false alarm ${pct(fw,1)}`],
     ["Reject at",`${kr}+ fails`,`in ${n} runs · false alarm ${pct(fr,2)}`],
-    [`Rate × ${mult} warns`,pct(dw,0),`per window, at ${pct(p1,1)} failures`],
-    [`Rate × ${mult} rejects`,pct(dr,0),`per window, at ${pct(p1,1)} failures`]
+    [`Rate × ${mult} warns`,pct(dw,0),`per block, at ${pct(p1,1)} failures`],
+    [`Rate × ${mult} rejects`,pct(dr,0),`per block, at ${pct(p1,1)} failures`]
   ].map(t=>`<div class="tile"><span class="lbl">${t[0]}</span><span class="v">${t[1]}</span><span class="s">${t[2]}</span></div>`).join("");
   const notes=[`<p>At baseline you expect about ${exp} failures per ${n} runs. Limits are whole counts, so the real false-alarm rate lands at or under your target, not on it.</p>`];
   if(kr>n) notes.push(`<p><b>The reject limit is out of reach:</b> no count in ${n} runs is rare enough. Use a bigger window or a looser target.</p>`);
-  if(dr<0.5&&kr<=n) notes.push(`<p><b>Weak detection:</b> a ${mult}× jump in failures gets rejected in under half of windows. A bigger window catches it more reliably but later.</p>`);
+  if(dr<0.5&&kr<=n) notes.push(`<p><b>Weak detection:</b> a ${mult}× jump in failures gets rejected in under half of blocks. A bigger block catches it more reliably but later.</p>`);
   $("bCallout").innerHTML=notes.join("");
 }
 function renderSigma(){
@@ -666,11 +662,11 @@ function renderSigma(){
   const sg=(tea-bias)/cv;
   let tier, rules;
   if(sg>=6){ tier="World class: one simple rule is enough."; rules={"1-2s":"off","1-3s":"reject","2-2s":"off","R-4s":"off","4-1s":"off","10x":"off"}; }
-  else if(sg>=4){ tier="Good: a short multirule."; rules={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"reject","4-1s":"off","10x":"off"}; }
-  else if(sg>=3){ tier="Marginal: the full multirule, and run the control more often."; rules={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"reject","4-1s":"reject","10x":"reject"}; }
-  else { tier="Too little room: no rule set will catch errors reliably. Improve the method (less bias or less spread) before relying on QC."; rules={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"reject","4-1s":"reject","10x":"reject"}; }
+  else if(sg>=4){ tier="Good: a short multirule."; rules={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"off","4-1s":"off","10x":"off"}; }
+  else if(sg>=3){ tier="Marginal: the full multirule, and run the control more often."; rules={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"off","4-1s":"reject","10x":"reject"}; }
+  else { tier="Too little room: no rule set will catch errors reliably. Improve the method (less bias or less spread) before relying on QC."; rules={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"off","4-1s":"reject","10x":"reject"}; }
   window._sgRules=rules;
-  $("sgOut").innerHTML=`<p><b>Sigma = ${sg.toFixed(1)}</b> (allowable error ${tea}% − bias ${bias}%) ÷ CV ${cv}%. ${tier}</p><p><button type="button" id="sgApply">Use the suggested rules below</button> <span style="color:var(--muted);font-size:.82rem">Then check what they catch and cost.</span></p>`;
+  $("sgOut").innerHTML=`<p><b>Sigma = ${sg.toFixed(1)}</b> (allowable error ${tea}% − bias ${bias}%) ÷ CV ${cv}%. ${tier}</p><p style="color:var(--muted);font-size:.84rem">These tiers simplify Westgard's sigma-based rule selection, which also sets how many controls per run and how often to run them.</p><p><button type="button" id="sgApply">Use the suggested rules below</button> <span style="color:var(--muted);font-size:.82rem">Then check what they catch and cost.</span></p>`;
   $("sgApply").onclick=()=>{ ljMode={...window._sgRules}; renderLJ(); };
 }
 function showStep(n){
@@ -699,7 +695,7 @@ function load(k){
   const e=EX[k];
   document.querySelectorAll('#types input').forEach(i=>i.checked=e.types.includes(i.value));
   ["ref","sev","watch"].forEach(n=>document.querySelectorAll(`input[name=${n}]`).forEach(i=>i.checked=i.value===e[n]));
-  $("judgeVal").checked=e.judgeVal; $("keyAgreed").checked=!!e.keyAgreed; $("maLive").checked=!!e.maLive;
+  $("judgeVal").checked=e.judgeVal; $("judgeSelf").checked=!!e.judgeSelf; $("keyAgreed").checked=!!e.keyAgreed; $("maLive").checked=!!e.maLive;
   ["swap","silent","prompt","input"].forEach(w=>$("c_"+w).checked=e.worries.includes(w));
   $("reportable").value=e.reportable; $("critVals").value=e.crit; $("critWho").value=e.critWho; $("critMins").value=e.critMins;
   $("stopPct").value=e.stopPct; $("minGrade").value=e.minGrade; $("rangeLo").value=e.lo; $("rangeHi").value=e.hi; $("allowErr").value=e.allowErr;
