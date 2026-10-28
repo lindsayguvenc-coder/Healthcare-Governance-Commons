@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Pick accuracy, precision and drift measures for an AI agent, set cutoffs, and see what your control rules catch and cost.">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Agent QC Metric Picker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: bench worksheet. Left = intake questions with worked examples in the margin; right = live result cards (sticky on desktop). */
+:root{
+  --bg:#f2f2f6; --panel:#ffffff; --ink:#1d1e2a; --muted:#5d5f72; --line:#d6d6e2; --tint:#ebebf3;
+  --accent:#62619a; --accent-ink:#ffffff;
+  --ok:#2d7a57; --warn:#a8701a; --bad:#b33a2e;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14141c; --panel:#1c1c27; --ink:#e7e7f0; --muted:#9d9eb4; --line:#30303f;
+  --tint:#232331; --accent:#a3a2d8; --accent-ink:#14141c; --ok:#62c294; --warn:#e2a64d; --bad:#ec7366; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14141c; --panel:#1c1c27; --ink:#e7e7f0; --muted:#9d9eb4; --line:#30303f;
+  --tint:#232331; --accent:#a3a2d8; --accent-ink:#14141c; --ok:#62c294; --warn:#e2a64d; --bad:#ec7366; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--body)}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 56px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:22px}
+header{display:grid;gap:6px}
+.eyebrow{font:600 .72rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+h1{font:800 clamp(1.7rem,3.5vw,2.4rem)/1.1 var(--display);margin:0;letter-spacing:-.02em;text-wrap:balance}
+.lede{color:var(--muted);margin:0;max-width:68ch}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,.btn{font:600 .86rem var(--body);padding:8px 13px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.exnote{font:400 .8rem var(--mono);color:var(--warn)}
+.grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.col{display:grid;gap:14px;min-width:0}
+.results{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:900px){.results{position:static}}
+.stephead{display:flex;align-items:baseline;gap:10px;margin-top:6px}
+.stephead b{font:600 .72rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.stephead h2{font:700 1.15rem var(--display);margin:0}
+.q{background:var(--panel);border:1px solid var(--line);border-radius:8px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.85fr);overflow:hidden}
+@media (max-width:620px){.q{grid-template-columns:minmax(0,1fr)}}
+.qmain{padding:14px 16px;display:grid;gap:10px;min-width:0}
+.qmain h3{font:600 .98rem var(--body);margin:0}
+.qmain .why{color:var(--muted);font-size:.86rem;margin:-4px 0 0}
+.ex{background:var(--tint);padding:14px 16px;font-size:.84rem;display:grid;gap:8px;align-content:start;border-left:1px solid var(--line);min-width:0}
+@media (max-width:620px){.ex{border-left:none;border-top:1px solid var(--line)}}
+.ex .lab{font:600 .68rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ex p{margin:0} .ex p b{font-weight:600}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opts label{display:flex;gap:7px;align-items:flex-start;border:1px solid var(--line);border-radius:6px;padding:7px 10px;cursor:pointer;font-size:.88rem;flex:1 1 150px}
+.opts label:has(input:checked){border-color:var(--accent);background:var(--tint)}
+.opts small{display:block;color:var(--muted);font-size:.78rem}
+.opts input{margin-top:3px;accent-color:var(--accent)}
+.field{display:grid;gap:4px}
+.field label{font-size:.84rem;font-weight:500}
+.field small{color:var(--muted);font-size:.78rem}
+input[type=number],input[type=text],select,textarea{font:400 .9rem var(--body);padding:8px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+input[type=number]{font-family:var(--mono);max-width:9rem}
+textarea{min-height:58px;resize:vertical}
+.row2{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:grid;gap:10px}
+.cardhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.cardhead h2{font:800 1.15rem var(--display);margin:0}
+.cardhead .q2{color:var(--muted);font-size:.82rem;flex-basis:100%;margin-top:-4px}
+.pill{font:600 .74rem var(--mono);padding:3px 9px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.pill.ok{color:var(--ok)} .pill.warn{color:var(--warn)} .pill.bad{color:var(--bad)}
+.meter{display:flex;gap:3px} .meter span{flex:1;height:6px;border-radius:2px;background:var(--line)}
+.meter span.on{background:var(--ok)} .meter span.miss{background:var(--bad)}
+.lbl{font:600 .68rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.measures{display:grid;gap:8px}
+.m{border-top:1px solid var(--line);padding-top:8px;display:grid;gap:2px}
+.m:first-child{border-top:none;padding-top:0}
+.m .t{font:600 .7rem var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
+.m .what{font-weight:600;font-size:.9rem}
+.m .how{color:var(--muted);font-size:.84rem}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:5px;font-size:.86rem}
+.checks li{display:grid;grid-template-columns:1.3em minmax(0,1fr);gap:6px}
+.checks .ic{font:600 .9rem var(--mono)} .checks .y .ic{color:var(--ok)} .checks .n .ic{color:var(--bad)}
+.checks .fix{display:block;color:var(--muted);font-size:.8rem}
+.traps{display:grid;gap:6px}
+.trap{border:1px solid var(--warn);border-radius:6px;padding:8px 10px;font-size:.84rem}
+.trap b{color:var(--warn)}
+.base{font-size:.86rem} .base .num{font:600 1.05rem var(--mono);font-variant-numeric:tabular-nums}
+.next{border:1px dashed var(--line);border-radius:8px;padding:14px 16px;color:var(--muted);font-size:.88rem}
+.next b{color:var(--ink)}
+footer{color:var(--muted);font-size:.8rem;display:grid;gap:4px}
+footer a{color:var(--accent)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:none;border-bottom:3px solid transparent;border-radius:0;background:transparent;color:var(--muted);padding:10px 14px;white-space:nowrap;font:600 .92rem var(--body)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:grid;gap:2px}
+.tile .v{font:600 1.35rem var(--mono);font-variant-numeric:tabular-nums}
+.tile .s{color:var(--muted);font-size:.78rem}
+.tablebox{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font:600 .68rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);vertical-align:bottom;white-space:normal}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+th.n{text-align:right}
+td .d{display:block;color:var(--muted);font-size:.76rem;white-space:normal;min-width:170px}
+tr.sum td{font-weight:600;background:var(--tint)}
+tr.off td{color:var(--muted)}
+td select{width:auto;padding:4px 6px;font-size:.84rem}
+.neg{color:var(--bad)} .pos{color:var(--ok)}
+.callout{border-left:3px solid var(--accent);background:var(--panel);padding:12px 14px;border-radius:0 8px 8px 0;font-size:.9rem;display:grid;gap:6px}
+.callout p{margin:0}
+.knobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.s2{display:grid;gap:16px}
+.s2 h2{font:800 1.25rem var(--display);margin:6px 0 0}
+.s2 .sub{color:var(--muted);margin:-8px 0 0;max-width:72ch;font-size:.9rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow"><a href="/tools" style="color:inherit;text-decoration:none">← Commons tools</a> · Agent QC</div>
+    <h1>Agent QC Metric Picker</h1>
+    <p class="lede">Step 1: answer nine questions about your agent and its cutoffs, and get the accuracy, precision and drift measures that fit your data, with a check of how completely they cover what you care about. Step 2: choose control rules and see what the whole rule set catches and what it costs.</p>
+    <div class="bar">
+      <span class="lbl">Load an example</span>
+      <button type="button" id="exGrocery" aria-pressed="true">Grocery sorting agent</button>
+      <button type="button" id="exNote" aria-pressed="false">Discharge-summary drafter</button>
+      <button type="button" id="clearAll">Start blank</button>
+      <span class="exnote" id="exNote2">Showing example answers. Edit anything.</span>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Steps">
+    <button type="button" role="tab" id="tab1" aria-selected="true">1 · Pick metrics</button>
+    <button type="button" role="tab" id="tab2" aria-selected="false">2 · Pick rules</button>
+  </nav>
+
+  <div class="grid" id="view1">
+    <form class="col" id="f" autocomplete="off">
+      <div class="stephead"><b>A</b><h2>About the agent</h2></div>
+
+      <section class="q">
+        <div class="qmain">
+          <h3>1. What does one run produce?</h3>
+          <p class="why">Pick every type. The data type decides which statistics work.</p>
+          <div class="opts" id="types">
+            <label><input type="checkbox" id="t_binary" value="binary">Pass / fail<small>Task done or not</small></label>
+            <label><input type="checkbox" id="t_cat" value="cat">A choice from a set<small>Category, label, aisle, code</small></label>
+            <label><input type="checkbox" id="t_graded" value="graded">A grade<small>Rubric score, 1–5, A–F</small></label>
+            <label><input type="checkbox" id="t_cont" value="cont">A number<small>Dose, price, score, count</small></label>
+            <label><input type="checkbox" id="t_text" value="text">Free text<small>Summary, answer, message</small></label>
+            <label><input type="checkbox" id="t_image" value="image">An image or marked-up image<small>Generated image, boxes or outlines drawn on a scan</small></label>
+          </div>
+        </div>
+        <aside class="ex"><span class="lab">Examples</span>
+          <p><b>Grocery agent:</b> a choice from a set (an aisle per item), plus pass/fail for the whole run.</p>
+          <p><b>Discharge drafter:</b> free text, which a reviewer grades 1–5.</p>
+          <p><b>Slide-screening agent:</b> an image with suspect cells circled, plus a pass/fail call.</p></aside>
+      </section>
+
+      <section class="q">
+        <div class="qmain">
+          <h3>2. Is there a known right answer?</h3>
+          <p class="why">Accuracy needs a reference. Without one you can only measure consistency and change.</p>
+          <div class="opts">
+            <label><input type="radio" name="ref" id="r_key" value="key">An answer key exists<small>Fixed correct output per input</small></label>
+            <label><input type="radio" name="ref" id="r_judge" value="judge">An expert or judge model can score it<small>Human reviewer or LLM-as-judge</small></label>
+            <label><input type="radio" name="ref" id="r_none" value="none">Nobody can say<small>No reference at all</small></label>
+          </div>
+          <div class="opts"><label><input type="checkbox" id="judgeVal">The judge has been checked against human raters<small>Agreement (κ) at least as good as humans with each other</small></label></div>
+        </div>
+        <aside class="ex"><span class="lab">Examples</span>
+          <p><b>Grocery agent:</b> answer key. Every item has one correct aisle.</p>
+          <p><b>Discharge drafter:</b> a judge model scores it. Not yet checked against clinicians.</p></aside>
+      </section>
+
+      <section class="q">
+        <div class="qmain">
+          <h3>3. What happens when it's wrong?</h3>
+          <p class="why">Sets how strict the cutoffs and rules need to be.</p>
+          <div class="opts">
+            <label><input type="radio" name="sev" id="s_low" value="low">Inconvenience<small>Someone redoes it</small></label>
+            <label><input type="radio" name="sev" id="s_money" value="money">Money or time lost<small>Rework, refunds, delays</small></label>
+            <label><input type="radio" name="sev" id="s_harm" value="harm">Someone could be harmed<small>Health, safety, rights</small></label>
+          </div>
+        </div>
+        <aside class="ex"><span class="lab">Examples</span>
+          <p><b>Grocery agent:</b> harm. An allergen shelved as allergen-free, or chicken left out of the cold aisle.</p>
+          <p><b>Discharge drafter:</b> harm. A dropped medication change.</p></aside>
+      </section>
+
+      <section class="q">
+        <div class="qmain">
+          <h3>4. What will you watch?</h3>
+          <p class="why">A fixed control isolates the agent. Live traffic shows real use but mixes in changes to the inputs.</p>
+          <div class="opts">
+            <label><input type="radio" name="watch" id="w_ctrl" value="ctrl">A fixed control<small>Same test set, run on schedule</small></label>
+            <label><input type="radio" name="watch" id="w_live" value="live">Live traffic only<small>Real requests as they come</small></label>
+            <label><input type="radio" name="watch" id="w_both" value="both">Both<small>Control plus live sampling</small></label>
+          </div>
+          <div class="opts"><label><input type="checkbox" id="maLive">A moving average of live outputs is charted with limits<small>For live traffic: average grade, category mix, or escalation rate, checked between control runs</small></label></div>
+        </div>
+        <aside class="ex"><span class="lab">Examples</span>
+          <p><b>Grocery agent:</b> a fixed control. The same 11-item list every run.</p>
+          <p><b>Discharge drafter:</b> both. 30 fixed charts weekly, plus a sample of real drafts. No moving average yet.</p>
+          <p><b>A ticket-routing agent:</b> live only, with a 200-ticket moving average of the share sent to billing.</p></aside>
+      </section>
+
+      <section class="q">
+        <div class="qmain">
+          <h3>5. What change worries you?</h3>
+          <p class="why">The drift card checks all four kinds of change either way. Your picks are marked, so you can see which gaps you already knew about.</p>
+          <div class="opts">
+            <label><input type="checkbox" id="c_swap" value="swap">A model swap<small>You change versions</small></label>
+            <label><input type="checkbox" id="c_silent" value="silent">A silent provider update<small>Same name, different behavior</small></label>
+            <label><input type="checkbox" id="c_prompt" value="prompt">A prompt or config edit<small>Your own changes</small></label>
+            <label><input type="checkbox" id="c_input" value="input">The inputs shifting<small>New users, new cases</small></label>
+          </div>
+        </div>
+        <aside class="ex"><span class="lab">Examples</span>
+          <p><b>Grocery agent:</b> a model swap and a silent update.</p>
+          <p><b>Discharge drafter:</b> all four, including a new patient population.</p></aside>
+      </section>
+
+      <div class="stephead"><b>B</b><h2>Ranges and cutoffs</h2></div>
+
+      <section class="q">
+        <div class="qmain">
+          <h3>6. Ranges, cutoffs and critical values</h3>
+          <p class="why">The same layers a lab sets for a test: the range it's validated for, the cutoff where someone acts, the error that's still fine, and the critical values that need a human right now.</p>
+          <div class="field"><label for="reportable">Validated range (what it was tested on)</label><textarea id="reportable"></textarea><small>Inputs outside this get flagged, not answered. Like a lab's reportable range.</small></div>
+          <div class="row2">
+            <div class="field"><label for="stopPct">Stop-using point (% of runs acceptable)</label><input type="number" id="stopPct" min="0" max="100" step="0.1"><small>Below this pass rate you'd pull it</small></div>
+            <div class="field"><label for="minGrade">Lowest acceptable grade</label><input type="text" id="minGrade"><small>For graded outputs. Leave blank if none.</small></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label for="rangeLo">Acceptable range, low</label><input type="number" id="rangeLo" step="any"><small>For numeric outputs</small></div>
+            <div class="field"><label for="rangeHi">Acceptable range, high</label><input type="number" id="rangeHi" step="any"><small>For numeric outputs</small></div>
+            <div class="field"><label for="allowErr">Allowable error (±)</label><input type="number" id="allowErr" step="any"><small>How far off is still fine</small></div>
+          </div>
+          <div class="field"><label for="critVals">Critical values (one per line)</label><textarea id="critVals"></textarea><small>Results that aren't errors but need a human now. Different from never-events, which are the agent's mistakes.</small></div>
+          <div class="row2">
+            <div class="field"><label for="critWho">Who gets the call</label><input type="text" id="critWho"></div>
+            <div class="field"><label for="critMins">Within (minutes)</label><input type="number" id="critMins" min="0" step="1"></div>
+          </div>
+        </div>
+        <aside class="ex"><span class="lab">Examples</span>
+          <p><b>Grocery agent:</b> validated on an 11-item list and 9 aisles. Stop below 95% of runs passing. Critical value: a list item that's recalled; the store manager within 15 minutes.</p>
+          <p><b>Discharge drafter:</b> validated on adult medicine discharges, not pediatrics. Stop below 90% of drafts graded 4 or better. Critical value: the chart shows a new critical lab nobody acted on; the attending within 30 minutes.</p>
+          <p><b>A dosing assistant:</b> validated for adults 40–120 kg. Range 0–40 mg, allowable error ±2 mg. Critical value: any dose over 30 mg; the pharmacist within 10 minutes.</p></aside>
+      </section>
+
+      <section class="q">
+        <div class="qmain">
+          <h3>7. What must never happen?</h3>
+          <p class="why">Never-events reject a run whatever its score. One per line.</p>
+          <div class="field"><label for="never">Never-events</label><textarea id="never"></textarea></div>
+        </div>
+        <aside class="ex"><span class="lab">Examples</span>
+          <p><b>Grocery agent:</b> peanut butter in the allergen-free aisle. Any cold item in a warm aisle.</p>
+          <p><b>Discharge drafter:</b> a medication change left out. A new allergy left out.</p></aside>
+      </section>
+
+      <section class="q">
+        <div class="qmain">
+          <h3>8. How rare a failure do you need to rule out?</h3>
+          <p class="why">Zero failures in a small baseline proves little. This sets the baseline size.</p>
+          <div class="row2">
+            <div class="field"><label for="rareFail">Your target: failure rate to rule out (%)</label><input type="number" id="rareFail" min="0.1" max="50" step="0.1"><small>The meaningful target for your use</small></div>
+            <div class="field"><label for="vendorFail">Vendor's claimed failure rate (%)</label><input type="number" id="vendorFail" min="0.1" max="50" step="0.1"><small>From their docs or contract. Blank if none.</small></div>
+            <div class="field"><label for="conf">Confidence</label><select id="conf"><option value="80">80%</option><option value="90">90%</option><option value="95" selected>95%</option><option value="99">99%</option></select><small>Higher costs more runs</small></div>
+            <div class="field"><label for="planned">Baseline runs planned</label><input type="number" id="planned" min="0" step="1"><small>Repeat runs before you go live</small></div>
+            <div class="field"><label for="minAgree">Minimum agreement across repeats (%)</label><input type="number" id="minAgree" min="0" max="100" step="1"><small>Same input, same answer</small></div>
+          </div>
+        </div>
+        <aside class="ex"><span class="lab">Examples</span>
+          <p><b>Grocery agent:</b> rule out 3% at 95% confidence. No vendor claim. 100 runs planned. Each item placed the same way at least 95% of the time.</p>
+          <p><b>Discharge drafter:</b> rule out 1% at 95%. The vendor claims 0.5%, which takes about 600 runs to verify. 60 planned.</p></aside>
+      </section>
+
+      <section class="q">
+        <div class="qmain">
+          <h3>9. Where did those numbers come from, and does your test set sit near them?</h3>
+          <p class="why">A cutoff is only as good as its source. A test set that's too easy can't show drift.</p>
+          <div class="field"><label for="cutSrc">Source of the cutoffs</label>
+            <select id="cutSrc">
+              <option value="">Choose one</option>
+              <option value="reg">Regulation, guideline or standard</option>
+              <option value="expert">Expert or clinical judgment, written down</option>
+              <option value="hist">Historical performance of the old process</option>
+              <option value="gut">A gut call for now</option>
+            </select></div>
+          <div class="field"><label for="nearCut">Does the control include items that land near the cutoff?</label>
+            <select id="nearCut">
+              <option value="">Choose one</option>
+              <option value="yes">Yes, some items are hard enough to fail sometimes</option>
+              <option value="no">No, baseline runs are at or near 100%</option>
+              <option value="unk">Don't know yet</option>
+            </select></div>
+        </div>
+        <aside class="ex"><span class="lab">Examples</span>
+          <p><b>Grocery agent:</b> expert judgment. No: 100 of 100 baseline runs passed, so the control sits at the ceiling.</p>
+          <p><b>Discharge drafter:</b> guideline-based. Yes: complex charts score 3–4.</p></aside>
+      </section>
+    </form>
+
+    <div class="col results" id="results" aria-live="polite"></div>
+  </div>
+
+  <div class="s2" id="view2" hidden>
+    <h2>Levey-Jennings rules, for numbers</h2>
+    <p class="sub">For any output you chart with a mean and SD: a numeric result, output tokens, an average grade. Set each rule to off, warn or reject. The numbers come from simulating 20,000 runs per setting, one control result per run.</p>
+    <div class="knobs">
+      <div class="field"><label for="k_shift">Systematic error to catch (SD)</label><input type="number" id="k_shift" value="2" min="0.5" max="5" step="0.5"><small>A shift in the mean, e.g. after a model swap</small></div>
+      <div class="field"><label for="k_sdx">Random error to catch (× SD)</label><input type="number" id="k_sdx" value="2" min="1.25" max="4" step="0.25"><small>The spread grows, e.g. a less stable model</small></div>
+      <div class="field"><label for="k_prev">Runs with a real error (%)</label><input type="number" id="k_prev" value="2" min="0.1" max="50" step="0.1"><small>How often something is truly wrong. Sets how much a rejection means.</small></div>
+    </div>
+    <div class="tiles" id="ljTiles"></div>
+    <div class="callout" id="ljCallout"></div>
+    <div class="tablebox"><table>
+      <thead><tr><th>Rule</th><th>Setting</th><th class="n">False rejections per run, alone</th><th class="n">Shift caught within 5 runs, alone</th><th class="n">Random error caught within 5 runs, alone</th><th class="n">Remove it: shift caught</th><th class="n">Remove it: random caught</th><th class="n">Remove it: false rejections</th></tr></thead>
+      <tbody id="ljRows"></tbody>
+    </table></div>
+    <p class="sub" style="margin:0">"Remove it" shows how the whole set changes without that rule. A rule whose removal barely moves detection is mostly catching what the others already catch.</p>
+
+    <h2>Count limits, for pass/fail and rates</h2>
+    <p class="sub">For anything counted: failed runs, process errors, never-events. Chart the number of failures in each window of runs against limits from the binomial distribution.</p>
+    <div class="knobs">
+      <div class="field"><label for="b_p0">Baseline failure rate (%)</label><input type="number" id="b_p0" value="3" min="0" max="90" step="0.1"><small>From your baseline. If you saw zero, use the rate you ruled out.</small></div>
+      <div class="field"><label for="b_n">Window (runs)</label><input type="number" id="b_n" value="20" min="5" max="200" step="1"></div>
+      <div class="field"><label for="b_aw">Warn false-alarm target (%)</label><input type="number" id="b_aw" value="5" min="0.1" max="20" step="0.1"></div>
+      <div class="field"><label for="b_ar">Reject false-alarm target (%)</label><input type="number" id="b_ar" value="0.3" min="0.01" max="10" step="0.01"></div>
+      <div class="field"><label for="b_mult">Failure rate to catch (× baseline)</label><input type="number" id="b_mult" value="3" min="1.5" max="20" step="0.5"></div>
+    </div>
+    <div class="tiles" id="bTiles"></div>
+    <div class="callout" id="bCallout"></div>
+  </div>
+
+  <footer>
+    <div>Methods drawn from current practice: <a href="https://arxiv.org/pdf/2406.12045" target="_blank" rel="noopener">τ-bench (pass^k)</a> · <a href="https://arxiv.org/html/2408.04667v5" target="_blank" rel="noopener">Atil et al. (agreement across runs)</a> · <a href="https://arxiv.org/pdf/2307.09009" target="_blank" rel="noopener">Chen et al. (version mismatch)</a> · <a href="https://www.anthropic.com/research/statistical-approach-to-model-evals" target="_blank" rel="noopener">Anthropic (error bars, paired tests)</a> · <a href="https://arxiv.org/html/2510.09738v1" target="_blank" rel="noopener">Judge's Verdict (judge validation)</a> · <a href="https://oatml.cs.ox.ac.uk/blog/2024/06/19/detecting_hallucinations_2024.html" target="_blank" rel="noopener">Semantic entropy</a> · <a href="https://galileo.ai/blog/best-llm-output-drift-monitoring-platforms" target="_blank" rel="noopener">drift platforms</a>; plus lab QC practice (Levey-Jennings, Westgard).</div>
+    <div>Working prototype. Nothing you enter leaves your browser.</div>
+  </footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const TYPE_NAME = {binary:"Pass / fail", cat:"Choice from a set", graded:"Grade", cont:"Number", text:"Free text", image:"Image"};
+
+const LIB = {
+  accuracy:{
+    binary:["Success rate with a 95% confidence interval","Compare each run's end state to the known correct end state. Chart failures per rolling window with binomial limits."],
+    cat:["Exact match to the key, per item","Count items right per run. Score never-events separately so a high score can't hide them."],
+    graded:["Rubric grade from a validated judge","Grade against the expected grade. Within ±1 grade is acceptable; 2 off rejects."],
+    cont:["Bias from the target value","Levey-Jennings chart with Westgard rules against your allowable error. If it states confidence, check calibration (ECE, Brier score)."],
+    text:["Reference-guided judge, or claims checked against the source","Turn the judge's verdict into pass/fail per output, then chart it like pass/fail."],
+    image:["Overlap with the reference markup, or validated reviewer score","For boxes or outlines: overlap with the expert's markup (IoU, Dice), plus misses and false finds. For generated images: a judge or reviewer validated against humans."]
+  },
+  precision:{
+    binary:["pass^k","Chance that all k repeat runs pass. A reliable agent stays flat as k rises; an unreliable one drops."],
+    cat:["Agreement across repeat runs, per item","Share of repeats where an item gets the same answer. Flags the items the agent is unsure of."],
+    graded:["Spread of grades on the same input, and judge self-agreement","SD of grades across repeats; judge κ against itself and against humans."],
+    cont:["SD and CV across repeat runs","Classic imprecision. Set a minimum SD floor at validation if counts come out too tight to chart."],
+    text:["Agreement by meaning (semantic entropy)","Sample several outputs, group them by meaning, measure the spread. Identical-text rate only as a strict side check."],
+    image:["Agreement across repeats on the same image","Overlap between repeat markups of the same input; for generated images, similarity of image embeddings across repeats."]
+  },
+  drift:{
+    binary:["Paired before/after on the same items","Same items under both versions; analyze the differences. Plus pass rate over time with binomial limits."],
+    cat:["Mismatch rate between versions","Share of answers that changed. Catches churn even when accuracy holds steady."],
+    graded:["Grade trend against baseline","Rolling mean grade; an EWMA catches small sustained shifts."],
+    cont:["Westgard shift and trend rules","2-2s, 4-1s and 10x catch systematic shifts; a distribution test (KS) on live values."],
+    text:["Embedding drift and length","Distance between this period's outputs and the baseline's, in meaning space; output length as a cheap early flag."],
+    image:["Image embedding drift, and overlap trend","Distance between this period's images and the baseline's in embedding space; mean overlap score over time on the control set."]
+  }
+};
+
+function readState(){
+  const types=[...document.querySelectorAll('#types input:checked')].map(i=>i.value);
+  const val=n=>{const x=document.querySelector(`input[name=${n}]:checked`);return x?x.value:""};
+  const num=id=>{const v=$(id).value.trim();return v===""?null:Number(v)};
+  return {types, ref:val("ref"), judgeVal:$("judgeVal").checked, sev:val("sev"), watch:val("watch"),
+    maLive:$("maLive").checked, worries:["swap","silent","prompt","input"].filter(w=>$("c_"+w).checked),
+    reportable:$("reportable").value.trim(), crit:$("critVals").value.split("\n").map(x=>x.trim()).filter(Boolean),
+    critWho:$("critWho").value.trim(), critMins:num("critMins"), stopPct:num("stopPct"), minGrade:$("minGrade").value.trim(), lo:num("rangeLo"), hi:num("rangeHi"), allowErr:num("allowErr"),
+    never:$("never").value.split("\n").map(s=>s.trim()).filter(Boolean),
+    rare:num("rareFail"), vendor:num("vendorFail"), conf:Number($("conf").value)||95, planned:num("planned"), minAgree:num("minAgree"), cutSrc:$("cutSrc").value, nearCut:$("nearCut").value};
+}
+
+// Zero failures in n runs rules out a failure rate p at confidence c when (1-p)^n <= 1-c.
+const needRuns = (p,c=95) => p ? Math.ceil(Math.log(1-c/100)/Math.log(1-p/100)) : null;
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function measures(concept, s){
+  if(!s.types.length) return `<p class="how" style="margin:0;color:var(--muted)">Pick what one run produces (question 1).</p>`;
+  return s.types.map(t=>{
+    const [what,how]=LIB[concept][t];
+    return `<div class="m"><span class="t">${TYPE_NAME[t]}</span><span class="what">${what}</span><span class="how">${how}</span></div>`;
+  }).join("");
+}
+
+function card(title, question, body, checks, traps){
+  const app=checks.filter(c=>c.applies!==false);
+  const got=app.filter(c=>c.ok).length, n=app.length;
+  const frac=n?got/n:0;
+  const pill = !n ? `<span class="pill warn">Answer the questions</span>` :
+    frac===1 ? `<span class="pill ok">Complete · ${got}/${n}</span>` :
+    frac>=.6 ? `<span class="pill warn">Partial · ${got}/${n}</span>` : `<span class="pill bad">Gaps · ${got}/${n}</span>`;
+  const meter = `<div class="meter" aria-hidden="true">${app.map(c=>`<span class="${c.ok?'on':'miss'}"></span>`).join("")}</div>`;
+  const list = `<ul class="checks">${app.map(c=>`<li class="${c.ok?'y':'n'}"><span class="ic">${c.ok?'✓':'✕'}</span><span>${c.label}${!c.ok&&c.fix?`<span class="fix">${c.fix}</span>`:""}</span></li>`).join("")}</ul>`;
+  const tr = traps.length?`<div class="traps">${traps.map(t=>`<div class="trap"><b>Trap:</b> ${t}</div>`).join("")}</div>`:"";
+  return `<section class="card"><div class="cardhead"><h2>${title}</h2>${pill}<span class="q2">${question}</span></div>
+    <div class="measures">${body}</div>${tr}
+    <div class="lbl">Completeness for what you asked</div>${meter}${list}</section>`;
+}
+
+function render(){
+  const s=readState();
+  const judgeBased = s.ref==="judge" || s.types.includes("graded") || s.types.includes("text") || s.types.includes("image");
+  const repeats = s.watch==="ctrl"||s.watch==="both";
+  const live = s.watch==="live"||s.watch==="both";
+  const needT = needRuns(s.rare,s.conf), needV = needRuns(s.vendor,s.conf);
+  const need = Math.max(needT||0, needV||0) || null;
+  const strict = s.sev==="harm";
+  const hasCut = s.stopPct!=null || !!s.minGrade || (s.lo!=null&&s.hi!=null) || s.allowErr!=null;
+
+  // Accuracy
+  const aTraps=[];
+  if(s.ref==="none") aTraps.push("With no reference, accuracy can't be claimed. Only precision and drift are measurable. Write down who could score it, even partly.");
+  if(s.nearCut==="no") aTraps.push("Your control sits at the ceiling. A test set everyone passes can't show drift until the agent fails outright. Add items that land near your cutoff.");
+  if(s.cutSrc==="gut") aTraps.push("Gut-call cutoffs are fine to start, but mark every result as provisional until the cutoff has a written source.");
+  const aChecks=[
+    {label:"A reference to score against", ok:s.ref==="key"||s.ref==="judge", fix:"Pick an answer key or a judge in question 2."},
+    {label:"Judge checked against human raters", applies:judgeBased&&s.ref!=="none", ok:s.judgeVal, fix:"Score 50–100 outputs with two humans and the judge. Compare κ to human-to-human κ."},
+    {label:"A stop-using cutoff", ok:hasCut, fix:"Set a pass rate, lowest grade, or range in question 6."},
+    {label:"Validated range written down", ok:!!s.reportable, fix:"Say what inputs it was tested on, so anything outside gets flagged instead of answered."},
+    {label:"Critical values defined, with who gets called and how fast", applies:s.sev!=="low", ok:s.crit.length>0&&!!s.critWho&&s.critMins!=null, fix:"List results that need a human now, name the person, set the time limit."},
+    {label:"Never-events written down", applies:s.sev!=="low", ok:s.never.length>0, fix:"List what rejects a run regardless of score (question 7)."},
+    {label:"Cutoffs have a written source", ok:!!s.cutSrc&&s.cutSrc!=="gut", fix:"Tie each cutoff to a guideline, expert sign-off or past performance."},
+    {label:"Control has items near the cutoff", applies:repeats, ok:s.nearCut==="yes", fix:"Add harder items until baseline accuracy sits below 100%."},
+    {label:needT?`Baseline verifies your target: under ${s.rare}% failure (${needT} runs)`:"Target failure rate set", ok:!!needT&&s.planned!=null&&s.planned>=needT, fix:needT?`Plan at least ${needT} runs; you have ${s.planned??0}.`:"Set your target in question 8."},
+    {label:`Baseline verifies the vendor's claim: under ${s.vendor}% failure (${needV} runs)`, applies:!!needV, ok:!!needV&&s.planned!=null&&s.planned>=needV, fix:`Plan at least ${needV} runs to check their number, or record that the claim is unverified.`},
+    {label:"Your target is at least as strict as the vendor's claim", applies:!!needV&&!!needT, ok:!!needV&&!!needT&&s.rare<=s.vendor, fix:"Your target is looser than what the vendor promises. Fine, but then a pass doesn't confirm their claim."}
+  ];
+  const baseLine = (n,p,who)=>`<span class="num">${n}</span> runs with zero failures rule out ${who} ${p}% failure rate at ${s.conf}% confidence.`;
+  const aBody = measures("accuracy",s) + (need?`<div class="base"><span class="lbl">Baseline</span><br>${needT?baseLine(needT,s.rare,"your"):""}${needT&&needV?"<br>":""}${needV?baseLine(needV,s.vendor,"the vendor's"):""}<br><span style="color:var(--muted);font-size:.8rem">Each failure you do see raises the count. Size the baseline to the stricter of the two.</span></div>`:"");
+
+  // Precision
+  const pTraps=[];
+  if(s.watch==="live") pTraps.push("Live traffic never repeats the same input, so precision can't be measured from it. Add a small fixed control, even five items.");
+  if(s.types.includes("cont")||s.types.includes("cat")) pTraps.push("Discrete counts with almost no spread break Westgard math: one clean run can read as 4 SD out. Chart counts as rates, or set an SD floor.");
+  const pChecks=[
+    {label:"Same input run more than once", ok:repeats, fix:"Run a fixed control (question 4)."},
+    {label:"At least 20 repeats in the baseline", applies:repeats, ok:s.planned!=null&&s.planned>=20, fix:"Plan 20 or more repeat runs."},
+    {label:"Minimum agreement set", applies:s.types.some(t=>t!=="cont"), ok:s.minAgree!=null, fix:"Set how often the same input must get the same answer (question 8)."},
+    {label:"Allowable imprecision set for numbers", applies:s.types.includes("cont"), ok:s.allowErr!=null, fix:"Set an allowable error (question 6)."},
+    {label:"Judge's own consistency checked", applies:judgeBased&&s.ref!=="none", ok:s.judgeVal, fix:"Re-score the same outputs with the judge and measure its agreement with itself."}
+  ];
+
+  // Drift
+  const dTraps=[];
+  if(s.watch==="live"&&s.worries.some(w=>w!=="input")) dTraps.push("Live-only monitoring can't tell a model change from a change in what people ask. Both look like drift.");
+  if(live) dTraps.push("A moving average moves when the people or cases change, not only when the agent does. Labs handle this with truncation limits (leave extreme results out of the average) and by averaging a stable group. Do the same: trim outliers, and average one steady slice of traffic.");
+  if(s.worries.includes("silent")) dTraps.push("Silent updates don't announce themselves. The control has to run on a schedule, not only when you change something.");
+  const W={swap:["Model swap","Run the control on both versions; compare as paired differences plus mismatch rate.",repeats],
+           silent:["Silent provider update","Run the control on a fixed schedule against a frozen baseline.",repeats],
+           prompt:["Prompt or config edit","Treat each edit like a new reagent lot: rerun the control before go-live.",repeats],
+           input:["Inputs shifting","Compare live input and output distributions to a reference window (PSI, JS, embedding drift).",live]};
+  const dChecks = Object.keys(W).map(w=>({label:`Covers: ${W[w][0]}${s.worries.includes(w)?" · your worry":""}`, ok:W[w][2], fix:W[w][1]+(W[w][2]?"":(w==="input"?" Needs live monitoring.":" Needs a fixed control."))}));
+  dChecks.push({label:"System check on live traffic between control runs (moving average)", applies:live, ok:s.maLive, fix:"Chart a rolling average of one live output (mean grade, category share, escalation rate) with limits from a stable baseline period."});
+  dChecks.push({label:"A baseline to compare against", ok:s.planned!=null&&s.planned>=20, fix:"Record a baseline of 20+ runs per version before any change."});
+  dChecks.push({label:"Control can move (not at the ceiling)", applies:repeats, ok:s.nearCut==="yes", fix:"A control stuck at 100% only shows drift as outright failure."});
+  const maBlock = live ? `<div class="m"><span class="t">Live traffic · system level</span><span class="what">Moving average of live outputs</span><span class="how">The agent version of patient-based QC. A rolling average of one output over the last N live runs, charted with limits, catches systematic drift between control runs.</span></div>` : "";
+  const wantDrift = maBlock + `<div class="m"><span class="t">Every kind of change</span>${Object.keys(W).map(w=>`<span class="how"><b>${W[w][0]}${s.worries.includes(w)?" (your worry)":""}:</b> ${W[w][1]}</span>`).join("")}</div>`;
+
+  $("results").innerHTML =
+    card("Accuracy","Is it right? Close to the reference.", aBody, aChecks, aTraps) +
+    card("Precision","Is it consistent? Same input, same answer.", measures("precision",s), pChecks, pTraps) +
+    card("Drift","Has it changed? Over time or across versions.", measures("drift",s)+wantDrift, dChecks, dTraps) +
+    `<div class="next"><b>Next: pick the rules.</b> Choose control rules for each chart and see what the whole set catches and what it costs, split by systematic and random error. <button type="button" class="go2">Go to step 2</button></div>`;
+}
+
+// Rule-set performance engine for the Agent QC Metric Picker (step 2).
+// One control result per run, in SD units from the baseline mean.
+// Rules look back across runs, like a Levey-Jennings chart with one control.
+
+function rng(seed){ // mulberry32: same numbers every time, so results don't jitter
+  return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed);
+    t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; };
+}
+function gaussFrom(r){ let u=0,v=0; while(u===0)u=r(); while(v===0)v=r();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+// Each rule checks the window ending at the newest point (xs[xs.length-1]).
+const RULES = {
+  "1-2s":{name:"1-2s", desc:"One result beyond ±2 SD", fire:xs=>Math.abs(xs.at(-1))>2},
+  "1-3s":{name:"1-3s", desc:"One result beyond ±3 SD", fire:xs=>Math.abs(xs.at(-1))>3},
+  "2-2s":{name:"2-2s", desc:"Two in a row beyond 2 SD, same side", fire:xs=>xs.length>=2&&((xs.at(-1)>2&&xs.at(-2)>2)||(xs.at(-1)<-2&&xs.at(-2)<-2))},
+  "R-4s":{name:"R-4s", desc:"Two in a row, one above +2 SD and one below −2 SD", fire:xs=>xs.length>=2&&((xs.at(-1)>2&&xs.at(-2)<-2)||(xs.at(-1)<-2&&xs.at(-2)>2))},
+  "4-1s":{name:"4-1s", desc:"Four in a row beyond 1 SD, same side", fire:xs=>xs.length>=4&&(xs.slice(-4).every(x=>x>1)||xs.slice(-4).every(x=>x<-1))},
+  "10x":{name:"10x", desc:"Ten in a row on the same side of the mean", fire:xs=>xs.length>=10&&(xs.slice(-10).every(x=>x>0)||xs.slice(-10).every(x=>x<0))}
+};
+const RULE_ORDER=["1-2s","1-3s","2-2s","R-4s","4-1s","10x"];
+
+// Simulate. mode: rules {key:"off"|"warn"|"reject"}.
+// Returns per-run probabilities for: false rejection (in control), detection of a
+// systematic shift (first errored run, and within 5), detection of random error (same).
+function evaluate(mode, opts){
+  const {shift=2, sdx=2, trials=20000, seed=7} = opts||{};
+  const active = RULE_ORDER.filter(k=>mode[k]&&mode[k]!=="off");
+  const rejectSet = active.filter(k=>mode[k]==="reject");
+  const warnSet = active.filter(k=>mode[k]==="warn");
+  const H=10; // in-control history before the evaluated run
+  const r=rng(seed);
+  let fr=0, fw=0, s1=0, s5=0, r1=0, r5=0;
+  const anyFires=(set,xs)=>set.some(k=>RULES[k].fire(xs));
+  for(let t=0;t<trials;t++){
+    const hist=[]; for(let i=0;i<H;i++) hist.push(gaussFrom(r));
+    // in control
+    const ic=hist.concat([gaussFrom(r)]);
+    if(anyFires(rejectSet,ic)) fr++;
+    if(anyFires(warnSet,ic)) fw++;
+    // systematic shift starting now
+    let xs=hist.slice(), got=false;
+    for(let j=0;j<5;j++){ xs.push(gaussFrom(r)+shift); if(anyFires(rejectSet,xs)){ if(j===0) s1++; got=true; break; } }
+    if(got) s5++;
+    // random error (SD multiplied) starting now
+    xs=hist.slice(); got=false;
+    for(let j=0;j<5;j++){ xs.push(gaussFrom(r)*sdx); if(anyFires(rejectSet,xs)){ if(j===0) r1++; got=true; break; } }
+    if(got) r5++;
+  }
+  return {pfr:fr/trials, warn:fw/trials, sys1:s1/trials, sys5:s5/trials, rnd1:r1/trials, rnd5:r5/trials};
+}
+
+// Binomial helpers for count charts (fails in a rolling window of n runs).
+function lnC(n,k){ let s=0; for(let i=1;i<=k;i++) s+=Math.log(n-k+i)-Math.log(i); return s; }
+function binomTail(n,p,k){ // P(X >= k)
+  if(k<=0) return 1; if(p<=0) return 0; if(p>=1) return 1;
+  let s=0; for(let i=k;i<=n;i++) s+=Math.exp(lnC(n,i)+i*Math.log(p)+(n-i)*Math.log(1-p)); return Math.min(1,s);
+}
+function limitFor(n,p,alpha){ // smallest k with P(X>=k) <= alpha
+  for(let k=0;k<=n+1;k++) if(binomTail(n,p,k)<=alpha) return k; return n+1;
+}
+
+
+
+const LJ_DEFAULT={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"reject","4-1s":"warn","10x":"reject"};
+let ljMode={...LJ_DEFAULT};
+const pct=(x,d=1)=>(x*100).toFixed(d)+"%";
+const sgn=(x,d=1)=>{const v=x*100; if(Math.abs(v)<0.05) return `<span>0.0</span>`; return `<span class="${v<0?'neg':'pos'}">${v>0?'+':''}${v.toFixed(d)}</span>`;};
+function renderLJ(){
+  const o={shift:Number($("k_shift").value)||2, sdx:Number($("k_sdx").value)||2, trials:20000, seed:7};
+  const prev=(Number($("k_prev").value)||2)/100;
+  const full=evaluate(ljMode,o);
+  const alone={}, without={};
+  RULE_ORDER.forEach(k=>{ alone[k]=evaluate({[k]:"reject"},o);
+    if(ljMode[k]==="reject"){ const m={...ljMode}; m[k]="off"; without[k]=evaluate(m,o); } });
+  const ped=full.sys5, ppv = (prev*full.sys1+ (1-prev)*full.pfr)>0 ? prev*full.sys1/(prev*full.sys1+(1-prev)*full.pfr) : 0;
+  $("ljTiles").innerHTML=[
+    ["False rejections",pct(full.pfr,2),"per in-control run"],
+    ["Warnings",pct(full.warn,1),"per in-control run"],
+    [`Shift of ${o.shift} SD`,pct(full.sys1,0)+" → "+pct(full.sys5,0),"caught on 1st run → within 5"],
+    [`Random error × ${o.sdx}`,pct(full.rnd1,0)+" → "+pct(full.rnd5,0),"caught on 1st run → within 5"],
+    ["A rejection is real",pct(ppv,0),`when ${pct(prev,1)} of runs have a shift`]
+  ].map(t=>`<div class="tile"><span class="lbl">${t[0]}</span><span class="v">${t[1]}</span><span class="s">${t[2]}</span></div>`).join("");
+  const rej=RULE_ORDER.filter(k=>ljMode[k]==="reject");
+  const sum=f=>rej.reduce((a,k)=>a+alone[k][f],0);
+  $("ljCallout").innerHTML = rej.length<2 ? `<p>Turn on two or more reject rules to see how they combine.</p>` :
+    `<p><b>The rules don't add up.</b> Your ${rej.length} reject rules, each run alone, add up to ${pct(sum("sys5"),0)} for catching the shift. Together they catch it ${pct(full.sys5,0)} of the time. For random error: ${pct(sum("rnd5"),0)} added vs. ${pct(full.rnd5,0)} together.</p>
+     <p><b>False rejections nearly do add up:</b> ${pct(sum("pfr"),2)} added vs. ${pct(full.pfr,2)} together. Stacking rules costs false alarms faster than it buys detection, because the rules read the same points and catch the same errors.</p>`;
+  $("ljRows").innerHTML = RULE_ORDER.map(k=>{
+    const m=ljMode[k], a=alone[k], w=without[k];
+    const sel=`<select data-rule="${k}" aria-label="${k} setting">${["off","warn","reject"].map(v=>`<option value="${v}"${v===m?" selected":""}>${v}</option>`).join("")}</select>`;
+    const rem = w ? `<td class="n">${sgn(w.sys5-full.sys5)}</td><td class="n">${sgn(w.rnd5-full.rnd5)}</td><td class="n">${sgn(w.pfr-full.pfr,2)}</td>`
+                  : `<td class="n" colspan="3" style="text-align:left;color:var(--muted)">${m==="warn"?"Warn only. Doesn't reject.":"Off"}</td>`;
+    return `<tr class="${m==="off"?"off":""}"><td><b>${k}</b><span class="d">${RULES[k].desc}</span></td><td>${sel}</td><td class="n">${pct(a.pfr,2)}</td><td class="n">${pct(a.sys5,0)}</td><td class="n">${pct(a.rnd5,0)}</td>${rem}</tr>`;
+  }).join("") + `<tr class="sum"><td>Whole set</td><td></td><td class="n">${pct(full.pfr,2)}</td><td class="n">${pct(full.sys5,0)}</td><td class="n">${pct(full.rnd5,0)}</td><td colspan="3"></td></tr>`;
+  document.querySelectorAll("#ljRows select").forEach(el=>el.onchange=()=>{ ljMode[el.dataset.rule]=el.value; renderLJ(); });
+}
+function renderBinom(){
+  const p0=(Number($("b_p0").value)||0)/100, n=Math.max(5,Math.round(Number($("b_n").value)||20));
+  const aw=(Number($("b_aw").value)||5)/100, ar=(Number($("b_ar").value)||0.3)/100, mult=Number($("b_mult").value)||3;
+  const p1=Math.min(0.99,p0*mult);
+  if(p0<=0){ $("bTiles").innerHTML=""; $("bCallout").innerHTML=`<p><b>A baseline of zero failures can't set limits.</b> Any failure would be out of control, which is the ceiling problem again. Enter the failure rate you ruled out (step 1, question 8) as the baseline, or make the control harder.</p>`; return; }
+  const kw=limitFor(n,p0,aw), kr=limitFor(n,p0,ar);
+  const fw=binomTail(n,p0,kw), fr=binomTail(n,p0,kr), dw=binomTail(n,p1,kw), dr=binomTail(n,p1,kr);
+  const exp=(n*p0).toFixed(1);
+  $("bTiles").innerHTML=[
+    ["Warn at",`${kw}+ fails`,`in ${n} runs · false alarm ${pct(fw,1)}`],
+    ["Reject at",`${kr}+ fails`,`in ${n} runs · false alarm ${pct(fr,2)}`],
+    [`Rate × ${mult} warns`,pct(dw,0),`per window, at ${pct(p1,1)} failures`],
+    [`Rate × ${mult} rejects`,pct(dr,0),`per window, at ${pct(p1,1)} failures`]
+  ].map(t=>`<div class="tile"><span class="lbl">${t[0]}</span><span class="v">${t[1]}</span><span class="s">${t[2]}</span></div>`).join("");
+  const notes=[`<p>At baseline you expect about ${exp} failures per ${n} runs. Limits are whole counts, so the real false-alarm rate lands at or under your target, not on it.</p>`];
+  if(kr>n) notes.push(`<p><b>The reject limit is out of reach:</b> no count in ${n} runs is rare enough. Use a bigger window or a looser target.</p>`);
+  if(dr<0.5&&kr<=n) notes.push(`<p><b>Weak detection:</b> a ${mult}× jump in failures gets rejected in under half of windows. A bigger window catches it more reliably but later.</p>`);
+  $("bCallout").innerHTML=notes.join("");
+}
+function showStep(n){
+  $("view1").hidden=n!==1; $("view2").hidden=n!==2;
+  $("tab1").setAttribute("aria-selected",n===1); $("tab2").setAttribute("aria-selected",n===2);
+  if(n===2){ renderLJ(); renderBinom(); }
+}
+$("tab1").onclick=()=>showStep(1); $("tab2").onclick=()=>showStep(2);
+document.addEventListener("click",e=>{ if(e.target.classList&&e.target.classList.contains("go2")){ showStep(2); window.scrollTo(0,0);} });
+let ljTimer; ["k_shift","k_sdx","k_prev"].forEach(id=>$(id).addEventListener("input",()=>{clearTimeout(ljTimer); ljTimer=setTimeout(renderLJ,250);}));
+["b_p0","b_n","b_aw","b_ar","b_mult"].forEach(id=>$(id).addEventListener("input",renderBinom));
+
+const EX = {
+  grocery:{types:["cat","binary"],ref:"key",judgeVal:false,sev:"harm",watch:"ctrl",worries:["swap","silent"],
+    reportable:"An 11-item shopping list sorted into 9 fixed aisles",crit:"A list item that's under recall",critWho:"Store manager",critMins:15,
+    stopPct:95,minGrade:"",lo:"",hi:"",allowErr:"",never:"Peanut butter in the Free-From aisle\nAny cold item in a warm aisle",
+    rare:3,vendor:"",conf:95,planned:100,minAgree:95,cutSrc:"expert",nearCut:"no"},
+  note:{types:["text","graded"],ref:"judge",judgeVal:false,sev:"harm",watch:"both",worries:["swap","silent","prompt","input"],
+    reportable:"Adult medicine discharges. Not pediatrics, not psychiatry.",crit:"A new critical lab result with no documented action",critWho:"Attending physician",critMins:30,
+    stopPct:90,minGrade:"4 of 5",lo:"",hi:"",allowErr:"",never:"A medication change left out\nA new allergy left out",
+    rare:1,vendor:0.5,conf:95,planned:60,minAgree:"",cutSrc:"reg",nearCut:"yes"},
+  blank:{types:[],ref:"",judgeVal:false,sev:"",watch:"",worries:[],reportable:"",crit:"",critWho:"",critMins:"",stopPct:"",minGrade:"",lo:"",hi:"",allowErr:"",never:"",rare:"",vendor:"",conf:95,planned:"",minAgree:"",cutSrc:"",nearCut:""}
+};
+function load(k){
+  const e=EX[k];
+  document.querySelectorAll('#types input').forEach(i=>i.checked=e.types.includes(i.value));
+  ["ref","sev","watch"].forEach(n=>document.querySelectorAll(`input[name=${n}]`).forEach(i=>i.checked=i.value===e[n]));
+  $("judgeVal").checked=e.judgeVal; $("maLive").checked=!!e.maLive;
+  ["swap","silent","prompt","input"].forEach(w=>$("c_"+w).checked=e.worries.includes(w));
+  $("reportable").value=e.reportable; $("critVals").value=e.crit; $("critWho").value=e.critWho; $("critMins").value=e.critMins;
+  $("stopPct").value=e.stopPct; $("minGrade").value=e.minGrade; $("rangeLo").value=e.lo; $("rangeHi").value=e.hi; $("allowErr").value=e.allowErr;
+  $("never").value=e.never; $("rareFail").value=e.rare; $("vendorFail").value=e.vendor; $("conf").value=e.conf; $("planned").value=e.planned; $("minAgree").value=e.minAgree;
+  $("cutSrc").value=e.cutSrc; $("nearCut").value=e.nearCut;
+  $("exGrocery").setAttribute("aria-pressed",k==="grocery"); $("exNote").setAttribute("aria-pressed",k==="note");
+  $("exNote2").hidden = k==="blank";
+  render();
+}
+$("exGrocery").onclick=()=>load("grocery");
+$("exNote").onclick=()=>load("note");
+$("clearAll").onclick=()=>load("blank");
+$("f").addEventListener("input",render);
+$("f").addEventListener("change",render);
+$("f").addEventListener("submit",e=>e.preventDefault());
+load("grocery");
+</script>
+
+</body>
+</html>

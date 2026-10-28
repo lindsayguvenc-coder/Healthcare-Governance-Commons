@@ -47,3 +47,13 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       Questions second, after triage screening. Notes and tools never automatic.
 - [ ] **Claim labels as data.** Sourced / Field consensus / Commons position /
       Needs source as a field on each claim, so the checks can enforce them.
+
+## Tools: rebuild once-over (added Oct 28, 2026)
+- [ ] **Once-over of every tool.** All tools were first passes: Validation
+      Protocol Generator, ROI Assessment, Peer Challenge Registry, Facetious
+      Collaborator, the transition tools, node pages, and the Agent QC Metric
+      Picker. Review each for correctness and "decent," not just working.
+- [ ] **VPG ↔ Agent QC hand-off.** The Validation Protocol Generator verifies
+      vendor claims before go-live; the Agent QC picker monitors after. The
+      picker's "vendor's claimed failure rate" should come from the VPG's
+      model-card answers instead of being asked twice.
