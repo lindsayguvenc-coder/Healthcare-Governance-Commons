@@ -9,6 +9,10 @@ name: Weekly backup
 # Needs one repository secret: BACKUP_TOKEN, matching the BACKUP_TOKEN
 # environment variable in Vercel. That token can only export and clear the
 # archived log; it can't approve, publish, or read the private queue.
+#
+# It also checks how many contributions are waiting for review. If any are,
+# it opens (or updates) a GitHub issue, which emails Lindsay. When the queue
+# is empty it closes that issue. Only the count is used, never the content.
 
 on:
   schedule:
@@ -17,6 +21,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   backup:
@@ -68,7 +73,8 @@ jobs:
             fs.writeFileSync("published-latest.json", JSON.stringify(d.published, null, 1));
             fs.writeFileSync("stats-latest.json", JSON.stringify(d.stats, null, 1));
             fs.writeFileSync(".decisions-count", String(d.decisions.length));
-            console.log(`published: ${d.published.length} · decisions archived: ${d.decisions.length}`);
+            fs.writeFileSync(".pending-count", String(Number(d.pendingCount) || 0));
+            console.log(`published: ${d.published.length} · decisions archived: ${d.decisions.length} · waiting for review: ${Number(d.pendingCount) || 0}`);
           ' "$day"
           echo "DAY=$day" >> "$GITHUB_ENV"
 
@@ -89,4 +95,32 @@ jobs:
             echo
           else
             echo "Decision log was empty; nothing to clear."
+          fi
+
+      - name: Remind Lindsay if contributions are waiting
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          n=$(cat .pending-count)
+          title_prefix="Review queue:"
+          open=$(gh issue list -R "$REPO" --state open --search "\"$title_prefix\" in:title" --json number --jq '.[0].number // empty')
+          if [ "$n" -gt 0 ]; then
+            word=$([ "$n" -eq 1 ] && echo "contribution is" || echo "contributions are")
+            body="$n $word waiting for review.
+
+          Open the site, go to the Intake tab, and unlock it: $SITE
+
+          This issue closes itself the first Monday the queue is empty. @lindsayguvenc-coder"
+            if [ -n "$open" ]; then
+              gh issue edit "$open" -R "$REPO" --title "$title_prefix $n waiting"
+              gh issue comment "$open" -R "$REPO" --body "$body"
+            else
+              gh issue create -R "$REPO" --title "$title_prefix $n waiting" --body "$body"
+            fi
+          elif [ -n "$open" ]; then
+            gh issue close "$open" -R "$REPO" --comment "Queue is empty. Closing."
+          else
+            echo "Nothing waiting."
           fi
