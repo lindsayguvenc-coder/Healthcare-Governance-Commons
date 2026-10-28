@@ -82,6 +82,9 @@ textarea{min-height:58px;resize:vertical}
 .m .t{font:600 .7rem var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
 .m .what{font-weight:600;font-size:.9rem}
 .m .how{color:var(--muted);font-size:.84rem}
+details summary{cursor:pointer;font-size:.82rem;color:var(--accent);font-weight:600;margin-top:4px}
+.also{display:grid;gap:8px;margin-top:6px;padding-left:10px;border-left:2px solid var(--line)}
+.also>div{display:grid;gap:2px}
 .checks{list-style:none;margin:0;padding:0;display:grid;gap:5px;font-size:.86rem}
 .checks li{display:grid;grid-template-columns:1.3em minmax(0,1fr);gap:6px}
 .checks .ic{font:600 .9rem var(--mono)} .checks .y .ic{color:var(--ok)} .checks .n .ic{color:var(--bad)}
@@ -156,11 +159,12 @@ td select{width:auto;padding:4px 6px;font-size:.84rem}
             <label><input type="checkbox" id="t_graded" value="graded">A grade<small>Rubric score, 1–5, A–F</small></label>
             <label><input type="checkbox" id="t_cont" value="cont">A number<small>Dose, price, score, count</small></label>
             <label><input type="checkbox" id="t_text" value="text">Free text<small>Summary, answer, message</small></label>
+            <label><input type="checkbox" id="t_agent" value="agent">Actions or tool calls<small>The agent changes something: records, orders, files</small></label>
             <label><input type="checkbox" id="t_image" value="image">An image or marked-up image<small>Generated image, boxes or outlines drawn on a scan</small></label>
           </div>
         </div>
         <aside class="ex"><span class="lab">Examples</span>
-          <p><b>Grocery agent:</b> a choice from a set (an aisle per item), plus pass/fail for the whole run.</p>
+          <p><b>Grocery agent:</b> a choice from a set (an aisle per item), pass/fail for the whole run, and tool calls (it places each item with a call).</p>
           <p><b>Discharge drafter:</b> free text, which a reviewer grades 1–5.</p>
           <p><b>Slide-screening agent:</b> an image with suspect cells circled, plus a pass/fail call.</p></aside>
       </section>
@@ -316,6 +320,15 @@ td select{width:auto;padding:4px 6px;font-size:.84rem}
   </div>
 
   <div class="s2" id="view2" hidden>
+    <h2>Start with sigma</h2>
+    <p class="sub">The sigma metric says how much room your method has before results go out of bounds. More room means simpler rules are enough. Westgard picks rules this way.</p>
+    <div class="knobs">
+      <div class="field"><label for="sg_tea">Allowable error (%)</label><input type="number" id="sg_tea" value="10" min="0.1" step="0.1"><small>From intended use (step 1, question 6)</small></div>
+      <div class="field"><label for="sg_bias">Bias (%)</label><input type="number" id="sg_bias" value="2" min="0" step="0.1"><small>From your method comparison</small></div>
+      <div class="field"><label for="sg_cv">CV (%)</label><input type="number" id="sg_cv" value="2" min="0.01" step="0.1"><small>From your repeat runs</small></div>
+    </div>
+    <div class="callout" id="sgOut"></div>
+
     <h2>Levey-Jennings rules, for numbers</h2>
     <p class="sub">For any output you chart with a mean and SD: a numeric result, output tokens, an average grade. Set each rule to off, warn or reject. The numbers come from simulating 20,000 runs per setting, one control result per run.</p>
     <div class="callout"><p><b>These numbers assume</b> roughly normal results, independent runs, and one control result per run.</p><p>Agent data often breaks this. Counts like steps can be nearly constant, and some outputs split into two groups (clean runs vs. runs with a retry). If yours is counts or pass/fail, use the count limits below instead. If it's a number, look at a histogram of your baseline first: one hump means these numbers roughly hold, two humps or a spike means they don't.</p></div>
@@ -353,35 +366,76 @@ td select{width:auto;padding:4px 6px;font-size:.84rem}
 
 <script>
 const $ = id => document.getElementById(id);
-const TYPE_NAME = {binary:"Pass / fail", cat:"Choice from a set", graded:"Grade", cont:"Number", text:"Free text", image:"Image"};
+const TYPE_NAME = {binary:"Pass / fail", cat:"Choice from a set", graded:"Grade", cont:"Number", text:"Free text", image:"Image", agent:"Actions"};
 
+// Each cell: [start-here, ...also-used]. Entry = [name, how, when to use, weakness]
 const LIB = {
-  accuracy:{
-    binary:["Success rate with a 95% confidence interval","Compare each run's end state to the known correct end state. Chart failures per rolling window with binomial limits."],
-    cat:["Exact match to the key, per item","Count items right per run. Score never-events separately so a high score can't hide them."],
-    graded:["Rubric grade from a validated judge","Grade against the expected grade. Within ±1 grade is acceptable; 2 off rejects."],
-    cont:["Bias from the target value","Levey-Jennings chart with Westgard rules against your allowable error. If it states confidence, check calibration (ECE, Brier score)."],
-    text:["Reference-guided judge, or claims checked against the source","Turn the judge's verdict into pass/fail per output, then chart it like pass/fail."],
-    image:["Overlap with the reference markup, or validated reviewer score","For boxes or outlines: overlap with the expert's markup (IoU, Dice), plus misses and false finds. For generated images: a judge or reviewer validated against humans."]
-  },
-  precision:{
-    binary:["pass^k","Chance that all k repeat runs pass. A reliable agent stays flat as k rises; an unreliable one drops."],
-    cat:["Agreement across repeat runs, per item","Share of repeats where an item gets the same answer. Flags the items the agent is unsure of."],
-    graded:["Spread of grades on the same input, and judge self-agreement","SD of grades across repeats; judge κ against itself and against humans."],
-    cont:["SD and CV across repeat runs","Classic imprecision. Set a minimum SD floor at validation if counts come out too tight to chart."],
-    text:["Agreement by meaning (semantic entropy)","Sample several outputs, group them by meaning, measure the spread. Identical-text rate only as a strict side check."],
-    image:["Agreement across repeats on the same image","Overlap between repeat markups of the same input; for generated images, similarity of image embeddings across repeats."]
-  },
-  drift:{
-    binary:["Paired before/after on the same items","Same items under both versions; analyze the differences. Plus pass rate over time with binomial limits."],
-    cat:["Mismatch rate between versions","Share of answers that changed. Catches churn even when accuracy holds steady."],
-    graded:["Grade trend against baseline","Rolling mean grade; an EWMA catches small sustained shifts."],
-    cont:["Westgard shift and trend rules","2-2s, 4-1s and 10x catch systematic shifts; a distribution test (KS) on live values."],
-    text:["Embedding drift and length","Distance between this period's outputs and the baseline's, in meaning space; output length as a cheap early flag."],
-    image:["Image embedding drift, and overlap trend","Distance between this period's images and the baseline's in embedding space; mean overlap score over time on the control set."]
-  }
+ accuracy:{
+  binary:[
+   ["Success rate with a 95% confidence interval","Compare each run's end state to the known correct end state; chart failures per window with binomial limits.","Tasks done or not done","A single rate hides which cases fail"],
+   ["Sensitivity, specificity, PPV and NPV","Build the 2×2 against the reference: what it flags vs. what's true.","When the agent flags or screens something (risk alerts, triage)","PPV moves with how common the condition is; report it at your own prevalence"],
+   ["AUROC","Ranks cases by the agent's score and checks how well it separates true from false.","When the agent outputs a score or probability","Says nothing about the threshold you actually use"],
+   ["Subgroup performance","The same measures, per population group.","Always, when people are affected","Small groups give wide intervals; report them"]],
+  cat:[
+   ["Exact match to the key, per item","Count items right per run; score never-events separately.","Fixed set of correct answers","Overall match hides a weak category"],
+   ["Confusion matrix with per-category precision and recall","Which answers get mistaken for which.","More than a few categories","Needs enough of each category to read"],
+   ["Cohen's κ against the key","Agreement corrected for chance.","Categories of uneven size","Hard to explain to non-statisticians"]],
+  graded:[
+   ["Rubric grade from a validated judge","Grade against the expected grade; within ±1 grade acceptable.","Quality on a scale","Only as good as the judge"],
+   ["Weighted κ or ICC against expert grades","Agreement that counts near-misses as partly right.","Comparing to human graders","Needs double-graded examples"],
+   ["Mean absolute grade error","Average distance from the expert's grade.","A simple number for trend charts","Treats the scale as evenly spaced"]],
+  cont:[
+   ["Total error vs. allowable error","Total error = |bias| + 2 SD, compared to your allowable error. The lab's pass/fail for a method.","Any numeric output with a target","Needs a real allowable error, set from intended use"],
+   ["Bland-Altman plot","Difference vs. average against the reference method; shows bias and limits of agreement.","Comparing to a reference method","Assumes the difference doesn't grow with the value (or log it)"],
+   ["Deming or Passing-Bablok regression","Separates constant bias from proportional bias.","Wide range of values","Needs a spread of values across the range"],
+   ["Sigma metric","(allowable error − |bias|) ÷ SD. Sets how strict the step 2 rules need to be.","Before picking QC rules","Depends on the allowable error you choose"],
+   ["Calibration (ECE, Brier score)","Does stated confidence match the hit rate?","When it reports confidence","Needs many results per confidence band"]],
+  text:[
+   ["Claim-level groundedness","Split the output into claims; check each against the source.","Summaries, answers from documents","Labor-heavy unless a judge does it, then validate the judge"],
+   ["Reference-guided judge","A validated judge compares the output to a reference answer; convert to pass/fail.","Open answers with a model answer","Judge errors can correlate with the agent's"],
+   ["Sampled human review","Experts review a random sample on a schedule.","Always, as a check on any judge","Small samples; plan the size"],
+   ["Overlap scores (ROUGE, BERTScore)","Word or meaning overlap with a reference text.","Cheap screening only","Weak link to correctness; don't use alone"]],
+  image:[
+   ["Overlap with the reference markup (IoU, Dice)","For boxes or outlines: overlap with the expert's markup.","Marking findings on images","Average overlap hides missed findings"],
+   ["Per-finding sensitivity and false finds","Count findings caught and false ones per image (FROC).","Several findings per image","Needs a matching rule for 'same finding'"],
+   ["Validated reviewer score","For generated images: a judge or reviewer checked against humans.","Generated images","Only as good as the reviewer"]],
+  agent:[
+   ["Task end-state correct","The world after the agent acts matches the expected end state.","Agents that change records or systems","Says nothing about how it got there"],
+   ["Tool-call correctness","Right tool, right arguments, per call; malformed-call rate.","Any tool-using agent","A recovered error looks like success at the end"],
+   ["Policy adherence","Required steps done (confirmation before writes, escalation when required).","Regulated or high-stakes actions","Needs written policies to check against"]]
+ },
+ precision:{
+  binary:[["pass^k","Chance that all k repeat runs pass. A reliable agent stays flat as k rises.","Any repeatable task","Needs many repeats per task"],
+   ["Repeatability vs. reproducibility","Same setup back to back, vs. across days, versions and providers (CLSI EP05 split).","Before go-live and after changes","Reproducibility needs time and planned variation"]],
+  cat:[["Agreement across repeat runs, per item","Share of repeats giving the same answer; flags items the agent is unsure of.","Any categorical output","Needs 20+ repeats to see 5–10% wobble"],
+   ["Test-retest κ","Chance-corrected agreement between two passes.","Comparing passes or days","Two passes only"]],
+  graded:[["Grade SD on repeats, and judge self-agreement","SD of grades across repeats; judge κ with itself.","Graded outputs","Mixes agent and judge noise unless separated"],
+   ["ICC across repeats","Share of variance that is real differences between items vs. noise.","Several items, several repeats","Needs a balanced design"]],
+  cont:[["SD and CV across repeat runs","Classic imprecision.","Any number","Discrete counts can come out too tight; set an SD floor"],
+   ["Within-run vs. between-day SD","Splits short-term from long-term imprecision (CLSI EP05).","Before setting QC limits","Needs 20 days or equivalent"]],
+  text:[["Agreement by meaning (semantic entropy)","Sample several outputs, group by meaning, measure the spread.","Answers with a meaning to compare","Needs a reliable meaning check"],
+   ["Identical-text rate","Share of repeats with the exact same text.","Strict side check","Almost always low; not a quality signal alone"]],
+  image:[["Agreement across repeats on the same image","Overlap between repeat markups; embedding similarity for generated images.","Images","Embedding similarity isn't clinical sameness"]],
+  agent:[["Same actions on the same input","Share of repeats with the same tool-call sequence and end state.","Tool-using agents","Different paths can be equally fine"]]
+ },
+ drift:{
+  binary:[["Paired before/after on the same items","Same items under both versions; analyze the differences.","Any version change","Needs the control to sit below the ceiling"],
+   ["Rate over time with binomial limits","Failures per window against warn and reject limits.","Ongoing monitoring","Slow to show small shifts"],
+   ["CUSUM or EWMA on the rate","Accumulates small sustained shifts.","Small persistent changes","Harder to explain; tune with step 2 logic"]],
+  cat:[["Mismatch rate between versions","Share of answers that changed. Catches churn even when accuracy holds.","Any version change","Says changed, not better or worse"],
+   ["Answer-mix shift (PSI, Jensen-Shannon)","Compares the distribution of answers to a reference window.","Live traffic","Moves when inputs change too"]],
+  graded:[["Grade trend with EWMA","Rolling mean grade; EWMA catches small sustained shifts.","Graded outputs","Judge drift looks like agent drift"]],
+  cont:[["Westgard shift and trend rules","2-2s, 4-1s and 10x catch systematic shifts.","Fixed control","Assumes roughly normal data"],
+   ["CUSUM or EWMA","Accumulates small shifts faster than single-point rules.","Small sustained shifts","Needs tuning"],
+   ["Distribution test (KS)","Compares this period's values to the baseline's.","Live traffic","Very sensitive with big samples; pair with a size threshold"]],
+  text:[["Embedding drift","Distance between this period's outputs and the baseline's in meaning space.","Free text","Hard to say what changed"],
+   ["Length and refusal rate","Cheap early flags.","Any text","Non-specific"]],
+  image:[["Image embedding drift and overlap trend","Embedding distance to baseline; mean overlap on the control over time.","Images","Embedding shifts aren't clinical shifts"]],
+  agent:[["Tool-call pattern change","Calls per task, malformed-call rate, where in the task errors happen.","Tool-using agents","Path changes may be harmless"]]
+ }
 };
-
+const COMMON_DRIFT = [["Shadow or canary runs","Run the new version beside the old one on live traffic before switching.","Before any version change"],
+  ["Real-world signals","Override rate by staff, user corrections, incident reports.","Live use; often the first sign"]];
 function readState(){
   const types=[...document.querySelectorAll('#types input:checked')].map(i=>i.value);
   const val=n=>{const x=document.querySelector(`input[name=${n}]:checked`);return x?x.value:""};
@@ -401,11 +455,11 @@ const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 function measures(concept, s){
   if(!s.types.length) return `<p class="how" style="margin:0;color:var(--muted)">Pick what one run produces (question 1).</p>`;
   return s.types.map(t=>{
-    const [what,how]=LIB[concept][t];
-    return `<div class="m"><span class="t">${TYPE_NAME[t]}</span><span class="what">${what}</span><span class="how">${how}</span></div>`;
-  }).join("");
+    const [first,...more]=LIB[concept][t];
+    const row=(e)=>`<span class="what">${e[0]}</span><span class="how">${e[1]}</span><span class="how"><i>Use when:</i> ${e[2]}. <i>Watch for:</i> ${e[3]}.</span>`;
+    return `<div class="m"><span class="t">${TYPE_NAME[t]} · start here</span>${row(first)}${more.length?`<details><summary>Also used (${more.length})</summary><div class="also">${more.map(e=>`<div>${row(e)}</div>`).join("")}</div></details>`:""}</div>`;
+  }).join("") + (concept==="drift"?`<div class="m"><span class="t">Any output</span>${COMMON_DRIFT.map(e=>`<span class="how"><b>${e[0]}:</b> ${e[1]} ${e[2]}.</span>`).join("")}</div>`:"");
 }
-
 function card(title, question, body, checks, traps){
   const app=checks.filter(c=>c.applies!==false);
   const got=app.filter(c=>c.ok).length, n=app.length;
@@ -606,18 +660,32 @@ function renderBinom(){
   if(dr<0.5&&kr<=n) notes.push(`<p><b>Weak detection:</b> a ${mult}× jump in failures gets rejected in under half of windows. A bigger window catches it more reliably but later.</p>`);
   $("bCallout").innerHTML=notes.join("");
 }
+function renderSigma(){
+  const tea=Number($("sg_tea").value), bias=Math.abs(Number($("sg_bias").value)||0), cv=Number($("sg_cv").value);
+  if(!tea||!cv){ $("sgOut").innerHTML="<p>Enter allowable error and CV to get a sigma.</p>"; return; }
+  const sg=(tea-bias)/cv;
+  let tier, rules;
+  if(sg>=6){ tier="World class: one simple rule is enough."; rules={"1-2s":"off","1-3s":"reject","2-2s":"off","R-4s":"off","4-1s":"off","10x":"off"}; }
+  else if(sg>=4){ tier="Good: a short multirule."; rules={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"reject","4-1s":"off","10x":"off"}; }
+  else if(sg>=3){ tier="Marginal: the full multirule, and run the control more often."; rules={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"reject","4-1s":"reject","10x":"reject"}; }
+  else { tier="Too little room: no rule set will catch errors reliably. Improve the method (less bias or less spread) before relying on QC."; rules={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"reject","4-1s":"reject","10x":"reject"}; }
+  window._sgRules=rules;
+  $("sgOut").innerHTML=`<p><b>Sigma = ${sg.toFixed(1)}</b> (allowable error ${tea}% − bias ${bias}%) ÷ CV ${cv}%. ${tier}</p><p><button type="button" id="sgApply">Use the suggested rules below</button> <span style="color:var(--muted);font-size:.82rem">Then check what they catch and cost.</span></p>`;
+  $("sgApply").onclick=()=>{ ljMode={...window._sgRules}; renderLJ(); };
+}
 function showStep(n){
   $("view1").hidden=n!==1; $("view2").hidden=n!==2;
   $("tab1").setAttribute("aria-selected",n===1); $("tab2").setAttribute("aria-selected",n===2);
-  if(n===2){ renderLJ(); renderBinom(); }
+  if(n===2){ renderSigma(); renderLJ(); renderBinom(); }
 }
 $("tab1").onclick=()=>showStep(1); $("tab2").onclick=()=>showStep(2);
 document.addEventListener("click",e=>{ if(e.target.classList&&e.target.classList.contains("go2")){ showStep(2); window.scrollTo(0,0);} });
 let ljTimer; ["k_shift","k_sdx","k_prev"].forEach(id=>$(id).addEventListener("input",()=>{clearTimeout(ljTimer); ljTimer=setTimeout(renderLJ,250);}));
 ["b_p0","b_n","b_aw","b_ar","b_mult"].forEach(id=>$(id).addEventListener("input",renderBinom));
+["sg_tea","sg_bias","sg_cv"].forEach(id=>$(id).addEventListener("input",renderSigma));
 
 const EX = {
-  grocery:{types:["cat","binary"],ref:"key",judgeVal:false,sev:"harm",watch:"ctrl",worries:["swap","silent"],
+  grocery:{types:["cat","binary","agent"],ref:"key",judgeVal:false,sev:"harm",watch:"ctrl",worries:["swap","silent"],
     reportable:"An 11-item shopping list sorted into 9 fixed aisles",crit:"A list item that's under recall",critWho:"Store manager",critMins:15,
     stopPct:95,minGrade:"",lo:"",hi:"",allowErr:"",never:"Peanut butter in the Free-From aisle\nAny cold item in a warm aisle",
     rare:3,vendor:"",conf:95,planned:100,minAgree:95,cutSrc:"expert",nearCut:"no"},
