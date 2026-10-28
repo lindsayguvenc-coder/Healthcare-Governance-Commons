@@ -317,6 +317,7 @@ td select{width:auto;padding:4px 6px;font-size:.84rem}
   <div class="s2" id="view2" hidden>
     <h2>Levey-Jennings rules, for numbers</h2>
     <p class="sub">For any output you chart with a mean and SD: a numeric result, output tokens, an average grade. Set each rule to off, warn or reject. The numbers come from simulating 20,000 runs per setting, one control result per run.</p>
+    <div class="callout"><p><b>These numbers assume</b> roughly normal results, independent runs, and one control result per run.</p><p>Agent data often breaks this. Counts like steps can be nearly constant, and some outputs split into two groups (clean runs vs. runs with a retry). If yours is counts or pass/fail, use the count limits below instead. If it's a number, look at a histogram of your baseline first: one hump means these numbers roughly hold, two humps or a spike means they don't.</p></div>
     <div class="knobs">
       <div class="field"><label for="k_shift">Systematic error to catch (SD)</label><input type="number" id="k_shift" value="2" min="0.5" max="5" step="0.5"><small>A shift in the mean, e.g. after a model swap</small></div>
       <div class="field"><label for="k_sdx">Random error to catch (× SD)</label><input type="number" id="k_sdx" value="2" min="1.25" max="4" step="0.25"><small>The spread grows, e.g. a less stable model</small></div>
@@ -408,15 +409,17 @@ function card(title, question, body, checks, traps){
   const app=checks.filter(c=>c.applies!==false);
   const got=app.filter(c=>c.ok).length, n=app.length;
   const frac=n?got/n:0;
+  const critMiss=app.some(c=>c.crit&&!c.ok);
   const pill = !n ? `<span class="pill warn">Answer the questions</span>` :
-    frac===1 ? `<span class="pill ok">Complete · ${got}/${n}</span>` :
+    critMiss ? `<span class="pill bad">Critical gap · ${got}/${n}</span>` :
+    frac===1 ? `<span class="pill ok">Covers the checklist · ${got}/${n}</span>` :
     frac>=.6 ? `<span class="pill warn">Partial · ${got}/${n}</span>` : `<span class="pill bad">Gaps · ${got}/${n}</span>`;
   const meter = `<div class="meter" aria-hidden="true">${app.map(c=>`<span class="${c.ok?'on':'miss'}"></span>`).join("")}</div>`;
-  const list = `<ul class="checks">${app.map(c=>`<li class="${c.ok?'y':'n'}"><span class="ic">${c.ok?'✓':'✕'}</span><span>${c.label}${!c.ok&&c.fix?`<span class="fix">${c.fix}</span>`:""}</span></li>`).join("")}</ul>`;
+  const list = `<ul class="checks">${app.map(c=>`<li class="${c.ok?'y':'n'}"><span class="ic">${c.ok?'✓':'✕'}</span><span>${c.crit?'<b>Critical:</b> ':''}${c.label}${!c.ok&&c.fix?`<span class="fix">${c.fix}</span>`:""}</span></li>`).join("")}</ul>`;
   const tr = traps.length?`<div class="traps">${traps.map(t=>`<div class="trap"><b>Trap:</b> ${t}</div>`).join("")}</div>`:"";
   return `<section class="card"><div class="cardhead"><h2>${title}</h2>${pill}<span class="q2">${question}</span></div>
     <div class="measures">${body}</div>${tr}
-    <div class="lbl">Completeness for what you asked</div>${meter}${list}</section>`;
+    <div class="lbl">Completeness for what you asked</div><span class="how" style="color:var(--muted);font-size:.8rem;margin-top:-6px">Counts what's on this checklist. It isn't a judgment that the set is enough for your use. A missing critical item marks the card as a critical gap whatever the count.</span>${meter}${list}</section>`;
 }
 
 function render(){
@@ -435,12 +438,12 @@ function render(){
   if(s.nearCut==="no") aTraps.push("Your control sits at the ceiling. A test set everyone passes can't show drift until the agent fails outright. Add items that land near your cutoff.");
   if(s.cutSrc==="gut") aTraps.push("Gut-call cutoffs are fine to start, but mark every result as provisional until the cutoff has a written source.");
   const aChecks=[
-    {label:"A reference to score against", ok:s.ref==="key"||s.ref==="judge", fix:"Pick an answer key or a judge in question 2."},
+    {label:"A reference to score against", crit:true, ok:s.ref==="key"||s.ref==="judge", fix:"Pick an answer key or a judge in question 2."},
     {label:"Judge checked against human raters", applies:judgeBased&&s.ref!=="none", ok:s.judgeVal, fix:"Score 50–100 outputs with two humans and the judge. Compare κ to human-to-human κ."},
-    {label:"A stop-using cutoff", ok:hasCut, fix:"Set a pass rate, lowest grade, or range in question 6."},
+    {label:"A stop-using cutoff", crit:true, ok:hasCut, fix:"Set a pass rate, lowest grade, or range in question 6."},
     {label:"Validated range written down", ok:!!s.reportable, fix:"Say what inputs it was tested on, so anything outside gets flagged instead of answered."},
     {label:"Critical values defined, with who gets called and how fast", applies:s.sev!=="low", ok:s.crit.length>0&&!!s.critWho&&s.critMins!=null, fix:"List results that need a human now, name the person, set the time limit."},
-    {label:"Never-events written down", applies:s.sev!=="low", ok:s.never.length>0, fix:"List what rejects a run regardless of score (question 7)."},
+    {label:"Never-events written down", crit:s.sev==="harm", applies:s.sev!=="low", ok:s.never.length>0, fix:"List what rejects a run regardless of score (question 7)."},
     {label:"Cutoffs have a written source", ok:!!s.cutSrc&&s.cutSrc!=="gut", fix:"Tie each cutoff to a guideline, expert sign-off or past performance."},
     {label:"Control has items near the cutoff", applies:repeats, ok:s.nearCut==="yes", fix:"Add harder items until baseline accuracy sits below 100%."},
     {label:needT?`Baseline verifies your target: under ${s.rare}% failure (${needT} runs)`:"Target failure rate set", ok:!!needT&&s.planned!=null&&s.planned>=needT, fix:needT?`Plan at least ${needT} runs; you have ${s.planned??0}.`:"Set your target in question 8."},
@@ -448,14 +451,14 @@ function render(){
     {label:"Your target is at least as strict as the vendor's claim", applies:!!needV&&!!needT, ok:!!needV&&!!needT&&s.rare<=s.vendor, fix:"Your target is looser than what the vendor promises. Fine, but then a pass doesn't confirm their claim."}
   ];
   const baseLine = (n,p,who)=>`<span class="num">${n}</span> runs with zero failures rule out ${who} ${p}% failure rate at ${s.conf}% confidence.`;
-  const aBody = measures("accuracy",s) + (need?`<div class="base"><span class="lbl">Baseline</span><br>${needT?baseLine(needT,s.rare,"your"):""}${needT&&needV?"<br>":""}${needV?baseLine(needV,s.vendor,"the vendor's"):""}<br><span style="color:var(--muted);font-size:.8rem">Each failure you do see raises the count. Size the baseline to the stricter of the two.</span></div>`:"");
+  const aBody = measures("accuracy",s) + (need?`<div class="base"><span class="lbl">Baseline</span><br>${needT?baseLine(needT,s.rare,"your"):""}${needT&&needV?"<br>":""}${needV?baseLine(needV,s.vendor,"the vendor's"):""}<br><span style="color:var(--muted);font-size:.8rem">This bounds failures on the inputs in your control set only. Real traffic needs its own evidence. It also assumes runs are independent; repeats of the same input can fail together. Each failure you do see raises the count. Size the baseline to the stricter of the two.</span></div>`:"");
 
   // Precision
   const pTraps=[];
   if(s.watch==="live") pTraps.push("Live traffic never repeats the same input, so precision can't be measured from it. Add a small fixed control, even five items.");
   if(s.types.includes("cont")||s.types.includes("cat")) pTraps.push("Discrete counts with almost no spread break Westgard math: one clean run can read as 4 SD out. Chart counts as rates, or set an SD floor.");
   const pChecks=[
-    {label:"Same input run more than once", ok:repeats, fix:"Run a fixed control (question 4)."},
+    {label:"Same input run more than once", crit:true, ok:repeats, fix:"Run a fixed control (question 4)."},
     {label:"At least 20 repeats in the baseline", applies:repeats, ok:s.planned!=null&&s.planned>=20, fix:"Plan 20 or more repeat runs."},
     {label:"Minimum agreement set", applies:s.types.some(t=>t!=="cont"), ok:s.minAgree!=null, fix:"Set how often the same input must get the same answer (question 8)."},
     {label:"Allowable imprecision set for numbers", applies:s.types.includes("cont"), ok:s.allowErr!=null, fix:"Set an allowable error (question 6)."},
@@ -471,7 +474,7 @@ function render(){
            silent:["Silent provider update","Run the control on a fixed schedule against a frozen baseline.",repeats],
            prompt:["Prompt or config edit","Treat each edit like a new reagent lot: rerun the control before go-live.",repeats],
            input:["Inputs shifting","Compare live input and output distributions to a reference window (PSI, JS, embedding drift).",live]};
-  const dChecks = Object.keys(W).map(w=>({label:`Covers: ${W[w][0]}${s.worries.includes(w)?" · your worry":""}`, ok:W[w][2], fix:W[w][1]+(W[w][2]?"":(w==="input"?" Needs live monitoring.":" Needs a fixed control."))}));
+  const dChecks = Object.keys(W).map(w=>({label:`Covers: ${W[w][0]}${s.worries.includes(w)?" · your worry":""}`, crit:s.worries.includes(w), ok:W[w][2], fix:W[w][1]+(W[w][2]?"":(w==="input"?" Needs live monitoring.":" Needs a fixed control."))}));
   dChecks.push({label:"System check on live traffic between control runs (moving average)", applies:live, ok:s.maLive, fix:"Chart a rolling average of one live output (mean grade, category share, escalation rate) with limits from a stable baseline period."});
   dChecks.push({label:"A baseline to compare against", ok:s.planned!=null&&s.planned>=20, fix:"Record a baseline of 20+ runs per version before any change."});
   dChecks.push({label:"Control can move (not at the ceiling)", applies:repeats, ok:s.nearCut==="yes", fix:"A control stuck at 100% only shows drift as outright failure."});
