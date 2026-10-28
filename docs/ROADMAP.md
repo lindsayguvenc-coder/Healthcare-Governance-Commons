@@ -64,3 +64,9 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       confidence per node). Until then, tools stay labeled working prototypes
       and get AI dress-rehearsal reviews. The Agent QC picker had one on
       Oct 28; its sigma step and expanded method library still need one.
+- [ ] **PHI screening: next steps.** Oct 28 added a browser-side screen on every
+      free-text field plus a server check (api/_phi.js) on the AI relay and
+      contributions. Still to do: (1) the VPG upload check reads PDFs as plain
+      text, so it sees compressed streams and misses PHI; use a real text
+      extractor before uploads come back. (2) Real de-identification (names,
+      dates and places in free prose) is a security-reviewer job, not regex.

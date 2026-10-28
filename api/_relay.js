@@ -17,6 +17,7 @@
 //   - Requests must come from a page on this same site (Origin/Referer check).
 //     This stops other websites from using the endpoint from a browser; it does
 //     not stop a determined script. The rate limit and caps bound that case.
+const { strongHit, strings, REFUSAL } = require("./_phi.js");
 
 const Redis = require("ioredis");
 
@@ -102,6 +103,10 @@ async function relay(req, res) {
   if (!messages || messages.length === 0) {
     return res.status(400).json({ error: "Missing messages" });
   }
+  // Screen what the user typed (user turns only; the page's own system prompt is not user input).
+  const userText = strings(messages.filter((m) => m && m.role === "user").map((m) => m.content)).join("\n");
+  const phi = strongHit(userText);
+  if (phi) return res.status(400).json({ error: REFUSAL(phi), phi: true });
 
   const forwarded = {
     model: MODEL,
