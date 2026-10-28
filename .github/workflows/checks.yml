@@ -1,0 +1,26 @@
+name: Commons checks
+
+# Mechanical drift checks on every pull request and push to main.
+# Fails the check if a node is missing from the map, a link goes nowhere,
+# a data file falls out of sync, or the regulatory layer goes stale.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 15 * * 1"   # Mondays, so staleness shows up even without a PR
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Drift checks
+        run: node scripts/check.mjs
+      - name: Build
+        run: npm install --no-audit --no-fund && npm run build

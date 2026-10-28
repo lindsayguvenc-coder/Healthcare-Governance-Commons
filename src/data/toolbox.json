@@ -1,0 +1,180 @@
+{
+ "tools": {
+  "vpg": {
+   "name": "Validation Protocol Generator",
+   "url": "/validation-protocol",
+   "kind": "Commons tool"
+  },
+  "roi": {
+   "name": "ROI Assessment",
+   "url": "/roi-assessment",
+   "kind": "Commons tool"
+  },
+  "consult": {
+   "name": "Governance Assessment",
+   "url": "/consultation",
+   "kind": "Commons tool"
+  },
+  "unpacker": {
+   "name": "Disagreement Unpacker",
+   "url": "/transition#disagreement-unpacker",
+   "kind": "Commons tool"
+  },
+  "health-check": {
+   "name": "Container Health Check",
+   "url": "/transition#container-health-check",
+   "kind": "Commons tool"
+  },
+  "charter": {
+   "name": "Charter Builder",
+   "url": "/transition#charter-builder",
+   "kind": "Commons tool"
+  },
+  "registry": {
+   "name": "Peer Challenge Registry",
+   "url": "/challenge-registry",
+   "kind": "Commons tool"
+  },
+  "mechanisms": {
+   "name": "Governance Mechanisms Index",
+   "url": "/governance_mechanisms_index.pdf",
+   "kind": "Commons reference"
+  },
+  "reagents": {
+   "name": "Buy AI Like Reagents: vendor contract clauses",
+   "url": "https://lindsayguvenc-coder.github.io/lab-rules-map/vendor-contracts/",
+   "kind": "Commons reference"
+  },
+  "lab-rules": {
+   "name": "Lab Rules Map: what binding law requires across regulated fields",
+   "url": "https://lindsayguvenc-coder.github.io/lab-rules-map/",
+   "kind": "Commons reference"
+  },
+  "seismometer": {
+   "name": "Epic Seismometer: open-source model evaluation with fairness audits",
+   "url": "https://github.com/epic-open-source/seismometer",
+   "kind": "External, open source"
+  },
+  "chai-card": {
+   "name": "CHAI Applied Model Card: a voluntary template for describing a model",
+   "url": "https://www.chai.org/workgroup/applied-model",
+   "kind": "External, voluntary template"
+  },
+  "maude": {
+   "name": "FDA MAUDE: adverse event reports for medical devices",
+   "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/search.cfm",
+   "kind": "External, public database"
+  },
+  "fda-recalls": {
+   "name": "FDA medical device recalls database",
+   "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm",
+   "kind": "External, public database"
+  },
+  "tripod": {
+   "name": "TRIPOD+AI checklist for reporting prediction models",
+   "url": "https://www.tripod-statement.org/",
+   "kind": "External, reporting checklist"
+  },
+  "cw": {
+   "name": "Community Weaving: method for building governance in unmapped territory",
+   "url": "/community-weaving",
+   "kind": "Commons series"
+  }
+ },
+ "byNode": {
+  "norm": [
+   "chai-card",
+   "lab-rules"
+  ],
+  "watcher": [
+   "vpg",
+   "seismometer"
+  ],
+  "h1": [
+   "vpg",
+   "consult"
+  ],
+  "h3": [
+   "maude",
+   "fda-recalls"
+  ],
+  "h2": [
+   "charter",
+   "vpg"
+  ],
+  "h4": [
+   "unpacker",
+   "reagents"
+  ],
+  "escalation": [
+   "charter",
+   "consult",
+   "unpacker"
+  ],
+  "adjudicate": [
+   "unpacker",
+   "reagents"
+  ],
+  "threshold_review": [
+   "vpg",
+   "seismometer"
+  ],
+  "authority": [
+   "charter",
+   "consult",
+   "mechanisms"
+  ],
+  "stop": [
+   "vpg",
+   "mechanisms"
+  ],
+  "override": [
+   "vpg",
+   "consult"
+  ],
+  "validation": [
+   "vpg",
+   "tripod",
+   "seismometer",
+   "chai-card",
+   "roi"
+  ],
+  "learning-loop": [
+   "health-check",
+   "mechanisms",
+   "roi"
+  ],
+  "vendor-risk": [
+   "reagents",
+   "lab-rules",
+   "consult"
+  ],
+  "explainability": [
+   "chai-card",
+   "tripod"
+  ],
+  "contestation": [
+   "unpacker",
+   "charter"
+  ],
+  "equity": [
+   "vpg",
+   "seismometer"
+  ],
+  "accountability": [
+   "charter",
+   "health-check",
+   "consult"
+  ],
+  "forming": [
+   "cw",
+   "unpacker"
+  ],
+  "commons": [
+   "registry",
+   "mechanisms",
+   "lab-rules",
+   "cw"
+  ]
+ }
+}

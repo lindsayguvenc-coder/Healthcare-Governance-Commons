@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Notice — Healthcare Governance Commons</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1a1a2e;
+      --purple: #7c5cbf;
+      --purple-light: #f3f0ff;
+      --muted: #6b7080;
+      --border: #e0e0e0;
+      --amber-bg: #fff8e1;
+      --amber-border: #f0a500;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 16px;
+    }
+
+    /* Header */
+    .header {
+      border-bottom: 2px solid var(--purple);
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .wordmark {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--purple);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    .wordmark:hover {
+      opacity: 0.8;
+    }
+
+    /* Main content */
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 60px 40px 80px;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 48px;
+    }
+
+    .section {
+      margin-bottom: 48px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--purple);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    p {
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    ul {
+      margin: 0 0 16px 24px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    /* Callout box */
+    .callout {
+      background: var(--purple-light);
+      border-left: 4px solid var(--purple);
+      padding: 20px 24px;
+      margin: 24px 0;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .callout p {
+      margin-bottom: 0;
+    }
+
+    /* Warning box */
+    .warning {
+      background: var(--amber-bg);
+      border-left: 4px solid var(--amber-border);
+      padding: 20px 24px;
+      margin: 24px 0;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .warning p {
+      margin-bottom: 0;
+    }
+
+    /* Incident response */
+    .incident-steps {
+      counter-reset: step;
+      list-style: none;
+      margin-left: 0;
+    }
+
+    .incident-steps li {
+      counter-increment: step;
+      padding-left: 40px;
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .incident-steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 28px;
+      height: 28px;
+      background: var(--purple);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    /* Last updated */
+    .last-updated {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .footer a {
+      color: var(--purple);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 40px 24px 60px;
+      }
+      .header {
+        padding: 16px 24px;
+      }
+      .footer {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <a href="/" class="wordmark">Healthcare Governance Commons</a>
+    <a href="/tools" class="wordmark" style="font-weight: 400; text-transform: none; font-size: 13px;">← Tools</a>
+  </header>
+
+  <main class="container">
+
+    <h1 class="page-title">Privacy Notice</h1>
+    <p class="page-subtitle">How the Healthcare Governance Commons handles submitted information.</p>
+
+    <div class="callout">
+      <p><strong>The short version:</strong> The Commons is a working prototype built by one person. It does not store what you type into its tools, and the parts that would collect information from visitors are paused. Do not enter patient information anywhere on this site.</p>
+    </div>
+
+    <section class="section">
+      <h2 class="section-title">What is live and what is paused</h2>
+      <ul>
+        <li><strong>Live:</strong> the governance map, node pages, document library, Community Weaving series, and tools that answer from what you type (Validation Protocol Generator, ROI Assessment, Governance Assessment, Disagreement Unpacker, Container Health Check, Charter Builder, node synthesis, Facetious Collaborator).</li>
+        <li><strong>Contributions:</strong> each node page lets you suggest a source, a tool, or a question, or add a practitioner note. Nothing is published until it's reviewed by hand.</li>
+        <li><strong>Paused:</strong> document upload in the Validation Protocol Generator, and registrations and introduction requests in the Peer Challenge Registry. These would collect files or contact details, and they stay closed until someone is accountable for securing them.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">What happens to what you type</h2>
+      <ul>
+        <li><strong>AI-assisted tools</strong> send your text to Anthropic's API to generate a response, through this site's server. The Commons does not save your text or the response. Anthropic handles the request under its API terms.</li>
+        <li><strong>Validation Protocol Generator</strong> sends your answers to this site's server to assemble the protocol. Nothing is saved; the PDF is built in your browser.</li>
+        <li><strong>Contributions</strong> are stored for review: the link or text you send, the node it's for, and the time. For practitioner notes, the name and role you choose to publish, if any. No email, contact details, or network address is stored with a contribution. Before review, each contribution is read by two AI reviewers (through Anthropic's API) that recommend accepting or rejecting it; a person makes every final decision. Rejected contributions are deleted; the site keeps only counts (how many of each type were submitted, accepted, or rejected, and the website domain of suggested links), never the content. Accepted ones are published on the node page.</li>
+        <li><strong>Usage limits.</strong> To stop the AI tools from being abused, the site keeps a count of requests per network address. Each count is deleted automatically after about an hour.</li>
+        <li><strong>Hosting.</strong> The site runs on Vercel, which keeps standard request logs.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Not for patient information</h2>
+      <p>None of these tools are designed to receive protected health information (PHI) as defined under HIPAA, and there is no PHI detection on typed input. Describe systems and situations, not patients.</p>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Contact</h2>
+      <p>Questions about this privacy notice can be directed through the Healthcare Governance Commons GitHub repository.</p>
+      <p><a href="https://github.com/lindsayguvenc-coder/Healthcare-Governance-Commons" style="color: #7c5cbf;">github.com/lindsayguvenc-coder/Healthcare-Governance-Commons</a></p>
+    </section>
+
+    <p class="last-updated">Last updated: October 27, 2026. This notice will be updated when paused features reopen.</p>
+
+  </main>
+
+  <footer class="footer">
+    <span>Healthcare Governance Commons</span>
+    <span>
+      <a href="/">Home</a> &nbsp;·&nbsp;
+      <a href="/tools">Tools</a> &nbsp;·&nbsp;
+      <a href="/community-weaving">Community Weaving</a>
+    </span>
+  </footer>
+
+</body>
+</html>

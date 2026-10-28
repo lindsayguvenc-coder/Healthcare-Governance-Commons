@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Governance Architecture — Healthcare Governance Commons</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1117;
+      --bg2: #13161f;
+      --bg3: #1a1d2a;
+      --border: #2a2d3a;
+      --border-bright: #3d4155;
+      --text: #e2e4ed;
+      --muted: #6b7080;
+      --purple: #b49eff;
+      --purple-dim: #7c6ab5;
+      --purple-glow: rgba(180, 158, 255, 0.15);
+      --green: #7fffd4;
+      --green-dim: #4db896;
+      --red: #ff6b6b;
+      --amber: #ffc947;
+      --handoff: #4fc3f7;
+      --handoff-dim: #2a7a9e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 60px 32px 100px;
+    }
+
+    /* Header */
+    .nav-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 48px;
+      transition: color 0.2s;
+    }
+    .nav-back:hover { color: var(--purple); }
+    .nav-back::before { content: '←'; }
+
+    .episode-label {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--purple);
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(28px, 5vw, 44px);
+      font-weight: 300;
+      line-height: 1.15;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+
+    .intro-text {
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--muted);
+      max-width: 620px;
+      margin-bottom: 56px;
+    }
+
+    .intro-text strong {
+      color: var(--text);
+      font-weight: 400;
+    }
+
+    /* Instruction bar */
+    .instruction {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      margin-bottom: 40px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg2);
+    }
+    .instruction::before {
+      content: '↗';
+      color: var(--purple);
+      font-size: 14px;
+    }
+
+    /* ── DIAGRAM CANVAS ── */
+    .diagram-canvas {
+      position: relative;
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 48px 32px;
+      overflow: visible;
+    }
+
+    /* Loop labels */
+    .loop-label {
+      position: absolute;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 3px;
+      pointer-events: none;
+    }
+    .loop-label.internal {
+      top: 16px;
+      left: 32px;
+      color: var(--green);
+      background: rgba(127, 255, 212, 0.08);
+      border: 1px solid rgba(127, 255, 212, 0.2);
+    }
+    .loop-label.external {
+      top: 16px;
+      right: 32px;
+      color: var(--purple);
+      background: rgba(180, 158, 255, 0.08);
+      border: 1px solid rgba(180, 158, 255, 0.2);
+    }
+
+    /* Two-column loop layout */
+    .loops-row {
+      display: grid;
+      grid-template-columns: 1fr 80px 1fr;
+      gap: 0;
+      margin-top: 16px;
+    }
+
+    /* Each loop is a vertical stack of nodes */
+    .loop-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Node cards */
+    .node {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      position: relative;
+    }
+    .node:hover {
+      transform: translateY(-2px);
+    }
+    .node.internal-node {
+      border-left: 3px solid var(--green-dim);
+    }
+    .node.internal-node:hover,
+    .node.internal-node.active {
+      border-left-color: var(--green);
+      border-color: var(--green-dim);
+      background: rgba(127, 255, 212, 0.05);
+    }
+    .node.external-node {
+      border-left: 3px solid var(--purple-dim);
+    }
+    .node.external-node:hover,
+    .node.external-node.active {
+      border-left-color: var(--purple);
+      border-color: var(--purple-dim);
+      background: var(--purple-glow);
+    }
+    .node.stop-node {
+      border-left: 3px solid var(--red);
+      grid-column: 1 / -1;
+    }
+    .node.stop-node:hover,
+    .node.stop-node.active {
+      border-left-color: var(--red);
+      border-color: rgba(255, 107, 107, 0.4);
+      background: rgba(255, 107, 107, 0.05);
+    }
+
+    .node-id {
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .node-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .node-sub {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* Arrow indicators on node */
+    .node-arrow {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+    .node:hover .node-arrow,
+    .node.active .node-arrow {
+      color: var(--purple);
+    }
+
+    /* Center column — handoff nodes */
+    .handoff-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .handoff-node {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 2px solid var(--handoff-dim);
+      background: rgba(79, 195, 247, 0.06);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      flex-shrink: 0;
+    }
+    .handoff-node:hover,
+    .handoff-node.active {
+      border-color: var(--handoff);
+      background: rgba(79, 195, 247, 0.12);
+      transform: scale(1.08);
+    }
+    .handoff-id {
+      font-size: 9px;
+      font-weight: 500;
+      color: var(--handoff);
+      letter-spacing: 0.05em;
+    }
+    .handoff-label {
+      font-size: 7px;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* Stop row */
+    .stop-row {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* ── DETAIL PANEL ── */
+    .detail-panel {
+      margin-top: 32px;
+      border: 1px solid var(--border-bright);
+      border-radius: 8px;
+      background: var(--bg2);
+      overflow: hidden;
+      transition: all 0.3s ease;
+      opacity: 0;
+      max-height: 0;
+      pointer-events: none;
+    }
+    .detail-panel.visible {
+      opacity: 1;
+      max-height: 600px;
+      pointer-events: auto;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 24px 28px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-header-left {}
+    .panel-type {
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .panel-type.internal { color: var(--green); }
+    .panel-type.external { color: var(--purple); }
+    .panel-type.handoff { color: var(--handoff); }
+    .panel-type.stop { color: var(--red); }
+
+    .panel-title {
+      font-family: 'Fraunces', serif;
+      font-size: 22px;
+      font-weight: 300;
+      color: var(--text);
+    }
+
+    .panel-close {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 16px;
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, color 0.2s;
+      flex-shrink: 0;
+      margin-left: 16px;
+    }
+    .panel-close:hover {
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+
+    .panel-body {
+      padding: 24px 28px 28px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 600px) {
+      .panel-body { grid-template-columns: 1fr; }
+    }
+
+    .panel-section-label {
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .panel-desc {
+      font-size: 13px;
+      line-height: 1.75;
+      color: var(--text);
+    }
+    .panel-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .panel-list li {
+      font-size: 12px;
+      color: var(--muted);
+      padding-left: 16px;
+      position: relative;
+      line-height: 1.5;
+    }
+    .panel-list li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: var(--border-bright);
+    }
+
+    /* Flow arrows between nodes */
+    .flow-arrow {
+      text-align: center;
+      color: var(--border-bright);
+      font-size: 16px;
+      line-height: 1;
+      pointer-events: none;
+      padding: 2px 0;
+    }
+    .flow-arrow.internal { color: rgba(127, 255, 212, 0.3); }
+    .flow-arrow.external { color: rgba(180, 158, 255, 0.3); }
+
+    /* Footer */
+    .page-footer {
+      margin-top: 64px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-series {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+    .footer-nav {
+      display: flex;
+      gap: 24px;
+    }
+    .footer-nav a {
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      transition: color 0.2s;
+    }
+    .footer-nav a:hover { color: var(--purple); }
+
+    /* Pulse animation on handoff nodes */
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 rgba(79, 195, 247, 0.3); }
+      70% { box-shadow: 0 0 0 8px rgba(79, 195, 247, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(79, 195, 247, 0); }
+    }
+    .handoff-node {
+      animation: pulse-ring 3s ease infinite;
+    }
+    .handoff-node:nth-child(2) { animation-delay: 0.75s; }
+    .handoff-node:nth-child(3) { animation-delay: 1.5s; }
+    .handoff-node:nth-child(4) { animation-delay: 2.25s; }
+
+    /* Entrance animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .node { animation: fadeUp 0.4s ease both; }
+    .node:nth-child(1) { animation-delay: 0.05s; }
+    .node:nth-child(2) { animation-delay: 0.1s; }
+    .node:nth-child(3) { animation-delay: 0.15s; }
+    .node:nth-child(4) { animation-delay: 0.2s; }
+    .node:nth-child(5) { animation-delay: 0.25s; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <a href="/community-weaving" class="nav-back">Community Weaving Series</a>
+
+  <div class="episode-label">Episode 07 — What it actually looks like</div>
+  <h1>The Governance<br>Architecture</h1>
+  <p class="intro-text">
+    Two loops. Four handoff nodes. One stop mechanism.<br><br>
+    The <strong>internal technical loop</strong> runs continuously — monitoring, flagging, logging. The <strong>external human governance loop</strong> holds authority — deciding, dissenting, intervening. They are not the same system. They are not supposed to be.<br><br>
+    Click any component to see what it does and why it exists.
+  </p>
+
+  <div class="instruction">Click any component to open its detail panel</div>
+
+  <div class="diagram-canvas">
+    <span class="loop-label internal">Internal Technical Loop</span>
+    <span class="loop-label external">External Human Loop</span>
+
+    <div class="loops-row">
+
+      <!-- Internal loop -->
+      <div class="loop-col" id="internal-col">
+        <div class="node internal-node" data-node="ai-model" onclick="openPanel('ai-model')">
+          <div class="node-id">INT-01</div>
+          <div class="node-title">AI Model</div>
+          <div class="node-sub">Clinical decision support layer</div>
+          <span class="node-arrow">↗</span>
+        </div>
+        <div class="flow-arrow internal">↓</div>
+        <div class="node internal-node" data-node="westgard" onclick="openPanel('westgard')">
+          <div class="node-id">INT-02</div>
+          <div class="node-title">Performance Monitor</div>
+          <div class="node-sub">Westgard-adapted QC rules</div>
+          <span class="node-arrow">↗</span>
+        </div>
+        <div class="flow-arrow internal">↓</div>
+        <div class="node internal-node" data-node="taxonomy" onclick="openPanel('taxonomy')">
+          <div class="node-id">INT-03</div>
+          <div class="node-title">Taxonomy / Lexicon</div>
+          <div class="node-sub">Shared language layer</div>
+          <span class="node-arrow">↗</span>
+        </div>
+        <div class="flow-arrow internal">↓</div>
+        <div class="node internal-node" data-node="memory" onclick="openPanel('memory')">
+          <div class="node-id">INT-04</div>
+          <div class="node-title">Institutional Memory</div>
+          <div class="node-sub">Artifact protection + audit trail</div>
+          <span class="node-arrow">↗</span>
+        </div>
+      </div>
+
+      <!-- Handoff column -->
+      <div class="handoff-col" id="handoff-col">
+        <div class="handoff-node" data-node="h1" onclick="openPanel('h1')">
+          <div class="handoff-id">H1</div>
+          <div class="handoff-label">Deploy</div>
+        </div>
+        <div class="handoff-node" data-node="h2" onclick="openPanel('h2')">
+          <div class="handoff-id">H2</div>
+          <div class="handoff-label">Monitor</div>
+        </div>
+        <div class="handoff-node" data-node="h3" onclick="openPanel('h3')">
+          <div class="handoff-id">H3</div>
+          <div class="handoff-label">Review</div>
+        </div>
+        <div class="handoff-node" data-node="h4" onclick="openPanel('h4')">
+          <div class="handoff-id">H4</div>
+          <div class="handoff-label">Intervene</div>
+        </div>
+      </div>
+
+      <!-- External loop -->
+      <div class="loop-col" id="external-col">
+        <div class="node external-node" data-node="clinical" onclick="openPanel('clinical')">
+          <div class="node-id">EXT-01</div>
+          <div class="node-title">Clinical Judgment</div>
+          <div class="node-sub">Human authority at the bedside</div>
+          <span class="node-arrow">↗</span>
+        </div>
+        <div class="flow-arrow external">↓</div>
+        <div class="node external-node" data-node="authority" onclick="openPanel('authority')">
+          <div class="node-id">EXT-02</div>
+          <div class="node-title">Authority Matrix</div>
+          <div class="node-sub">Who decides what, at which tier</div>
+          <span class="node-arrow">↗</span>
+        </div>
+        <div class="flow-arrow external">↓</div>
+        <div class="node external-node" data-node="dissent" onclick="openPanel('dissent')">
+          <div class="node-id">EXT-03</div>
+          <div class="node-title">Dissent Layer</div>
+          <div class="node-sub">Structured disagreement as signal</div>
+          <span class="node-arrow">↗</span>
+        </div>
+        <div class="flow-arrow external">↓</div>
+        <div class="node external-node" data-node="trigger" onclick="openPanel('trigger')">
+          <div class="node-id">EXT-04</div>
+          <div class="node-title">Decision Trigger Layer</div>
+          <div class="node-sub">Escalation thresholds + review gates</div>
+          <span class="node-arrow">↗</span>
+        </div>
+      </div>
+
+    </div><!-- /loops-row -->
+
+    <!-- Stop mechanism row -->
+    <div class="stop-row">
+      <div class="node stop-node" data-node="stop" onclick="openPanel('stop')">
+        <div class="node-id">STOP</div>
+        <div class="node-title">Stop Mechanism</div>
+        <div class="node-sub">Hard halt + failover routing — activates when either loop detects irreversible risk</div>
+        <span class="node-arrow">↗</span>
+      </div>
+      <div class="node stop-node" data-node="failover" onclick="openPanel('failover')">
+        <div class="node-id">FAILOVER</div>
+        <div class="node-title">Failover Protocol</div>
+        <div class="node-sub">Manual pathway + escalation chain — care continues when the model stops</div>
+        <span class="node-arrow">↗</span>
+      </div>
+    </div>
+
+  </div><!-- /diagram-canvas -->
+
+  <!-- Detail panel -->
+  <div class="detail-panel" id="detail-panel">
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <div class="panel-type" id="panel-type"></div>
+        <div class="panel-title" id="panel-title"></div>
+      </div>
+      <button class="panel-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="panel-body">
+      <div>
+        <div class="panel-section-label">What it does</div>
+        <p class="panel-desc" id="panel-desc"></p>
+      </div>
+      <div>
+        <div class="panel-section-label">Why it exists</div>
+        <ul class="panel-list" id="panel-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <div class="footer-series">Healthcare Governance Commons — Community Weaving</div>
+    <nav class="footer-nav">
+      <a href="/community-weaving">← All Episodes</a>
+      <a href="/">Commons Home</a>
+    </nav>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<script>
+  const nodeData = {
+    'ai-model': {
+      type: 'internal',
+      typeLabel: 'Internal Technical Loop — INT-01',
+      title: 'AI Model',
+      desc: 'The clinical decision support layer — the model itself. It receives inputs, generates outputs, and flags confidence levels. It does not hold authority. It holds a seat at the table, with a defined scope and hard boundaries on what it can act upon without human review.',
+      list: [
+        'Scope is defined at deployment — not at inference time',
+        'Outputs are typed: recommendation, flag, alert, or auto-route',
+        'Confidence scores surface to the performance monitor continuously',
+        'No direct write access to patient record without governance review'
+      ]
+    },
+    'westgard': {
+      type: 'internal',
+      typeLabel: 'Internal Technical Loop — INT-02',
+      title: 'Performance Monitor',
+      desc: 'Westgard rules, adapted for AI. Originally designed to detect drift in lab instrument performance, these rules now watch the model — flagging systematic bias, sensitivity degradation, and population shift before they compound into harm.',
+      list: [
+        '1-2s rule: two consecutive results beyond 2 standard deviations → flag',
+        'R4s rule: sudden range jump within a batch → investigate',
+        'Population shift monitor: demographic drift in flagged cases',
+        'All violations logged to institutional memory, not silently corrected'
+      ]
+    },
+    'taxonomy': {
+      type: 'internal',
+      typeLabel: 'Internal Technical Loop — INT-03',
+      title: 'Taxonomy / Lexicon',
+      desc: 'The shared language layer. When a model says "high risk" and a clinician says "high risk," they need to mean the same thing. The taxonomy defines terms, thresholds, and categories — and it is versioned, so drift in meaning over time is traceable.',
+      list: [
+        'All output categories defined with explicit inclusion/exclusion criteria',
+        'Clinical urgency tiers mapped to response time expectations',
+        'Version-controlled: changes require governance review',
+        'Serves as the handshake protocol between INT and EXT loops'
+      ]
+    },
+    'memory': {
+      type: 'internal',
+      typeLabel: 'Internal Technical Loop — INT-04',
+      title: 'Institutional Memory',
+      desc: 'The artifact protection and audit trail layer. Every governance decision, every dissent event, every model version change, every stop mechanism activation — logged, timestamped, and protected from deletion. This is the organization\'s memory of how it governs itself.',
+      list: [
+        'Immutable audit log: entries cannot be edited, only appended',
+        'Artifact protection: governance documents are versioned, not overwritten',
+        'Dissent events logged with full context, including resolution',
+        'Required for accreditation review and retrospective analysis'
+      ]
+    },
+    'clinical': {
+      type: 'external',
+      typeLabel: 'External Human Loop — EXT-01',
+      title: 'Clinical Judgment',
+      desc: 'Human authority at the bedside. The clinician remains the final decision-maker in all patient-facing contexts. The governance architecture exists to support, inform, and protect this judgment — not to route around it.',
+      list: [
+        'Clinician can override any model recommendation at any time',
+        'Override is logged but never blocked',
+        'Model outputs are advisory unless explicitly authorized otherwise',
+        'Clinical autonomy is the non-negotiable constraint the whole system is built around'
+      ]
+    },
+    'authority': {
+      type: 'external',
+      typeLabel: 'External Human Loop — EXT-02',
+      title: 'Authority Matrix',
+      desc: 'Who decides what, at which tier. Not everyone has the same authority over every decision. The matrix makes this explicit — defining decision types, required stakeholders, escalation paths, and quorum requirements before a governance action is binding.',
+      list: [
+        'Tier 1: operational decisions — frontline staff authority',
+        'Tier 2: model configuration changes — department leadership',
+        'Tier 3: deployment scope changes — governance committee',
+        'Tier 4: stop mechanism or model decommission — executive + clinical leadership'
+      ]
+    },
+    'dissent': {
+      type: 'external',
+      typeLabel: 'External Human Loop — EXT-03',
+      title: 'Dissent Layer',
+      desc: 'Structured disagreement as signal, not noise. The dissent layer gives every stakeholder a formal pathway to flag concerns — before decisions are final, not after harm has occurred. Dissent is logged, reviewed, and responded to. Silence is not consent.',
+      list: [
+        'Any stakeholder can file a dissent at any governance tier',
+        'Dissent does not block decisions — it creates a required response obligation',
+        'Unresolved dissent escalates automatically after defined time window',
+        'Pattern analysis: recurring dissent themes surface as system-level flags'
+      ]
+    },
+    'trigger': {
+      type: 'external',
+      typeLabel: 'External Human Loop — EXT-04',
+      title: 'Decision Trigger Layer',
+      desc: 'Escalation thresholds and review gates. Not every signal requires a governance meeting. The trigger layer defines which conditions automatically escalate, which require scheduled review, and which can be handled operationally — preventing both under-response and governance fatigue.',
+      list: [
+        'Performance monitor violations → automatic escalation to EXT-02',
+        'Dissent volume threshold → mandatory governance review within 72hrs',
+        'Population shift flags → clinical leadership notification within 24hrs',
+        'Stop mechanism activation → immediate Tier 4 authority convening'
+      ]
+    },
+    'h1': {
+      type: 'handoff',
+      typeLabel: 'Handoff Node — H1',
+      title: 'Deploy',
+      desc: 'The first handoff: from development to deployment. Before the model goes live, the internal loop is configured and the external loop is briefed. Scope is defined, authority assignments are made, and the institutional memory is initialized. H1 is the moment the governance contract becomes active.',
+      list: [
+        'Requires Tier 3 authority sign-off before activation',
+        'Taxonomy and lexicon versions locked at deploy',
+        'Westgard baseline established from validation cohort',
+        'Dissent pathway published and tested before go-live'
+      ]
+    },
+    'h2': {
+      type: 'handoff',
+      typeLabel: 'Handoff Node — H2',
+      title: 'Monitor',
+      desc: 'The ongoing handoff: performance data from the internal loop surfaces to human reviewers on a defined cadence. H2 is not an alarm — it is a scheduled conversation between the technical and human systems. Most governance happens here, quietly, before anything goes wrong.',
+      list: [
+        'Weekly performance dashboard to operational governance lead',
+        'Monthly review with clinical stakeholders',
+        'Westgard violations trigger immediate H2 event outside schedule',
+        'H2 outputs logged to institutional memory as governance record'
+      ]
+    },
+    'h3': {
+      type: 'handoff',
+      typeLabel: 'Handoff Node — H3',
+      title: 'Review',
+      desc: 'The deliberate handoff: a formal governance review triggered by accumulated signal. H3 is where the authority matrix convenes, dissent is surfaced and addressed, and decisions about model configuration, scope, or continuation are made. H3 produces a governance record that protects the organization.',
+      list: [
+        'Triggered by: dissent threshold, performance trend, scope change request',
+        'Requires quorum per authority matrix tier',
+        'Outputs: decision, rationale, dissent resolution, next review date',
+        'All outputs go to institutional memory — immutable'
+      ]
+    },
+    'h4': {
+      type: 'handoff',
+      typeLabel: 'Handoff Node — H4',
+      title: 'Intervene',
+      desc: 'The emergency handoff: something has gone wrong, or is about to. H4 activates the stop mechanism, initiates failover, and convenes Tier 4 authority. The internal loop hands control entirely to the external loop. H4 is the moment the architecture proves it was worth building.',
+      list: [
+        'Activates automatically on defined stop conditions',
+        'Can be manually triggered by any Tier 2+ authority',
+        'Immediately suspends model output — failover takes over',
+        'Tier 4 authority must convene within defined window or suspension continues'
+      ]
+    },
+    'stop': {
+      type: 'stop',
+      typeLabel: 'Stop Mechanism',
+      title: 'Stop Mechanism',
+      desc: 'The hard halt. When either loop detects conditions that risk irreversible harm, the model stops. Not pauses. Stops. The stop mechanism is the most important component in the architecture — not because it will be used often, but because its existence changes how every other component behaves.',
+      list: [
+        'Triggers: safety pre-filter violation, Westgard R4s breach, population shift beyond threshold',
+        'Effect: model output suspended, failover activated, H4 initiated',
+        'Cannot be overridden below Tier 4 authority',
+        'Every activation generates a mandatory post-incident review'
+      ]
+    },
+    'failover': {
+      type: 'stop',
+      typeLabel: 'Failover Protocol',
+      title: 'Failover Protocol',
+      desc: 'Care continues when the model stops. The failover protocol defines exactly what happens next — who does what, using which manual pathway, with which escalation chain. A governance architecture without a failover is a building without fire exits. The exits matter most when you hope never to use them.',
+      list: [
+        'Manual pathway defined and trained before go-live',
+        'Escalation chain published to all clinical stakeholders',
+        'Failover period is time-limited — review must occur within defined window',
+        'Failover experience feeds back into model improvement cycle'
+      ]
+    }
+  };
+
+  let activeNode = null;
+
+  function openPanel(nodeId) {
+    const data = nodeData[nodeId];
+    if (!data) return;
+
+    // Deactivate previous
+    if (activeNode) {
+      const prev = document.querySelector(`[data-node="${activeNode}"]`);
+      if (prev) prev.classList.remove('active');
+    }
+
+    // Activate new
+    activeNode = nodeId;
+    const el = document.querySelector(`[data-node="${nodeId}"]`);
+    if (el) el.classList.add('active');
+
+    // Populate panel
+    document.getElementById('panel-type').textContent = data.typeLabel;
+    document.getElementById('panel-type').className = `panel-type ${data.type}`;
+    document.getElementById('panel-title').textContent = data.title;
+    document.getElementById('panel-desc').textContent = data.desc;
+
+    const list = document.getElementById('panel-list');
+    list.innerHTML = '';
+    data.list.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      list.appendChild(li);
+    });
+
+    const panel = document.getElementById('detail-panel');
+    panel.classList.add('visible');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function closePanel() {
+    const panel = document.getElementById('detail-panel');
+    panel.classList.remove('visible');
+    if (activeNode) {
+      const el = document.querySelector(`[data-node="${activeNode}"]`);
+      if (el) el.classList.remove('active');
+      activeNode = null;
+    }
+  }
+</script>
+</body>
+</html>

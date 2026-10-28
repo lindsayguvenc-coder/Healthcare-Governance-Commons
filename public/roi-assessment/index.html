@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROI Assessment · Governance Commons</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300;1,9..144,600&display=swap');
+
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #141720;
+  --surface3: #0d1019;
+  --border: #2a2d3a;
+  --border-bright: #3d4155;
+  --accent: #b49eff;
+  --accent2: #7eb8f7;
+  --accent3: #f77e7e;
+  --accent4: #e8c547;
+  --accent5: #7ef7c0;
+  --accent6: #f7a87e;
+  --roi: #f77e7e;
+  --text: #e2e4ed;
+  --muted: #6b7080;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  min-height: 100vh;
+}
+
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.topbar-left { display: flex; flex-direction: column; gap: 2px; }
+.topbar-title { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 300; color: var(--text); }
+.topbar-sub { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.topbar-right { display: flex; gap: 16px; align-items: center; }
+.nav-link { font-size: 10px; letter-spacing: 0.1em; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.nav-link:hover { color: var(--roi); }
+
+/* ── LAYOUT ── */
+.main { flex: 1; display: flex; overflow: hidden; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  overflow-y: auto;
+  padding: 24px 0;
+}
+.sidebar-label {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 20px;
+  margin-bottom: 16px;
+}
+.section-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 20px;
+  border-left: 2px solid transparent;
+  cursor: default;
+  transition: background 0.15s;
+}
+.section-step.active { border-left-color: var(--roi); background: var(--surface2); }
+.section-step.completed { border-left-color: var(--accent5); }
+.section-step.clickable { cursor: pointer; }
+.section-step.clickable:hover { background: var(--surface2); }
+.step-num {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--border-bright);
+  line-height: 1;
+  flex-shrink: 0;
+  padding-top: 2px;
+  transition: color 0.15s;
+  min-width: 28px;
+}
+.section-step.active .step-num { color: var(--roi); }
+.section-step.completed .step-num { color: var(--accent5); }
+.step-name { font-size: 11px; color: var(--muted); line-height: 1.3; transition: color 0.15s; }
+.section-step.active .step-name { color: var(--text); }
+.section-step.completed .step-name { color: var(--accent5); }
+.step-tag { font-size: 9px; color: var(--muted); margin-top: 2px; letter-spacing: 0.06em; }
+.sidebar-divider { border: none; border-top: 1px solid var(--border); margin: 12px 20px; }
+
+/* ── CONTENT ── */
+.content { flex: 1; overflow-y: auto; }
+
+/* ── INTRO ── */
+.intro-phase {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 64px 40px 80px;
+}
+.phase-tag {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--roi);
+  margin-bottom: 16px;
+}
+.phase-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.1;
+  margin-bottom: 20px;
+}
+.phase-title em { font-style: italic; color: var(--roi); }
+.phase-desc {
+  font-size: 12px;
+  line-height: 1.9;
+  color: var(--muted);
+  margin-bottom: 36px;
+  max-width: 580px;
+}
+.audience-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+.audience-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 18px 16px;
+}
+.audience-icon { font-size: 16px; color: var(--roi); margin-bottom: 8px; }
+.audience-label { font-size: 11px; color: var(--text); font-weight: 500; margin-bottom: 4px; }
+.audience-desc { font-size: 10px; color: var(--muted); line-height: 1.5; }
+.intro-note {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+  background: rgba(232,197,71,0.05);
+  border: 1px solid rgba(232,197,71,0.2);
+  border-left: 3px solid var(--accent4);
+  border-radius: 0 3px 3px 0;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+}
+.intro-note strong { color: var(--accent4); }
+.intro-privacy {
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 32px;
+  letter-spacing: 0.04em;
+}
+.start-btn {
+  background: transparent;
+  border: 1px solid var(--roi);
+  color: var(--roi);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.start-btn:hover { background: rgba(247,126,126,0.08); }
+
+/* ── ELICITATION ── */
+.elicit-phase {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 40px 80px;
+}
+.section-header { margin-bottom: 36px; }
+.section-num {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--roi);
+  margin-bottom: 10px;
+}
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: clamp(20px, 3vw, 28px);
+  line-height: 1.15;
+  margin-bottom: 10px;
+}
+.section-desc { font-size: 12px; color: var(--muted); line-height: 1.7; }
+
+.champion-note {
+  background: rgba(180,158,255,0.06);
+  border: 1px solid rgba(180,158,255,0.2);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 3px 3px 0;
+  padding: 12px 16px;
+  margin-bottom: 28px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.champion-note-label {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 5px;
+}
+
+/* Questions */
+.question-block {
+  margin-bottom: 28px;
+  animation: fadeIn 0.2s ease both;
+}
+.question-text {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+.question-note {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: var(--surface2);
+  border-left: 2px solid var(--border-bright);
+}
+.q-select {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 10px 28px 10px 12px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7080' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+.q-select:focus { border-color: var(--roi); }
+.q-select option { background: var(--surface); }
+.q-textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  line-height: 1.7;
+  padding: 10px 12px;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.q-textarea:focus { border-color: var(--roi); }
+.q-textarea::placeholder { color: var(--muted); }
+.q-text {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.q-text:focus { border-color: var(--roi); }
+.q-text::placeholder { color: var(--muted); }
+
+/* Multi-select checkboxes */
+.checkbox-group { display: flex; flex-direction: column; gap: 6px; }
+.checkbox-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.checkbox-item:hover { border-color: var(--border-bright); }
+.checkbox-item.checked { border-color: var(--roi); background: rgba(247,126,126,0.06); }
+.checkbox-box {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--border-bright);
+  border-radius: 2px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: all 0.15s;
+  position: relative;
+}
+.checkbox-item.checked .checkbox-box {
+  background: var(--roi);
+  border-color: var(--roi);
+}
+.checkbox-item.checked .checkbox-box::after {
+  content: '✓';
+  position: absolute;
+  top: -1px;
+  left: 1px;
+  font-size: 10px;
+  color: var(--bg);
+  font-weight: 700;
+}
+.checkbox-label { font-size: 11px; color: var(--muted); line-height: 1.4; }
+.checkbox-item.checked .checkbox-label { color: var(--text); }
+
+/* Section nav */
+.section-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.nav-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nav-btn:hover { border-color: var(--border-bright); color: var(--text); }
+.nav-btn-primary {
+  background: transparent;
+  border: 1px solid var(--roi);
+  color: var(--roi);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 10px 22px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nav-btn-primary:hover { background: rgba(247,126,126,0.08); }
+.nav-btn-primary.green {
+  border-color: var(--accent5);
+  color: var(--accent5);
+}
+.nav-btn-primary.green:hover { background: rgba(126,247,192,0.08); }
+.progress-text { font-size: 10px; color: var(--muted); letter-spacing: 0.06em; }
+
+/* Logic flag */
+.logic-flag {
+  display: none;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(232,197,71,0.06);
+  border: 1px solid rgba(232,197,71,0.25);
+  border-left: 2px solid var(--accent4);
+  font-size: 10px;
+  color: var(--accent4);
+  line-height: 1.6;
+  border-radius: 0 2px 2px 0;
+}
+.logic-flag.visible { display: block; }
+
+/* ── GENERATING ── */
+.generating-phase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 40px;
+  text-align: center;
+}
+.gen-spinner {
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--border);
+  border-top-color: var(--roi);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 28px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.gen-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: 22px;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+.gen-steps { display: flex; flex-direction: column; gap: 8px; }
+.gen-step { font-size: 11px; color: var(--muted); }
+
+/* ── REPORT ── */
+.report-phase {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 48px 40px 80px;
+}
+
+.report-header {
+  margin-bottom: 40px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--border);
+}
+.report-tag {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--roi);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.report-tag::before { content: ''; display: block; width: 20px; height: 1px; background: var(--roi); }
+.report-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: clamp(22px, 3.5vw, 32px);
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+.report-title em { font-style: italic; color: var(--roi); }
+.report-meta {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.report-meta-item {
+  font-size: 10px;
+  color: var(--muted);
+}
+.report-meta-item span { color: var(--text); }
+
+/* Strategy status banner */
+.strategy-banner {
+  padding: 14px 18px;
+  border-radius: 3px;
+  margin-bottom: 32px;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.strategy-banner.has-strategy {
+  background: rgba(126,247,192,0.06);
+  border: 1px solid rgba(126,247,192,0.25);
+  border-left: 3px solid var(--accent5);
+  color: var(--accent5);
+}
+.strategy-banner.no-strategy {
+  background: rgba(232,197,71,0.06);
+  border: 1px solid rgba(232,197,71,0.25);
+  border-left: 3px solid var(--accent4);
+  color: var(--accent4);
+}
+.strategy-banner p { color: var(--muted); margin-top: 6px; }
+
+/* Dimensions */
+.dimensions-section { margin-bottom: 40px; }
+.section-label {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.dimension-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.dimension-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 20px;
+  transition: border-color 0.2s;
+}
+.dim-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.dim-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+}
+.dim-rating-badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.rating-strong { background: rgba(126,247,192,0.1); color: var(--accent5); border: 1px solid rgba(126,247,192,0.3); }
+.rating-moderate { background: rgba(232,197,71,0.1); color: var(--accent4); border: 1px solid rgba(232,197,71,0.3); }
+.rating-weak { background: rgba(247,126,126,0.1); color: var(--accent3); border: 1px solid rgba(247,126,126,0.3); }
+.rating-insufficient { background: rgba(107,112,128,0.1); color: var(--muted); border: 1px solid var(--border); }
+.rating-not-assessed { background: rgba(107,112,128,0.1); color: var(--muted); border: 1px solid var(--border); }
+.rating-not-applicable { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+.dim-summary { font-size: 11px; color: var(--muted); line-height: 1.7; margin-bottom: 12px; }
+.dim-lists { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.dim-list-label {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.dim-list-label.strengths { color: var(--accent5); }
+.dim-list-label.gaps { color: var(--accent3); }
+.dim-list ul { list-style: none; display: flex; flex-direction: column; gap: 3px; }
+.dim-list ul li {
+  font-size: 10px;
+  color: var(--muted);
+  padding-left: 14px;
+  position: relative;
+  line-height: 1.5;
+}
+.dim-list.strengths ul li::before { content: '→'; position: absolute; left: 0; color: var(--accent5); font-size: 9px; }
+.dim-list.gaps ul li::before { content: '→'; position: absolute; left: 0; color: var(--accent3); font-size: 9px; }
+.dim-champion {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 8px 10px;
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.dim-champion-label {
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 3px;
+}
+
+/* Gap map */
+.gap-map {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 20px 22px;
+  margin-bottom: 32px;
+}
+.gap-map-title { font-size: 11px; font-weight: 500; color: var(--text); margin-bottom: 16px; }
+.gap-map-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.gap-col-label {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.gap-col-label.measured { color: var(--accent5); }
+.gap-col-label.assumed { color: var(--accent4); }
+.gap-col-label.unknown { color: var(--accent3); }
+.gap-col ul { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.gap-col ul li { font-size: 10px; color: var(--muted); line-height: 1.4; padding-left: 12px; position: relative; }
+.gap-col.measured ul li::before { content: '◉'; position: absolute; left: 0; font-size: 7px; color: var(--accent5); top: 2px; }
+.gap-col.assumed ul li::before { content: '◎'; position: absolute; left: 0; font-size: 7px; color: var(--accent4); top: 2px; }
+.gap-col.unknown ul li::before { content: '○'; position: absolute; left: 0; font-size: 7px; color: var(--accent3); top: 2px; }
+
+/* Overall narrative */
+.overall-narrative {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--roi);
+  border-radius: 0 4px 4px 0;
+  padding: 20px 22px;
+  margin-bottom: 32px;
+}
+.overall-narrative-label {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--roi);
+  margin-bottom: 10px;
+}
+.overall-narrative-text { font-size: 12px; color: var(--muted); line-height: 1.8; }
+
+/* Recommendations */
+.recommendations-section {
+  background: rgba(126,247,192,0.04);
+  border: 1px solid rgba(126,247,192,0.2);
+  border-radius: 4px;
+  padding: 22px;
+  margin-bottom: 32px;
+}
+.rec-title { font-size: 11px; font-weight: 500; color: var(--accent5); margin-bottom: 14px; }
+.rec-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.rec-list li {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.6;
+  padding-left: 18px;
+  position: relative;
+}
+.rec-list li::before { content: '→'; position: absolute; left: 0; color: var(--accent5); }
+
+/* Report-only notice */
+.report-only-notice {
+  background: rgba(232,197,71,0.05);
+  border: 1px solid rgba(232,197,71,0.2);
+  border-radius: 4px;
+  padding: 20px 22px;
+  margin-bottom: 32px;
+}
+.ron-label {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent4);
+  margin-bottom: 8px;
+}
+.ron-text { font-size: 11px; color: var(--muted); line-height: 1.7; }
+
+/* Report actions */
+.report-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+.action-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.action-btn:hover { border-color: var(--border-bright); color: var(--text); }
+.action-btn.primary {
+  border-color: var(--roi);
+  color: var(--roi);
+}
+.action-btn.primary:hover { background: rgba(247,126,126,0.08); }
+
+/* Error */
+.error-phase {
+  max-width: 600px;
+  margin: 80px auto;
+  padding: 40px;
+  text-align: center;
+}
+.error-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: 22px;
+  color: var(--accent3);
+  margin-bottom: 14px;
+}
+.error-msg { font-size: 11px; color: var(--muted); line-height: 1.7; margin-bottom: 24px; }
+
+/* ── PRINT ── */
+@media print {
+  .topbar, .sidebar, .report-actions { display: none; }
+  .main { display: block; }
+  .content { overflow: visible; }
+  .report-phase { max-width: 100%; padding: 20px; }
+  .dimension-grid { grid-template-columns: 1fr 1fr; }
+  .gap-map-cols { grid-template-columns: repeat(3, 1fr); }
+  body { background: white; color: black; }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+  .sidebar { display: none; }
+  .intro-phase, .elicit-phase, .report-phase { padding: 32px 20px 60px; }
+  .audience-cards { grid-template-columns: 1fr; }
+  .dimension-grid { grid-template-columns: 1fr; }
+  .gap-map-cols { grid-template-columns: 1fr; }
+  .topbar { padding: 12px 16px; }
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Healthcare Governance Commons</div>
+      <div class="topbar-sub">ROI Assessment Tool</div>
+    </div>
+    <div class="topbar-right">
+      <a href="/" class="nav-link">Commons</a>
+      <a href="/tools" class="nav-link">All Tools</a>
+      <a href="/validation-protocol" class="nav-link">VPG</a>
+      <a href="/challenge-registry" class="nav-link">Registry</a>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="sidebar" id="sidebar"></div>
+    <div class="content" id="content"></div>
+  </div>
+
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────────
+
+const state = {
+  phase: 'intro',
+  sectionIdx: 0,
+  answers: {},
+  report: null,
+  errorMsg: null,
+};
+
+function a() { return state.answers; }
+function isOngoing() { return a().q_pathway && a().q_pathway.startsWith('Ongoing'); }
+function isChampion() { return a().q_role && a().q_role.startsWith('Physician'); }
+function hasStrategy() {
+  const s = a().q_strategy;
+  return s && s.startsWith('Yes');
+}
+
+// ── SECTIONS ──────────────────────────────────────────────────────────────────
+
+const SECTIONS_META = [
+  { label: 'Start',                tag: 'System & pathway' },
+  { label: 'Strategy',             tag: 'Org AI strategy' },
+  { label: 'Clinical & Ops',       tag: 'What it does' },
+  { label: 'Financial',            tag: 'Cost & savings' },
+  { label: 'Equity & Community',   tag: 'What else matters' },
+  { label: 'Evidence & Decision',  tag: 'Making the case' },
+];
+
+function getSection(idx) {
+  switch (idx) {
+    case 0: return sectionStart();
+    case 1: return sectionStrategy();
+    case 2: return sectionClinicalOps();
+    case 3: return sectionFinancial();
+    case 4: return sectionEquity();
+    case 5: return sectionEvidence();
+    default: return null;
+  }
+}
+
+function sectionStart() {
+  return {
+    idx: 0,
+    title: 'System & Context',
+    desc: 'Tell us what you are assessing and who you are.',
+    championNote: null,
+    questions: [
+      {
+        id: 'q_pathway', required: true,
+        text: 'Are you evaluating a clinical AI system for adoption, or assessing one already in use?',
+        type: 'select',
+        options: [
+          'Pre-adoption — evaluating whether to adopt',
+          'Ongoing — system is deployed, assessing value or continuation',
+        ],
+      },
+      {
+        id: 'q_system', required: true,
+        text: 'Name of the AI system you are assessing',
+        type: 'text',
+        placeholder: 'e.g. Epic Sepsis Model, Aidoc Head CT, Viz.ai LVO',
+      },
+      {
+        id: 'q_use_type', required: true,
+        text: 'What does this system do?',
+        type: 'select',
+        options: [
+          'Triage / prioritization — direct impact on care sequencing',
+          'Decision support at point of care',
+          'Risk stratification — identifies patients for intervention',
+          'Workflow routing — determines care pathway or resource allocation',
+          'Screening / flagging — identifies cases for human review',
+          'Diagnostic support — image, pathology, or lab interpretation',
+          'Retrospective audit / quality improvement',
+          'Other',
+        ],
+      },
+      {
+        id: 'q_setting', required: true,
+        text: 'Care setting',
+        type: 'select',
+        options: [
+          'Emergency department',
+          'Inpatient — general medical/surgical',
+          'Inpatient — ICU / critical care',
+          'Outpatient / ambulatory',
+          'Multi-setting',
+          'Trauma',
+          'Post-acute / rehabilitation',
+          'Other',
+        ],
+      },
+      {
+        id: 'q_role', required: true,
+        text: 'How are you approaching this assessment?',
+        type: 'select',
+        options: [
+          'Governance or AI oversight committee',
+          'Procurement or pre-adoption evaluation team',
+          'Physician or clinician championing this project',
+          'Executive or administrative leadership',
+          'Other',
+        ],
+      },
+      {
+        id: 'q_org', required: false,
+        text: 'Organization name or type (optional)',
+        type: 'text',
+        placeholder: 'e.g. Regional Medical Center, Academic Health System',
+      },
+      {
+        id: 'q_deployment_duration', required: false,
+        text: 'How long has this system been deployed at your organization?',
+        type: 'select',
+        showIf: () => isOngoing(),
+        options: ['Less than 3 months', '3–6 months', '6–12 months', '1–2 years', 'More than 2 years', 'Unknown'],
+      },
+    ],
+  };
+}
+
+function sectionStrategy() {
+  return {
+    idx: 1,
+    title: 'Organizational AI Strategy',
+    desc: 'Whether recommendations can be generated depends on whether your organization has a documented AI strategy.',
+    championNote: null,
+    questions: [
+      {
+        id: 'q_strategy', required: true,
+        text: 'Does your organization have a documented AI strategy?',
+        type: 'select',
+        options: [
+          'Yes — documented and in active use',
+          'Yes — in development',
+          'No — not yet developed',
+          'Unknown',
+        ],
+        note: 'If no documented strategy exists, this tool will produce a complete assessment but will not generate recommendations. The report can be used as direct input to strategy development.',
+      },
+      {
+        id: 'q_strategy_priorities', required: false,
+        text: 'What are the primary goals of your AI strategy?',
+        type: 'multi',
+        showIf: () => hasStrategy(),
+        options: [
+          'Improve clinical quality and outcomes',
+          'Improve patient safety',
+          'Increase operational efficiency',
+          'Advance health equity',
+          'Reduce costs',
+          'Support and retain staff',
+          'Grow organizational capabilities',
+          'Community health impact',
+          'Research and innovation',
+          'Other',
+        ],
+      },
+      {
+        id: 'q_strategy_criteria', required: false,
+        text: 'Does your AI strategy include explicit criteria for adopting or sunsetting AI systems?',
+        type: 'select',
+        showIf: () => a().q_strategy === 'Yes — documented and in active use',
+        options: ['Yes — formal criteria', 'Partial — informally understood', 'No', 'Unknown'],
+      },
+      {
+        id: 'q_strategy_describe', required: false,
+        text: 'Briefly describe those criteria',
+        type: 'textarea',
+        showIf: () => {
+          const c = a().q_strategy_criteria;
+          return c && (c.startsWith('Yes') || c.startsWith('Partial'));
+        },
+        placeholder: 'e.g. minimum ROI threshold, equity requirements, governance sign-off, sunset triggers...',
+      },
+      {
+        id: 'q_roi_defined', required: true,
+        text: 'Has your organization formally defined what value looks like for this specific system?',
+        type: 'select',
+        options: [
+          'Yes — defined and measurable',
+          'Yes — defined but informally',
+          'No — not yet defined',
+          'Unknown',
+        ],
+      },
+      {
+        id: 'q_exit_threshold', required: true,
+        text: 'Has your organization defined an exit threshold — the point at which you would conclude this system should be sunset or not adopted?',
+        type: 'select',
+        options: [
+          'Yes — formally defined',
+          'Not yet defined',
+          'This decision has not been formally considered',
+        ],
+      },
+      {
+        id: 'q_exit_describe', required: false,
+        text: 'What is that threshold?',
+        type: 'textarea',
+        showIf: () => a().q_exit_threshold === 'Yes — formally defined',
+        placeholder: 'e.g. if clinical performance drops below X%, if equity gap exceeds Y%, if staff burden increases beyond Z...',
+      },
+    ],
+  };
+}
+
+function sectionClinicalOps() {
+  return {
+    idx: 2,
+    title: 'Clinical & Operational Value',
+    desc: 'What the tool does to patient outcomes and how it affects the people using it.',
+    championNote: 'Clinical data typically lives with clinical quality, patient safety, your CMO\'s office, or EHR analytics. Operational data lives with workflow analysts, nursing informatics, or department managers. Ask for: adverse event rates, diagnostic accuracy audits, time-motion studies, alert volume reports, staff satisfaction data.',
+    questions: [
+      {
+        id: 'q_clinical_expected', required: true,
+        text: 'What clinical value is this system expected to deliver?',
+        type: 'multi',
+        options: [
+          'Improved diagnostic accuracy',
+          'Reduced missed or delayed diagnoses',
+          'Faster time to diagnosis or intervention',
+          'Reduced adverse events',
+          'Improved patient safety',
+          'Reduction in unnecessary procedures or redundant testing',
+          'Improved clinical documentation quality',
+          'Other',
+          'None identified yet',
+        ],
+      },
+      {
+        id: 'q_clinical_status', required: true,
+        text: isOngoing()
+          ? 'How has the clinical value been assessed at your institution?'
+          : 'How would you characterize the evidence base for the expected clinical benefits?',
+        type: 'select',
+        options: isOngoing()
+          ? ['Formally measured with local data', 'Informally assessed', 'Not yet measured', 'Measured — value confirmed', 'Measured — value questioned']
+          : ['Strong vendor and peer-reviewed evidence', 'Moderate vendor evidence', 'Limited peer evidence only', 'Assumed but not yet validated', 'Not yet assessed'],
+      },
+      {
+        id: 'q_clinical_subgroup', required: true,
+        text: 'Has clinical performance been assessed by patient subgroup (race, payer, age, comorbidity)?',
+        type: 'select',
+        options: [
+          'Yes — formal subgroup analysis',
+          'Yes — informal review',
+          'No — not yet assessed',
+          'Not applicable',
+        ],
+      },
+      {
+        id: 'q_operational_expected', required: true,
+        text: 'What operational value is this system expected to deliver?',
+        type: 'multi',
+        options: [
+          'Reduced clinician cognitive burden',
+          'Reduced workflow time',
+          'Reduced alert fatigue',
+          'Improved throughput',
+          'Reduced redundant work',
+          'Improved care coordination',
+          'Improved staff satisfaction',
+          'Other',
+          'None identified yet',
+        ],
+      },
+      {
+        id: 'q_operational_status', required: true,
+        text: 'Has operational impact been formally assessed?',
+        type: 'select',
+        options: [
+          'Yes — formal study or analysis',
+          'Yes — informal feedback collected',
+          'No — not yet assessed',
+          'Not applicable',
+        ],
+      },
+      {
+        id: 'q_alert_fatigue', required: false,
+        text: 'Has alert fatigue or distraction burden from this system been assessed?',
+        type: 'select',
+        options: [
+          'Yes — formally assessed',
+          'Yes — informally monitored',
+          'No — not assessed',
+          'Not applicable — system does not generate alerts',
+        ],
+      },
+    ],
+  };
+}
+
+function sectionFinancial() {
+  return {
+    idx: 3,
+    title: 'Financial Value',
+    desc: 'What this system costs and what financial value it delivers or avoids.',
+    championNote: 'Financial data lives with your finance department, supply chain, or CFO\'s office. Total cost of ownership includes license fees, implementation, training, maintenance, and IT infrastructure. Avoided costs are often harder to quantify but can be the most substantial value. Ask for: total cost of ownership analysis, labor impact models, avoided cost analyses.',
+    questions: [
+      {
+        id: 'q_cost', required: true,
+        text: 'What is the approximate all-in annual cost (license + implementation + IT + staff time)?',
+        type: 'select',
+        options: [
+          'Under $50,000',
+          '$50,000 – $150,000',
+          '$150,000 – $500,000',
+          '$500,000 – $1,000,000',
+          'Over $1,000,000',
+          'Not known',
+          'Not disclosed by vendor',
+        ],
+      },
+      {
+        id: 'q_financial_categories', required: true,
+        text: 'Which financial value categories are relevant to your assessment?',
+        type: 'multi',
+        options: [
+          'Reduced labor cost (e.g., fewer manual reads or reviews)',
+          'Avoided downstream costs (prevented adverse events, shorter LOS)',
+          'Reduction in unnecessary procedures and redundant testing',
+          'Avoided regulatory penalties and compliance costs',
+          'Avoided staff turnover costs — tool provides workflow relief',
+          'Avoided staff turnover costs — tool creates burden (negative value)',
+          'Improved revenue capture or billing accuracy',
+          'Reduced re-admission or downstream care costs',
+          'Other',
+          'None identified yet',
+        ],
+      },
+      {
+        id: 'q_financial_analysis', required: true,
+        text: 'Has a formal financial analysis been conducted?',
+        type: 'select',
+        options: [
+          'Yes — full cost-benefit or ROI analysis',
+          'Yes — partial analysis',
+          'Informal estimates only',
+          'No — not yet conducted',
+        ],
+      },
+      {
+        id: 'q_financial_turnover', required: false,
+        text: 'Is there a staff turnover dimension attributable to burden or relief from this tool?',
+        type: 'select',
+        options: [
+          'Yes — tool provides workflow relief that may improve retention',
+          'Yes — tool adds burden that may contribute to turnover',
+          'Both directions are in play',
+          'Not assessed',
+          'Not applicable',
+        ],
+      },
+      {
+        id: 'q_financial_regulatory', required: false,
+        text: 'Are there regulatory or compliance cost implications (FDA, CMS, state law, accreditation)?',
+        type: 'select',
+        options: [
+          'Yes — active compliance costs or risks identified',
+          'Yes — potential but not yet assessed',
+          'No',
+          'Unknown',
+        ],
+      },
+    ],
+  };
+}
+
+function sectionEquity() {
+  return {
+    idx: 4,
+    title: 'Equity, Community & Non-monetary Value',
+    desc: 'Three dimensions that are often the least formally tracked but carry the most weight in governance decisions.',
+    championNote: 'Equity data may be in monitoring dashboards or patient safety reports. Community value often lives in community health needs assessments and patient advisory committees. Non-monetary currency — trust, buy-in, relationships — is usually informal but is often the deciding factor in whether adoption and continuation actually work.',
+    questions: [
+      {
+        id: 'q_equity_relevant', required: true,
+        text: 'Is differential AI performance across patient populations a relevant risk for this system?',
+        type: 'select',
+        options: [
+          'Yes — high relevance',
+          'Yes — moderate relevance',
+          'Uncertain',
+          'No — low relevance for this use',
+          'Not yet considered',
+        ],
+      },
+      {
+        id: 'q_equity_populations', required: false,
+        text: 'Which populations are most relevant to your equity assessment?',
+        type: 'multi',
+        showIf: () => {
+          const v = a().q_equity_relevant;
+          return v && !v.startsWith('No') && !v.startsWith('Not yet');
+        },
+        options: [
+          'Race / ethnicity',
+          'Insurance / payer type',
+          'Age',
+          'Sex / gender',
+          'Language / health literacy',
+          'Geographic (rural vs. urban)',
+          'Socioeconomic status',
+          'Disability status',
+          'Other',
+          'Unknown',
+        ],
+      },
+      {
+        id: 'q_equity_analysis', required: true,
+        text: 'Has subgroup performance analysis been conducted?',
+        type: 'select',
+        options: [
+          'Yes — formal, published or internal report',
+          'Yes — informal review',
+          'No — not yet conducted',
+          'Not feasible with current data',
+          'Not applicable',
+        ],
+      },
+      {
+        id: 'q_harm_tracked', required: true,
+        text: 'Has patient harm potentially attributable to this AI system been formally tracked?',
+        type: 'select',
+        options: [
+          'Yes — formal incident reporting includes AI involvement',
+          'Yes — informally monitored',
+          'No — not yet tracked',
+          'No — and this is a known gap',
+        ],
+      },
+      {
+        id: 'q_community_benefit', required: false,
+        text: 'Does your organization have community benefit obligations relevant to this deployment?',
+        type: 'select',
+        options: [
+          'Yes — nonprofit community benefit requirement',
+          'Yes — other community obligation',
+          'No — not applicable',
+          'Unknown',
+        ],
+      },
+      {
+        id: 'q_community_trust', required: false,
+        text: 'Has community or patient trust in this system been assessed?',
+        type: 'select',
+        options: [
+          'Yes — formally assessed',
+          'Yes — through patient advisory feedback',
+          'Informally understood',
+          'No — not assessed',
+          'Not applicable',
+        ],
+      },
+      {
+        id: 'q_community_impact', required: false,
+        text: "Has this system's impact on the health of the communities you serve been assessed?",
+        type: 'select',
+        options: ['Yes — formally', 'Yes — informally', 'Not yet assessed', 'Not applicable'],
+      },
+      {
+        id: 'q_staff_trust', required: true,
+        text: 'How would you characterize clinician trust in this system?',
+        type: 'select',
+        options: [
+          'High — strong buy-in across the team',
+          'Moderate — generally accepted with some skepticism',
+          'Mixed — divided response',
+          'Low — significant resistance',
+          'Unknown — not assessed',
+          'Not yet deployed to clinical staff',
+        ],
+      },
+      {
+        id: 'q_patient_trust', required: false,
+        text: 'How would you characterize patient trust or acceptance of this system?',
+        type: 'select',
+        options: [
+          'High — patients are generally comfortable',
+          'Moderate — with appropriate explanation',
+          'Mixed — varied response',
+          'Low — notable patient concerns',
+          'Unknown — not assessed',
+          'Not applicable',
+        ],
+      },
+      {
+        id: 'q_reputation', required: false,
+        text: "Has your organization's use of this system been a reputational asset, liability, or neutral?",
+        type: 'select',
+        options: [
+          'Asset — positive differentiation',
+          'Neutral',
+          'Liability — reputational concern',
+          'Unknown / too early to assess',
+        ],
+      },
+      {
+        id: 'q_non_monetary_note', required: false,
+        text: 'What non-monetary value — trust, buy-in, relationships — is most at stake for this system? (optional)',
+        type: 'textarea',
+        placeholder: 'What would be lost or gained in terms of trust or relationships if this system is adopted or sunset?',
+      },
+    ],
+  };
+}
+
+function sectionEvidence() {
+  return {
+    idx: 5,
+    title: 'Evidence Quality & Decision Context',
+    desc: 'How strong is the case, and what does the decision actually look like.',
+    championNote: isChampion()
+      ? 'This section translates the assessment into the framing you need for a decision. The final question — what you most need to be able to say — is the most important one in the tool for your situation.'
+      : null,
+    questions: [
+      {
+        id: 'q_evidence_overall', required: true,
+        text: 'Overall, how would you characterize the strength of the evidence base for the value claims about this system?',
+        type: 'select',
+        options: [
+          'Strong — robust data across multiple dimensions',
+          'Moderate — solid data on some dimensions, weak or assumed on others',
+          'Weak — mostly assumptions or vendor claims',
+          'Insufficient — not enough data to assess',
+          'Mixed — strong in some areas, concerning in others',
+        ],
+      },
+      {
+        id: 'q_biggest_unknown', required: false,
+        text: 'What is the single biggest unknown in the value case for this system?',
+        type: 'textarea',
+        placeholder: "e.g. \"We don't know if clinical value holds in our population\", \"We haven't quantified operational impact\", \"No equity analysis has been done\"",
+      },
+      {
+        id: 'q_decision_maker', required: false,
+        text: 'Who is the decision-maker for this adoption/continuation/sunset decision?',
+        type: 'select',
+        options: [
+          'Formal governance or oversight committee',
+          'Executive leadership (CMO / CFO / CEO)',
+          'Clinical department leadership',
+          'IT or informatics leadership',
+          'Shared / consensus',
+          'Unknown',
+        ],
+      },
+      {
+        id: 'q_timeline', required: false,
+        text: 'What is the timeline for this decision?',
+        type: 'select',
+        options: [
+          'Immediate (within 2 weeks)',
+          'Short (within 1 month)',
+          'Medium (within 3 months)',
+          'Long (3–6 months)',
+          'No defined timeline',
+        ],
+      },
+      {
+        id: 'q_champion_question', required: false,
+        text: 'What specific question do you need answered to make the case? What is the thing you most need to be able to say?',
+        type: 'textarea',
+        showIf: () => isChampion(),
+        placeholder: "e.g. \"Is the value sufficient to justify the cost?\", \"Can I defend this to the quality committee?\", \"Is this system safe for our patient population?\"",
+      },
+      {
+        id: 'q_opponents', required: false,
+        text: 'Are there internal stakeholders skeptical or opposed to this system? What are their primary concerns? (optional)',
+        type: 'textarea',
+        placeholder: 'Knowing the opposition helps frame the assessment honestly.',
+      },
+      {
+        id: 'q_context', required: false,
+        text: 'Anything else about your organizational context that would affect this assessment? (optional)',
+        type: 'textarea',
+        placeholder: 'Organizational pressures, strategic priorities not covered above, constraints...',
+      },
+    ],
+  };
+}
+
+// ── RENDER SIDEBAR ────────────────────────────────────────────────────────────
+
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  let html = `<div class="sidebar-label">Sections</div>`;
+
+  SECTIONS_META.forEach((s, i) => {
+    const isActive = state.phase === 'elicit' && state.sectionIdx === i;
+    const isDone = (state.phase === 'elicit' && state.sectionIdx > i) || state.phase === 'generating' || state.phase === 'report';
+    const isClickable = isDone && state.phase === 'elicit';
+    html += `<div class="section-step ${isActive ? 'active' : ''} ${isDone ? 'completed' : ''} ${isClickable ? 'clickable' : ''}"
+      ${isClickable ? `onclick="goSection(${i})"` : ''}>
+      <div class="step-num">${i + 1}</div>
+      <div class="step-info">
+        <div class="step-name">${s.label}</div>
+        <div class="step-tag">${s.tag}</div>
+      </div>
+    </div>`;
+  });
+
+  if (state.phase === 'report') {
+    html += `<hr class="sidebar-divider">
+    <div class="section-step active">
+      <div class="step-num" style="color: var(--roi);">◉</div>
+      <div class="step-info">
+        <div class="step-name" style="color: var(--text);">Assessment</div>
+        <div class="step-tag">Complete</div>
+      </div>
+    </div>`;
+  }
+
+  sidebar.innerHTML = html;
+}
+
+// ── RENDER INTRO ──────────────────────────────────────────────────────────────
+
+function renderIntro() {
+  state.phase = 'intro';
+  renderSidebar();
+  document.getElementById('content').innerHTML = `
+    <div class="intro-phase">
+      <div class="phase-tag">ROI Assessment Tool</div>
+      <h1 class="phase-title">Is this AI system <em>earning its place?</em></h1>
+      <p class="phase-desc">
+        No formal ROI framework exists for clinical AI. Value is claimed broadly and
+        measured almost nowhere.<br><br>
+        This tool synthesizes a structured assessment across six dimensions: clinical
+        outcomes, operational impact, financial returns, equity and harm, community value,
+        and the non-monetary currencies that governance committees rarely track but that
+        determine whether adoption actually works.
+      </p>
+      <div class="audience-cards">
+        <div class="audience-card">
+          <div class="audience-icon">◎</div>
+          <div class="audience-label">Governance committees</div>
+          <div class="audience-desc">Decide whether to continue, scale, or sunset</div>
+        </div>
+        <div class="audience-card">
+          <div class="audience-icon">◎</div>
+          <div class="audience-label">Procurement teams</div>
+          <div class="audience-desc">Evaluate whether to adopt</div>
+        </div>
+        <div class="audience-card">
+          <div class="audience-icon">◎</div>
+          <div class="audience-label">Physician champions</div>
+          <div class="audience-desc">Build the case — and learn where to find the data</div>
+        </div>
+      </div>
+      <div class="intro-note">
+        <strong>Strategy gate:</strong> If your organization does not have a documented AI strategy, this tool produces a complete assessment report but does not generate recommendations. Recommendations require a strategy to anchor against. The report can be used as direct input to strategy development.
+      </div>
+      <div class="intro-privacy">No account required. Your inputs are not stored.</div>
+      <button class="start-btn" onclick="startAssessment()">Start assessment →</button>
+    </div>`;
+}
+
+// ── RENDER SECTION ────────────────────────────────────────────────────────────
+
+function renderSection(idx) {
+  state.phase = 'elicit';
+  state.sectionIdx = idx;
+  renderSidebar();
+
+  const section = getSection(idx);
+  if (!section) return;
+
+  const visibleQs = section.questions.filter(q => !q.showIf || q.showIf());
+  const isLast = idx === 5;
+
+  let html = `<div class="elicit-phase">
+    <div class="section-header">
+      <div class="section-num">Section ${idx + 1} of 6</div>
+      <div class="section-title">${section.title}</div>
+      <div class="section-desc">${section.desc}</div>
+    </div>`;
+
+  if (section.championNote) {
+    html += `<div class="champion-note">
+      <div class="champion-note-label">Physician champion — where to find this data</div>
+      ${section.championNote}
+    </div>`;
+  }
+
+  visibleQs.forEach(q => { html += renderQuestion(q); });
+
+  html += `<div class="section-nav">
+    <button class="nav-btn" onclick="goBack(${idx})">← Back</button>
+    <span class="progress-text">Section ${idx + 1} of 6</span>
+    <button class="nav-btn-primary ${isLast ? 'green' : ''}" onclick="${isLast ? 'goToGenerate()' : `goSection(${idx + 1})`}">
+      ${isLast ? 'Generate assessment →' : 'Next →'}
+    </button>
+  </div>
+  </div>`;
+
+  const content = document.getElementById('content');
+  content.innerHTML = html;
+  content.scrollTop = 0;
+  visibleQs.forEach(q => restoreAnswer(q));
+}
+
+function renderQuestion(q) {
+  let input = '';
+  const val = state.answers[q.id];
+
+  if (q.type === 'select') {
+    input = `<select class="q-select" id="q-${q.id}" onchange="setAnswer('${q.id}', this.value)">
+      <option value="">— Select —</option>
+      ${q.options.map(o => `<option value="${o}"${val === o ? ' selected' : ''}>${o}</option>`).join('')}
+    </select>`;
+  } else if (q.type === 'multi') {
+    const vals = Array.isArray(val) ? val : [];
+    input = `<div class="checkbox-group">
+      ${q.options.map(o => `
+        <div class="checkbox-item${vals.includes(o) ? ' checked' : ''}" onclick="toggleMulti('${q.id}', '${o.replace(/'/g, "\\'")}', this)">
+          <div class="checkbox-box"></div>
+          <div class="checkbox-label">${o}</div>
+        </div>`).join('')}
+    </div>`;
+  } else if (q.type === 'textarea') {
+    input = `<textarea class="q-textarea" id="q-${q.id}" placeholder="${q.placeholder || ''}"
+      oninput="setAnswer('${q.id}', this.value)">${val || ''}</textarea>`;
+  } else if (q.type === 'text') {
+    input = `<input type="text" class="q-text" id="q-${q.id}" placeholder="${q.placeholder || ''}"
+      value="${(val || '').replace(/"/g, '&quot;')}" oninput="setAnswer('${q.id}', this.value)">`;
+  }
+
+  const noteHtml = q.note ? `<div class="question-note">${q.note}</div>` : '';
+
+  return `<div class="question-block" id="qblock-${q.id}">
+    <div class="question-text">${q.text}</div>
+    ${noteHtml}
+    ${input}
+  </div>`;
+}
+
+function restoreAnswer(q) {
+  if (q.type === 'select' || q.type === 'text' || q.type === 'textarea') {
+    const el = document.getElementById(`q-${q.id}`);
+    if (el && state.answers[q.id]) {
+      el.value = state.answers[q.id];
+    }
+  }
+}
+
+// ── RENDER GENERATING ─────────────────────────────────────────────────────────
+
+function renderGenerating() {
+  state.phase = 'generating';
+  renderSidebar();
+  document.getElementById('content').innerHTML = `
+    <div class="generating-phase">
+      <div class="gen-spinner"></div>
+      <div class="gen-title">Synthesizing assessment</div>
+      <div class="gen-steps">
+        <div class="gen-step">Analyzing value across 6 dimensions...</div>
+        <div class="gen-step">Mapping gaps between evidence and assumptions...</div>
+        <div class="gen-step">Checking strategy alignment...</div>
+      </div>
+    </div>`;
+}
+
+// ── RENDER REPORT ─────────────────────────────────────────────────────────────
+
+function renderReport(report) {
+  state.phase = 'report';
+  renderSidebar();
+
+  const ratingClass = {
+    'strong': 'rating-strong',
+    'moderate': 'rating-moderate',
+    'weak': 'rating-weak',
+    'insufficient': 'rating-insufficient',
+    'not-assessed': 'rating-not-assessed',
+    'not-applicable': 'rating-not-applicable',
+  };
+  const ratingLabel = {
+    'strong': 'Strong',
+    'moderate': 'Moderate',
+    'weak': 'Weak',
+    'insufficient': 'Insufficient',
+    'not-assessed': 'Not assessed',
+    'not-applicable': 'N/A',
+  };
+
+  const meta = report.meta || {};
+  const strategy = report.strategyStatus || {};
+  const dims = report.dimensions || [];
+  const gapMap = report.gapMap || {};
+
+  // Header
+  let html = `<div class="report-phase">
+    <div style="font-size:11px;letter-spacing:0.04em;opacity:0.7;margin:0 0 16px;padding:8px 10px;border:1px dashed currentColor;border-radius:4px">AI-generated from your answers · not reviewed by a person · check it before you rely on it</div>
+    <div class="report-header">
+      <div class="report-tag">ROI Assessment</div>
+      <div class="report-title">Value assessment — <em>${escHtml(meta.system || 'AI System')}</em></div>
+      <div class="report-meta">
+        ${meta.pathway ? `<div class="report-meta-item">Pathway: <span>${meta.pathway === 'pre-adoption' ? 'Pre-adoption' : 'Ongoing'}</span></div>` : ''}
+        ${meta.org ? `<div class="report-meta-item">Organization: <span>${escHtml(meta.org)}</span></div>` : ''}
+        <div class="report-meta-item">Generated: <span>${meta.generatedDate || new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'})}</span></div>
+      </div>
+    </div>
+
+    <div class="report-actions">
+      <button class="action-btn primary" onclick="window.print()">Print / Save as PDF</button>
+      <button class="action-btn" onclick="copyReportText()">Copy report text</button>
+      <button class="action-btn" onclick="startOver()">Start new assessment</button>
+    </div>`;
+
+  // Strategy banner
+  if (strategy.hasStrategy) {
+    html += `<div class="strategy-banner has-strategy">
+      Strategy aligned — recommendations included
+      <p>${escHtml(strategy.strategyNote || '')}</p>
+    </div>`;
+  } else {
+    html += `<div class="strategy-banner no-strategy">
+      Report only — no recommendations
+      <p>${escHtml(strategy.strategyNote || 'No documented AI strategy was identified. Recommendations require a strategy to anchor against.')}</p>
+    </div>`;
+  }
+
+  // Dimensions
+  html += `<div class="dimensions-section">
+    <div class="section-label">Value assessment — six dimensions</div>
+    <div class="dimension-grid">`;
+
+  dims.forEach(dim => {
+    const rc = ratingClass[dim.rating] || 'rating-not-assessed';
+    const rl = ratingLabel[dim.rating] || dim.rating || '—';
+    const strengths = dim.strengths || [];
+    const gaps = dim.gaps || [];
+
+    html += `<div class="dimension-card">
+      <div class="dim-top">
+        <div class="dim-label">${escHtml(dim.label || dim.id)}</div>
+        <div class="dim-rating-badge ${rc}">${rl}</div>
+      </div>
+      <div class="dim-summary">${escHtml(dim.summary || '')}</div>
+      <div class="dim-lists">`;
+
+    if (strengths.length) {
+      html += `<div class="dim-list strengths">
+        <div class="dim-list-label strengths">Strengths</div>
+        <ul>${strengths.map(s => `<li>${escHtml(s)}</li>`).join('')}</ul>
+      </div>`;
+    }
+    if (gaps.length) {
+      html += `<div class="dim-list gaps">
+        <div class="dim-list-label gaps">Gaps</div>
+        <ul>${gaps.map(g => `<li>${escHtml(g)}</li>`).join('')}</ul>
+      </div>`;
+    }
+
+    html += `</div>`;
+
+    if (dim.championGuidance) {
+      html += `<div class="dim-champion">
+        <div class="dim-champion-label">Where to find this data</div>
+        ${escHtml(dim.championGuidance)}
+      </div>`;
+    }
+
+    html += `</div>`;
+  });
+
+  html += `</div></div>`;
+
+  // Gap map
+  if (gapMap.measured || gapMap.assumed || gapMap.unknown) {
+    const measured = gapMap.measured || [];
+    const assumed = gapMap.assumed || [];
+    const unknown = gapMap.unknown || [];
+
+    html += `<div class="gap-map">
+      <div class="gap-map-title">Evidence gap map</div>
+      <div class="gap-map-cols">
+        <div class="gap-col measured">
+          <div class="gap-col-label measured">Measured</div>
+          <ul>${measured.length ? measured.map(m => `<li>${escHtml(m)}</li>`).join('') : '<li style="font-style:italic">Nothing formally measured</li>'}</ul>
+        </div>
+        <div class="gap-col assumed">
+          <div class="gap-col-label assumed">Assumed</div>
+          <ul>${assumed.length ? assumed.map(m => `<li>${escHtml(m)}</li>`).join('') : '<li style="font-style:italic">None identified</li>'}</ul>
+        </div>
+        <div class="gap-col unknown">
+          <div class="gap-col-label unknown">Unknown</div>
+          <ul>${unknown.length ? unknown.map(m => `<li>${escHtml(m)}</li>`).join('') : '<li style="font-style:italic">None identified</li>'}</ul>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Overall narrative
+  if (report.overallNarrative) {
+    html += `<div class="overall-narrative">
+      <div class="overall-narrative-label">Overall assessment</div>
+      <div class="overall-narrative-text">${escHtml(report.overallNarrative)}</div>
+    </div>`;
+  }
+
+  // Recommendations or report-only notice
+  if (strategy.recommendationsAvailable && report.recommendations && report.recommendations.length) {
+    html += `<div class="recommendations-section">
+      <div class="rec-title">Recommendations — anchored to organizational strategy</div>
+      <ul class="rec-list">
+        ${report.recommendations.map(r => `<li>${escHtml(r)}</li>`).join('')}
+      </ul>
+    </div>`;
+  } else if (report.reportOnlyStatement) {
+    html += `<div class="report-only-notice">
+      <div class="ron-label">Report only — recommendations not generated</div>
+      <div class="ron-text">${escHtml(report.reportOnlyStatement)}</div>
+    </div>`;
+  }
+
+  html += `</div>`; // end report-phase
+  document.getElementById('content').innerHTML = html;
+  document.getElementById('content').scrollTop = 0;
+}
+
+// ── RENDER ERROR ──────────────────────────────────────────────────────────────
+
+function renderError(msg) {
+  state.phase = 'error';
+  renderSidebar();
+  document.getElementById('content').innerHTML = `
+    <div class="error-phase">
+      <div class="error-title">Assessment could not be generated</div>
+      <div class="error-msg">${escHtml(msg || 'An unexpected error occurred.')}<br><br>
+        Check that your API key is configured and try again. Your answers have been preserved.
+      </div>
+      <button class="nav-btn-primary" onclick="goToGenerate()">Try again</button>
+      &nbsp;
+      <button class="nav-btn" onclick="goSection(5)">← Back to last section</button>
+    </div>`;
+}
+
+// ── ANSWER MANAGEMENT ─────────────────────────────────────────────────────────
+
+function setAnswer(id, value) {
+  state.answers[id] = value;
+  // Re-render if answer controls showIf logic in current section
+  const section = getSection(state.sectionIdx);
+  if (!section) return;
+  const hasConditional = section.questions.some(q => q.showIf);
+  if (hasConditional) renderSection(state.sectionIdx);
+}
+
+function toggleMulti(id, value, el) {
+  if (!Array.isArray(state.answers[id])) state.answers[id] = [];
+  const arr = state.answers[id];
+  const i = arr.indexOf(value);
+  if (i === -1) {
+    arr.push(value);
+    el.classList.add('checked');
+  } else {
+    arr.splice(i, 1);
+    el.classList.remove('checked');
+  }
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+
+function startAssessment() {
+  renderSection(0);
+}
+
+function goSection(idx) {
+  renderSection(idx);
+}
+
+function goBack(currentIdx) {
+  if (currentIdx === 0) { renderIntro(); return; }
+  renderSection(currentIdx - 1);
+}
+
+function goToGenerate() {
+  generateAssessment();
+}
+
+function startOver() {
+  state.answers = {};
+  state.report = null;
+  state.sectionIdx = 0;
+  renderIntro();
+}
+
+// ── AI GENERATION ─────────────────────────────────────────────────────────────
+
+async function generateAssessment() {
+  renderGenerating();
+
+  const systemPrompt = buildSystemPrompt();
+  const userPrompt = buildUserPrompt();
+
+  try {
+    const res = await fetch('/api/synthesize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2500,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || `API error ${res.status}`);
+    }
+
+    const data = await res.json();
+    const text = data?.content?.[0]?.text;
+    if (!text) throw new Error('No content returned from API');
+
+    const cleaned = text.replace(/```json\n?|```\n?/g, '').trim();
+    const report = JSON.parse(cleaned);
+    state.report = report;
+    renderReport(report);
+
+  } catch (err) {
+    renderError(err.message);
+  }
+}
+
+function buildSystemPrompt() {
+  return `You are a healthcare AI governance advisor synthesizing a structured return-on-investment and value assessment for a clinical AI system. Your output is a formal assessment document used by governance committees, procurement teams, and clinician champions.
+
+You assess value across six dimensions:
+1. CLINICAL OUTCOMES — patient safety, diagnostic accuracy, adverse events avoided, reduction in unnecessary procedures and redundant testing
+2. OPERATIONAL — workflow efficiency, reduced cognitive burden, alert fatigue, throughput, staff satisfaction
+3. FINANCIAL — license and implementation costs; saved labor; avoided downstream costs; reduction in unnecessary procedures and redundant testing; avoided regulatory penalties and compliance costs; avoided staff turnover costs attributable to tool burden or tool relief (this is bidirectional — tools that reduce burden may improve retention; tools that add burden may increase turnover)
+4. EQUITY / HARM — differential performance across patient populations, documented harms, subgroup analysis completeness
+5. COMMUNITY — community health impact, community and patient trust, nonprofit community benefit obligations, relationships with the populations served
+6. NON-MONETARY CURRENCY — clinician buy-in, staff trust, patient trust in the institution, reputational capital, vendor relationships, psychological safety of the care team
+
+CRITICAL RULE — Strategy gate:
+If the organization does NOT have a documented AI strategy (status is "No" or "Unknown"): set "recommendationsAvailable": false. Do NOT generate recommendations. Set "reportOnlyStatement" to a clear explanation that recommendations require a documented organizational AI strategy to anchor against, and that this report should be used as direct input to strategy development and governance review.
+If the organization DOES have a documented AI strategy (status starts with "Yes"): set "recommendationsAvailable": true. Generate recommendations structured explicitly against the stated strategic priorities.
+
+Rating discipline:
+"rating" reflects the strength of the evidence for value claims, not the strength of the claims themselves. A system with strong expected clinical benefits but no local measurement should receive "insufficient" or "weak", not "strong". Be honest.
+
+For each dimension, include "championGuidance" — a brief, specific note on who in a healthcare organization typically holds this data, so a physician champion knows where to go.
+
+Return ONLY a valid JSON object. No markdown fences, no prose outside the JSON.
+
+Required JSON structure:
+{
+  "meta": { "system": string, "pathway": "pre-adoption"|"ongoing", "org": string|null, "generatedDate": string },
+  "strategyStatus": { "hasStrategy": boolean, "strategyNote": string, "recommendationsAvailable": boolean },
+  "dimensions": [
+    {
+      "id": "clinical"|"operational"|"financial"|"equity"|"community"|"nonmonetary",
+      "label": string,
+      "rating": "strong"|"moderate"|"weak"|"insufficient"|"not-assessed"|"not-applicable",
+      "summary": string,
+      "strengths": string[],
+      "gaps": string[],
+      "championGuidance": string
+    }
+  ],
+  "gapMap": { "measured": string[], "assumed": string[], "unknown": string[] },
+  "overallNarrative": string,
+  "recommendations": string[]|null,
+  "reportOnlyStatement": string|null
+}`;
+}
+
+function buildUserPrompt() {
+  const ans = state.answers;
+  const fmt = v => v || 'Not answered';
+  const fmtArr = v => Array.isArray(v) ? (v.length ? v.join(', ') : 'None selected') : (v || 'Not answered');
+
+  return `ASSESSMENT CONTEXT
+System: ${fmt(ans.q_system)}
+Pathway: ${fmt(ans.q_pathway)}
+Use type: ${fmt(ans.q_use_type)}
+Care setting: ${fmt(ans.q_setting)}
+Role of assessor: ${fmt(ans.q_role)}
+Organization: ${ans.q_org || 'Not specified'}
+${ans.q_deployment_duration ? `Deployment duration: ${ans.q_deployment_duration}` : ''}
+
+ORGANIZATIONAL STRATEGY
+Strategy status: ${fmt(ans.q_strategy)}
+${ans.q_strategy_priorities ? `Strategic priorities: ${fmtArr(ans.q_strategy_priorities)}` : ''}
+${ans.q_strategy_criteria ? `Adoption/sunset criteria in strategy: ${ans.q_strategy_criteria}` : ''}
+${ans.q_strategy_describe ? `Criteria description: ${ans.q_strategy_describe}` : ''}
+Value definition status: ${fmt(ans.q_roi_defined)}
+Exit threshold defined: ${fmt(ans.q_exit_threshold)}
+${ans.q_exit_describe ? `Exit threshold description: ${ans.q_exit_describe}` : ''}
+
+CLINICAL & OPERATIONAL VALUE
+Expected clinical value: ${fmtArr(ans.q_clinical_expected)}
+Clinical evidence status: ${fmt(ans.q_clinical_status)}
+Subgroup analysis: ${fmt(ans.q_clinical_subgroup)}
+Expected operational value: ${fmtArr(ans.q_operational_expected)}
+Operational impact assessed: ${fmt(ans.q_operational_status)}
+Alert fatigue assessed: ${fmt(ans.q_alert_fatigue)}
+
+FINANCIAL VALUE
+Approximate annual cost: ${fmt(ans.q_cost)}
+Relevant financial value categories: ${fmtArr(ans.q_financial_categories)}
+Financial analysis conducted: ${fmt(ans.q_financial_analysis)}
+Staff turnover dimension: ${fmt(ans.q_financial_turnover)}
+Regulatory/compliance cost implications: ${fmt(ans.q_financial_regulatory)}
+
+EQUITY, COMMUNITY & NON-MONETARY VALUE
+Equity relevance: ${fmt(ans.q_equity_relevant)}
+${ans.q_equity_populations ? `Relevant populations: ${fmtArr(ans.q_equity_populations)}` : ''}
+Subgroup analysis status: ${fmt(ans.q_equity_analysis)}
+Patient harm tracking: ${fmt(ans.q_harm_tracked)}
+Community benefit obligations: ${fmt(ans.q_community_benefit)}
+Community/patient trust assessed: ${fmt(ans.q_community_trust)}
+Community health impact assessed: ${fmt(ans.q_community_impact)}
+Clinician trust level: ${fmt(ans.q_staff_trust)}
+Patient trust level: ${fmt(ans.q_patient_trust)}
+Reputational posture: ${fmt(ans.q_reputation)}
+${ans.q_non_monetary_note ? `Non-monetary notes: ${ans.q_non_monetary_note}` : ''}
+
+EVIDENCE QUALITY & DECISION CONTEXT
+Overall evidence quality: ${fmt(ans.q_evidence_overall)}
+${ans.q_biggest_unknown ? `Biggest unknown: ${ans.q_biggest_unknown}` : ''}
+Decision-maker: ${fmt(ans.q_decision_maker)}
+Decision timeline: ${fmt(ans.q_timeline)}
+${ans.q_champion_question ? `Champion's core question: ${ans.q_champion_question}` : ''}
+${ans.q_opponents ? `Stakeholder concerns: ${ans.q_opponents}` : ''}
+${ans.q_context ? `Additional context: ${ans.q_context}` : ''}
+
+Generate a comprehensive, honest ROI assessment. Do not overstate value where evidence is weak or absent. For dimensions where data is missing, say so directly — the gap map and honest assessment of what is not known is as valuable as confirmation of what is.`;
+}
+
+// ── REPORT UTILITIES ──────────────────────────────────────────────────────────
+
+function copyReportText() {
+  if (!state.report) return;
+  const r = state.report;
+  let text = `ROI ASSESSMENT — ${r.meta?.system || 'AI System'}\n`;
+  text += `Generated: ${r.meta?.generatedDate || ''}\n\n`;
+  (r.dimensions || []).forEach(d => {
+    text += `${d.label} (${d.rating})\n${d.summary}\n`;
+    if (d.gaps?.length) text += `Gaps: ${d.gaps.join('; ')}\n`;
+    text += '\n';
+  });
+  if (r.overallNarrative) text += `OVERALL ASSESSMENT\n${r.overallNarrative}\n\n`;
+  if (r.recommendations?.length) text += `RECOMMENDATIONS\n${r.recommendations.map((r,i) => `${i+1}. ${r}`).join('\n')}\n`;
+  if (r.reportOnlyStatement) text += `NOTE\n${r.reportOnlyStatement}\n`;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.action-btn:not(.primary)');
+    if (btn) { btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy report text'; }, 2000); }
+  }).catch(() => {});
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderIntro();
+</script>
+</body>
+</html>

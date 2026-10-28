@@ -1,0 +1,25 @@
+{
+  "rewrites": [
+    {
+      "source": "/community-weaving",
+      "destination": "/community-weaving/index.html"
+    },
+    {
+      "source": "/transition",
+      "destination": "/transition/index.html"
+    },
+    {
+      "source": "/roi-assessment",
+      "destination": "/roi-assessment/index.html"
+    },
+    {
+      "source": "/nodes/:id",
+      "destination": "/index.html"
+    }
+  ],
+  "functions": {
+    "api/queue.js": {
+      "maxDuration": 60
+    }
+  }
+}

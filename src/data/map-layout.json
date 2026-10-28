@@ -1,0 +1,178 @@
+{
+ "layout": "arc",
+ "note": "Map positions as percentages of the map area. Every node in nodes.json needs one; the checks enforce it.",
+ "layouts": {
+  "arc": {
+   "norm": {
+    "x": 16,
+    "y": 65
+   },
+   "watcher": {
+    "x": 20,
+    "y": 46
+   },
+   "h1": {
+    "x": 40,
+    "y": 38
+   },
+   "h2": {
+    "x": 42,
+    "y": 62
+   },
+   "h3": {
+    "x": 33,
+    "y": 53
+   },
+   "h4": {
+    "x": 50,
+    "y": 50
+   },
+   "escalation": {
+    "x": 62,
+    "y": 38
+   },
+   "adjudicate": {
+    "x": 72,
+    "y": 48
+   },
+   "threshold_review": {
+    "x": 68,
+    "y": 62
+   },
+   "authority": {
+    "x": 60,
+    "y": 70
+   },
+   "stop": {
+    "x": 80,
+    "y": 60
+   },
+   "override": {
+    "x": 82,
+    "y": 44
+   },
+   "validation": {
+    "x": 74,
+    "y": 76
+   },
+   "commons": {
+    "x": 50,
+    "y": 8
+   },
+   "learning-loop": {
+    "x": 80,
+    "y": 22
+   },
+   "vendor-risk": {
+    "x": 91,
+    "y": 34
+   },
+   "explainability": {
+    "x": 96,
+    "y": 50
+   },
+   "equity": {
+    "x": 95,
+    "y": 66
+   },
+   "contestation": {
+    "x": 88,
+    "y": 80
+   },
+   "accountability": {
+    "x": 64,
+    "y": 90
+   },
+   "forming": {
+    "x": 30,
+    "y": 92
+   }
+  },
+  "squeeze": {
+   "norm": {
+    "x": 16,
+    "y": 65
+   },
+   "watcher": {
+    "x": 20,
+    "y": 46
+   },
+   "h1": {
+    "x": 40,
+    "y": 38
+   },
+   "h2": {
+    "x": 42,
+    "y": 62
+   },
+   "h3": {
+    "x": 33,
+    "y": 53
+   },
+   "h4": {
+    "x": 50,
+    "y": 50
+   },
+   "escalation": {
+    "x": 60,
+    "y": 32
+   },
+   "adjudicate": {
+    "x": 70,
+    "y": 41
+   },
+   "threshold_review": {
+    "x": 71,
+    "y": 58
+   },
+   "authority": {
+    "x": 58,
+    "y": 66
+   },
+   "stop": {
+    "x": 82,
+    "y": 50
+   },
+   "override": {
+    "x": 80,
+    "y": 30
+   },
+   "validation": {
+    "x": 78,
+    "y": 82
+   },
+   "commons": {
+    "x": 50,
+    "y": 8
+   },
+   "learning-loop": {
+    "x": 92,
+    "y": 40
+   },
+   "vendor-risk": {
+    "x": 60,
+    "y": 50
+   },
+   "explainability": {
+    "x": 93,
+    "y": 58
+   },
+   "accountability": {
+    "x": 82,
+    "y": 68
+   },
+   "contestation": {
+    "x": 66,
+    "y": 76
+   },
+   "equity": {
+    "x": 93,
+    "y": 76
+   },
+   "forming": {
+    "x": 48,
+    "y": 90
+   }
+  }
+ }
+}

@@ -1,0 +1,1678 @@
+[
+ {
+  "id": "norm",
+  "loop": "internal",
+  "label": "Normalization Layer",
+  "icon": "⊞",
+  "question": "Is output translatable to a common schema?",
+  "components": [
+   "Structural normalization",
+   "Semantic normalization",
+   "Performance concept taxonomy",
+   "Temporal cycle mapping"
+  ],
+  "artifacts": [
+   "Common schema specification",
+   "Vendor output format registry",
+   "Semantic equivalence definitions"
+  ],
+  "contention": "Who owns and maintains the schema — and how vendor compliance is enforced",
+  "gap": "No adopted cross-vendor schema standard. The one federal model-card requirement for certified EHRs (ONC HTI-1 source attributes) is being removed by HTI-5, finalized Oct 26, 2026; ONC may restore some later. Voluntary templates such as CHAI's Applied Model Card remain (as of Oct 2026).",
+  "mandatory": true,
+  "matrixReady": false,
+  "matrixLabel": null,
+  "matrixUseCases": [],
+  "loopLabel": "Internal Technical Loop",
+  "status": "Contested",
+  "insight": "No cross-vendor schema standard exists. The governance gap here is not technical — it's political.",
+  "frameworks": [],
+  "evidence": [
+   {
+    "title": "FDA GMLP Guiding Principles",
+    "meta": "FDA / Health Canada / MHRA · 2021",
+    "url": "https://www.fda.gov/medical-devices/software-medical-device-samd/good-machine-learning-practice-medical-device-development-guiding-principles"
+   },
+   {
+    "title": "Community Weaving Ep 05: The Shared Mental Model Problem",
+    "meta": "Lindsay LaMere · 2025",
+    "url": "/community_weaving_ep05.pdf"
+   }
+  ],
+  "notes": [],
+  "useCases": {},
+  "keyDocs": [],
+  "mapLabel": "Normalization Layer"
+ },
+ {
+  "id": "watcher",
+  "loop": "internal",
+  "label": "Watcher / Signal Layer",
+  "icon": "◎",
+  "question": "Is it behaving as designed?",
+  "components": [
+   "Signal ingestion",
+   "Threshold evaluation",
+   "State classification",
+   "Routing logic"
+  ],
+  "artifacts": [
+   "Threshold registry",
+   "State classification criteria",
+   "Routing protocol"
+  ],
+  "contention": "What thresholds are appropriate for each use case — and who has authority to set them",
+  "gap": "Cross-model evaluation and monitoring tools now exist, including Epic's open-source Seismometer and orchestration platforms. Many health systems evaluate AI inside the EHR or the vendor's own tools, the system being evaluated (10 of 25 in a 2026 CCM/KLAS study). Monitoring independent of the model vendor is still uncommon (as of Oct 2026).",
+  "mandatory": true,
+  "matrixReady": true,
+  "matrixLabel": "Performance Monitoring & Drift Detection",
+  "matrixUseCases": [
+   "diagnostic",
+   "screening",
+   "monitoring",
+   "triage",
+   "treatment",
+   "admin"
+  ],
+  "loopLabel": "Internal Technical Loop",
+  "status": "Unknown",
+  "insight": "Monitoring should be independent of the vendor whose model it watches, the way a lab doesn't let the instrument manufacturer run its QC. (Commons position)",
+  "frameworks": [],
+  "evidence": [
+   {
+    "title": "FDA Predetermined Change Control Plan",
+    "meta": "FDA · 2024",
+    "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/marketing-submission-recommendations-predetermined-change-control-plan-artificial-intelligence"
+   },
+   {
+    "title": "AI-Enabled Device Software Functions: Lifecycle Management",
+    "meta": "FDA · 2025",
+    "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/artificial-intelligence-enabled-device-software-functions-lifecycle-management-and-marketing"
+   },
+   {
+    "title": "ECG Arrhythmia Detection Governance Demo",
+    "meta": "Lindsay LaMere · 2025",
+    "url": "https://github.com/lindsayguvenc-coder/ecg-governance-demo"
+   }
+  ],
+  "notes": [
+   {
+    "by": "Lindsay LaMere",
+    "when": "Feb 2025",
+    "text": "The monitoring gap that nobody talks about: each vendor monitors their own model's performance. The institution has no independent view. This is like letting the instrument manufacturer run your QC program. It would never pass a CAP inspection. The watcher layer is the institution's independent monitoring infrastructure — it has to exist outside the vendor relationship.",
+    "gem": true,
+    "source": "taxonomy"
+   }
+  ],
+  "useCases": {
+   "diagnostic": {
+    "status": "live",
+    "summary": "Post-deployment performance tracking. Retrospective accuracy vs. real-time drift."
+   },
+   "screening": {
+    "status": "live",
+    "summary": "Population shift detection. Subgroup drift."
+   },
+   "monitoring": {
+    "status": "sparse",
+    "summary": "Monitoring of monitoring tools — mostly conceptual."
+   },
+   "triage": {
+    "status": "sparse",
+    "summary": "Triage accuracy monitoring complicated by outcome attribution."
+   },
+   "treatment": {
+    "status": "sparse",
+    "summary": "Clinical outcome tracking. Long attribution chains."
+   },
+   "admin": {
+    "status": "gap",
+    "summary": "Admin AI monitoring almost undocumented."
+   }
+  },
+  "keyDocs": [
+   "fda-pccp-2024",
+   "fda-lifecycle-2025",
+   "haug-nejm-2023",
+   "apollo-2024",
+   "guvenc-ecg-2025"
+  ],
+  "mapLabel": "Watcher / Signal Layer"
+ },
+ {
+  "id": "h1",
+  "loop": "handoff",
+  "label": "Escalation Gate (H1)",
+  "icon": "↑",
+  "question": "Has an internal signal crossed into human decision territory?",
+  "components": [
+   "Escalate-tier trigger from Watcher",
+   "Required inputs defined",
+   "Response window defined",
+   "Default action if window lapses"
+  ],
+  "artifacts": [
+   "Escalation protocol",
+   "Response window SLA",
+   "Default action registry"
+  ],
+  "contention": "What response window is clinically and operationally appropriate",
+  "gap": "Contracts for clinical AI rarely define an escalation protocol. Lab vendor agreements routinely set incident reporting windows and response times.",
+  "mandatory": true,
+  "matrixReady": true,
+  "matrixLabel": "Escalation Tiers & Routing Logic",
+  "matrixUseCases": [
+   "diagnostic",
+   "screening",
+   "monitoring",
+   "triage",
+   "treatment",
+   "admin"
+  ],
+  "loopLabel": "Handoff Zone",
+  "status": "Unknown",
+  "insight": "Response window design in high-acuity settings must account for cognitive load — the clinical environment itself reduces bandwidth to question the AI.",
+  "frameworks": [],
+  "evidence": [
+   {
+    "title": "Automation Bias and Assistive AI",
+    "meta": "JAMA / Khera et al. · 2023",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/38112824/"
+   },
+   {
+    "title": "Bringing Safety to AI",
+    "meta": "IHI / Lucian Leape Institute · 2024",
+    "url": "https://www.ihi.org/resources/white-papers/bringing-safety-ai-adapting-patient-safety-principles-artificial-intelligence-health-care"
+   },
+   {
+    "title": "Westgard ML Adaptation",
+    "meta": "Lindsay LaMere / Commons · 2025",
+    "url": null
+   }
+  ],
+  "notes": [],
+  "useCases": {
+   "diagnostic": {
+    "status": "live",
+    "summary": "Confidence score → routing tier mapping. When does low-confidence flag human?"
+   },
+   "screening": {
+    "status": "sparse",
+    "summary": "FP/FN asymmetry drives routing logic."
+   },
+   "monitoring": {
+    "status": "live",
+    "summary": "Statistical control limits as escalation triggers. Westgard adapted to ML."
+   },
+   "triage": {
+    "status": "live",
+    "summary": "Time-critical escalation with defined information package."
+   },
+   "treatment": {
+    "status": "gap",
+    "summary": "No clear examples of treatment escalation protocols in deployed systems."
+   },
+   "admin": {
+    "status": "sparse",
+    "summary": "Workflow disruption escalation less studied."
+   }
+  },
+  "keyDocs": [],
+  "mapLabel": "Escalation Gate"
+ },
+ {
+  "id": "h3",
+  "loop": "handoff",
+  "label": "Cold Trigger Intake (H3)",
+  "icon": "⟳",
+  "question": "Has an external event made the current deployment questionable?",
+  "components": [
+   "FDA guidance changes",
+   "Published evidence updates",
+   "Peer institution incidents",
+   "Formal intake process"
+  ],
+  "artifacts": [
+   "External signal monitoring policy",
+   "Evidence review triggers",
+   "Intake submission format"
+  ],
+  "contention": "Who is responsible for monitoring external signals and how frequently",
+  "gap": "Often undesigned. At many institutions, cold triggers have no formal entry point.",
+  "mandatory": false,
+  "matrixReady": false,
+  "matrixLabel": null,
+  "matrixUseCases": [],
+  "loopLabel": "Handoff Zone",
+  "status": "Unknown",
+  "insight": "Cold triggers are frequently missing: external signals such as new evidence, peer incidents, and FDA updates often have no formal path into governance. The Commons position: every program needs a named intake for them.",
+  "frameworks": [],
+  "evidence": [
+   {
+    "title": "AI-Enabled Device Software Functions: Lifecycle Management",
+    "meta": "FDA · 2025",
+    "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/artificial-intelligence-enabled-device-software-functions-lifecycle-management-and-marketing"
+   }
+  ],
+  "notes": [],
+  "useCases": {},
+  "keyDocs": [],
+  "mapLabel": "Cold Trigger Intake"
+ },
+ {
+  "id": "h2",
+  "loop": "handoff",
+  "label": "Threshold Authority (H2)",
+  "icon": "≡",
+  "question": "Has the external loop revised operating parameters for the internal loop?",
+  "components": [
+   "Revised threshold documentation",
+   "Version control",
+   "Authorization record",
+   "Implementation handoff"
+  ],
+  "artifacts": [
+   "Threshold change log",
+   "Authorization matrix",
+   "Versioned threshold registry"
+  ],
+  "contention": "How quickly threshold revisions must be implemented after authorization",
+  "gap": "No versioned threshold registry with rationale exists in current deployments.",
+  "mandatory": true,
+  "matrixReady": true,
+  "matrixLabel": "Authority Matrix & Decision Rights",
+  "matrixUseCases": [
+   "diagnostic",
+   "screening",
+   "monitoring",
+   "triage",
+   "treatment",
+   "admin"
+  ],
+  "loopLabel": "Handoff Zone",
+  "status": "Unknown",
+  "insight": "Authority follows accountability: whoever already owns corrective action in a domain should own AI governance authority there. The CLIA laboratory director model is the closest existing analog. (Commons position)",
+  "frameworks": [],
+  "evidence": [
+   {
+    "title": "FDA Clinical Decision Support Software Guidance",
+    "meta": "FDA · 2022",
+    "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/clinical-decision-support-software"
+   },
+   {
+    "title": "Health AI Partnership Principles",
+    "meta": "HAIP · 2024",
+    "url": "https://healthaipartnership.org"
+   },
+   {
+    "title": "Community Weaving Ep 05: The Shared Mental Model Problem",
+    "meta": "Lindsay LaMere · 2025",
+    "url": "/community_weaving_ep05.pdf"
+   }
+  ],
+  "notes": [
+   {
+    "by": "Lindsay LaMere",
+    "when": "Feb 2025",
+    "text": "The authority problem in clinical AI has a direct analog in laboratory medicine. Under CLIA, the laboratory director holds corrective action authority — full stop, regardless of what the instrument vendor or the hospital administration wants. The principle that works: authority follows existing accountability structures. Whoever already owns corrective action in your governance system should own AI governance authority for that domain.",
+    "gem": true,
+    "source": "taxonomy"
+   },
+   {
+    "by": "Lindsay LaMere",
+    "when": "Feb 2025",
+    "text": "The gap I keep finding: institutions build AI governance committees but don't pre-assign who has Tier 3 (suspend) and Tier 4 (terminate) authority. Everyone agrees those tiers should exist. Nobody wants to put a name on them before something goes wrong. That reluctance is itself a governance failure — and it's the most common one.",
+    "gem": false,
+    "source": "taxonomy"
+   }
+  ],
+  "useCases": {
+   "diagnostic": {
+    "status": "live",
+    "summary": "Who decides routing threshold? FDA 510(k) predicate logic applies."
+   },
+   "screening": {
+    "status": "live",
+    "summary": "Population-level screening authority differs from individual clinical decisions."
+   },
+   "monitoring": {
+    "status": "sparse",
+    "summary": "Ongoing authority for model drift is often unclear post-deployment."
+   },
+   "triage": {
+    "status": "live",
+    "summary": "Time-critical decisions require pre-defined authority chains."
+   },
+   "treatment": {
+    "status": "sparse",
+    "summary": "Prescribing authority cannot be delegated to algorithm."
+   },
+   "admin": {
+    "status": "sparse",
+    "summary": "Workflow AI authority is lower stakes but underdocumented."
+   }
+  },
+  "keyDocs": [
+   "fda-cds-2022",
+   "haip-principles-2024",
+   "ama-ai-policy-2023",
+   "fda-pccp-2024"
+  ],
+  "mapLabel": "Threshold Authority"
+ },
+ {
+  "id": "h4",
+  "loop": "handoff",
+  "label": "Dispute Resolution Return (H4)",
+  "icon": "⊗",
+  "question": "Has adjudication produced a system state change?",
+  "components": [
+   "Finding upheld / modified / withdrawn",
+   "Model status change",
+   "Threshold update if applicable",
+   "Audit record"
+  ],
+  "artifacts": [
+   "Dispute resolution record",
+   "Model status change protocol",
+   "Contract amendment triggers"
+  ],
+  "contention": "What model status changes can be mandated vs. recommended",
+  "gap": "There is rarely a structured path from a resolved dispute back to a system change; disputes often settle through negotiation rather than process.",
+  "mandatory": false,
+  "matrixReady": true,
+  "matrixLabel": "Audit Trails & Documentation",
+  "matrixUseCases": [
+   "diagnostic",
+   "screening",
+   "monitoring",
+   "triage",
+   "treatment",
+   "admin"
+  ],
+  "loopLabel": "Handoff Zone",
+  "status": "Unknown",
+  "insight": "Audit trail requirements for AI decisions are increasingly a regulatory expectation, not just a best practice.",
+  "frameworks": [],
+  "evidence": [
+   {
+    "title": "FDA Transparency for ML-Enabled Medical Devices",
+    "meta": "FDA · 2024",
+    "url": "https://www.fda.gov/media/178693/download"
+   },
+   {
+    "title": "Community Weaving Ep 06: Disagreement as Data",
+    "meta": "Lindsay LaMere · 2025",
+    "url": "/community_weaving_ep06.pdf"
+   }
+  ],
+  "notes": [],
+  "useCases": {
+   "diagnostic": {
+    "status": "live",
+    "summary": "FDA expects documentation of training data lineage."
+   },
+   "screening": {
+    "status": "sparse",
+    "summary": "Screening audit aligns mostly with standard EHR documentation."
+   },
+   "monitoring": {
+    "status": "sparse",
+    "summary": "Monitoring data as audit artifact."
+   },
+   "triage": {
+    "status": "sparse",
+    "summary": "ED triage audit complexity — multiple AI touchpoints."
+   },
+   "treatment": {
+    "status": "gap",
+    "summary": "Treatment recommendation audit: underdeveloped."
+   },
+   "admin": {
+    "status": "gap",
+    "summary": "No standard."
+   }
+  },
+  "keyDocs": [],
+  "mapLabel": "Dispute Resolution Return"
+ },
+ {
+  "id": "escalation",
+  "loop": "external",
+  "label": "Escalation Review",
+  "icon": "↑↑",
+  "question": "Does this signal require a governance decision?",
+  "components": [
+   "Hot trigger review (time-bounded)",
+   "Warm trigger review (scheduled)",
+   "Cold trigger review (evidence-based)",
+   "Initial triage and routing"
+  ],
+  "artifacts": [
+   "Review protocol",
+   "Triage criteria",
+   "Panel composition requirements"
+  ],
+  "contention": "Appropriate panel composition — who must be present for different trigger types",
+  "gap": "No defined review panel composition standard.",
+  "mandatory": true,
+  "matrixReady": false,
+  "matrixLabel": null,
+  "matrixUseCases": [],
+  "loopLabel": "External Human Governance Loop",
+  "status": "Contested",
+  "insight": "Panel composition is often set explicitly, but not always, and ad hoc panels lack legitimacy when decisions are contested. The Commons position: decide composition before the first escalation.",
+  "frameworks": [],
+  "evidence": [
+   {
+    "title": "Bringing Safety to AI",
+    "meta": "IHI / Lucian Leape Institute · 2024",
+    "url": "https://www.ihi.org/resources/white-papers/bringing-safety-ai-adapting-patient-safety-principles-artificial-intelligence-health-care"
+   },
+   {
+    "title": "Governance Mechanisms Index",
+    "meta": "Lindsay LaMere / Commons · 2025",
+    "url": "/governance_mechanisms_index.pdf"
+   }
+  ],
+  "notes": [],
+  "useCases": {},
+  "keyDocs": [],
+  "mapLabel": "Escalation Review"
+ },
+ {
+  "id": "adjudicate",
+  "loop": "external",
+  "label": "Dispute Adjudication",
+  "icon": "⊡",
+  "question": "Is the vendor's counter-evidence sufficient to modify or withdraw the finding?",
+  "components": [
+   "Structured vendor submission format",
+   "Review panel + quorum",
+   "Defined timeline",
+   "Outcome options",
+   "Single appeals path"
+  ],
+  "artifacts": [
+   "Dispute submission format",
+   "Adjudication criteria",
+   "Appeals process"
+  ],
+  "contention": "What constitutes sufficient counter-evidence — and who defines sufficiency",
+  "gap": "Contracts for clinical AI rarely define how disputed findings are adjudicated. The Commons position: sufficiency criteria and a single appeals path belong in the contract.",
+  "mandatory": false,
+  "matrixReady": false,
+  "matrixLabel": null,
+  "matrixUseCases": [],
+  "loopLabel": "External Human Governance Loop",
+  "status": "Unknown",
+  "insight": "Adjudication legitimacy requires pre-defined sufficiency criteria. Without them, the process is a negotiation, not a governance decision.",
+  "frameworks": [],
+  "evidence": [
+   {
+    "title": "Community Weaving Ep 06: Disagreement as Data",
+    "meta": "Lindsay LaMere · 2025",
+    "url": "/community_weaving_ep06.pdf"
+   },
+   {
+    "title": "The Disagreement Unpacker Tool",
+    "meta": "Lindsay LaMere / Commons · 2025",
+    "url": "/transition#disagreement-unpacker"
+   }
+  ],
+  "notes": [],
+  "useCases": {},
+  "keyDocs": [],
+  "mapLabel": "Dispute Adjudication"
+ },
+ {
+  "id": "threshold_review",
+  "loop": "external",
+  "label": "Threshold Review",
+  "icon": "◈",
+  "question": "Are current flip conditions still appropriate?",
+  "components": [
+   "Annual scheduled review",
+   "Event-triggered review",
+   "Evidence-triggered review",
+   "Authorization and documentation"
+  ],
+  "artifacts": [
+   "Review schedule",
+   "Evidence evaluation criteria",
+   "Authorization record format"
+  ],
+  "contention": "How to handle threshold changes mid-deployment without operational disruption",
+  "gap": "Threshold review is often ad hoc.",
+  "mandatory": true,
+  "matrixReady": false,
+  "matrixLabel": null,
+  "matrixUseCases": [],
+  "loopLabel": "External Human Governance Loop",
+  "status": "Unknown",
+  "insight": "Threshold review happens, but rarely in a way that can change anything. The Commons position: it should be scheduled, authorized, and able to change the threshold.",
+  "frameworks": [],
+  "evidence": [
+   {
+    "title": "FDA Predetermined Change Control Plan",
+    "meta": "FDA · 2024",
+    "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/marketing-submission-recommendations-predetermined-change-control-plan-artificial-intelligence"
+   }
+  ],
+  "notes": [],
+  "useCases": {},
+  "keyDocs": [],
+  "mapLabel": "Threshold Review"
+ },
+ {
+  "id": "authority",
+  "loop": "external",
+  "label": "Authority Tiers",
+  "icon": "⊙",
+  "question": "What action is this governance body authorized to take?",
+  "components": [
+   "Tier 1: Advisory",
+   "Tier 2: Conditional",
+   "Tier 3: Suspend (requires fallback)",
+   "Tier 4: Terminate (e.g., CMO + CIO)"
+  ],
+  "artifacts": [
+   "Authority matrix",
+   "Fallback protocol (prerequisite)",
+   "Termination protocol"
+  ],
+  "contention": "Tier 3 and 4 authority is politically costly to assign: whoever holds it owns the consequences of stopping, and of not stopping.",
+  "gap": "Hard stop authority is not always formally assigned, and fallback protocols don't always exist at deployment. The Commons position: both must be in place before go-live.",
+  "mandatory": true,
+  "matrixReady": false,
+  "matrixLabel": null,
+  "matrixUseCases": [],
+  "loopLabel": "External Human Governance Loop",
+  "status": "Contested",
+  "insight": "Authority follows accountability: whoever already owns corrective action in a domain should own AI governance authority there. The CLIA laboratory director model is the closest existing analog. (Commons position)",
+  "frameworks": [],
+  "evidence": [
+   {
+    "title": "Health AI Partnership Principles",
+    "meta": "HAIP · 2024",
+    "url": "https://healthaipartnership.org"
+   },
+   {
+    "title": "AMA Principles for Augmented Intelligence",
+    "meta": "AMA · 2023",
+    "url": "https://www.ama-assn.org/practice-management/digital/ama-principles-augmented-intelligence-medicine"
+   },
+   {
+    "title": "Governance Mechanisms Index",
+    "meta": "Lindsay LaMere / Commons · 2025",
+    "url": "/governance_mechanisms_index.pdf"
+   }
+  ],
+  "notes": [
+   {
+    "text": "The gap I keep finding: institutions build AI governance committees but don't pre-assign who has Tier 3 (suspend) and Tier 4 (terminate) authority. Everyone agrees those tiers should exist. Nobody wants to put a name on them before something goes wrong. That reluctance is itself a governance failure — and it's the most common one.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   }
+  ],
+  "useCases": {},
+  "keyDocs": [],
+  "mapLabel": "Authority Tiers"
+ },
+ {
+  "id": "stop",
+  "loop": "external",
+  "label": "Stop Mechanisms",
+  "icon": "⊗",
+  "question": "What conditions mandate halting the AI system?",
+  "components": [
+   "Hard stop triggers (automated)",
+   "Soft stop triggers (human-initiated)",
+   "Kill switch authority chain",
+   "Fallback protocol activation"
+  ],
+  "artifacts": [
+   "Stop condition registry",
+   "Kill switch authority matrix",
+   "Fallback protocol"
+  ],
+  "contention": "Debate: fixed vs. dynamic confidence thresholds for automated stops",
+  "gap": "Stop triggers and fallback protocols are often untested until they're needed. The Commons position: test both before go-live and on a schedule.",
+  "mandatory": true,
+  "matrixReady": true,
+  "matrixLabel": "Stop Mechanisms & Automated Triggers",
+  "matrixUseCases": [
+   "diagnostic",
+   "screening",
+   "monitoring",
+   "triage",
+   "treatment",
+   "admin"
+  ],
+  "loopLabel": "External Human Governance Loop",
+  "status": "Contested",
+  "insight": "Statistical process control, the method behind lab QC rules like Westgard's, has been proposed for monitoring clinical AI (Feng et al., npj Digital Medicine, 2022). The Commons' ECG governance demo illustrates Westgard-adapted stop thresholds on a public dataset: retrospective, MIMIC-IV, not deployed. Fixed versus adaptive thresholds remain an open question.",
+  "frameworks": [],
+  "evidence": [
+   {
+    "title": "FDA Predetermined Change Control Plan",
+    "meta": "FDA · 2024",
+    "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/marketing-submission-recommendations-predetermined-change-control-plan-artificial-intelligence"
+   },
+   {
+    "title": "ECG Arrhythmia Detection Governance Demo",
+    "meta": "Lindsay LaMere · 2025",
+    "url": "https://github.com/lindsayguvenc-coder/ecg-governance-demo"
+   },
+   {
+    "title": "Westgard ML Adaptation",
+    "meta": "Lindsay LaMere / Commons · 2025",
+    "url": null
+   },
+   {
+    "title": "Bringing Safety to AI",
+    "meta": "IHI · 2024",
+    "url": "https://www.ihi.org/resources/white-papers/bringing-safety-ai-adapting-patient-safety-principles-artificial-intelligence-health-care"
+   }
+  ],
+  "notes": [
+   {
+    "by": "Lindsay LaMere",
+    "when": "Mar 2025",
+    "text": "The QC threshold problem in clinical AI is structurally identical to Westgard multi-rule design. The 2-of-3s rule maps directly to: if 2 of 3 consecutive inference confidence scores fall below threshold, escalate. The 4-1s maps to sustained drift. We don't need new frameworks — we need to translate the ones that already work.",
+    "gem": true,
+    "source": "taxonomy"
+   },
+   {
+    "by": "Lindsay LaMere",
+    "when": "Mar 2025",
+    "text": "Key unresolved: Westgard rules assume calibrated, comparable measurements from a stable analytic process. ML confidence scores are not that — they're model-specific, not cross-vendor comparable, and can shift with data distribution. The adaptation works conceptually but requires per-deployment calibration first. That calibration step is currently missing from every deployment checklist I've seen.",
+    "gem": false,
+    "source": "taxonomy"
+   },
+   {
+    "by": "Lindsay LaMere",
+    "when": "Mar 2025",
+    "text": "From the ECG governance demo: the hard stop fired twice in retrospective MIMIC-IV validation — both on data quality failures (missing lead configurations), not model confidence failures. Implication: data validation stops may be more practically important than confidence threshold stops, at least for diagnostic aid tools. Worth separating these in the stop condition registry.",
+    "gem": true,
+    "source": "taxonomy"
+   }
+  ],
+  "useCases": {
+   "diagnostic": {
+    "status": "live",
+    "summary": "Hard stop conditions: data quality failure, confidence below threshold, EHR mismatch."
+   },
+   "screening": {
+    "status": "live",
+    "summary": "Population-level stops vs. individual result suppression."
+   },
+   "monitoring": {
+    "status": "live",
+    "summary": "Automated drift detection triggers."
+   },
+   "triage": {
+    "status": "sparse",
+    "summary": "Stop in time-critical context is itself a patient safety event."
+   },
+   "treatment": {
+    "status": "gap",
+    "summary": "Critical gap. No agreed framework for treatment recommendation stops."
+   },
+   "admin": {
+    "status": "sparse",
+    "summary": "Ops AI stops create workflow disruption."
+   }
+  },
+  "keyDocs": [
+   "fda-pccp-2024",
+   "fda-gmlp-2021",
+   "guvenc-ecg-2025",
+   "westgard-ml-adaptation",
+   "ihi-leape-2024"
+  ],
+  "mapLabel": "Stop Mechanisms"
+ },
+ {
+  "id": "override",
+  "loop": "external",
+  "label": "Human Override Protocols",
+  "icon": "⟳",
+  "question": "How are clinician overrides of AI recommendations logged, reviewed, and fed back?",
+  "components": [
+   "Override logging (automatic)",
+   "Override rate as KPI",
+   "Quarterly override review",
+   "Feedback pathway to model team"
+  ],
+  "artifacts": [
+   "Override protocol",
+   "Override rate thresholds",
+   "Feedback loop specification"
+  ],
+  "contention": "Too-easy override → automation complacency. Too-hard → alarm fatigue workarounds.",
+  "gap": "No standard for what override rate is healthy vs. a signal of system failure.",
+  "mandatory": true,
+  "matrixReady": true,
+  "matrixLabel": "Human Oversight & Override Protocols",
+  "matrixUseCases": [
+   "diagnostic",
+   "screening",
+   "monitoring",
+   "triage",
+   "treatment",
+   "admin"
+  ],
+  "loopLabel": "External Human Governance Loop",
+  "questionStatic": "How are clinician overrides logged, reviewed, and fed back?",
+  "status": "Unknown",
+  "insight": "Automation bias is a predictable system behavior, not a user failure. Override design must account for both over-reliance and under-reliance failure modes.",
+  "frameworks": [],
+  "evidence": [
+   {
+    "title": "Automation Bias and Assistive AI",
+    "meta": "JAMA / Khera et al. · 2023",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/38112824/"
+   },
+   {
+    "title": "Automation Bias: A Systematic Review",
+    "meta": "JAMIA / Goddard et al. · 2011",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3240751/"
+   },
+   {
+    "title": "AMA Principles for Augmented Intelligence",
+    "meta": "AMA · 2023",
+    "url": "https://www.ama-assn.org/practice-management/digital/ama-principles-augmented-intelligence-medicine"
+   }
+  ],
+  "notes": [
+   {
+    "by": "Lindsay LaMere",
+    "when": "Jan 2025",
+    "text": "Khera et al (JAMA 2023) frames this well: automation bias errors are compounded by time pressure. This means override design in high-acuity settings (ED triage, ICU monitoring) has to account for the fact that the clinical environment itself reduces the cognitive bandwidth available to question the AI. Override needs to be nearly frictionless in those contexts — the governance cost shifts to the review cycle, not the point of care.",
+    "gem": true,
+    "source": "taxonomy"
+   },
+   {
+    "text": "Automation bias errors are compounded by time pressure. Override design in high-acuity settings has to account for the fact that the clinical environment itself reduces the cognitive bandwidth available to question the AI.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   }
+  ],
+  "useCases": {
+   "diagnostic": {
+    "status": "live",
+    "summary": "Clinician override of algorithmic recommendation. Logged? Reviewed? Fed back?"
+   },
+   "screening": {
+    "status": "sparse",
+    "summary": "Override logic differs when screening is async vs. real-time."
+   },
+   "monitoring": {
+    "status": "sparse",
+    "summary": "Override of automated monitoring alerts."
+   },
+   "triage": {
+    "status": "live",
+    "summary": "Override in time-critical context. Documentation burden vs. speed of care."
+   },
+   "treatment": {
+    "status": "sparse",
+    "summary": "Highly contested. Most active area of governance debate."
+   },
+   "admin": {
+    "status": "gap",
+    "summary": "Admin override tracking largely absent."
+   }
+  },
+  "keyDocs": [
+   "khera-jama-2023",
+   "goddard-jamia-2011",
+   "ama-ai-policy-2023"
+  ],
+  "mapLabel": "Human Override"
+ },
+ {
+  "id": "validation",
+  "loop": "external",
+  "label": "Deployment Readiness & Validation",
+  "icon": "✓",
+  "question": "Has this AI system met the bar for clinical deployment?",
+  "components": [
+   "Clinical validation",
+   "Analytical validation",
+   "EHR integration testing",
+   "FDA clearance pathway",
+   "Training-serving skew check"
+  ],
+  "artifacts": [
+   "Validation protocol",
+   "Clinical evidence summary",
+   "FDA submission record",
+   "Go/no-go criteria"
+  ],
+  "contention": "RCT vs. real-world evidence as validation standard — no consensus",
+  "gap": "No widely adopted US validation framework built for administrative AI; general frameworks such as the NIST AI RMF apply but aren't specific to it.",
+  "mandatory": true,
+  "matrixReady": true,
+  "matrixLabel": "Deployment Readiness & Validation",
+  "matrixUseCases": [
+   "diagnostic",
+   "screening",
+   "monitoring",
+   "triage",
+   "treatment",
+   "admin"
+  ],
+  "loopLabel": "External Human Governance Loop",
+  "status": "Unknown",
+  "insight": "Retrospective accuracy does not predict post-deployment performance; training-serving skew is a key validation gap. Monitoring expectations scale with regulatory status: recommended in FDA's still-draft lifecycle guidance for AI devices, committed when a developer files a change control plan, and limited to voluntary guidance (Joint Commission and CHAI, 2025) for exempt clinical decision support and administrative AI (as of Oct 2026). The Commons position: risk-based monitoring, like a lab's IQCP, should apply to all of them.",
+  "frameworks": [],
+  "evidence": [
+   {
+    "title": "AI-Enabled Device Software Functions: Lifecycle Management",
+    "meta": "FDA · 2025",
+    "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/artificial-intelligence-enabled-device-software-functions-lifecycle-management-and-marketing"
+   },
+   {
+    "title": "FDA GMLP Guiding Principles",
+    "meta": "FDA / Health Canada / MHRA · 2021",
+    "url": "https://www.fda.gov/medical-devices/software-medical-device-samd/good-machine-learning-practice-medical-device-development-guiding-principles"
+   },
+   {
+    "title": "Clinical AI in Medicine 2023",
+    "meta": "NEJM / Haug & Drazen · 2023",
+    "url": "https://www.nejm.org/doi/10.1056/NEJMra2302038"
+   }
+  ],
+  "notes": [],
+  "useCases": {
+   "diagnostic": {
+    "status": "live",
+    "summary": "Clinical + analytical validation, EHR integration testing, FDA clearance."
+   },
+   "screening": {
+    "status": "live",
+    "summary": "Population representativeness. Training-serving skew."
+   },
+   "monitoring": {
+    "status": "sparse",
+    "summary": "Validation of monitoring infrastructure itself."
+   },
+   "triage": {
+    "status": "live",
+    "summary": "Prospective vs. retrospective validation for triage tools."
+   },
+   "treatment": {
+    "status": "sparse",
+    "summary": "RCT vs. real-world evidence debate."
+   },
+   "admin": {
+    "status": "sparse",
+    "summary": "Admin AI validation: no standard framework."
+   }
+  },
+  "keyDocs": [
+   "fda-lifecycle-2025",
+   "fda-gmlp-2021",
+   "fda-transparency-2024",
+   "fda-pccp-2024"
+  ],
+  "mapLabel": "Deployment Readiness"
+ },
+ {
+  "id": "learning-loop",
+  "loop": "external",
+  "label": "Learning Loop",
+  "icon": "↺",
+  "question": "Is there a structured mechanism for governance activity to feed back into governance architecture?",
+  "components": [
+   "After-action review cadence",
+   "Process quality capture (not just outcome)",
+   "Learning provenance and dating",
+   "Architecture update protocol",
+   "Learning retirement criteria"
+  ],
+  "artifacts": [
+   "After-action review record",
+   "Signal learning report",
+   "Decision pattern analysis",
+   "Architecture review findings",
+   "Governance update log"
+  ],
+  "contention": "Learning requires acknowledging failure, and governance systems that cannot admit error cannot learn from it. Who owns the learning function is also contested: if every node learns independently, you get local optimization without global coordination; if learning is centralized, it bottlenecks.",
+  "gap": "No standard mechanism for governance learning in clinical AI frameworks. Governance decisions are logged but seldom analyzed for patterns, and process quality (was the decision sound, not just did it work) is rarely captured. The Commons currently has no structured architecture for updating itself based on what it has observed.",
+  "mandatory": true,
+  "matrixReady": false,
+  "matrixLabel": null,
+  "matrixUseCases": [],
+  "loopLabel": "External Human Governance Loop",
+  "status": "Unknown",
+  "insight": null,
+  "callouts": [
+   {
+    "kind": "dq",
+    "title": "Decision quality ≠ outcome quality",
+    "text": "A learning loop that incorporates only outcome data will optimize for governance decisions that happened to produce good results — not decisions that were soundly reasoned. A correct governance decision can produce a bad outcome (incomplete information, downstream factors outside governance control). A flawed decision can produce a good outcome by luck. Learning must capture process quality, not just outcomes, or the governance system learns to replicate whatever worked rather than whatever was right."
+   }
+  ],
+  "frameworks": [
+   {
+    "title": "Three Learning Categories",
+    "items": [
+     {
+      "label": "Signal Learning",
+      "sublabel": "Feeds into: Watcher, Threshold Review, Stop Mechanisms",
+      "desc": "Learning from what the monitoring system observed. When did thresholds fire correctly? When did they miss failures? When did they false-alarm? Pattern analysis of signal history updates the calibration of the internal technical loop — not just the thresholds themselves, but the design of what gets watched and how."
+     },
+     {
+      "label": "Decision Learning",
+      "sublabel": "Feeds into: Override Protocols, Authority Tiers, Escalation Review",
+      "desc": "Learning from governance decisions made. Are override decisions clustering in one direction for a specific model or context? Are authority tier invocations hitting the same bottlenecks repeatedly? Are adjudication outcomes revealing systematic patterns in vendor dispute behavior? Decision learning updates governance design, not just parameters."
+     },
+     {
+      "label": "Architecture Learning",
+      "sublabel": "Feeds into: Governance Commons, Accountability, all nodes",
+      "desc": "Learning from the governance structure itself. Are certain nodes triggering frequently while others never fire? Are accountability assignments holding up or silently shifting? Are structural holes appearing where none were mapped? Architecture learning is the scheduled end-to-end review that asks whether the governance infrastructure remains fit for the current environment — not whether the AI system is performing, but whether the governance of it is."
+     }
+    ]
+   }
+  ],
+  "evidence": [
+   {
+    "title": "Trajectory-Informed Memory Generation for Self-Improving Agent Systems",
+    "meta": "Fang et al. · IBM Research · 2026 — four outcome types as learnable signal; provenance tracking; decision quality vs. outcome quality",
+    "url": "https://arxiv.org/abs/2603.10600"
+   },
+   {
+    "title": "AI Risk Management Framework (AI RMF 1.0)",
+    "meta": "NIST · 2023 — MANAGE 4.1: post-deployment feedback capture, appeal and override, change management",
+    "url": "https://doi.org/10.6028/NIST.AI.100-1"
+   },
+   {
+    "title": "The Hot Mess of AI: Misalignment, Scale, and Task Complexity",
+    "meta": "Hägele et al. · ICLR 2026 — stop triggers need upstream signals; learning causal patterns requires trajectory analysis",
+    "url": "https://arxiv.org/abs/2601.23045"
+   },
+   {
+    "title": "How Collective Intelligence Could Soon Reshape Medical Decision-Making",
+    "meta": "Dorn · Forbes · 2026 — aggregation rules need periodic review; governance rules themselves require learning loops",
+    "url": "https://www.forbes.com/sites/spencerdorn/2026/03/12/how-collective-intelligence-could-soon-reshape-medical-decision-making/"
+   }
+  ],
+  "notes": [
+   {
+    "text": "A governance system that cannot learn from its own activity is a static artifact in a dynamic environment. Clinical AI contexts change continuously: patient populations shift, models drift, evidence updates, staff turns over, regulations evolve. Governance architecture that was appropriate at deployment will not be appropriate at year three without a structured mechanism to update itself. Without a learning loop, governance ossifies at the moment it was built — which is precisely the moment it knew the least.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   },
+   {
+    "text": "The after-action gap: most governance events generate records but not learning. An override pattern showing clinicians consistently overriding a specific model recommendation in a specific context is a governance signal that something needs to change — in the model, the threshold, the training, or the deployment scope. Without a structured review cadence, that pattern lives in the logs indefinitely and never reaches the governance layer. Observation without reflection is surveillance, not learning.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   },
+   {
+    "text": "Architecture-level learning needs a scheduled home. An end-to-end governance review — not reviewing the AI system, but reviewing the governance of it — is the most important learning activity most institutions never do. It asks: do our nodes still match our actual governance process? Are our accountability assignments still accurate after the reorg? Are the gaps we mapped last year still gaps, or have they been filled? Treat it like a CLIA inspection that the institution runs on itself, on a schedule, before a regulator has to.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   }
+  ],
+  "useCases": {},
+  "keyDocs": [],
+  "mapLabel": "Learning Loop"
+ },
+ {
+  "id": "vendor-risk",
+  "loop": "external",
+  "label": "Vendor & Third-Party Risk",
+  "icon": "⋈",
+  "question": "Is the vendor relationship structured to support the governance obligations this institution has accepted?",
+  "components": [
+   "Pre-contract governance capability assessment",
+   "Governance rights clause checklist",
+   "Ongoing vendor obligation monitoring",
+   "Safety claim verification protocol",
+   "Dependency risk assessment",
+   "End-of-life transition plan"
+  ],
+  "artifacts": [
+   "Vendor governance capability assessment",
+   "Governance rights clause checklist",
+   "Vendor obligation monitoring schedule",
+   "Dependency risk score",
+   "Transition plan"
+  ],
+  "contention": "Small and mid-size institutions lack leverage to demand governance-grade contracts. What a contract grants and what an institution can practically exercise are different things, and rights that are never exercised don't constrain anyone. Where governance access ends and IP protection begins is genuinely contested.",
+  "gap": "No widely adopted template for governance-grade AI procurement contracts. Contracts for clinical AI often omit what lab vendor agreements routinely include: audit rights, disaggregated performance data, stop provisions, change notification. The Commons offers one: Buy AI Like Reagents (lindsayguvenc-coder.github.io/lab-rules-map/vendor-contracts). The Commons position: negotiate governance rights before signing, while leverage exists.",
+  "mandatory": true,
+  "matrixReady": false,
+  "matrixLabel": null,
+  "matrixUseCases": [],
+  "loopLabel": "External Human Governance Loop",
+  "status": "Unknown",
+  "insight": null,
+  "callouts": [
+   {
+    "kind": "scope",
+    "title": "Scope — what this node covers",
+    "text": "Governance of the vendor relationship itself: pre-contract assessment, contract structure, ongoing obligation monitoring, and transition. Distinct from adjudication (reactive dispute resolution), cold trigger intake (external market signals), normalization (output schema compliance), and watcher (behavioral monitoring of deployed systems)."
+   }
+  ],
+  "frameworks": [
+   {
+    "title": "Three Vendor Risk Categories",
+    "items": [
+     {
+      "label": "Capability Risk",
+      "sublabel": null,
+      "desc": "The vendor lacks the internal governance infrastructure to support the institution's obligations. No safety team, no disaggregated monitoring, no documentation practices. The institution cannot govern something the vendor has not built infrastructure to support — and cannot discover this gap without asking before signing."
+     },
+     {
+      "label": "Incentive Risk",
+      "sublabel": null,
+      "desc": "The vendor's commercial incentives are structurally misaligned with the institution's governance obligations. Deployment timelines, revenue targets, and competitive pressure create systematic incentive to underinvest in safety, narrow audit scope, and sign off early. This is not vendor malice — it is market structure."
+     },
+     {
+      "label": "Dependency Risk",
+      "sublabel": null,
+      "desc": "The institution has become so operationally embedded with the vendor that governance rights cannot be exercised in practice. Exit is impractical; the vendor knows it; contractual rights that technically exist become unenforceable because the cost of invoking them exceeds the cost of tolerating the problem."
+     }
+    ]
+   }
+  ],
+  "evidence": [
+   {
+    "title": "AI Risk Management Framework (AI RMF 1.0)",
+    "meta": "NIST · 2023 — GOVERN function: third-party risk explicitly required; residual risk disclosure to downstream acquirers",
+    "url": "https://doi.org/10.6028/NIST.AI.100-1"
+   },
+   {
+    "title": "Frontier AI Auditing: Toward Rigorous Third-Party Assessment",
+    "meta": "Brundage et al. · 2026 — adverse selection; commercial pressure; organizational-level scope",
+    "url": "https://arxiv.org/abs/2601.11699"
+   },
+   {
+    "title": "Algorithmic Systems in Public Administrations",
+    "meta": "Smuha · Cambridge Handbook · 2025 — transfer of public power to private actors; institution remains accountable",
+    "url": "https://doi.org/10.1017/9781009367783"
+   },
+   {
+    "title": "Health AI Partnership Principles",
+    "meta": "HAIP · 2024",
+    "url": "https://healthaipartnership.org"
+   }
+  ],
+  "notes": [
+   {
+    "text": "You cannot govern something your contract prevents you from governing. The most common vendor risk failure is not a vendor that actively resists oversight — it is an institution that never secured the rights it needs. Audit access, disaggregated performance data, model change notification, stop mechanism acknowledgment, and exit conditions must be in the contract before deployment. After the relationship starts, negotiating leverage is gone and the vendor's incentive to concede is zero.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   },
+   {
+    "text": "Capability risk is structural, not adversarial. Many clinical AI vendors — particularly startups — have not built mature safety infrastructure. They are not hiding it; they genuinely haven't prioritized it. An institution that procures a clinical AI tool from a vendor without a safety team has implicitly accepted that safety governance is entirely its own responsibility. That must be a named decision made at procurement, not a reality discovered after the system is embedded in clinical workflow.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   },
+   {
+    "text": "Dependency risk compounds silently. Each year a vendor is embedded in clinical workflows, the institution's practical ability to exit decreases — and both parties know it. By year three, a vendor that was originally eager to accommodate governance requests has a structural incentive not to. Governance rights that exist on paper become unenforceable when exit cost exceeds the cost of tolerating non-compliance. Dependency risk must be assessed at procurement and revisited annually, before it becomes acute.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   }
+  ],
+  "useCases": {},
+  "keyDocs": [],
+  "mapLabel": "Vendor Risk"
+ },
+ {
+  "id": "explainability",
+  "loop": "external",
+  "label": "Explainability",
+  "icon": "⊛",
+  "question": "Is the level of explainability sufficient for the oversight being asked of the reviewer?",
+  "components": [
+   "Explainability level specification",
+   "Audience mapping",
+   "XAI method validation",
+   "Override support adequacy check"
+  ],
+  "artifacts": [
+   "Explainability level specification",
+   "XAI method validation record",
+   "Audience-specific explanation artifacts",
+   "Override support adequacy assessment"
+  ],
+  "contention": "Whether high-performing clinical models must be opaque is itself contested: interpretable models often match black boxes on structured data, and post-hoc explanations of black boxes may not reflect how they actually decide. The live question is what explainability is for, and for whom: clinician trust, patient understanding, error detection, or audit. For now, rigorous validation carries the weight alongside whatever explanation is available. As explainability matures as a field, this node grows with it.",
+  "gap": "No standard for what sufficient explainability means in clinical AI. Required level almost never specified pre-deployment. Post-hoc XAI methods (LIME, SHAP) vary in reliability and are rarely validated against the model they claim to explain.",
+  "mandatory": true,
+  "matrixReady": false,
+  "matrixLabel": null,
+  "matrixUseCases": [],
+  "loopLabel": "External Human Governance Loop",
+  "status": "Contested",
+  "insight": null,
+  "callouts": [
+   {
+    "kind": "transparency",
+    "title": "Distinction from Transparency",
+    "text": "Transparency is a systemic property — the openness of the governance architecture to stakeholders. It is a dimension threaded through all nodes, not a process step. Explainability is a specific governance checkpoint: does this reviewer have sufficient understanding to exercise the oversight being asked of them? Transparency is about access to information; explainability is about whether that information is comprehensible enough to act on."
+   }
+  ],
+  "frameworks": [
+   {
+    "title": "Three Explainability Levels",
+    "items": [
+     {
+      "label": "Mechanism Explainability",
+      "sublabel": "Audience: auditors, validators, developers",
+      "desc": "How did the model produce this class of output? Covers feature importance, attention weights, and the internal logic structure. Required for audit, debugging, and validation. Does not tell a clinician what to do with a specific result."
+     },
+     {
+      "label": "Decision Explainability",
+      "sublabel": "Audience: clinicians exercising override authority",
+      "desc": "Why did the model flag this patient, result, or case? Covers the specific inputs and their relative contributions to this individual output. Required for meaningful override authority — a clinician cannot make an informed decision to override what they cannot understand."
+     },
+     {
+      "label": "Context Interpretability",
+      "sublabel": "Audience: clinicians acting on the output; patients affected by the decision",
+      "desc": "What does this output mean for clinical action? Covers confidence bounds, known population limitations, cases the model handles poorly, and what the clinician should do with this information. A model can be technically explainable while remaining clinically uninterpretable — the features don't map to anything actionable."
+     }
+    ]
+   }
+  ],
+  "evidence": [
+   {
+    "title": "AI Risk Management Framework (AI RMF 1.0)",
+    "meta": "NIST · 2023 — Explainable & Interpretable as distinct trustworthiness characteristic",
+    "url": "https://doi.org/10.6028/NIST.AI.100-1"
+   },
+   {
+    "title": "The Hot Mess of AI: Misalignment, Scale, and Task Complexity",
+    "meta": "Hägele et al. · ICLR 2026 — incoherent failures harder to explain; override boundary problem",
+    "url": "https://arxiv.org/abs/2601.23045"
+   },
+   {
+    "title": "FDA Clinical Decision Support Software Guidance",
+    "meta": "FDA · 2022",
+    "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/clinical-decision-support-software"
+   },
+   {
+    "title": "Algorithmic Systems in Public Administrations",
+    "meta": "Smuha · Cambridge Handbook · 2025 — Idaho: unconstitutionality grounded in opacity",
+    "url": "https://doi.org/10.1017/9781009367783"
+   }
+  ],
+  "notes": [
+   {
+    "text": "The level mismatch is where explainability requirements break down in practice. Auditors want mechanism explainability — how does this model work? Clinicians need decision explainability — why did it flag this patient? Patients are owed context interpretability — what does this mean for my care? All three get called \"explainability,\" but they require different artifacts and different governance architecture. Specifying \"the system must be explainable\" without specifying level, audience, and standard is not a requirement — it is a placeholder.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   },
+   {
+    "text": "Post-hoc XAI methods (LIME, SHAP, GradCAM) are reconstructions, not transcripts. They produce a simplified approximation of what the model might have been doing — not a record of what it actually did. For high-complexity models, the approximation quality can be poor: the explanation is locally faithful but globally misleading. Governance frameworks that accept XAI outputs as proof of explainability without validating the approximation are accepting theater. The explanation needs to be validated against the model it claims to explain.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   },
+   {
+    "text": "The override boundary problem from Hägele et al.: the harder the clinical task, the more incoherent the model's failure mode — and the harder it is for a human reviewer to recognize that override is warranted. Explainability requirements should therefore be highest for the most complex tasks, not treated as uniform across use cases. A governance framework that applies the same explainability standard to a sepsis prediction model and an appointment scheduling tool has not thought about this.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   }
+  ],
+  "useCases": {},
+  "keyDocs": [],
+  "mapLabel": "Explainability"
+ },
+ {
+  "id": "contestation",
+  "loop": "external",
+  "label": "Contestation & Redress",
+  "icon": "⊲",
+  "question": "Is there a structured pathway for affected parties to challenge AI-influenced decisions, and do remedies exist?",
+  "components": [
+   "Named contestation pathway",
+   "Scope definition",
+   "Review panel composition",
+   "Documentation preservation requirement",
+   "Remedy menu",
+   "Feedback loop to governance"
+  ],
+  "artifacts": [
+   "Contestation pathway specification",
+   "Documentation preservation policy",
+   "Remedy register",
+   "Challenge response protocol"
+  ],
+  "contention": "In complex clinical environments, AI is one input among many — attribution is contested, and determining what the AI contributed to a harmful outcome is unresolved in most frameworks",
+  "gap": "No structured contestation pathway exists in standard clinical AI governance. General patient grievance processes have no architecture for AI-specific decisions. Default remedy is litigation — years-delayed and inaccessible.",
+  "mandatory": true,
+  "matrixReady": false,
+  "matrixLabel": null,
+  "matrixUseCases": [],
+  "loopLabel": "External Human Governance Loop",
+  "status": "Unknown",
+  "insight": null,
+  "callouts": [
+   {
+    "kind": "adjudicate",
+    "title": "Distinction from Adjudication",
+    "text": "Adjudication (node: adjudicate) handles vendor disputes — a vendor challenging a governance finding about their system's performance. Contestation & Redress handles challenges from affected parties — patients, clinicians, or communities challenging a decision made about or affecting them. Different standing, different evidence standards, different remedies."
+   }
+  ],
+  "frameworks": [
+   {
+    "title": "Three Prerequisites for Meaningful Contestation",
+    "items": [
+     {
+      "label": "Documentation",
+      "sublabel": null,
+      "desc": "The AI's role in the decision must be recorded — what it recommended, confidence level, what the reviewer saw, and what action followed. Without a record, the patient has no basis for a meaningful challenge. Contestation rights without documentation requirements are theater."
+     },
+     {
+      "label": "Pathway",
+      "sublabel": null,
+      "desc": "A defined process must exist for raising a challenge: who to contact, what to submit, what timeline to expect, and what standard will be applied. A right to contest without a place to do it is nominal."
+     },
+     {
+      "label": "Remedy",
+      "sublabel": null,
+      "desc": "Outcomes must be available beyond \"thank you for your feedback.\" Remedies may include correction of the record, revisited clinical decision, system parameter review, policy change, or compensation. A contestation process with no remedy available converts legitimate challenge into feedback collection."
+     }
+    ]
+   }
+  ],
+  "evidence": [
+   {
+    "title": "AI Risk Management Framework (AI RMF 1.0)",
+    "meta": "NIST · 2023 — MEASURE 3.3: feedback processes for end users and impacted communities must be established",
+    "url": "https://doi.org/10.6028/NIST.AI.100-1"
+   },
+   {
+    "title": "Algorithmic Systems in Public Administrations",
+    "meta": "Smuha · Cambridge Handbook · 2025 — Idaho: litigation as only remedy; Dutch: harm before contestation possible",
+    "url": "https://doi.org/10.1017/9781009367783"
+   },
+   {
+    "title": "FDA Transparency for ML-Enabled Medical Devices",
+    "meta": "FDA · 2024 — documentation and transparency as regulatory expectation",
+    "url": "https://www.fda.gov/media/178693/download"
+   },
+   {
+    "title": "Bringing Safety to AI",
+    "meta": "IHI / Lucian Leape Institute · 2024",
+    "url": "https://www.ihi.org/resources/white-papers/bringing-safety-ai-adapting-patient-safety-principles-artificial-intelligence-health-care"
+   }
+  ],
+  "notes": [
+   {
+    "text": "The \"human in the loop\" does not close the contestation gap. GDPR Article 22 — the right not to be subject to solely automated decisions — technically doesn't apply when a clinician is in the chain. But the governance question isn't \"was there a human?\" It's \"did that human have the information, time, and authority to meaningfully deviate from the AI output?\" Automation bias means the answer is often no. A nominal human reviewer does not convert an automated decision into a human one.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   },
+   {
+    "text": "The Idaho Medicaid case — where an algorithm wrongfully reduced disability benefits for vulnerable people — resolved only through a class action lawsuit filed years after the harm began. The court found the system unconstitutional on due process grounds: lack of transparency and absence of model validation. That case defines what governance failure looks like when contestation is designed out. The lesson: contestation pathways must exist before harm occurs, because litigation after harm is not a governance mechanism.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   },
+   {
+    "text": "Plugging AI contestation into existing patient grievance processes doesn't work. Those processes were designed for human-caused harm — they have no evidence standards for algorithmic decisions, no expertise to evaluate AI outputs, and no remedies specific to model-level corrections. A contestation right that routes into an architecture built for something else produces process compliance without meaningful review.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   }
+  ],
+  "useCases": {},
+  "keyDocs": [],
+  "mapLabel": "Contestation & Redress"
+ },
+ {
+  "id": "equity",
+  "loop": "external",
+  "label": "Equity & Ongoing Bias Monitoring",
+  "icon": "⊜",
+  "question": "Are differential performance outcomes by population subgroup being detected, surfaced, and acted upon?",
+  "components": [
+   "Disaggregated performance monitoring",
+   "Disparate impact review",
+   "Equity finding escalation pathway",
+   "Community feedback channel"
+  ],
+  "artifacts": [
+   "Disaggregated performance report",
+   "Disparate impact assessment",
+   "Subgroup monitoring criteria",
+   "Equity finding escalation protocol"
+  ],
+  "contention": "Balanced accuracy across subgroups is not the same as equitable outcomes — what counts as fairness in a specific clinical context is contested",
+  "gap": "Fewer than half of hospitals using predictive models report checking them for bias with local data (44%, Nong et al., Health Affairs, 2025), and those relying on vendor models check less often. Ongoing equity monitoring is rarer still. Disaggregated performance data is often contractually unavailable from vendors. Since May 2025, Section 1557 requires covered entities to identify and mitigate discrimination risk in patient care decision support tools.",
+  "mandatory": true,
+  "matrixReady": false,
+  "matrixLabel": null,
+  "matrixUseCases": [],
+  "loopLabel": "External Human Governance Loop",
+  "status": "Contested",
+  "insight": null,
+  "callouts": [
+   {
+    "kind": "warning",
+    "title": "Distinction from Validation",
+    "text": "Validation asks: did this system pass a fairness bar before deployment? Equity monitoring asks: is it still fair, for this population, right now? These require different data, different cadences, and different governance authority. Pre-deployment fairness testing does not substitute for ongoing equity monitoring."
+   }
+  ],
+  "frameworks": [
+   {
+    "title": "Three Bias Types — NIST AI RMF",
+    "items": [
+     {
+      "label": "Systemic Bias",
+      "sublabel": null,
+      "desc": "Present in datasets, organizational norms, and broader society. A technically correct model built on biased training data produces biased outputs. Cannot be fixed by improving the model alone — requires examining the data ecosystem."
+     },
+     {
+      "label": "Computational & Statistical Bias",
+      "sublabel": null,
+      "desc": "Arises from non-representative samples, small subgroup sizes, and proxy variables. A model performing well at population level can fail catastrophically for underrepresented groups whose signal is too thin to learn from reliably."
+     },
+     {
+      "label": "Human-Cognitive Bias",
+      "sublabel": null,
+      "desc": "How clinicians perceive and act on AI outputs — including automation bias (over-trust) and motivated skepticism (under-trust). Under some conditions, human-AI interaction amplifies human biases rather than correcting them."
+     }
+    ]
+   }
+  ],
+  "evidence": [
+   {
+    "title": "AI Risk Management Framework (AI RMF 1.0)",
+    "meta": "NIST · 2023",
+    "url": "https://doi.org/10.6028/NIST.AI.100-1"
+   },
+   {
+    "title": "Algorithmic Systems in Public Administrations",
+    "meta": "Smuha · Cambridge Handbook · 2025",
+    "url": "https://doi.org/10.1017/9781009367783"
+   },
+   {
+    "title": "The Hot Mess of AI: Misalignment, Scale, and Task Complexity",
+    "meta": "Hägele et al. · ICLR 2026",
+    "url": "https://arxiv.org/abs/2601.23045"
+   },
+   {
+    "title": "Bringing Safety to AI",
+    "meta": "IHI / Lucian Leape Institute · 2024",
+    "url": "https://www.ihi.org/resources/white-papers/bringing-safety-ai-adapting-patient-safety-principles-artificial-intelligence-health-care"
+   }
+  ],
+  "notes": [
+   {
+    "text": "The \"balanced accuracy\" trap: a clinical AI system can achieve equal sensitivity and specificity across demographic groups while still contributing to disparate harm. False positives and false negatives do not carry equal downstream consequences for all patients. A false positive triggering unnecessary biopsy in a low-trust community is a different harm than the same false positive in a high-access setting. Equity monitoring must include outcome asymmetry, not just accuracy parity.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   },
+   {
+    "text": "Equity monitoring must be secured at procurement, not requested after deployment. Disaggregated performance data requires vendor disclosure. Most standard contracts do not require it. By the time an institution wants to run subgroup analysis, the data architecture either doesn't exist or is contractually off-limits. The time to negotiate access is before you need it.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   },
+   {
+    "text": "The Dutch childcare benefits algorithm ran for years flagging low-income families and families with dual nationality at higher rates before anyone detected the pattern — because the harm accumulated at population speed while the governance operated at individual complaint speed. The lesson for clinical AI: equity monitoring requires population-level metrics reviewed on a defined schedule, not individual case review waiting for someone to notice.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   }
+  ],
+  "useCases": {},
+  "keyDocs": [],
+  "mapLabel": "Equity Monitoring"
+ },
+ {
+  "id": "accountability",
+  "loop": "external",
+  "label": "Accountability",
+  "icon": "△",
+  "question": "Has accountability been explicitly assigned for this governance component, or is it assumed?",
+  "components": [
+   "Named holder at each governance tier",
+   "Authority–accountability alignment check",
+   "Explicit scope definition",
+   "Gap shape audit (misplaced / structural hole / false)"
+  ],
+  "artifacts": [
+   "Accountability assignment matrix",
+   "Authority–accountability alignment record",
+   "Gap shape audit report"
+  ],
+  "contention": "Shared accountability in multi-stakeholder structures tends toward diffused accountability — where formal assignment tips into governance theater is contested",
+  "gap": "No standard framework for accountability assignment in clinical AI governance. Most structures name accountability for process steps, not outcomes.",
+  "mandatory": true,
+  "matrixReady": false,
+  "matrixLabel": null,
+  "matrixUseCases": [],
+  "loopLabel": "External Human Governance Loop",
+  "status": "Unknown",
+  "insight": null,
+  "callouts": [
+   {
+    "kind": "liability",
+    "title": "Liability — dimension, not node",
+    "text": "Liability is the legal and financial consequence for accountability failures. It is a dimension within this node — who bears legal risk if accountability is absent or falsely assigned — not a separate governance process."
+   }
+  ],
+  "frameworks": [
+   {
+    "title": "Three Accountability Shapes",
+    "items": [
+     {
+      "label": "Misplaced",
+      "sublabel": null,
+      "desc": "Accountability is assigned to the wrong node. Fixable by reassignment. The holder is capable of being accountable — this responsibility just lives in the wrong place in the governance structure."
+     },
+     {
+      "label": "Structural Hole",
+      "sublabel": null,
+      "desc": "No holder is possible with the current architecture. The loop cannot collapse to a single responsible party. Requires structural redesign, not reassignment."
+     },
+     {
+      "label": "False Accountability",
+      "sublabel": null,
+      "desc": "Assigned outside real control. The named party cannot influence the outcome they're responsible for. Creates the appearance of governance while burning out the named person and concealing the actual gap."
+     }
+    ]
+   }
+  ],
+  "evidence": [
+   {
+    "title": "AI Risk Management Framework (AI RMF 1.0)",
+    "meta": "NIST · 2023",
+    "url": "https://doi.org/10.6028/NIST.AI.100-1"
+   },
+   {
+    "title": "Algorithmic Systems in Public Administrations",
+    "meta": "Smuha · Cambridge Handbook · 2025",
+    "url": "https://doi.org/10.1017/9781009367783"
+   },
+   {
+    "title": "How Collective Intelligence Could Soon Reshape Medical Decision-Making",
+    "meta": "Dorn · Forbes · 2026",
+    "url": "https://www.forbes.com/sites/spencerdorn/2026/03/12/how-collective-intelligence-could-soon-reshape-medical-decision-making/"
+   },
+   {
+    "title": "Bringing Safety to AI",
+    "meta": "IHI / Lucian Leape Institute · 2024",
+    "url": "https://www.ihi.org/resources/white-papers/bringing-safety-ai-adapting-patient-safety-principles-artificial-intelligence-health-care"
+   }
+  ],
+  "notes": [
+   {
+    "text": "The CLIA lab director model is the closest existing analog. Under CLIA, the director holds corrective action authority — full stop, regardless of what the instrument vendor or hospital administration wants. That structure works because accountability and authority are co-located in one role with named scope. Clinical AI governance needs the same design: accountability must follow authority, not be assigned separately and hoped to stick.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   },
+   {
+    "text": "The governance theater pattern: institutions build committees, assign roles, populate org charts — and believe accountability is covered. It isn't. Committee membership is accountability for showing up. What's missing is accountability for outcomes. Who is answerable when the model flags the wrong patients for six months? That question needs a name attached to it before deployment, not after the incident.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   },
+   {
+    "text": "False accountability is the hardest shape to fix because it looks like governance from the outside. The named person believes they're accountable. The institution believes accountability is covered. The gap only becomes visible when something goes wrong — by which point the structure has already failed. Diagnosing it requires one question: does this person have the authority, information, and resources to actually change the outcome they're being held responsible for? If not, the assignment is false.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   }
+  ],
+  "useCases": {},
+  "keyDocs": [],
+  "mapLabel": "Accountability"
+ },
+ {
+  "id": "forming",
+  "loop": "forming",
+  "label": "Forming Territory",
+  "icon": "◌",
+  "question": "What governance concepts belong in this architecture but don't yet have a settled node shape?",
+  "components": [
+   "Procurement design",
+   "Consent and disclosure",
+   "Model decommissioning",
+   "Patient and community voice",
+   "Standing in contestation",
+   "Representation in equity monitoring"
+  ],
+  "artifacts": [],
+  "contention": "Naming a concept too early locks in the wrong frame. These are real governance requirements — the structure has to follow the use case, not precede it.",
+  "gap": "No established structure for pre-deployment governance authorization or stakeholder standing in clinical AI governance. Both are active areas of field development.",
+  "mandatory": false,
+  "matrixReady": false,
+  "matrixLabel": null,
+  "matrixUseCases": [],
+  "loopLabel": "Forming Territory",
+  "status": "Unknown",
+  "insight": null,
+  "frameworks": [
+   {
+    "title": "Deployment Lifecycle",
+    "items": [
+     {
+      "label": "Procurement design",
+      "sublabel": null,
+      "desc": ""
+     },
+     {
+      "label": "Consent and disclosure",
+      "sublabel": null,
+      "desc": ""
+     },
+     {
+      "label": "Model decommissioning",
+      "sublabel": null,
+      "desc": ""
+     }
+    ]
+   },
+   {
+    "title": "Stakeholder Standing",
+    "items": [
+     {
+      "label": "Patient and community voice",
+      "sublabel": null,
+      "desc": ""
+     },
+     {
+      "label": "Standing in contestation",
+      "sublabel": null,
+      "desc": ""
+     },
+     {
+      "label": "Representation in equity monitoring",
+      "sublabel": null,
+      "desc": ""
+     }
+    ]
+   }
+  ],
+  "evidence": [
+   {
+    "title": "Health AI Partnership Principles",
+    "meta": "HAIP · 2024 — procurement and pre-deployment governance expectations",
+    "url": "https://healthaipartnership.org"
+   },
+   {
+    "title": "Algorithmic Systems in Public Administrations",
+    "meta": "Smuha · Cambridge Handbook · 2025 — stakeholder standing and affected party rights",
+    "url": "https://doi.org/10.1017/9781009367783"
+   },
+   {
+    "title": "FDA Transparency for ML-Enabled Medical Devices",
+    "meta": "FDA · 2024 — consent and disclosure as regulatory expectation",
+    "url": "https://www.fda.gov/media/178693/download"
+   }
+  ],
+  "notes": [
+   {
+    "text": "These aren't missing concepts — they're concepts waiting for the right frame. Consent and disclosure means something different in an advisory CDS context than in an autonomous decision system. Procurement design depends on what authority tier you've assigned. The concepts are real; the structure has to follow the use case, not precede it. Holding them here, named and loose, is better than building the wrong node.",
+    "by": "Lindsay LaMere",
+    "source": "static"
+   }
+  ],
+  "useCases": {},
+  "keyDocs": [],
+  "mapLabel": "Forming Territory"
+ },
+ {
+  "id": "commons",
+  "loop": "commons",
+  "label": "Governance Commons",
+  "icon": "◉",
+  "question": "Is the governance infrastructure itself current, neutral, and authoritative?",
+  "components": [
+   "Schema ownership + versioning",
+   "Threshold registry",
+   "Audit trail",
+   "Document + process layer"
+  ],
+  "artifacts": [
+   "Commons charter",
+   "Schema specification",
+   "Threshold registry",
+   "This taxonomy"
+  ],
+  "contention": "Funding, staffing, and authority source for the commons itself",
+  "gap": "Does not exist. This is the work.",
+  "mandatory": true,
+  "matrixReady": false,
+  "matrixLabel": null,
+  "matrixUseCases": [],
+  "loopLabel": "Governance Commons",
+  "status": null,
+  "insight": "The commons does not exist. This tool is the prototype. The structural gap: no neutral institutional authority owns the schema, threshold registry, or taxonomy for healthcare AI governance.",
+  "frameworks": [],
+  "evidence": [
+   {
+    "title": "Health AI Partnership Principles",
+    "meta": "HAIP · 2024",
+    "url": "https://healthaipartnership.org"
+   },
+   {
+    "title": "Community Weaving Ep 08: The Recursive Close",
+    "meta": "Lindsay LaMere · 2025",
+    "url": "/community_weaving_ep08.pdf"
+   },
+   {
+    "title": "Governance Mechanisms Index",
+    "meta": "Lindsay LaMere / Commons · 2025",
+    "url": "/governance_mechanisms_index.pdf"
+   }
+  ],
+  "notes": [
+   {
+    "by": "Lindsay LaMere",
+    "when": "Mar 2025",
+    "text": "This tool is the prototype for what the commons could look like. The gap it fills: everyone is producing governance documents. Nobody has built the connective tissue that makes them findable, relatable, and usable in context. The map is the artifact.",
+    "gem": true,
+    "source": "taxonomy"
+   }
+  ],
+  "useCases": {},
+  "keyDocs": [
+   "haip-principles-2024",
+   "apollo-2024",
+   "ihi-leape-2024"
+  ],
+  "mapLabel": "Governance Commons"
+ }
+]

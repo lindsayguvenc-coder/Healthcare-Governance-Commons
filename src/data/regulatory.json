@@ -1,0 +1,549 @@
+{
+ "asOf": "2026-10-27",
+ "nodes": {
+  "norm": {
+   "required": [
+    {
+     "text": "ONC HTI-1 source attributes for predictive tools in certified EHRs. Removed by HTI-5 (final Oct 26, 2026)",
+     "binds": "EHR developers",
+     "verified": true
+    }
+   ],
+   "recommended": [
+    {
+     "text": "CHAI Applied Model Card (voluntary template)",
+     "binds": "anyone",
+     "verified": true
+    },
+    {
+     "text": "FDA, Health Canada, and UK MHRA transparency principles for ML-enabled devices (June 2024)",
+     "binds": "device makers",
+     "verified": true
+    },
+    {
+     "text": "TRIPOD+AI reporting guideline (BMJ, 2024)",
+     "binds": "researchers",
+     "verified": true
+    }
+   ],
+   "practiced": []
+  },
+  "watcher": {
+   "required": [
+    {
+     "text": "FDA Quality Management System Regulation, 21 CFR 820, aligned to ISO 13485 (in effect Feb 2, 2026)",
+     "binds": "device makers",
+     "verified": true
+    },
+    {
+     "text": "FDA medical device reporting, 21 CFR 803: hospitals report device-related deaths to FDA and serious injuries to the maker within 10 work days",
+     "binds": "device makers, hospitals",
+     "verified": true
+    }
+   ],
+   "recommended": [
+    {
+     "text": "FDA draft lifecycle guidance for AI-enabled devices (Jan 2025): continuous monitoring, performance monitoring plans",
+     "binds": "device makers",
+     "verified": true
+    },
+    {
+     "text": "Joint Commission + CHAI guidance (Sept 2025): local monitoring",
+     "binds": "hospitals",
+     "verified": true
+    },
+    {
+     "text": "Feng et al. 2022: statistical process control for clinical AI",
+     "binds": "anyone",
+     "verified": true
+    }
+   ],
+   "practiced": [
+    {
+     "text": "CCM/KLAS 2026: 10 of 25 systems test AI inside the EHR or vendor tools",
+     "binds": null,
+     "verified": true
+    },
+    {
+     "text": "Epic Seismometer, open-source evaluation with fairness audits",
+     "binds": null,
+     "verified": true
+    }
+   ]
+  },
+  "h1": {
+   "required": [
+    {
+     "text": "CMS hospital Conditions of Participation, QAPI (42 CFR 482.21): track adverse events, analyze causes, implement preventive actions",
+     "binds": "hospitals",
+     "verified": true
+    }
+   ],
+   "recommended": [
+    {
+     "text": "Joint Commission + CHAI guidance (Sept 2025)",
+     "binds": "hospitals",
+     "verified": true
+    }
+   ],
+   "practiced": []
+  },
+  "h3": {
+   "required": [
+    {
+     "text": "FDA corrections and removals reporting, 21 CFR 806",
+     "binds": "device makers",
+     "verified": true
+    }
+   ],
+   "recommended": [],
+   "practiced": [
+    {
+     "text": "Example cold trigger, live: HTI-5 removing EHR model-card requirements (Oct 26, 2026)",
+     "binds": null,
+     "verified": true
+    }
+   ]
+  },
+  "h2": {
+   "required": [
+    {
+     "text": "FDA predetermined change control plan guidance for AI devices (final, Dec 4, 2024): pre-authorized changes",
+     "binds": "device makers",
+     "verified": true
+    },
+    {
+     "text": "CLIA laboratory director responsibilities, 42 CFR 493.1445 (binding only where AI runs in the lab)",
+     "binds": "labs",
+     "verified": true
+    }
+   ],
+   "recommended": [
+    {
+     "text": "Joint Commission + CHAI guidance (Sept 2025)",
+     "binds": "hospitals",
+     "verified": true
+    }
+   ],
+   "practiced": [
+    {
+     "text": "Wong et al., JAMA Network Open, Feb 2026: the updated Epic sepsis model needed score thresholds from 14 to 37 across four health systems to reach the same 60% sensitivity",
+     "binds": null,
+     "verified": true
+    }
+   ]
+  },
+  "h4": {
+   "required": [],
+   "recommended": [],
+   "practiced": []
+  },
+  "escalation": {
+   "required": [
+    {
+     "text": "CMS Conditions of Participation, QAPI (42 CFR 482.21)",
+     "binds": "hospitals",
+     "verified": true
+    }
+   ],
+   "recommended": [
+    {
+     "text": "Joint Commission + CHAI guidance (Sept 2025): governance structure",
+     "binds": "hospitals",
+     "verified": true
+    },
+    {
+     "text": "NIST AI RMF 1.0 (2023), Govern function",
+     "binds": "anyone",
+     "verified": true
+    }
+   ],
+   "practiced": []
+  },
+  "adjudicate": {
+   "required": [],
+   "recommended": [
+    {
+     "text": "Buy AI Like Reagents: contract clauses for audits and disputes (Commons product)",
+     "binds": "buyers",
+     "verified": true
+    }
+   ],
+   "practiced": []
+  },
+  "threshold_review": {
+   "required": [
+    {
+     "text": "FDA change control plan guidance (final, Dec 2024)",
+     "binds": "device makers",
+     "verified": true
+    },
+    {
+     "text": "California SB 1120 (2025): AI tools in utilization review must be periodically reviewed and revised",
+     "binds": "health plans, insurers",
+     "verified": true
+    }
+   ],
+   "recommended": [
+    {
+     "text": "FDA draft lifecycle guidance (Jan 2025)",
+     "binds": "device makers",
+     "verified": true
+    },
+    {
+     "text": "Joint Commission + CHAI guidance (Sept 2025)",
+     "binds": "hospitals",
+     "verified": true
+    }
+   ],
+   "practiced": []
+  },
+  "authority": {
+   "required": [
+    {
+     "text": "Texas SB 1188 (Sept 2025): practitioners must review all AI-generated records",
+     "binds": "practitioners",
+     "verified": true
+    },
+    {
+     "text": "CLIA laboratory director responsibilities, 42 CFR 493.1445 (lab AI only)",
+     "binds": "labs",
+     "verified": true
+    }
+   ],
+   "recommended": [
+    {
+     "text": "Joint Commission + CHAI guidance (Sept 2025)",
+     "binds": "hospitals",
+     "verified": true
+    },
+    {
+     "text": "ISO/IEC 42001 AI management system (2023, certifiable)",
+     "binds": "anyone",
+     "verified": true
+    }
+   ],
+   "practiced": []
+  },
+  "stop": {
+   "required": [
+    {
+     "text": "FDA corrections and removals, 21 CFR 806",
+     "binds": "device makers",
+     "verified": true
+    }
+   ],
+   "recommended": [
+    {
+     "text": "Feng et al. 2022: control charts for clinical AI",
+     "binds": "anyone",
+     "verified": true
+    },
+    {
+     "text": "FDA draft lifecycle guidance (Jan 2025)",
+     "binds": "device makers",
+     "verified": true
+    }
+   ],
+   "practiced": [
+    {
+     "text": "Commons ECG demo: illustrative, retrospective, not deployed",
+     "binds": null,
+     "verified": true
+    }
+   ]
+  },
+  "override": {
+   "required": [
+    {
+     "text": "Texas SB 1188 (Sept 2025): practitioner review",
+     "binds": "practitioners",
+     "verified": true
+    },
+    {
+     "text": "California SB 1120 (2025): AI can't supplant provider decision-making in utilization review",
+     "binds": "health plans, insurers",
+     "verified": true
+    },
+    {
+     "text": "CMS Medicare Advantage FAQ (Feb 2024): coverage decisions on individual circumstances, not an algorithm alone",
+     "binds": "MA plans",
+     "verified": true
+    }
+   ],
+   "recommended": [
+    {
+     "text": "FDA clinical decision support guidance (revised Jan 6, 2026): automation bias and time-critical use decide device status",
+     "binds": "software makers",
+     "verified": true
+    }
+   ],
+   "practiced": []
+  },
+  "validation": {
+   "required": [
+    {
+     "text": "FDA premarket review (510(k), De Novo, PMA) for device AI",
+     "binds": "device makers",
+     "verified": true
+    },
+    {
+     "text": "EU AI Act high-risk obligations for AI in medical devices: Aug 2, 2028 (moved by the 2026 Digital Omnibus)",
+     "binds": "makers selling in the EU",
+     "verified": true
+    }
+   ],
+   "recommended": [
+    {
+     "text": "FDA draft lifecycle guidance (Jan 2025)",
+     "binds": "device makers",
+     "verified": true
+    },
+    {
+     "text": "FDA, Health Canada, and MHRA Good Machine Learning Practice principles (2021)",
+     "binds": "device makers",
+     "verified": true
+    },
+    {
+     "text": "Joint Commission + CHAI guidance (Sept 2025): local validation",
+     "binds": "hospitals",
+     "verified": true
+    },
+    {
+     "text": "UK BS 30440 validation framework (2023; whether it covers administrative AI still unconfirmed)",
+     "binds": "anyone",
+     "verified": false
+    }
+   ],
+   "practiced": [
+    {
+     "text": "Nong et al. 2025: 61% of model-using hospitals validate accuracy locally",
+     "binds": null,
+     "verified": true
+    },
+    {
+     "text": "CCM/KLAS 2026: only 11 of 25 have a testing platform",
+     "binds": null,
+     "verified": true
+    }
+   ]
+  },
+  "learning-loop": {
+   "required": [
+    {
+     "text": "CMS Conditions of Participation, QAPI (42 CFR 482.21): feedback and learning throughout the hospital",
+     "binds": "hospitals",
+     "verified": true
+    },
+    {
+     "text": "Patient Safety and Quality Improvement Act (42 CFR Part 3): legal privilege for safety work reported to a Patient Safety Organization",
+     "binds": "hospitals, PSOs",
+     "verified": true
+    }
+   ],
+   "recommended": [
+    {
+     "text": "Joint Commission + CHAI guidance (Sept 2025)",
+     "binds": "hospitals",
+     "verified": true
+    }
+   ],
+   "practiced": []
+  },
+  "vendor-risk": {
+   "required": [
+    {
+     "text": "HIPAA business associate agreements, 45 CFR 164.504(e)",
+     "binds": "hospitals, vendors",
+     "verified": true
+    },
+    {
+     "text": "OMB M-25-22 AI acquisition (April 2025; federal agencies only, e.g., VA)",
+     "binds": "federal buyers",
+     "verified": true
+    }
+   ],
+   "recommended": [
+    {
+     "text": "Buy AI Like Reagents: 57 sourced clauses (Commons product)",
+     "binds": "buyers",
+     "verified": true
+    }
+   ],
+   "practiced": [
+    {
+     "text": "CCM/KLAS 2026: testing often runs inside vendor tools",
+     "binds": null,
+     "verified": true
+    }
+   ]
+  },
+  "explainability": {
+   "required": [
+    {
+     "text": "FDA CDS guidance (Jan 2026): non-device status requires clinicians can independently review the basis",
+     "binds": "software makers",
+     "verified": true
+    },
+    {
+     "text": "California AB 3030 (2025): disclose generative AI in patient communications",
+     "binds": "providers",
+     "verified": true
+    },
+    {
+     "text": "Texas HB 149 / TRAIGA (Jan 2026): disclose AI use in patient care",
+     "binds": "providers",
+     "verified": true
+    },
+    {
+     "text": "ONC HTI-1 source attributes. Removed by HTI-5",
+     "binds": "EHR developers",
+     "verified": true
+    }
+   ],
+   "recommended": [
+    {
+     "text": "FDA, Health Canada, and MHRA transparency principles (June 2024)",
+     "binds": "device makers",
+     "verified": true
+    }
+   ],
+   "practiced": [
+    {
+     "text": "Rudin, Nature Machine Intelligence 2019; Ghassemi et al., Lancet Digital Health 2021",
+     "binds": null,
+     "verified": true
+    }
+   ]
+  },
+  "contestation": {
+   "required": [
+    {
+     "text": "California SB 1120 (2025): licensed professional decides; tools open to audit",
+     "binds": "health plans, insurers",
+     "verified": true
+    },
+    {
+     "text": "CMS Medicare Advantage FAQ (Feb 2024)",
+     "binds": "MA plans",
+     "verified": true
+    },
+    {
+     "text": "Colorado SB 26-189 (from Jan 1, 2027): notice, plain-language explanation after an adverse decision, data correction, human review. Health care is covered, but HIPAA-covered entities are largely exempt",
+     "binds": "deployers in Colorado, mostly not hospitals",
+     "verified": true
+    }
+   ],
+   "recommended": [],
+   "practiced": []
+  },
+  "equity": {
+   "required": [
+    {
+     "text": "Section 1557, 45 CFR 92.210: identify and mitigate discrimination risk in decision support tools (since May 1, 2025; in force)",
+     "binds": "covered entities",
+     "verified": true
+    }
+   ],
+   "recommended": [
+    {
+     "text": "Joint Commission + CHAI guidance (Sept 2025)",
+     "binds": "hospitals",
+     "verified": true
+    },
+    {
+     "text": "NIST SP 1270 on identifying and managing bias (2022)",
+     "binds": "anyone",
+     "verified": true
+    },
+    {
+     "text": "Epic Seismometer fairness audits",
+     "binds": null,
+     "verified": true
+    }
+   ],
+   "practiced": [
+    {
+     "text": "Nong et al. 2025: 44% check for bias locally; less with vendor models",
+     "binds": null,
+     "verified": true
+    }
+   ]
+  },
+  "accountability": {
+   "required": [
+    {
+     "text": "Section 1557 §92.210: the covered entity is responsible",
+     "binds": "covered entities",
+     "verified": true
+    },
+    {
+     "text": "Texas SB 1188: the practitioner is responsible for AI-generated records",
+     "binds": "practitioners",
+     "verified": true
+    }
+   ],
+   "recommended": [
+    {
+     "text": "Joint Commission + CHAI guidance (Sept 2025)",
+     "binds": "hospitals",
+     "verified": true
+    },
+    {
+     "text": "ISO/IEC 42001 (2023)",
+     "binds": "anyone",
+     "verified": true
+    }
+   ],
+   "practiced": []
+  },
+  "forming": {
+   "required": [
+    {
+     "text": "Consent and disclosure: California AB 3030; Texas HB 149",
+     "binds": "providers",
+     "verified": true
+    }
+   ],
+   "recommended": [],
+   "practiced": []
+  },
+  "commons": {
+   "required": [],
+   "recommended": [],
+   "practiced": [
+    {
+     "text": "No neutral authority holds the schema, threshold registry, or taxonomy (Commons position). HTI-5 removing the one federal model-card layer makes this sharper.",
+     "binds": null,
+     "verified": true
+    }
+   ]
+  }
+ },
+ "upcoming": [
+  {
+   "when": "Nov 2026 (expected)",
+   "what": "HTI-6 proposed rule: information blocking, including automated and AI access"
+  },
+  {
+   "when": "~Dec 27, 2026",
+   "what": "Most HTI-5 changes take effect, removing EHR model-card requirements"
+  },
+  {
+   "when": "Jan 1, 2027",
+   "what": "Colorado SB 26-189 automated decision-making law (HIPAA-covered entities largely exempt)"
+  },
+  {
+   "when": "Dec 2, 2027",
+   "what": "EU AI Act obligations for standalone high-risk systems"
+  },
+  {
+   "when": "Aug 2, 2028",
+   "what": "EU AI Act obligations for AI in medical devices"
+  },
+  {
+   "when": "Pending",
+   "what": "FDA lifecycle guidance for AI-enabled devices, still draft"
+  }
+ ]
+}
