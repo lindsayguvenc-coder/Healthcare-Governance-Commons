@@ -8,6 +8,7 @@
 //   - a timestamp and an id
 // It never stores email, IP address, or any other contact detail. The per-IP
 // rate limit uses a counter that expires after about an hour.
+const { strongHit } = require("./_phi.js");
 
 const Redis = require("ioredis");
 const NODES = require("../src/data/nodes.json");
@@ -70,7 +71,7 @@ const BLOCK_PATTERNS = [
 ];
 function screen(text) {
   for (const p of BLOCK_PATTERNS) if (p.re.test(text)) return p.why;
-  return null;
+  return strongHit(text);
 }
 
 function clean(v, max) {
