@@ -57,3 +57,10 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       vendor claims before go-live; the Agent QC picker monitors after. The
       picker's "vendor's claimed failure rate" should come from the VPG's
       model-card answers instead of being asked twice.
+- [ ] **Statistician: hire before the first of these.** Someone uses a tool's
+      numbers to set up QC on a real system (e.g. a hospital sizing its
+      baseline); a published piece cites a tool's numbers as evidence; or work
+      starts on the Commons data component (frequency across sources,
+      confidence per node). Until then, tools stay labeled working prototypes
+      and get AI dress-rehearsal reviews. The Agent QC picker had one on
+      Oct 28; its sigma step and expanded method library still need one.
