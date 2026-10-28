@@ -174,10 +174,11 @@ td select{width:auto;padding:4px 6px;font-size:.84rem}
             <label><input type="radio" name="ref" id="r_judge" value="judge">An expert or judge model can score it<small>Human reviewer or LLM-as-judge</small></label>
             <label><input type="radio" name="ref" id="r_none" value="none">Nobody can say<small>No reference at all</small></label>
           </div>
+          <div class="opts"><label><input type="checkbox" id="keyAgreed">The key is agreed by more than one person, or traced to an outside source<small>Items people disagree on get marked contested: drift only, not accuracy</small></label></div>
           <div class="opts"><label><input type="checkbox" id="judgeVal">The judge has been checked against human raters<small>Agreement (κ) at least as good as humans with each other</small></label></div>
         </div>
         <aside class="ex"><span class="lab">Examples</span>
-          <p><b>Grocery agent:</b> answer key. Every item has one correct aisle.</p>
+          <p><b>Grocery agent:</b> answer key, set by one person who admits she's always lost in grocery stores. Two items turned out contested (oat milk, sunflower seed butter) and became drift-only.</p>
           <p><b>Discharge drafter:</b> a judge model scores it. Not yet checked against clinicians.</p></aside>
       </section>
 
@@ -385,7 +386,7 @@ function readState(){
   const types=[...document.querySelectorAll('#types input:checked')].map(i=>i.value);
   const val=n=>{const x=document.querySelector(`input[name=${n}]:checked`);return x?x.value:""};
   const num=id=>{const v=$(id).value.trim();return v===""?null:Number(v)};
-  return {types, ref:val("ref"), judgeVal:$("judgeVal").checked, sev:val("sev"), watch:val("watch"),
+  return {types, ref:val("ref"), keyAgreed:$("keyAgreed").checked, judgeVal:$("judgeVal").checked, sev:val("sev"), watch:val("watch"),
     maLive:$("maLive").checked, worries:["swap","silent","prompt","input"].filter(w=>$("c_"+w).checked),
     reportable:$("reportable").value.trim(), crit:$("critVals").value.split("\n").map(x=>x.trim()).filter(Boolean),
     critWho:$("critWho").value.trim(), critMins:num("critMins"), stopPct:num("stopPct"), minGrade:$("minGrade").value.trim(), lo:num("rangeLo"), hi:num("rangeHi"), allowErr:num("allowErr"),
@@ -439,6 +440,7 @@ function render(){
   if(s.cutSrc==="gut") aTraps.push("Gut-call cutoffs are fine to start, but mark every result as provisional until the cutoff has a written source.");
   const aChecks=[
     {label:"A reference to score against", crit:true, ok:s.ref==="key"||s.ref==="judge", fix:"Pick an answer key or a judge in question 2."},
+    {label:"Key agreed or traceable, contested items set aside", applies:s.ref==="key", ok:s.keyAgreed, fix:"Have two or three people mark the key on their own, or trace it to an outside source. Keep agreed items for accuracy; use the contested ones as drift sensors only."},
     {label:"Judge checked against human raters", applies:judgeBased&&s.ref!=="none", ok:s.judgeVal, fix:"Score 50–100 outputs with two humans and the judge. Compare κ to human-to-human κ."},
     {label:"A stop-using cutoff", crit:true, ok:hasCut, fix:"Set a pass rate, lowest grade, or range in question 6."},
     {label:"Validated range written down", ok:!!s.reportable, fix:"Say what inputs it was tested on, so anything outside gets flagged instead of answered."},
@@ -629,7 +631,7 @@ function load(k){
   const e=EX[k];
   document.querySelectorAll('#types input').forEach(i=>i.checked=e.types.includes(i.value));
   ["ref","sev","watch"].forEach(n=>document.querySelectorAll(`input[name=${n}]`).forEach(i=>i.checked=i.value===e[n]));
-  $("judgeVal").checked=e.judgeVal; $("maLive").checked=!!e.maLive;
+  $("judgeVal").checked=e.judgeVal; $("keyAgreed").checked=!!e.keyAgreed; $("maLive").checked=!!e.maLive;
   ["swap","silent","prompt","input"].forEach(w=>$("c_"+w).checked=e.worries.includes(w));
   $("reportable").value=e.reportable; $("critVals").value=e.crit; $("critWho").value=e.critWho; $("critMins").value=e.critMins;
   $("stopPct").value=e.stopPct; $("minGrade").value=e.minGrade; $("rangeLo").value=e.lo; $("rangeHi").value=e.hi; $("allowErr").value=e.allowErr;
