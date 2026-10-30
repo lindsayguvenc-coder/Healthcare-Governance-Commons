@@ -125,6 +125,11 @@ function mapAnswers(raw = {}, documentMeta = []) {
   if (startsYes(a.q27_peer_discussed)) set("Q_shared_learning", "yes");
   if (["Quarterly", "Twice yearly", "Annually"].includes(a.q28_cadence)) set("Q_external_benchmarking", "yes");
 
+  // Joint Commission + CHAI elements (as of Oct 29, 2026)
+  if (a.q41_policy) set("Q38", startsYes(a.q41_policy) ? "yes" : "no");
+  if (a.q42_training) set("Q39", startsYes(a.q42_training) || a.q42_training.startsWith("Scheduled") ? "yes" : "no");
+  if (a.q44_consent) set("Q40", a.q44_consent === "Yes" || a.q44_consent.startsWith("Not required") ? "yes" : "no");
+
   // Bias engine: how demographics are recorded locally
   const lr = localRecording(a);
   if (lr.recorded.length) set("Q_local_recording", lr.recorded);

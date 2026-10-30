@@ -32,6 +32,10 @@ const ANSWERS = {
   q15a_authority: "Named individual by role", q15a_authority_role: "CMIO",
   q15_gap_time: "Within 4 hours",
   q22_warn_threshold: "5%", q23_action_threshold: "10%",
+  q20_govbody: "Formal cross-functional governance committee",
+  q41_policy: "Yes — approved", q42_training: "Scheduled before go-live",
+  q43_disclosure: "Case by case", q44_consent: "Not yet decided",
+  q45_safety_reporting: "Our safety event system, no AI category", q46_security: "In progress",
 };
 
 (async () => {
@@ -104,6 +108,7 @@ const ANSWERS = {
   await show(1, "Cover: the system name now shows, and there's no overall governance rating. The disclaimer sits right under the details.", 5200);
   await show(find("Governance Map"), "Section 5 no longer grades the hospital against the old map. It points to the current Commons map instead.", 5200);
   await show(find("Not asked by this tool"), "Fields the questionnaire never asks now say 'Not asked by this tool. Fill in by hand.' They used to say 'Not disclosed'.", 5200);
+  await show(find("Joint Commission / CHAI"), "New: the seven Joint Commission + CHAI elements, scored from six new questions, with an as-of date and a 'check the current source' line.", 5600);
   await show(find("Pre-Deployment Checklist"), "Checklist: things the tool never asks get a ? and a note, not a red fail mark. Marks are drawn now; they used to print as garbage characters.", 5200);
   await show(pngs.length, "Every page has the short disclaimer line at the bottom, above the page number.", 4200);
   await caption(errors.length ? `Page errors: ${errors.join(" | ")}` : "Done. No page errors.", 2500);
