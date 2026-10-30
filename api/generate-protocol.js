@@ -14,7 +14,7 @@ const { mapAnswers } = require("./_answer-map.js");
 // organization when nobody had been asked. Now they say so plainly.
 const NOT_ASKED_TEXT = "Not asked by this tool. Fill in by hand.";
 const NOT_ASKED = new Set([
-  "Q1", "Q5", "Q6", "Q7", "Q10", "Q11", "Q12", "Q38", "Q39", "Q40",
+  "Q5", "Q10", "Q11", "Q12", "Q38", "Q39", "Q40",
   "Q_fda", "Q_autonomy", "Q_volume", "Q_f1", "Q_cohort_size", "Q_cohort_description",
   "Q_perf_summary", "Q_workflow_note", "Q_vendor_limitations", "Q_local_limitations",
   "Q_contraindications", "Q_preparer", "Q_reviewer", "Q_approver", "Q_next_review",
@@ -108,7 +108,7 @@ async function callEngine(url, body) {
 function assembleProtocol({ answers, logicFlags, gapFlags, documentMeta, tiersResult, biasResult, nodesResult }) {
   const isFullProtocol = !logicFlags.includes("WORKFLOW_SUMMARY_MODE");
   const useType = answers.Q2 || "unknown";
-  const deploymentName = answers.Q1 || "AI system (name not asked)";
+  const deploymentName = answers.Q1 || "AI system (name not given)";
   const institution = answers.Q3 || "Institution not specified";
   const generatedAt = new Date().toISOString();
   const generatedDate = new Date().toLocaleDateString("en-US", {

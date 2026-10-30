@@ -77,6 +77,9 @@ function mapAnswers(raw = {}, documentMeta = []) {
   // Identity
   set("Q3", a.q1_orgname);
   set("Q4", [a.q1_dept, a.q1_site].filter(Boolean).join(" · "));
+  set("Q1", a.q1_system && a.q1_system.trim());
+  set("Q6", a.q1_vendor && a.q1_vendor.trim());
+  set("Q7", a.q1_version && a.q1_version.trim());
 
   // Use type and what follows from it
   const useType = mapUseType(a.q2_usetype);
