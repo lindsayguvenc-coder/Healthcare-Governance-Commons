@@ -17,6 +17,7 @@ const exe = process.argv[4];
 const ANSWERS = {
   q0: "primary", q0b: "full",
   q1_orgname: "Example County Medical Center", q1_dept: "Emergency Department",
+  q1_system: "Example Sepsis Alert", q1_vendor: "Example Vendor Inc.", q1_version: "4.2",
   q2_usetype: "Triage / prioritization — direct impact on care sequencing",
   q30_age: "Predominantly adult (18–65)",
   q31_sex_record: "Binary with unknown / not recorded option",

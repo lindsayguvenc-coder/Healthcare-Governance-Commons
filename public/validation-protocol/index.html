@@ -1281,6 +1281,9 @@ function getSectionOrg() {
       { id: 'q1_orgname', text: 'Organization name', type: 'text', placeholder: 'Organization name', required: true },
       { id: 'q1_dept', text: 'Department / service line', type: 'text', placeholder: 'Optional' },
       { id: 'q1_site', text: 'Site / location', type: 'text', placeholder: 'Optional — if scoped to a specific site' },
+      { id: 'q1_system', text: 'Name of the AI system', type: 'text', placeholder: 'Optional — e.g. the product or model name your team uses' },
+      { id: 'q1_vendor', text: 'Vendor or developer', type: 'text', placeholder: 'Optional — or "built in-house"' },
+      { id: 'q1_version', text: 'Model or software version being validated', type: 'text', placeholder: 'Optional — a revalidation is tied to a specific version' },
       { id: 'q2_usetype', text: 'Which best describes how your organization plans to use this AI system?', type: 'select',
         options: [
           'Triage / prioritization — direct impact on care sequencing',

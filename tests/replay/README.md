@@ -10,7 +10,7 @@ shows the interface and logic, not live model judgment.
 
 ```
 npm run build
-cd tests/replay && npm init -y && npm i ioredis-mock@8 playwright
+cd tests/replay && npm i ioredis-mock@8 playwright
 node server.js ../.. 4300 &
 node record.js http://localhost:4300 ./video
 ```
