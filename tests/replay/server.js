@@ -28,6 +28,12 @@ Module._extensions[".js"] = function (mod, filename) {
   return origJs(mod, filename);
 };
 
+// Report tools are paused in code (api/_pause.js) until their reviews finish. The
+// replay exercises them anyway, so it swaps in a no-pause stub. Local test only.
+const pauseFile = path.join(repo, "api/_pause.js");
+require.cache[pauseFile] = { id: pauseFile, filename: pauseFile, loaded: true,
+  exports: { TOOLS: ["vpg", "roi", "consultation", "transition"], pausedTools: () => [], isPaused: () => false } };
+
 process.env.REDIS_URL = "redis://mock";
 process.env.INTAKE_PASSWORD = "test";
 process.env.VITE_ANTHROPIC_API_KEY = "mock";

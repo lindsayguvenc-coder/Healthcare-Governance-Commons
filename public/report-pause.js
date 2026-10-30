@@ -1,6 +1,10 @@
-// Report pause switch. When REPORTS_PAUSED=1 is set in Vercel, this page's
-// report generation stops and a notice explains why. The questions still work.
+// Report pause switch. Each report page loads this with data-tool="vpg" (or roi,
+// consultation, transition). If /api/status lists that tool as paused, report
+// generation stops and a notice explains why. The questions still work.
+// Which tools are paused: api/_pause.js.
 (function () {
+  var script = document.currentScript;
+  var TOOL = script && script.dataset ? script.dataset.tool : null;
   var ENTRY = ["handleGeneratePDF", "goToGenerate", "startGeneration",
                "runUnpacker", "runContainerCheck", "runCharterBuilder"];
   var MSG = "Report generation is paused while this tool is reviewed. The questions still work, so you can read through them.";
@@ -25,6 +29,10 @@
   }
   fetch("/api/status", { cache: "no-store" })
     .then(function (r) { return r.ok ? r.json() : {}; })
-    .then(function (s) { if (s && s.reportsPaused) pause(); })
+    .then(function (s) {
+      if (!s) return;
+      var list = s.pausedTools || [];
+      if (s.reportsPaused || !TOOL || list.indexOf(TOOL) !== -1) pause();
+    })
     .catch(function () {});
 })();

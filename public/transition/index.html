@@ -825,7 +825,7 @@ Be specific, grounded, and practically useful. Do not produce generic responses.
     const response = await fetch("/api/synthesize", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ purpose: "report", model: "claude-sonnet-4-20250514", max_tokens: 2500, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] })
+      body: JSON.stringify({ purpose: "report", tool: "transition", model: "claude-sonnet-4-20250514", max_tokens: 2500, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] })
     });
 
     const data = await response.json();
@@ -910,7 +910,7 @@ Be direct and specific. Base your assessment on what the user describes — don'
     const response = await fetch("/api/synthesize", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ purpose: "report", model: "claude-sonnet-4-20250514", max_tokens: 2500, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] })
+      body: JSON.stringify({ purpose: "report", tool: "transition", model: "claude-sonnet-4-20250514", max_tokens: 2500, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] })
     });
 
     const data = await response.json();
@@ -1021,7 +1021,7 @@ Generate a draft governance charter for this context.`;
     const response = await fetch("/api/synthesize", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ purpose: "report", model: "claude-sonnet-4-20250514", max_tokens: 2500, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] })
+      body: JSON.stringify({ purpose: "report", tool: "transition", model: "claude-sonnet-4-20250514", max_tokens: 2500, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] })
     });
 
     const data = await response.json();
@@ -1049,6 +1049,6 @@ function copyCharter(btn, text) {
   });
 }
 </script>
-<script src="/report-pause.js"></script>
+<script src="/report-pause.js" data-tool="transition"></script>
 </body>
 </html>

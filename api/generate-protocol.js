@@ -8,6 +8,7 @@
 // Output: { protocol: { sections: [...], meta, gapFlags, logicFlags } }
 
 const { mapAnswers } = require("./_answer-map.js");
+const { isPaused } = require("./_pause.js");
 
 // Governance-area grading (old Section 5 and the cover rating) is off while it is rebuilt
 // against the current Commons map (src/data/nodes.json). It graded 10 areas from the spring
@@ -69,7 +70,7 @@ export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
-  if (process.env.REPORTS_PAUSED === "1") {
+  if (isPaused("vpg")) {
     return res.status(503).json({ error: "Report generation is paused while this tool is reviewed." });
   }
 

@@ -17,6 +17,7 @@
 //   - Requests must come from a page on this same site (Origin/Referer check).
 //     This stops other websites from using the endpoint from a browser; it does
 //     not stop a determined script. The rate limit and caps bound that case.
+const { isPaused } = require("./_pause.js");
 const { strongHit, strings, REFUSAL } = require("./_phi.js");
 
 const Redis = require("ioredis");
@@ -96,7 +97,7 @@ async function relay(req, res) {
   const isPrivate = Boolean(pw && process.env.INTAKE_PASSWORD && pw === process.env.INTAKE_PASSWORD);
 
   const body = req.body || {};
-  if (process.env.REPORTS_PAUSED === "1" && body.purpose === "report") {
+  if (body.purpose === "report" && isPaused(body.tool)) {
     return res.status(503).json({ error: "Report generation is paused while this tool is reviewed." });
   }
   const messages = Array.isArray(body.messages) ? body.messages : null;
