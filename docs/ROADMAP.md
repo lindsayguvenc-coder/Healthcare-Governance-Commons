@@ -18,6 +18,12 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
 - [ ] **Weekly currency scan.** Federal Register, FDA guidance, CMS, state AI
       laws, EU AI Act against `src/data/regulatory.json`. Opens a pull request
       or report for review. Feeds the Movement box.
+      - *Option B (Oct 29, to decide Nov 4):* broader weekly sweep, one lane
+        per kind of update: legislation, clinical practice, healthcare
+        operations, industry, global standards. Checks every as-of date the
+        Commons cites (starting with `REFERENCES_AS_OF` in
+        `api/generate-protocol.js`) and flags what moved. Lindsay reviews the
+        findings as they come in and adjusts plans from them.
 - [ ] **Monthly claims audit.** Re-verify everything labeled Sourced; chase
       Needs-source items. Must be a separate agent from anything that writes
       content (the checker is never the writer).
@@ -70,3 +76,21 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       text, so it sees compressed streams and misses PHI; use a real text
       extractor before uploads come back. (2) Real de-identification (names,
       dates and places in free prose) is a security-reviewer job, not regex.
+
+## Report tools: content reset (added Oct 29, 2026)
+Content review of the VPG: "VPG Content Review" doc. Done Oct 29: shared
+disclaimer, PDF crash and garbled characters fixed, honest "not asked" blanks,
+system name/vendor/version questions, governance-area grading switched off
+(`NODE_GRADING_PAUSED`), Joint Commission + CHAI elements with as-of dates.
+- [ ] **Metrics swap.** Adopt the Agent QC picker's set (intervals, sample
+      size, calibration, per-group numbers); drop AUC-alone, F1, and the
+      0.97/0.93 floors; add alert rate, override rate, net benefit. Label any
+      default allowable error as a Commons position.
+- [ ] **Short tracks by use type.** Ambient scribes (recording consent: 11
+      all-party states) and agentic workflows.
+- [ ] **Same content review for ROI, Consultation and the transition tools.**
+- [ ] **Rebuild governance-area grading** against `src/data/nodes.json`.
+- [ ] **Literature pass on metrics** for anything newer worth adding.
+- [ ] **Face lift, last.** One consistent look across all report PDFs, once
+      the content has settled.
+
