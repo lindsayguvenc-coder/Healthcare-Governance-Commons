@@ -1611,6 +1611,20 @@ function getSectionMonitoring() {
           'Informally understood but not documented','Not yet defined','Unknown'] },
       { id: 'q_roi_exit', text: 'At what point would your organization conclude this system is not delivering sufficient value to justify continued use?', type: 'select',
         options: ['Defined threshold','Not yet defined','This decision has not been formally considered'] },
+      // Joint Commission + CHAI Responsible Use of AI elements (guidance Sept 2025; voluntary
+      // certification from June 1, 2026). As of Oct 29, 2026: recheck against the current version.
+      { id: 'q41_policy', text: 'Is there an approved written policy for how staff may use this AI system?', type: 'select',
+        options: ['Yes — approved','Drafted, not yet approved','No','Unknown'] },
+      { id: 'q42_training', text: 'Have the staff who will use it been trained on what it does, its limits, and when not to rely on it?', type: 'select',
+        options: ['Yes — completed','Scheduled before go-live','No','Unknown'] },
+      { id: 'q43_disclosure', text: 'Will patients be told when this AI system is used in their care?', type: 'select',
+        options: ['Yes — in a standard way (signage, portal, consent form or verbal)','Case by case','No','Not yet decided'] },
+      { id: 'q44_consent', text: 'Is patient consent obtained when this AI system assists with or directly influences treatment decisions?', type: 'select',
+        options: ['Yes','Not required for this use — decision documented','No','Not yet decided'] },
+      { id: 'q45_safety_reporting', text: 'Where do staff report AI near-misses, unsafe outputs or performance failures?', type: 'select',
+        options: ['Our safety event system, with an AI category','Our safety event system, no AI category','A separate AI reporting channel','No defined path','Unknown'] },
+      { id: 'q46_security', text: 'Has this deployment had a data security and data use review (what data it receives, where it goes, what the vendor may do with it)?', type: 'select',
+        options: ['Yes — completed','In progress','No','Unknown'] },
     ],
   };
 }
@@ -2812,8 +2826,9 @@ function renderSubcontent(doc, sub, C, protocol, ctx) {
       doc.setFont('helvetica', 'italic');
       doc.setFontSize(8);
       doc.setTextColor(...C.midGray);
-      doc.text(content.note, C.mL, y);
-      y += 14;
+      const cnLines = doc.splitTextToSize(content.note, C.contentW);
+      doc.text(cnLines, C.mL, y);
+      y += cnLines.length * 10 + 4;
     }
   }
 

@@ -16,12 +16,36 @@ const { mapAnswers } = require("./_answer-map.js");
 const NODE_GRADING_PAUSED = true;
 const COMMONS_MAP_URL = "https://healthcare-governance-commons.vercel.app";
 
+// Date the regulatory and standards references in this file were last checked.
+const REFERENCES_AS_OF = "October 29, 2026";
+const CHECK_SOURCE = `Current as of ${REFERENCES_AS_OF}. Rules and standards change; check the current source before relying on this.`;
+
+// Joint Commission + CHAI Responsible Use of AI in Healthcare: seven elements (guidance
+// Sept 17, 2025; voluntary certification launched June 1, 2026).
+function buildTjcElements(answers) {
+  const a = answers;
+  const has = (v) => typeof v === "string" && v.trim() !== "";
+  const gov = has(a.q20_govbody) && !a.q20_govbody.startsWith("No formal body") && a.q20_govbody !== "In development";
+  const disc = a.q43_disclosure || "";
+  const rep = a.q45_safety_reporting || "";
+  const st = (ok, partial) => ok ? "complete" : partial ? "recommended" : "incomplete";
+  return [
+    { item: "Policies and governance structure: a body that reviews AI", status: st(gov) },
+    { item: "Patient privacy and transparency: patients told when AI is used", status: st(disc.startsWith("Yes"), disc === "Case by case") },
+    { item: "Data security and data use: review completed", status: st((a.q46_security || "").startsWith("Yes"), a.q46_security === "In progress") },
+    { item: "Ongoing quality monitoring: named owner and a review cadence", status: st(!!a.Q28 && !!a.Q37) },
+    { item: "Safety event reporting: a defined path for AI events", status: st(rep.startsWith("Our safety event system, with") || rep.startsWith("A separate"), rep.startsWith("Our safety event system, no")) },
+    { item: "Risk and bias assessment: Section 3 reviewed by clinical governance", status: "recommended" },
+    { item: "Education and training: staff trained before go-live", status: st(a.Q39 === "yes") },
+  ];
+}
+
 // Fields the report has a slot for but the questionnaire never asks. Before Oct 29 these
 // printed as findings ("Not disclosed", "No", a red X), which read as facts about the
 // organization when nobody had been asked. Now they say so plainly.
 const NOT_ASKED_TEXT = "Not asked by this tool. Fill in by hand.";
 const NOT_ASKED = new Set([
-  "Q5", "Q10", "Q11", "Q12", "Q38", "Q39", "Q40",
+  "Q5", "Q10", "Q11", "Q12",
   "Q_fda", "Q_autonomy", "Q_volume", "Q_f1", "Q_cohort_size", "Q_cohort_description",
   "Q_perf_summary", "Q_workflow_note", "Q_vendor_limitations", "Q_local_limitations",
   "Q_contraindications", "Q_preparer", "Q_reviewer", "Q_approver", "Q_next_review",
@@ -517,6 +541,13 @@ function buildSection6(answers, tiersResult, nodesResult, isFullProtocol) {
         },
       },
       {
+        title: "Joint Commission / CHAI Elements Checklist",
+        content: {
+          items: buildTjcElements(answers),
+          note: "The seven elements of the Joint Commission + CHAI Responsible Use of AI guidance (Sept 2025), the basis of the voluntary certification launched June 1, 2026. * means partly in place or still to review. " + CHECK_SOURCE,
+        },
+      },
+      {
         title: "Deployment Conditions",
         content: {
           conditions: buildDeploymentConditions(answers, tiersResult, nodesResult, isFullProtocol),
@@ -633,6 +664,7 @@ function buildSection7(answers, allGapFlags, overallNodeRating, isFullProtocol) 
           generatedAt: new Date().toISOString(),
           commonsUrl: "healthcare-governance-commons.vercel.app",
           shelfLifeStatement: "This document has a shelf life. A validation protocol that is never updated is not a governance document — it is a record of past intentions.",
+          referencesAsOf: "Regulatory and standards references in this protocol: " + CHECK_SOURCE,
           versionStatement: "Version 1.0. Update this document when any revalidation trigger is met or when organizational context changes materially.",
         },
       },
