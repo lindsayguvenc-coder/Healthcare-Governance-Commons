@@ -78,6 +78,9 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       dates and places in free prose) is a security-reviewer job, not regex.
 
 ## Report tools: content reset (added Oct 29, 2026)
+Reports turn back on per tool: each tool is listed in `PAUSED_IN_CODE` in
+`api/_pause.js` and comes off that list in the PR that finishes its review.
+`REPORTS_PAUSED` in Vercel is now only the emergency switch.
 Content review of the VPG: "VPG Content Review" doc. Done Oct 29: shared
 disclaimer, PDF crash and garbled characters fixed, honest "not asked" blanks,
 system name/vendor/version questions, governance-area grading switched off
@@ -90,6 +93,9 @@ system name/vendor/version questions, governance-area grading switched off
       all-party states) and agentic workflows.
 - [ ] **Same content review for ROI, Consultation and the transition tools.**
 - [ ] **Rebuild governance-area grading** against `src/data/nodes.json`.
+- [ ] **Section 6 readiness verdict.** Computed but never printed, and it can
+      disagree with the overall rating. Decide: print it, merge it with the
+      rating, or remove it. (Carried from Oct 29.)
 - [ ] **Literature pass on metrics** for anything newer worth adding.
 - [ ] **Face lift, last.** One consistent look across all report PDFs, once
       the content has settled.
