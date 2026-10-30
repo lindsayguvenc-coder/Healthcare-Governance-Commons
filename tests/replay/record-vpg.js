@@ -101,7 +101,8 @@ const ANSWERS = {
     await caption(`Page ${n} of ${pngs.length} · ${text}`, ms);
   };
 
-  await show(1, "Cover: the disclaimer box sits under the rating. The rating summary now prints in full (it used to stop after one line).", 5200);
+  await show(1, "Cover: the system name now shows, and there's no overall governance rating. The disclaimer sits right under the details.", 5200);
+  await show(find("Governance Map"), "Section 5 no longer grades the hospital against the old map. It points to the current Commons map instead.", 5200);
   await show(find("Not asked by this tool"), "Fields the questionnaire never asks now say 'Not asked by this tool. Fill in by hand.' They used to say 'Not disclosed'.", 5200);
   await show(find("Pre-Deployment Checklist"), "Checklist: things the tool never asks get a ? and a note, not a red fail mark. Marks are drawn now; they used to print as garbage characters.", 5200);
   await show(pngs.length, "Every page has the short disclaimer line at the bottom, above the page number.", 4200);
