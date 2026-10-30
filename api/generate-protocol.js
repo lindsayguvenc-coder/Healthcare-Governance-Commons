@@ -9,6 +9,13 @@
 
 const { mapAnswers } = require("./_answer-map.js");
 
+// Governance-area grading (old Section 5 and the cover rating) is off while it is rebuilt
+// against the current Commons map (src/data/nodes.json). It graded 10 areas from the spring
+// map, three of whose names now mean something else on the site, with made-up cutoffs.
+// Oct 29, 2026. Set to false only once the grading reads from nodes.json.
+const NODE_GRADING_PAUSED = true;
+const COMMONS_MAP_URL = "https://healthcare-governance-commons.vercel.app";
+
 // Fields the report has a slot for but the questionnaire never asks. Before Oct 29 these
 // printed as findings ("Not disclosed", "No", a red X), which read as facts about the
 // organization when nobody had been asked. Now they say so plainly.
@@ -61,7 +68,9 @@ export default async function handler(req, res) {
     const [tiersResult, biasResult, nodesResult] = await Promise.all([
       callEngine(`${baseUrl}/api/vpg-engines`, { engine: 'westgard', answers, logicFlags, gapFlags }),
       callEngine(`${baseUrl}/api/vpg-engines`, { engine: 'bias', answers, logicFlags, gapFlags }),
-      callEngine(`${baseUrl}/api/vpg-engines`, { engine: 'nodes', answers, logicFlags, gapFlags }),
+      NODE_GRADING_PAUSED
+        ? Promise.resolve({ paused: true })
+        : callEngine(`${baseUrl}/api/vpg-engines`, { engine: 'nodes', answers, logicFlags, gapFlags }),
     ]);
 
     // Assemble full protocol object
@@ -124,7 +133,8 @@ function assembleProtocol({ answers, logicFlags, gapFlags, documentMeta, tiersRe
   ].filter(Boolean);
 
   // Derive overall protocol risk signal
-  const overallNodeRating = nodesResult.overallRating || { rating: "unknown", label: "Assessment incomplete", summary: "" };
+  const overallNodeRating = nodesResult.paused ? null
+    : (nodesResult.overallRating || { rating: "unknown", label: "Assessment incomplete", summary: "" });
   const biasSummaryRating = biasResult.compatibilityTable?.summary?.overallRating || (biasResult.mode === "qualitative" ? "qualitative" : "unknown");
 
   return {
@@ -418,6 +428,24 @@ function buildSection4(tiersResult, isFullProtocol) {
 
 // Section 5: Governance Node Assessment (from commons-node-mapper engine)
 function buildSection5(nodesResult, isFullProtocol) {
+  if (nodesResult.paused) {
+    return {
+      sectionNumber: 5,
+      title: "Governance Map",
+      subsections: [
+        {
+          title: "Governance areas for this deployment",
+          content: {
+            narrativeSummary:
+              "This section used to grade your answers against areas of the Commons governance map. That grading is being rebuilt " +
+              "against the current map and is switched off, so this protocol gives no overall governance rating. " +
+              `Use the map at ${COMMONS_MAP_URL} to walk through the areas that apply to this deployment: who watches it, ` +
+              "who can stop it, how disputes and complaints are handled, equity monitoring, and vendor risk, among others.",
+          },
+        },
+      ],
+    };
+  }
   if (nodesResult.error) {
     return {
       sectionNumber: 5,
@@ -481,7 +509,7 @@ function buildSection6(answers, tiersResult, nodesResult, isFullProtocol) {
             { item: "Staff training completed or scheduled", status: check(answers, "Q39", answers.Q39 === "yes") },
             { item: "Use policy approved", status: check(answers, "Q38", answers.Q38 === "yes") },
             { item: "Patient consent process defined (if applicable)", status: check(answers, "Q40", answers.Q40 === "yes") },
-            { item: "Bias assessment reviewed by clinical governance", status: (nodesResult.overallRating?.rating !== "critical") ? "recommended" : "required" },
+            { item: "Bias assessment reviewed by clinical governance", status: (nodesResult.overallRating?.rating === "critical") ? "required" : "recommended" },
             { item: "Corrective action owner designated", status: answers.Q28 ? "complete" : "incomplete" },
             { item: "Revalidation trigger criteria defined", status: check(answers, "Q_revalidation_trigger", !!answers.Q_revalidation_trigger) },
           ],
@@ -565,9 +593,9 @@ function buildSection7(answers, allGapFlags, overallNodeRating, isFullProtocol) 
     title: "Governance Summary & Open Items",
     subsections: [
       {
-        title: "Overall Governance Assessment",
+        title: overallNodeRating ? "Overall Governance Assessment" : "Preparation and Sign-off",
         content: {
-          rating: overallNodeRating,
+          ...(overallNodeRating ? { rating: overallNodeRating } : {}),
           assessmentDate: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
           protocolPreparedBy: field(answers, "Q_preparer", "Not specified"),
           reviewedBy: field(answers, "Q_reviewer", "Pending review"),
