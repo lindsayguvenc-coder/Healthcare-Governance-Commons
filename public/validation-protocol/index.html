@@ -703,6 +703,7 @@
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 <script src="/phi-guard.js"></script>
+<script src="/report-disclaimer.js"></script>
 </head>
 <body>
 <div role="note" style="font:600 12px/1.5 ui-monospace,Menlo,monospace;letter-spacing:.04em;padding:8px max(16px,env(safe-area-inset-left,0px));text-align:center;background:#fdf3d8;color:#5c4400;border-bottom:1px solid #e8d49a">WORKING PROTOTYPE · built by one person · not yet independently reviewed · think with it, but don't make decisions on its output alone</div>
@@ -1902,6 +1903,8 @@ function goToReady() {
       ${gapFlagHTML}
       ${logicFlagHTML}
 
+      ${window.CommonsDisclaimer ? CommonsDisclaimer.html(VPG_DISCLAIMER) : ''}
+
       <div class="generate-area">
         <button
           class="generate-btn"
@@ -1929,6 +1932,10 @@ function goToReady() {
 
     </div>`;
 }
+
+// Disclaimer identity for this tool. Bump VPG_VERSION when the protocol logic changes.
+const VPG_VERSION = '2026-10-29';
+const VPG_DISCLAIMER = { tool: 'Validation Protocol Generator', version: VPG_VERSION, ai: 'none' };
 
 // ── PDF GENERATION ────────────────────────────────────────────────────────
 
@@ -2026,7 +2033,25 @@ async function handleGeneratePDF() {
 // ── PDF RENDERER ──────────────────────────────────────────────────────────
 // Inline renderer — no external module needed.
 
+// jsPDF's built-in Helvetica only draws Latin-1 characters. Anything else (✓, →, the
+// subscripts in Westgard rule names like 1₂ₛ) printed as garbage like %È. Translate first.
+const SUB = { '₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9','ₛ':'s','ₓ':'x' };
+function pdfSafe(t) {
+  if (Array.isArray(t)) return t.map(pdfSafe);
+  if (typeof t !== 'string') return t;
+  return t
+    .replace(/[₀-₉ₛ]+/g, m => '-' + [...m].map(c => SUB[c]).join(''))   // 1₂ₛ -> 1-2s
+    .replace(/ₓ/g, 'x')                                                    // 10ₓ -> 10x
+    .replace(/→/g, '->').replace(/←/g, '<-').replace(/↳/g, '-')
+    .replace(/≥/g, '>=').replace(/≤/g, '<=').replace(/≈/g, '~')
+    .replace(/✓/g, 'OK').replace(/✗/g, 'X').replace(/⚠/g, '!').replace(/[◈⚑◉◎]/g, '*')
+    .replace(/[^\x09\x0A\x20-\x7E\xA0-\xFF—–•…‘’“”€™]/g, '?');
+}
+
 function renderProtocolPDF(doc, protocol) {
+  const rawText = doc.text.bind(doc), rawSplit = doc.splitTextToSize.bind(doc);
+  doc.text = (t, ...rest) => rawText(pdfSafe(t), ...rest);
+  doc.splitTextToSize = (t, ...rest) => rawSplit(pdfSafe(t), ...rest);
   const C = {
     pageW: 612, pageH: 792,
     mL: 54, mR: 54, mT: 54, mB: 72,
@@ -2074,8 +2099,11 @@ function renderProtocolPDF(doc, protocol) {
     return ry + lines.length * 11;
   };
 
+  // color: an [r,g,b] array or a palette name like 'teal'. Passing a name used to
+  // spread it into letters and crash jsPDF, so no protocol PDF could be generated.
   const hRule = (ry, color) => {
-    doc.setDrawColor(...(color || C.lightGray));
+    const rgb = Array.isArray(color) ? color : (C[color] || C.lightGray);
+    doc.setDrawColor(...rgb);
     doc.setLineWidth(0.5);
     doc.line(C.mL, ry, C.pageW - C.mR, ry);
   };
@@ -2114,7 +2142,7 @@ function renderProtocolPDF(doc, protocol) {
   // Meta rows
   const metaItems = [
     ['Institution', protocol.meta.institution],
-    ['Use Type', protocol.meta.useType],
+    ['Use Type', protocol.meta.useTypeLabel || protocol.meta.useType],
     ['Generated', protocol.meta.generatedDate],
     ['Protocol Version', protocol.meta.version],
   ];
@@ -2131,6 +2159,7 @@ function renderProtocolPDF(doc, protocol) {
   });
 
   // Overall rating
+  let coverY = 300 + metaItems.length * 22;
   const ov = protocol.overallRating;
   if (ov) {
     const ratingColorMap = {
@@ -2141,24 +2170,31 @@ function renderProtocolPDF(doc, protocol) {
     };
     const rc = ratingColorMap[ov.rating] || { bg: C.grayBg, border: C.midGray, text: C.midGray };
     const rY = 300 + metaItems.length * 22 + 16;
-    fillRect(C.mL, rY, C.contentW, 52, rc.bg);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    const sumLines = ov.summary ? doc.splitTextToSize(ov.summary, C.contentW - 20) : [];
+    const rH = 36 + sumLines.length * 9 + 6;
+    fillRect(C.mL, rY, C.contentW, rH, rc.bg);
     doc.setDrawColor(...rc.border);
     doc.setLineWidth(1);
-    doc.rect(C.mL, rY, C.contentW, 52, 'S');
+    doc.rect(C.mL, rY, C.contentW, rH, 'S');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
     doc.setTextColor(...rc.text);
     doc.text('OVERALL GOVERNANCE RATING', C.mL + 10, rY + 14);
     doc.setFontSize(11);
     doc.text(ov.label || '—', C.mL + 10, rY + 28);
-    if (ov.summary) {
+    if (sumLines.length) {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7.5);
       doc.setTextColor(...C.charcoal);
-      const sumLines = doc.splitTextToSize(ov.summary, C.contentW - 20);
-      if (sumLines[0]) doc.text(sumLines[0], C.mL + 10, rY + 42);
+      doc.text(sumLines, C.mL + 10, rY + 40);
     }
+    coverY = rY + rH;
   }
+
+  // Disclaimer, on the cover where nobody can miss it
+  if (window.CommonsDisclaimer) CommonsDisclaimer.pdfBlock(doc, C.mL, coverY + 14, C.contentW, VPG_DISCLAIMER);
 
   // Shelf life
   hRule(C.pageH - 90, 'lightGray');
@@ -2362,6 +2398,7 @@ function renderProtocolPDF(doc, protocol) {
     doc.setTextColor(...C.midGray);
     doc.text(`Page ${i} of ${total}`, C.pageW / 2, C.pageH - 20, { align: 'center' });
   }
+  if (window.CommonsDisclaimer) CommonsDisclaimer.pdfFooter(doc, VPG_DISCLAIMER);
 }
 
 // Renders subsection content and returns updated y position
@@ -2741,20 +2778,38 @@ function renderSubcontent(doc, sub, C, protocol, ctx) {
     const statusMap = {
       complete: { sym: '✓', color: C.green },
       incomplete: { sym: '✗', color: C.red },
-      recommended: { sym: '◈', color: C.amber },
+      recommended: { sym: '*', color: C.amber },
+      required: { sym: '!', color: C.red },
       'n/a-review-required': { sym: '?', color: C.midGray },
+      'not-asked': { sym: '?', color: C.midGray },
     };
     for (const item of content.items) {
       needsPage(14);
       const sc = statusMap[item.status] || { sym: '—', color: C.midGray };
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      doc.setTextColor(...sc.color);
-      doc.text(sc.sym, C.mL + 4, y);
+      doc.setDrawColor(...sc.color);
+      doc.setLineWidth(1.4);
+      if (item.status === 'complete') {
+        doc.line(C.mL + 3, y - 3, C.mL + 6, y); doc.line(C.mL + 6, y, C.mL + 12, y - 7);
+      } else if (item.status === 'incomplete') {
+        doc.line(C.mL + 4, y - 7, C.mL + 11, y); doc.line(C.mL + 11, y - 7, C.mL + 4, y);
+      } else {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...sc.color);
+        doc.text(sc.sym, C.mL + 5, y);
+      }
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8.5);
       doc.setTextColor(...C.charcoal);
       doc.text(item.item || String(item), C.mL + 18, y);
+      y += 14;
+    }
+    if (content.note) {
+      needsPage(14);
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(8);
+      doc.setTextColor(...C.midGray);
+      doc.text(content.note, C.mL, y);
       y += 14;
     }
   }
@@ -2857,8 +2912,9 @@ function renderSubcontent(doc, sub, C, protocol, ctx) {
       doc.setFont('helvetica', 'italic');
       doc.setFontSize(8);
       doc.setTextColor(...C.midGray);
-      doc.text(content.note, C.mL, y);
-      y += 14;
+      const noteLines = doc.splitTextToSize(content.note, C.contentW);
+      doc.text(noteLines, C.mL, y);
+      y += noteLines.length * 10 + 4;
     }
     needsPage(18);
     fillRect(C.mL, y, C.contentW, 16, C.charcoal);

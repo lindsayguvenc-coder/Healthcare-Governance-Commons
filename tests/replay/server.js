@@ -7,7 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const Module = require("module");
 
-const repo = process.argv[2];
+const repo = path.resolve(process.argv[2]);
 const port = Number(process.argv[3] || 4300);
 const here = __dirname;
 
@@ -22,7 +22,7 @@ Module._resolveFilename = function (req, ...rest) {
 const origJs = Module._extensions[".js"];
 Module._extensions[".js"] = function (mod, filename) {
   if (filename.startsWith(path.join(repo, "api"))) {
-    const src = fs.readFileSync(filename, "utf8").replace(/export default async function handler/, "module.exports = async function handler");
+    const src = fs.readFileSync(filename, "utf8").replace(/export default (async )?function handler/, "module.exports = $1function handler");
     return mod._compile(src, filename);
   }
   return origJs(mod, filename);
@@ -55,6 +55,11 @@ global.fetch = async (url, opts) => {
 const handlers = {
   "/api/suggest": require(path.join(repo, "api/suggest.js")),
   "/api/queue": require(path.join(repo, "api/queue.js")),
+  "/api/status": require(path.join(repo, "api/status.js")),
+  // Validation Protocol Generator. generate-protocol calls vpg-engines over HTTP at
+  // http://localhost:3000 when VERCEL_URL is unset, so run this server on port 3000 for it.
+  "/api/generate-protocol": require(path.join(repo, "api/generate-protocol.js")),
+  "/api/vpg-engines": require(path.join(repo, "api/vpg-engines.js")),
 };
 const dist = path.join(repo, "dist");
 const types = { ".js": "text/javascript", ".css": "text/css", ".html": "text/html", ".pdf": "application/pdf", ".json": "application/json", ".svg": "image/svg+xml" };

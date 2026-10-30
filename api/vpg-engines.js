@@ -136,8 +136,9 @@ function deriveMetrics({ sensitivity, specificity, prevalence }) {
 
     metrics.ppv = tp / (tp + fp);
     metrics.npv = tn / (tn + fn);
-    metrics.likelihoodRatioPos = metrics.sensitivity / (1 - metrics.specificity);
-    metrics.likelihoodRatioNeg = (1 - metrics.sensitivity) / metrics.specificity;
+    // 100% (or 0%) specificity makes a ratio undefined; leave it blank rather than print Infinity
+    metrics.likelihoodRatioPos = metrics.specificity < 1 ? metrics.sensitivity / (1 - metrics.specificity) : null;
+    metrics.likelihoodRatioNeg = metrics.specificity > 0 ? (1 - metrics.sensitivity) / metrics.specificity : null;
     metrics.calculable = true;
   }
 

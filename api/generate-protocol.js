@@ -9,6 +9,31 @@
 
 const { mapAnswers } = require("./_answer-map.js");
 
+// Fields the report has a slot for but the questionnaire never asks. Before Oct 29 these
+// printed as findings ("Not disclosed", "No", a red X), which read as facts about the
+// organization when nobody had been asked. Now they say so plainly.
+const NOT_ASKED_TEXT = "Not asked by this tool. Fill in by hand.";
+const NOT_ASKED = new Set([
+  "Q1", "Q5", "Q6", "Q7", "Q10", "Q11", "Q12", "Q38", "Q39", "Q40",
+  "Q_fda", "Q_autonomy", "Q_volume", "Q_f1", "Q_cohort_size", "Q_cohort_description",
+  "Q_perf_summary", "Q_workflow_note", "Q_vendor_limitations", "Q_local_limitations",
+  "Q_contraindications", "Q_preparer", "Q_reviewer", "Q_approver", "Q_next_review",
+  "Q_revalidation_trigger",
+]);
+// value if answered; the not-asked note if the questionnaire has no question for it;
+// otherwise the fallback (the question exists and was left blank)
+function field(answers, key, fallback) {
+  const v = answers[key];
+  if (v !== undefined && v !== null && v !== "") return v;
+  return NOT_ASKED.has(key) ? NOT_ASKED_TEXT : fallback;
+}
+// checklist status: complete / incomplete, or not-asked when there is no question for it
+function check(answers, key, isComplete) {
+  if (isComplete) return "complete";
+  const v = answers[key];
+  return NOT_ASKED.has(key) && (v === undefined || v === null || v === "") ? "not-asked" : "incomplete";
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -83,7 +108,7 @@ async function callEngine(url, body) {
 function assembleProtocol({ answers, logicFlags, gapFlags, documentMeta, tiersResult, biasResult, nodesResult }) {
   const isFullProtocol = !logicFlags.includes("WORKFLOW_SUMMARY_MODE");
   const useType = answers.Q2 || "unknown";
-  const deploymentName = answers.Q1 || "Unnamed AI Deployment";
+  const deploymentName = answers.Q1 || "AI system (name not asked)";
   const institution = answers.Q3 || "Institution not specified";
   const generatedAt = new Date().toISOString();
   const generatedDate = new Date().toLocaleDateString("en-US", {
@@ -100,7 +125,7 @@ function assembleProtocol({ answers, logicFlags, gapFlags, documentMeta, tiersRe
 
   // Derive overall protocol risk signal
   const overallNodeRating = nodesResult.overallRating || { rating: "unknown", label: "Assessment incomplete", summary: "" };
-  const biasSummaryRating = biasResult.compatibilityTable?.summary?.overallRating || biasResult.mode === "qualitative" ? "qualitative" : "unknown";
+  const biasSummaryRating = biasResult.compatibilityTable?.summary?.overallRating || (biasResult.mode === "qualitative" ? "qualitative" : "unknown");
 
   return {
     meta: {
@@ -108,6 +133,7 @@ function assembleProtocol({ answers, logicFlags, gapFlags, documentMeta, tiersRe
       deploymentName,
       institution,
       useType,
+      useTypeLabel: answers.q2_usetype ? answers.q2_usetype.split(" — ")[0] : useType,
       isFullProtocol,
       protocolMode: isFullProtocol ? "Full Validation Protocol" : "Workflow Summary Protocol",
       generatedAt,
@@ -143,13 +169,13 @@ function buildSection1(answers, documentMeta, isFullProtocol) {
       {
         title: "Deployment Identification",
         content: {
-          deploymentName: answers.Q1 || "Not specified",
-          useType: answers.Q2 || "Not specified",
+          deploymentName: field(answers, "Q1", "Not specified"),
+          useType: answers.q2_usetype || answers.Q2 || "Not specified",
           institution: answers.Q3 || "Not specified",
           department: answers.Q4 || "Not specified",
-          deploymentDate: answers.Q5 || "Not specified",
-          vendor: answers.Q6 || "Not specified",
-          modelVersion: answers.Q7 || "Not specified",
+          deploymentDate: field(answers, "Q5", "Not specified"),
+          vendor: field(answers, "Q6", "Not specified"),
+          modelVersion: field(answers, "Q7", "Not specified"),
         },
       },
       {
@@ -158,9 +184,9 @@ function buildSection1(answers, documentMeta, isFullProtocol) {
           clinicalSetting: answers.Q8 || "Not specified",
           targetPopulation: answers.Q9 || "Not specified",
           intendedUseDescription: answers.Q_use_description || answers.Q_S1_describe || "Not provided",
-          autonomyLevel: answers.Q_autonomy || "Not specified",
+          autonomyLevel: field(answers, "Q_autonomy", "Not specified"),
           decisionWindow: answers.Q24 || "Not specified",
-          patientVolumeAffected: answers.Q_volume || "Not specified",
+          patientVolumeAffected: field(answers, "Q_volume", "Not specified"),
         },
       },
       {
@@ -210,25 +236,25 @@ function buildSection2(answers, isFullProtocol) {
       {
         title: "Vendor-Reported Characteristics",
         content: {
-          modelArchitecture: answers.Q10 || "Not disclosed",
-          trainingDataDescription: answers.Q11 || "Not disclosed",
-          vendorValidationSummary: answers.Q12 || "Not disclosed",
-          modelCardAvailable: answers.Q19 === "yes" ? "Yes" : "No / Not reviewed",
-          fdaStatus: answers.Q_fda || "Not specified",
+          modelArchitecture: field(answers, "Q10", "Not disclosed"),
+          trainingDataDescription: field(answers, "Q11", "Not disclosed"),
+          vendorValidationSummary: field(answers, "Q12", "Not disclosed"),
+          modelCardAvailable: answers.Q19 === "yes" || answers.Q_modelcard === "yes" ? "Yes (uploaded)" : "Not uploaded",
+          fdaStatus: field(answers, "Q_fda", "Not specified"),
         },
       },
       isFullProtocol
         ? {
             title: "Local Validation Baseline",
             content: {
-              localValidationPerformed: answers.Q_local_validation === "yes" || answers.Q12 === "yes" ? "Yes" : "Not yet performed — see gap flags",
+              localValidationPerformed: answers.Q_local_validation === "yes" ? "Yes" : "Not yet performed — see gap flags",
               sensitivity: answers.Q15 ? `${answers.Q15}%` : "Not provided",
               specificity: answers.Q16 ? `${answers.Q16}%` : "Not provided",
               prevalence: answers.Q17 ? `${answers.Q17}%` : "Not provided",
               auc: answers.Q_auc || "Not provided",
-              f1: answers.Q_f1 || "Not provided",
-              validationCohortSize: answers.Q_cohort_size || "Not provided",
-              validationCohortDescription: answers.Q_cohort_description || "Not provided",
+              f1: field(answers, "Q_f1", "Not provided"),
+              validationCohortSize: field(answers, "Q_cohort_size", "Not provided"),
+              validationCohortDescription: field(answers, "Q_cohort_description", "Not provided"),
               metricsNote: !hasMetrics
                 ? "No performance metrics provided. Monitoring thresholds in Section 4 are based on use-type defaults. Provide local validation metrics to generate deployment-specific thresholds."
                 : null,
@@ -237,16 +263,16 @@ function buildSection2(answers, isFullProtocol) {
         : {
             title: "Performance Summary",
             content: {
-              performanceSummary: answers.Q_perf_summary || "Not provided",
-              workflowIntegrationNote: answers.Q_workflow_note || "Not provided",
+              performanceSummary: field(answers, "Q_perf_summary", "Not provided"),
+              workflowIntegrationNote: field(answers, "Q_workflow_note", "Not provided"),
             },
           },
       {
         title: "Known Limitations",
         content: {
-          vendorDisclosedLimitations: answers.Q_vendor_limitations || "None disclosed",
-          locallyIdentifiedLimitations: answers.Q_local_limitations || "None identified during elicitation",
-          contraindications: answers.Q_contraindications || "None specified",
+          vendorDisclosedLimitations: field(answers, "Q_vendor_limitations", "None disclosed"),
+          locallyIdentifiedLimitations: field(answers, "Q_local_limitations", "None identified during elicitation"),
+          contraindications: field(answers, "Q_contraindications", "None specified"),
         },
       },
     ],
@@ -452,13 +478,14 @@ function buildSection6(answers, tiersResult, nodesResult, isFullProtocol) {
             { item: "Monitoring owner named and notified", status: hasMonitoringOwner ? "complete" : "incomplete" },
             { item: "Stop criteria defined and documented", status: hasStopCriteria ? "complete" : "incomplete" },
             { item: "Failover workflow documented", status: hasFailover ? "complete" : "incomplete" },
-            { item: "Staff training completed or scheduled", status: answers.Q39 === "yes" ? "complete" : "incomplete" },
-            { item: "Use policy approved", status: answers.Q38 === "yes" ? "complete" : "incomplete" },
-            { item: "Patient consent process defined (if applicable)", status: answers.Q40 === "yes" ? "complete" : "n/a-review-required" },
+            { item: "Staff training completed or scheduled", status: check(answers, "Q39", answers.Q39 === "yes") },
+            { item: "Use policy approved", status: check(answers, "Q38", answers.Q38 === "yes") },
+            { item: "Patient consent process defined (if applicable)", status: check(answers, "Q40", answers.Q40 === "yes") },
             { item: "Bias assessment reviewed by clinical governance", status: (nodesResult.overallRating?.rating !== "critical") ? "recommended" : "required" },
             { item: "Corrective action owner designated", status: answers.Q28 ? "complete" : "incomplete" },
-            { item: "Revalidation trigger criteria defined", status: answers.Q_revalidation_trigger ? "complete" : "incomplete" },
+            { item: "Revalidation trigger criteria defined", status: check(answers, "Q_revalidation_trigger", !!answers.Q_revalidation_trigger) },
           ],
+          note: "* recommended, ! required. ? means this tool does not ask about it; confirm by hand.",
         },
       },
       {
@@ -542,9 +569,9 @@ function buildSection7(answers, allGapFlags, overallNodeRating, isFullProtocol) 
         content: {
           rating: overallNodeRating,
           assessmentDate: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
-          protocolPreparedBy: answers.Q_preparer || "Not specified",
-          reviewedBy: answers.Q_reviewer || "Pending review",
-          approvedBy: answers.Q_approver || "Pending approval",
+          protocolPreparedBy: field(answers, "Q_preparer", "Not specified"),
+          reviewedBy: field(answers, "Q_reviewer", "Pending review"),
+          approvedBy: field(answers, "Q_approver", "Pending approval"),
         },
       },
       {
@@ -559,13 +586,14 @@ function buildSection7(answers, allGapFlags, overallNodeRating, isFullProtocol) 
         title: "Open Items Log",
         content: {
           items: buildOpenItemsLog(answers, allGapFlags),
-          note: "Open items should be assigned to named owners with target resolution dates before this protocol is considered complete.",
+          note: (allGapFlags.length > 15 ? `Showing the first 15 of ${allGapFlags.length} gap flags. All of them are in the appendix. ` : "") +
+            "Open items should be assigned to named owners with target resolution dates before this protocol is considered complete.",
         },
       },
       {
         title: "Next Scheduled Review",
         content: {
-          nextReviewDate: answers.Q_next_review || "Not specified — set before deployment",
+          nextReviewDate: field(answers, "Q_next_review", "Not specified — set before deployment"),
           reviewCadence: answers.Q_review_cadence || "Recommended: quarterly for first year, then annually unless monitoring triggers earlier review",
           reviewOwner: answers.Q28 || "Not assigned",
         },
