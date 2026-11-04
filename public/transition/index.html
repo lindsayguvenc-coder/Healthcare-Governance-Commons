@@ -505,7 +505,7 @@
     <div class="tool-header">
       <div class="tool-tag">AI-Powered · Charter Principles</div>
       <div class="tool-title">The <em>Charter Builder</em></div>
-      <p class="tool-desc">Answer five questions about your context and the AI generates a draft governance charter — all six principles translated into rules, metrics, and failsafes for your domain, plus who can stop a tool. Copy it and mark it up with your group.</p>
+      <p class="tool-desc">Answer five questions about your context and the AI generates a draft governance charter — all six principles translated into rules, metrics, and failsafes for your domain, plus who can stop a tool. Copy it and mark it up with your group. For baseline controls beyond a charter, see the free <a href="https://chai.org/workgroup/cross-cutting/ai-governance" style="color:inherit">CHAI governance playbooks</a>.</p>
     </div>
 
     <div class="input-group">
@@ -700,7 +700,7 @@
       </div>
       <div class="charter-card a3">
         <div class="charter-label">Equity and representation</div>
-        <div class="charter-rule">No decision without presence of materially affected populations. A decision needs enough people present in two ways: enough members overall, and enough people from each group the decision affects.</div>
+        <div class="charter-rule">No decision without presence of materially affected populations. A decision needs enough people present in two ways: enough members overall, and enough people from each group the decision affects. Patients are <a href="https://impact.stanford.edu/article/engaging-patients-ai-governance" style="color:inherit">largely left out of US AI governance today</a>, and including them is feasible.</div>
         <div class="charter-detail">Failsafe: Vote invalidated if representation gaps exist.</div>
       </div>
       <div class="charter-card a6">
@@ -738,6 +738,9 @@ function esc(value) {
 function disclaimerOpts(tool) {
   return { tool, version: TOOL_VERSION, ai: "full" };
 }
+
+// These tools only hear one person's account, so the result says so.
+const ONE_PERSON = `<div class="output-section"><div class="output-content">This reflects one person's description. Have someone else fill it in separately and compare the results. Where the two differ is worth discussing.</div></div>`;
 
 // A failure the visitor can do something about (patient data refused, rate limit, too long).
 class ToolMessage extends Error {}
@@ -835,6 +838,7 @@ Only say what the description supports. You know nothing about these people beyo
       <div class="output-section"><div class="synthesis-card"><div class="synthesis-label">Synthesis — what a solution that honors both looks like</div><div class="synthesis-text">${esc(result.synthesis)}</div></div></div>
       <div class="output-section"><div class="output-section-label">What this disagreement reveals</div><div class="output-content">${esc(result.what_we_learned)}</div></div>
       <div class="output-section"><div class="output-section-label">Next facilitator move</div><div class="output-content" style="border-color: var(--accent); color: var(--accent);">${esc(result.facilitator_move)}</div></div>
+      ${ONE_PERSON}
       ${CommonsDisclaimer.html(disclaimerOpts("Disagreement Unpacker"))}
     `;
   } catch (err) {
@@ -964,6 +968,7 @@ Be direct and specific. Base your assessment on what the user describes — don'
       <div class="output-section"><div class="output-section-label a2">Six properties</div>${legend}${propertyRows}</div>
       <div class="output-section"><div class="output-section-label a2">Active failure mode flags</div>${failureFlags}</div>
       <div class="output-section"><div class="output-section-label a2">Recommendations</div>${recommendations}</div>
+      ${ONE_PERSON}
       ${CommonsDisclaimer.html(disclaimerOpts("Container Health Check"))}
     `;
   } catch (err) {
@@ -1008,9 +1013,15 @@ Write a draft charter as flowing prose with clear sections. For each principle:
 - Give one concrete metric or indicator
 - Adapt the failsafe given above to their context; don't replace it with a different one
 
-Keep the whole draft under 900 words so it finishes cleanly. Format as a readable document, not a JSON object. Put each principle's name on its own line as a plain heading, with no markdown symbols such as # or *. This is a starting draft the group will edit before adopting anything, not a finished charter. Be specific to their domain and context — don't be generic. Address their highest-stakes decision and their most feared failure mode directly.
+Keep the whole draft under 1,000 words so it finishes cleanly. Format as a readable document, not a JSON object. Put each principle's name on its own line as a plain heading, with no markdown symbols such as # or *. This is a starting draft the group will edit before adopting anything, not a finished charter. Be specific to their domain and context — don't be generic. Address their highest-stakes decision and their most feared failure mode directly.
 
-Always include a section titled Stop Authority: name the role that can pause a tool or decision immediately without a meeting, the role that covers when that person is out, and what happens after a pause. Name roles, never invent people. If the user didn't say who holds this, mark it [ASSUMED: ...].
+Always include a section titled Stop Authority: name the role that can pause a tool or decision immediately without a meeting, the role that covers when that person is out, what happens after a pause, and who must be told and by when (leave the time limit for the group to set).
+
+Always include a section titled Ownership and Autonomy: each AI system has a named owner role responsible for monitoring it, and the group states what can run without a person and what needs human review. This includes AI agents that carry out multi-step work.
+
+Name roles, never invent people. If the user didn't say who holds a role, mark it [ASSUMED: ...].
+
+Do not cite specific laws or regulations. Tell the group to check the federal and state rules that apply to them, such as patient disclosure, consent for recording, and human review requirements.
 
 Metrics and thresholds are suggestions for the group to set, not standards; never imply a number comes from a regulation or published standard. Where you had to assume something about their context, mark it in the text as [ASSUMED: what you assumed].
 
