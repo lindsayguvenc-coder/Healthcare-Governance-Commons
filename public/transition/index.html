@@ -204,20 +204,8 @@
   .output-card-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
   .output-card-text { font-size: 11px; line-height: 1.7; color: var(--text); }
 
-  /* health score dots */
-  .score-dot {
-    display: inline-block;
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    margin-right: 6px;
-    vertical-align: middle;
-  }
-  .score-green { background: var(--accent5); box-shadow: 0 0 5px var(--accent5); }
-  .score-yellow { background: var(--accent4); }
-  .score-red { background: var(--accent3); }
-  .score-grey { background: transparent; border: 1.5px dashed #9a9aa6; box-sizing: border-box; }
-  .score-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 11px; opacity: .8; margin-bottom: 12px; }
-  .score-legend .score-dot { margin-right: 6px; vertical-align: middle; }
+  .read-row { margin-bottom: 6px; }
+  .read-row b { font-weight: 600; color: var(--accent2); }
   .cant-tell { font-style: italic; opacity: .75; }
 
   .health-row {
@@ -458,7 +446,7 @@
     <div class="tool-header">
       <div class="tool-tag">AI-Powered · Good Container Design</div>
       <div class="tool-title">Container <em>Health Check</em></div>
-      <p class="tool-desc">Describe your governance container — your team, working group, governance committee, or collaborative. The AI assesses it against the six Good Container properties and flags which failure modes are active or at risk.</p>
+      <p class="tool-desc">Describe your governance container — your team, working group, governance committee, or collaborative. The AI reads it against six Good Container properties and shows what you said, what's missing, and what to ask your group. It doesn't score you: one description can't support a score.</p>
     </div>
 
     <div class="input-group">
@@ -490,12 +478,12 @@
       </div>
     </div>
 
-    <button class="run-btn accent2" id="container-btn" onclick="runContainerCheck()">Run health check →</button>
+    <button class="run-btn accent2" id="container-btn" onclick="runContainerCheck()">Read my container →</button>
 
     <div class="output-wrapper" id="container-output-wrapper">
       <hr class="output-divider">
       <div style="font-size:11px;letter-spacing:0.04em;opacity:0.7;margin:0 0 16px;padding:8px 10px;border:1px dashed currentColor;border-radius:4px">AI-generated from what you described · not reviewed by a person · check it before you rely on it</div>
-      <div id="container-loading" class="loading" style="display:none">Assessing container</div>
+      <div id="container-loading" class="loading" style="display:none">Reading container</div>
       <div id="container-output-content"></div>
     </div>
   </div>
@@ -548,6 +536,20 @@
     </div>
 
     <button class="run-btn accent5" id="charter-btn" onclick="runCharterBuilder()">Build draft charter →</button>
+
+    <details data-last-updated="2026-11-04" style="font-size:12px; line-height:1.8; margin:0 0 20px;">
+      <summary style="cursor:pointer;">Rules to check: state examples · last updated November 4, 2026</summary>
+      <p style="margin:10px 0;">There is little federal law on most of this, so state rules often lead. These are examples only, not a complete list and not legal advice. Laws change, so check the current rules where you operate. The AI won't cite laws in your draft.</p>
+      <ul style="margin:0 0 0 18px;">
+        <li><strong>California AB 3030:</strong> disclose generative AI in patient communications</li>
+        <li><strong>California SB 1120:</strong> a licensed professional decides in utilization review; AI can't replace that</li>
+        <li><strong>Texas SB 1188:</strong> practitioners must review AI-generated records</li>
+        <li><strong>Texas HB 149:</strong> disclose AI use in patient care</li>
+        <li><strong>Rhode Island:</strong> tell patients when AI helps with visit notes, and review those notes for accuracy</li>
+        <li><strong>Maine HB 2082:</strong> mental health professionals need patient consent for ambient AI recording</li>
+        <li><strong>Colorado SB 26-189 (from Jan 1, 2027):</strong> notice, explanation, and human review after adverse decisions; HIPAA-covered entities are largely exempt</li>
+      </ul>
+    </details>
 
     <div class="output-wrapper" id="charter-output-wrapper">
       <hr class="output-divider">
@@ -865,7 +867,7 @@ async function runContainerCheck() {
   loading.style.display = 'block';
   outputContent.innerHTML = '';
 
-  const systemPrompt = `You are a governance container health assessment specialist. Your job is to assess a governance container against six Good Container properties and flag failure modes.
+  const systemPrompt = `You are a governance container reader. You read one person's description of a governance container against six Good Container properties. You do not score or grade it, because one description can't support a verdict. You show what it says, what it leaves out, and what the group should ask itself.
 
 IMPORTANT: Respond in plain English only. Do not use any non-English characters, symbols, or words under any circumstances.
 
@@ -886,38 +888,32 @@ The five failure modes to flag:
 
 Respond ONLY in this exact JSON format:
 {
-  "overall": "One sentence overall health assessment",
+  "overall": "One sentence on what the description covers and what it leaves out. Not a verdict on the group's health.",
   "properties": {
-    "legitimacy": { "score": "green|yellow|red|grey", "finding": "One sentence finding" },
-    "safety": { "score": "green|yellow|red|grey", "finding": "One sentence finding" },
-    "time": { "score": "green|yellow|red|grey", "finding": "One sentence finding" },
-    "intimacy": { "score": "green|yellow|red|grey", "finding": "One sentence finding" },
-    "narrative": { "score": "green|yellow|red|grey", "finding": "One sentence finding" },
-    "stop": { "score": "green|yellow|red|grey", "finding": "One sentence finding" }
+    "legitimacy": { "said": "...", "missing": "...", "ask": "..." },
+    "safety": { "said": "...", "missing": "...", "ask": "..." },
+    "time": { "said": "...", "missing": "...", "ask": "..." },
+    "intimacy": { "said": "...", "missing": "...", "ask": "..." },
+    "narrative": { "said": "...", "missing": "...", "ask": "..." },
+    "stop": { "said": "...", "missing": "...", "ask": "..." }
   },
-  "active_failure_modes": ["list only failure modes that are active or at elevated risk"],
-  "recommendations": [
-    { "area": "Short label", "action": "One concrete recommendation" },
-    { "area": "Short label", "action": "One concrete recommendation" }
-  ]
+  "active_failure_modes": ["list only failure modes the description gives evidence for"]
 }
 
-What the scores mean:
-- green: the description shows this property is in place
-- yellow: the description shows a real concern or partial gap
-- red: the description shows this property is failing
-- grey: the description doesn't say enough to assess this property. Grey is not a mild concern, it is no result. The finding should name what you would need to know.
+For each property:
+- said: what the description shows about this property, including concerns. If it shows nothing, write "Nothing on this."
+- missing: what it doesn't tell us, in one sentence.
+- ask: one pointed question for the group, specific to what was described.
 
-Be direct and specific. Base your assessment on what the user describes — don't assume what you don't know. Never use yellow for missing information; use grey. Only list a failure mode if the description gives evidence for it.`;
+Base everything on what the user wrote. Don't assume what you don't know. Never use words like healthy, good, poor, passing, or failing about the group as a whole.`;
 
-  const userPrompt = `Container description: ${input}\nContainer type: ${containerType}\nRunning for: ${containerAge}\n\nAssess this governance container. Return only valid JSON.`;
+  const userPrompt = `Container description: ${input}\nContainer type: ${containerType}\nRunning for: ${containerAge}\n\nRead this governance container. Return only valid JSON.`;
 
   try {
     const reply = await askAI(systemPrompt, userPrompt);
     const result = parseJSON(reply);
     loading.style.display = 'none';
 
-    const scoreColors = { green: 'score-green', yellow: 'score-yellow', red: 'score-red', grey: 'score-grey' };
     const propLabels = {
       legitimacy: 'Legitimacy without capture — credible and independent, not owned by any single interest',
       safety: 'Psychological safety — participants can say uncomfortable truths without punishment',
@@ -937,14 +933,16 @@ Be direct and specific. Base your assessment on what the user describes — don'
 
     const propertyRows = Object.entries(result.properties).map(([key, val]) => `
       <div class="health-row">
-        <div style="flex-shrink:0; padding-top:3px;"><span class="score-dot ${scoreColors[val.score] || 'score-grey'}" aria-label="${esc(scoreColors[val.score] ? val.score : 'grey')}"></span></div>
-        <div><div class="health-label">${propLabels[key] || esc(key)}</div><div class="health-text">${esc(val.finding)}</div></div>
+        <div>
+          <div class="health-label">${propLabels[key] || esc(key)}</div>
+          <div class="health-text read-row"><b>What you said:</b> ${esc(val.said)}</div>
+          <div class="health-text read-row"><b>What's missing:</b> ${esc(val.missing)}</div>
+          <div class="health-text read-row"><b>Ask your group:</b> ${esc(val.ask)}</div>
+        </div>
       </div>
     `).join('');
 
     const activeModes = result.active_failure_modes || [];
-    const greyCount = Object.values(result.properties).filter(v => !['green', 'yellow', 'red'].includes(v.score)).length;
-    const legend = `<div class="score-legend"><span><span class="score-dot score-green"></span>In place</span><span><span class="score-dot score-yellow"></span>Concern</span><span><span class="score-dot score-red"></span>Failing</span><span><span class="score-dot score-grey"></span>Not assessable from what you wrote</span></div>`;
 
     const failureFlags = activeModes.length > 0
       ? activeModes.map(f => {
@@ -952,22 +950,12 @@ Be direct and specific. Base your assessment on what the user describes — don'
           const label = failureDescriptors[key] || esc(f);
           return `<div class="failure-flag"><div class="failure-flag-label">⚡ ${label}</div></div>`;
         }).join('')
-      : greyCount > 0
-        ? `<div class="output-content">None flagged from what you described, but ${greyCount} of ${Object.keys(result.properties).length} properties couldn't be assessed, so this isn't a clean result.</div>`
-        : `<div class="output-content" style="border-color: var(--accent5); color: var(--accent5);">No failure modes flagged as active or at elevated risk.</div>`;
-
-    const recommendations = (result.recommendations || []).map(r => `
-      <div class="health-row">
-        <div style="flex-shrink:0; padding-top:2px; font-family: 'DM Mono', monospace; font-size:9px; color: var(--accent2); font-weight:700;">→</div>
-        <div><div class="health-label">${esc(r.area)}</div><div class="health-text">${esc(r.action)}</div></div>
-      </div>
-    `).join('');
+      : `<div class="output-content">None flagged from what you described. That only means the description didn't show any.</div>`;
 
     outputContent.innerHTML = `
-      <div class="output-section"><div class="output-section-label a2">Overall assessment</div><div class="output-content">${esc(result.overall)}</div></div>
-      <div class="output-section"><div class="output-section-label a2">Six properties</div>${legend}${propertyRows}</div>
-      <div class="output-section"><div class="output-section-label a2">Active failure mode flags</div>${failureFlags}</div>
-      <div class="output-section"><div class="output-section-label a2">Recommendations</div>${recommendations}</div>
+      <div class="output-section"><div class="output-section-label a2">What this description covers</div><div class="output-content">${esc(result.overall)}</div></div>
+      <div class="output-section"><div class="output-section-label a2">Six properties</div>${propertyRows}</div>
+      <div class="output-section"><div class="output-section-label a2">Failure modes to look at</div>${failureFlags}</div>
       ${ONE_PERSON}
       ${CommonsDisclaimer.html(disclaimerOpts("Container Health Check"))}
     `;

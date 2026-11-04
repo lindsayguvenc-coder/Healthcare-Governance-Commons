@@ -27,18 +27,18 @@ const UNPACK = {
   what_we_learned: "Nobody owns the stop decision yet.",
   facilitator_move: "Ask each side what result would change their mind.",
 };
+const row = (said, missing, ask) => ({ said, missing, ask });
 const CONTAINER_THIN = {
-  overall: "Too little here to say much: only the membership is described.",
+  overall: "This covers who sits on the committee and nothing about how it works.",
   properties: {
-    legitimacy: { score: "yellow", finding: "The vendor sits as a voting member." },
-    safety: { score: "grey", finding: "Nothing says whether people can disagree safely. Need: what happens after dissent." },
-    time: { score: "grey", finding: "Nothing on meeting cadence or pressure." },
-    intimacy: { score: "grey", finding: "Nothing on how members work together." },
-    narrative: { score: "grey", finding: "Nothing on what story the group tells." },
-    stop: { score: "grey", finding: "Nothing says who can pause a tool." },
+    legitimacy: row("The vendor sits as a member.", "Whether the vendor votes.", "Does the vendor vote on its own products?"),
+    safety: row("Nothing on this.", "What happens after someone disagrees.", "When did someone last say no here, and what happened?"),
+    time: row("Nothing on this.", "How often you meet and who sets deadlines.", "Who sets your deadlines?"),
+    intimacy: row("Nothing on this.", "How members work together.", "Who outside IT has seen this tool in use?"),
+    narrative: row("Nothing on this.", "What story the group tells.", "How would you explain this group's purpose to a patient?"),
+    stop: row("Nothing on this.", "Who can pause a tool.", "If a tool went wrong tonight, who turns it off?"),
   },
   active_failure_modes: [],
-  recommendations: [{ area: "Vendor seat", action: "Move the vendor to a non-voting seat." }],
 };
 const CHARTER = `# Dignity before efficiency\n\nNo **workflow** change may shift its error burden onto the "night shift" or the clinic's Medicaid patients. [ASSUMED: the committee covers all three campuses]\n\nIndicator: the group sets a threshold for error rate by shift.\nFailsafe: any member can pause a rollout pending review.\n\nHow to use this draft\n\nDecide the thresholds, cut what doesn't fit, and name owners before adopting anything.`;
 const HOSTILE = `<img src=x onerror="window.__pwned=1"> "quoted" and \`backticks\` and \${1+1}`;
@@ -100,12 +100,11 @@ let next = null;
   await page.waitForSelector("#container-output-content .commons-disclaimer");
   await to("#container-output-content");
   await page.evaluate(() => window.scrollBy(0, 120));
-  await caption("Container Health Check on a thin description. Decision 1: dashed grey means no result, not a mild concern.", 5500);
-  results.greyDots = await page.locator("#container-output-content .health-row .score-grey").count();
-  const noClean = page.locator("#container-output-content", { hasText: "isn't a clean result" });
-  results.notClean = await noClean.count();
-  await page.locator("#container-output-content .output-section-label", { hasText: "Active failure" }).evaluate(e => window.scrollTo(0, e.getBoundingClientRect().top + scrollY - 200));
-  await caption("No failure modes found, but it won't call that clean when 5 of 6 weren't assessable.", 5000);
+  await caption("Container Health Check rebuilt: no colors, no score. What you said, what's missing, what to ask your group.", 5500);
+  results.readRows = await page.locator("#container-output-content .read-row").count();
+  results.noDots = (await page.locator("#container-output-content .score-dot").count()) === 0;
+  await page.locator("#container-output-content .output-section-label", { hasText: "Failure modes" }).evaluate(e => window.scrollTo(0, e.getBoundingClientRect().top + scrollY - 200));
+  await caption("No false all-clear, and a note that this is one person's description.", 4500);
 
   // 3. Charter, with copy
   next = { text: CHARTER };
@@ -114,6 +113,10 @@ let next = null;
   await page.waitForSelector("#charter-output-content .commons-disclaimer");
   await to("#charter-output-content");
   await caption("Charter Builder. Decision 4: labeled a draft to mark up, assumptions flagged, no raw # or ** symbols.", 5500);
+  await page.locator("details[data-last-updated] summary").click();
+  await to("details[data-last-updated]");
+  await caption("State examples, dated, with the AI citing no laws in the draft.", 4500);
+  await to("#charter-output-content .copy-btn");
   await page.click("#charter-output-content .copy-btn");
   await page.waitForTimeout(200);
   const clip = await page.evaluate(() => navigator.clipboard.readText());

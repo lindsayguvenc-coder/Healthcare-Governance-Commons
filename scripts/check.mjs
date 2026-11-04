@@ -63,6 +63,11 @@ const ageDays = (Date.now() - Date.parse(reg.asOf)) / 86400000;
 if (!(ageDays >= 0)) fail(`regulatory.json: asOf "${reg.asOf}" is not a valid date`);
 else if (ageDays > MAX_AGE_DAYS) fail(`regulatory.json: last reviewed ${Math.round(ageDays)} days ago (limit ${MAX_AGE_DAYS})`);
 else if (ageDays > MAX_AGE_DAYS - 30) warn(`regulatory.json: review due within a month (reviewed ${reg.asOf})`);
+
+// The state-law examples on /transition carry their own date.
+const stateBox = read("public/transition/index.html").match(/data-last-updated="([\d-]+)"/);
+if (!stateBox) fail("transition page: state examples have no last-updated date");
+else if ((Date.now() - Date.parse(stateBox[1])) / 86400000 > MAX_AGE_DAYS) warn(`transition page: state examples are out of date (updated ${stateBox[1]})`);
 for (const [id, layers] of Object.entries(reg.nodes)) {
   for (const k of ["required", "recommended", "practiced"]) {
     for (const it of layers[k] || []) if (!it.verified) warn(`regulatory.json: "${id}" ${k} item unverified: ${it.text.slice(0, 60)}`);
