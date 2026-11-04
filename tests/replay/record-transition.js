@@ -15,11 +15,14 @@ fs.mkdirSync(out, { recursive: true });
 const na = "Can't tell from this: nothing here says what either side has lived through.";
 const UNPACK = {
   summary: "A timing dispute standing in for a dispute about who carries the risk if the tool is wrong.",
+  facts: { party_a: "Burnout is driving departures.", party_b: "The validation data doesn't cover this population." },
   assumptions: { party_a: "Delay has a cost that is being undercounted.", party_b: "Validation evidence so far doesn't fit this population." },
   values: { party_a: "Access now.", party_b: "Not harming the patients least able to absorb an error." },
   experience: { party_a: na, party_b: "Described as having run a prior rollout that was pulled after go-live." },
+  incentives: { party_a: "Rewarded for retention numbers.", party_b: "Answers for it if an audit finds a gap." },
   risks: { party_a: "Falling behind while staff burn out.", party_b: "A silent failure nobody is watching for." },
   horizons: { party_a: "This quarter.", party_b: "The next several years of trust." },
+  definitions: { party_a: "'Validated' means the vendor tested it.", party_b: "'Validated' means tested on our patients." },
   synthesis: "A limited launch with a named stop owner might honor both, if the group can agree what would trigger a stop.",
   what_we_learned: "Nobody owns the stop decision yet.",
   facilitator_move: "Ask each side what result would change their mind.",
