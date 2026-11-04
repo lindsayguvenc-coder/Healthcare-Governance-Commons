@@ -35,6 +35,7 @@ const CONTAINER_THIN = {
     time: { score: "grey", finding: "Nothing on meeting cadence or pressure." },
     intimacy: { score: "grey", finding: "Nothing on how members work together." },
     narrative: { score: "grey", finding: "Nothing on what story the group tells." },
+    stop: { score: "grey", finding: "Nothing says who can pause a tool." },
   },
   active_failure_modes: [],
   recommendations: [{ area: "Vendor seat", action: "Move the vendor to a non-voting seat." }],
@@ -104,7 +105,7 @@ let next = null;
   const noClean = page.locator("#container-output-content", { hasText: "isn't a clean result" });
   results.notClean = await noClean.count();
   await page.locator("#container-output-content .output-section-label", { hasText: "Active failure" }).evaluate(e => window.scrollTo(0, e.getBoundingClientRect().top + scrollY - 200));
-  await caption("No failure modes found, but it won't call that clean when 4 of 5 weren't assessable.", 5000);
+  await caption("No failure modes found, but it won't call that clean when 5 of 6 weren't assessable.", 5000);
 
   // 3. Charter, with copy
   next = { text: CHARTER };

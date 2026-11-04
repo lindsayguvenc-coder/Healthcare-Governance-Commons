@@ -398,7 +398,7 @@
       <span class="pill a4">Disagreement as Data</span>
       <span class="pill a1">AI as Immune System</span>
       <span class="pill a5">Good Container Design</span>
-      <span class="pill a2">Future Transition Council</span>
+      <span class="pill a2">Charter Principles</span>
       <span class="pill">Behavioral Architecture</span>
     </div>
   </header>
@@ -458,7 +458,7 @@
     <div class="tool-header">
       <div class="tool-tag">AI-Powered · Good Container Design</div>
       <div class="tool-title">Container <em>Health Check</em></div>
-      <p class="tool-desc">Describe your governance container — your team, working group, governance committee, or collaborative. The AI assesses it against the five Good Container properties and flags which failure modes are active or at risk.</p>
+      <p class="tool-desc">Describe your governance container — your team, working group, governance committee, or collaborative. The AI assesses it against the six Good Container properties and flags which failure modes are active or at risk.</p>
     </div>
 
     <div class="input-group">
@@ -503,9 +503,9 @@
   <!-- ── TOOL 3: CHARTER BUILDER ── -->
   <div id="charter-builder" class="tool-wrapper accent5" style="margin-bottom:80px;">
     <div class="tool-header">
-      <div class="tool-tag">AI-Powered · Future Transition Council</div>
+      <div class="tool-tag">AI-Powered · Charter Principles</div>
       <div class="tool-title">The <em>Charter Builder</em></div>
-      <p class="tool-desc">Answer five questions about your context and the AI generates a draft governance charter — all six principles translated into specific rules, metrics, and failsafes for your domain. Copyable and ready to adapt.</p>
+      <p class="tool-desc">Answer five questions about your context and the AI generates a draft governance charter — all six principles translated into rules, metrics, and failsafes for your domain, plus who can stop a tool. Copy it and mark it up with your group.</p>
     </div>
 
     <div class="input-group">
@@ -577,6 +577,7 @@
           <li><strong>Time insulated from urgency</strong> — protected from quarterly thinking and short-term pressure</li>
           <li><strong>Cross-domain intimacy</strong> — not panels, but sustained collaboration across disciplines over months</li>
           <li><strong>Narrative incubation</strong> — generates the story of change, not just the mechanics</li>
+          <li><strong>Stop authority</strong> — a named person can pause a tool now, without waiting for a meeting</li>
         </ul>
         <h3>Failure modes</h3>
         <ul>
@@ -671,10 +672,10 @@
   </div>
 
   <!-- FTC CHARTER -->
-  <div class="section-label">Future Transition Council — Charter Principles</div>
+  <div class="section-label">Charter Principles</div>
   <div class="charter" style="margin-bottom:80px;">
     <p style="font-size:11px; line-height:1.9; color:var(--muted); max-width:640px; margin-bottom:32px;">
-      A design for humane large-scale transition. Not a council of authorities — an operating system for decision-making under complexity. Each value translates directly into a rule, a metric, and a failsafe.
+      Six principles for making decisions under uncertainty. Each one has a rule, and a failsafe for when the rule fails.
     </p>
     <div class="charter-grid">
       <div class="charter-card a1">
@@ -699,12 +700,12 @@
       </div>
       <div class="charter-card a3">
         <div class="charter-label">Equity and representation</div>
-        <div class="charter-rule">No decision without presence of materially affected populations. Two-axis quorum required.</div>
+        <div class="charter-rule">No decision without presence of materially affected populations. A decision needs enough people present in two ways: enough members overall, and enough people from each group the decision affects.</div>
         <div class="charter-detail">Failsafe: Vote invalidated if representation gaps exist.</div>
       </div>
       <div class="charter-card a6">
         <div class="charter-label">Dual-horizon discipline</div>
-        <div class="charter-rule">Every proposal must include H1 stabilization plan and H2 systemic correction plan.</div>
+        <div class="charter-rule">Every proposal needs a plan for now (what keeps people safe in the short term) and a plan for later (what fixes the underlying problem).</div>
         <div class="charter-detail">Failsafe: Rejection if one horizon is achieved by sacrificing the other.</div>
       </div>
     </div>
@@ -860,16 +861,17 @@ async function runContainerCheck() {
   loading.style.display = 'block';
   outputContent.innerHTML = '';
 
-  const systemPrompt = `You are a governance container health assessment specialist. Your job is to assess a governance container against five Good Container properties and flag failure modes.
+  const systemPrompt = `You are a governance container health assessment specialist. Your job is to assess a governance container against six Good Container properties and flag failure modes.
 
 IMPORTANT: Respond in plain English only. Do not use any non-English characters, symbols, or words under any circumstances.
 
-The five properties to assess:
+The six properties to assess:
 1. Legitimacy without capture — credible and independent, not owned by any single interest
 2. Psychological safety for radical honesty — participants can say uncomfortable truths without punishment
 3. Time insulated from urgency — protected from short-term pressure and quarterly thinking
 4. Cross-domain intimacy — sustained collaboration across disciplines, not just panels or meetings
 5. Narrative incubation — able to generate the story of change, not just the mechanics
+6. Stop authority — a named person or role can pause a tool or decision now, without waiting for a meeting, and someone covers when they are out
 
 The five failure modes to flag:
 1. Ego capture — charismatic personalities absorbing decision authority
@@ -886,7 +888,8 @@ Respond ONLY in this exact JSON format:
     "safety": { "score": "green|yellow|red|grey", "finding": "One sentence finding" },
     "time": { "score": "green|yellow|red|grey", "finding": "One sentence finding" },
     "intimacy": { "score": "green|yellow|red|grey", "finding": "One sentence finding" },
-    "narrative": { "score": "green|yellow|red|grey", "finding": "One sentence finding" }
+    "narrative": { "score": "green|yellow|red|grey", "finding": "One sentence finding" },
+    "stop": { "score": "green|yellow|red|grey", "finding": "One sentence finding" }
   },
   "active_failure_modes": ["list only failure modes that are active or at elevated risk"],
   "recommendations": [
@@ -916,7 +919,8 @@ Be direct and specific. Base your assessment on what the user describes — don'
       safety: 'Psychological safety — participants can say uncomfortable truths without punishment',
       time: 'Time insulation — protected from short-term pressure and quarterly thinking',
       intimacy: 'Cross-domain intimacy — sustained collaboration across disciplines, not just panels',
-      narrative: 'Narrative incubation — generates the story of change, not just the mechanics'
+      narrative: 'Narrative incubation — generates the story of change, not just the mechanics',
+      stop: 'Stop authority — a named person can pause a tool now, without waiting for a meeting'
     };
 
     const failureDescriptors = {
@@ -945,7 +949,7 @@ Be direct and specific. Base your assessment on what the user describes — don'
           return `<div class="failure-flag"><div class="failure-flag-label">⚡ ${label}</div></div>`;
         }).join('')
       : greyCount > 0
-        ? `<div class="output-content">None flagged from what you described, but ${greyCount} of 5 properties couldn't be assessed, so this isn't a clean result.</div>`
+        ? `<div class="output-content">None flagged from what you described, but ${greyCount} of ${Object.keys(result.properties).length} properties couldn't be assessed, so this isn't a clean result.</div>`
         : `<div class="output-content" style="border-color: var(--accent5); color: var(--accent5);">No failure modes flagged as active or at elevated risk.</div>`;
 
     const recommendations = (result.recommendations || []).map(r => `
@@ -957,7 +961,7 @@ Be direct and specific. Base your assessment on what the user describes — don'
 
     outputContent.innerHTML = `
       <div class="output-section"><div class="output-section-label a2">Overall assessment</div><div class="output-content">${esc(result.overall)}</div></div>
-      <div class="output-section"><div class="output-section-label a2">Five properties</div>${legend}${propertyRows}</div>
+      <div class="output-section"><div class="output-section-label a2">Six properties</div>${legend}${propertyRows}</div>
       <div class="output-section"><div class="output-section-label a2">Active failure mode flags</div>${failureFlags}</div>
       <div class="output-section"><div class="output-section-label a2">Recommendations</div>${recommendations}</div>
       ${CommonsDisclaimer.html(disclaimerOpts("Container Health Check"))}
@@ -1005,6 +1009,8 @@ Write a draft charter as flowing prose with clear sections. For each principle:
 - Adapt the failsafe given above to their context; don't replace it with a different one
 
 Keep the whole draft under 900 words so it finishes cleanly. Format as a readable document, not a JSON object. Put each principle's name on its own line as a plain heading, with no markdown symbols such as # or *. This is a starting draft the group will edit before adopting anything, not a finished charter. Be specific to their domain and context — don't be generic. Address their highest-stakes decision and their most feared failure mode directly.
+
+Always include a section titled Stop Authority: name the role that can pause a tool or decision immediately without a meeting, the role that covers when that person is out, and what happens after a pause. Name roles, never invent people. If the user didn't say who holds this, mark it [ASSUMED: ...].
 
 Metrics and thresholds are suggestions for the group to set, not standards; never imply a number comes from a regulation or published standard. Where you had to assume something about their context, mark it in the text as [ASSUMED: what you assumed].
 
