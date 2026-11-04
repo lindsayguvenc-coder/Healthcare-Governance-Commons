@@ -215,6 +215,10 @@
   .score-green { background: var(--accent5); box-shadow: 0 0 5px var(--accent5); }
   .score-yellow { background: var(--accent4); }
   .score-red { background: var(--accent3); }
+  .score-grey { background: transparent; border: 1.5px dashed #9a9aa6; box-sizing: border-box; }
+  .score-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 11px; opacity: .8; margin-bottom: 12px; }
+  .score-legend .score-dot { margin-right: 6px; vertical-align: middle; }
+  .cant-tell { font-style: italic; opacity: .75; }
 
   .health-row {
     display: flex;
@@ -372,6 +376,7 @@
   }
 </style>
 <script src="/phi-guard.js"></script>
+<script src="/report-disclaimer.js"></script>
 </head>
 <body>
 <div role="note" style="font:600 12px/1.5 ui-monospace,Menlo,monospace;letter-spacing:.04em;padding:8px max(16px,env(safe-area-inset-left,0px));text-align:center;background:#fdf3d8;color:#5c4400;border-bottom:1px solid #e8d49a">WORKING PROTOTYPE · built by one person · not yet independently reviewed · think with it, but don't make decisions on its output alone</div>
@@ -778,6 +783,42 @@ function toggleConcept(card) {
   if (!wasExpanded) card.classList.add('expanded');
 }
 
+// ── SHARED ─────────────────────────────────────────────────────────────────
+const TOOL_VERSION = "2026-11-04"; // the date these tools' logic last changed
+
+// AI text and anything echoed from the visitor goes through this before it reaches the page.
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function disclaimerOpts(tool) {
+  return { tool, version: TOOL_VERSION, ai: "full" };
+}
+
+// A failure the visitor can do something about (patient data refused, rate limit, too long).
+class ToolMessage extends Error {}
+
+async function askAI(system, user) {
+  const response = await fetch("/api/synthesize", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ purpose: "report", tool: "transition", max_tokens: 2500, system, messages: [{ role: "user", content: user }] })
+  });
+  const data = await response.json();
+  if (!response.ok) throw new ToolMessage(typeof data.error === "string" ? data.error : "Something went wrong. Please try again.");
+  return { text: data.content.map(i => i.text || '').join(''), truncated: data.stop_reason === "max_tokens" };
+}
+
+function parseJSON(reply) {
+  if (reply.truncated) throw new ToolMessage("The answer came back too long and was cut off. Try a shorter description.");
+  return JSON.parse(reply.text.replace(/```json|```/g, '').trim());
+}
+
+function showError(el, err) {
+  const msg = err instanceof ToolMessage ? err.message : "Something went wrong. Please try again.";
+  el.innerHTML = `<div class="output-content" style="color: var(--accent3);">${esc(msg)}</div>`;
+}
+
 // ── DISAGREEMENT UNPACKER ──────────────────────────────────────────────────
 async function runUnpacker() {
   const input = document.getElementById('disagreement-input').value.trim();
@@ -817,35 +858,35 @@ You respond ONLY in JSON format with this exact structure:
   "facilitator_move": "One specific facilitation prompt or action to take next in the room"
 }
 
-Be specific, grounded, and practically useful. Do not produce generic responses. Tailor everything to the actual disagreement described.`;
+Be specific, grounded, and practically useful. Do not produce generic responses. Tailor everything to the actual disagreement described.
+
+Only say what the description supports. You know nothing about these people beyond what is written here. If it doesn't tell you something for a field or a party, do not invent it: start that field with "Can't tell from this:" and name what you would need to know. This matters most for lived experience, which should never be made up. If only one side is described, say so instead of building the other side from imagination. Keep the synthesis as tentative as the description is thin.`;
 
   const userPrompt = `Disagreement: ${input}\n\nContext/domain: ${context}\nStakes level: ${stakes}\n\nUnpack this disagreement using the five-lens framework. Return only valid JSON.`;
 
   try {
-    const response = await fetch("/api/synthesize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ purpose: "report", tool: "transition", model: "claude-sonnet-4-20250514", max_tokens: 2500, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] })
-    });
-
-    const data = await response.json();
-    const text = data.content.map(i => i.text || '').join('');
-    const result = JSON.parse(text.replace(/```json|```/g, '').trim());
+    const reply = await askAI(systemPrompt, userPrompt);
+    const result = parseJSON(reply);
     loading.style.display = 'none';
 
+    const shown = v => `<span class="${String(v ?? '').startsWith("Can't tell") ? 'cant-tell' : ''}">${esc(v)}</span>`;
+    const pair = (label, a, b, lens) => `<div class="output-section"><div class="output-section-label">${label}</div><div class="output-grid"><div class="output-card"><div class="output-card-label">${a}</div><div class="output-card-text">${shown(lens?.party_a)}</div></div><div class="output-card"><div class="output-card-label">${b}</div><div class="output-card-text">${shown(lens?.party_b)}</div></div></div></div>`;
+
     outputContent.innerHTML = `
-      <div class="output-section"><div class="output-section-label">What this disagreement is really about</div><div class="output-content">${result.summary}</div></div>
-      <div class="output-section"><div class="output-section-label">Hidden assumptions</div><div class="output-grid"><div class="output-card"><div class="output-card-label">Position A assumes</div><div class="output-card-text">${result.assumptions.party_a}</div></div><div class="output-card"><div class="output-card-label">Position B assumes</div><div class="output-card-text">${result.assumptions.party_b}</div></div></div></div>
-      <div class="output-section"><div class="output-section-label">Values in tension</div><div class="output-grid"><div class="output-card"><div class="output-card-label">Position A protects</div><div class="output-card-text">${result.values.party_a}</div></div><div class="output-card"><div class="output-card-label">Position B protects</div><div class="output-card-text">${result.values.party_b}</div></div></div></div>
-      <div class="output-section"><div class="output-section-label">Risks being guarded against</div><div class="output-grid"><div class="output-card"><div class="output-card-label">Position A fears</div><div class="output-card-text">${result.risks.party_a}</div></div><div class="output-card"><div class="output-card-label">Position B fears</div><div class="output-card-text">${result.risks.party_b}</div></div></div></div>
-      <div class="output-section"><div class="output-section-label">Time horizons in conflict</div><div class="output-grid"><div class="output-card"><div class="output-card-label">Position A is looking at</div><div class="output-card-text">${result.horizons.party_a}</div></div><div class="output-card"><div class="output-card-label">Position B is looking at</div><div class="output-card-text">${result.horizons.party_b}</div></div></div></div>
-      <div class="output-section"><div class="synthesis-card"><div class="synthesis-label">Synthesis — what a solution that honors both looks like</div><div class="synthesis-text">${result.synthesis}</div></div></div>
-      <div class="output-section"><div class="output-section-label">What this disagreement reveals</div><div class="output-content">${result.what_we_learned}</div></div>
-      <div class="output-section"><div class="output-section-label">Next facilitator move</div><div class="output-content" style="border-color: var(--accent); color: var(--accent);">${result.facilitator_move}</div></div>
+      <div class="output-section"><div class="output-section-label">What this disagreement is really about</div><div class="output-content">${esc(result.summary)}</div></div>
+      ${pair('Hidden assumptions', 'Position A assumes', 'Position B assumes', result.assumptions)}
+      ${pair('Values in tension', 'Position A protects', 'Position B protects', result.values)}
+      ${pair('Lived experience behind each view', 'Position A draws on', 'Position B draws on', result.experience)}
+      ${pair('Risks being guarded against', 'Position A fears', 'Position B fears', result.risks)}
+      ${pair('Time horizons in conflict', 'Position A is looking at', 'Position B is looking at', result.horizons)}
+      <div class="output-section"><div class="synthesis-card"><div class="synthesis-label">Synthesis — what a solution that honors both looks like</div><div class="synthesis-text">${esc(result.synthesis)}</div></div></div>
+      <div class="output-section"><div class="output-section-label">What this disagreement reveals</div><div class="output-content">${esc(result.what_we_learned)}</div></div>
+      <div class="output-section"><div class="output-section-label">Next facilitator move</div><div class="output-content" style="border-color: var(--accent); color: var(--accent);">${esc(result.facilitator_move)}</div></div>
+      ${CommonsDisclaimer.html(disclaimerOpts("Disagreement Unpacker"))}
     `;
   } catch (err) {
     loading.style.display = 'none';
-    outputContent.innerHTML = `<div class="output-content" style="color: var(--accent3);">Something went wrong. Please try again.</div>`;
+    showError(outputContent, err);
   }
   btn.disabled = false;
 }
@@ -889,11 +930,11 @@ Respond ONLY in this exact JSON format:
 {
   "overall": "One sentence overall health assessment",
   "properties": {
-    "legitimacy": { "score": "green|yellow|red", "finding": "One sentence finding" },
-    "safety": { "score": "green|yellow|red", "finding": "One sentence finding" },
-    "time": { "score": "green|yellow|red", "finding": "One sentence finding" },
-    "intimacy": { "score": "green|yellow|red", "finding": "One sentence finding" },
-    "narrative": { "score": "green|yellow|red", "finding": "One sentence finding" }
+    "legitimacy": { "score": "green|yellow|red|grey", "finding": "One sentence finding" },
+    "safety": { "score": "green|yellow|red|grey", "finding": "One sentence finding" },
+    "time": { "score": "green|yellow|red|grey", "finding": "One sentence finding" },
+    "intimacy": { "score": "green|yellow|red|grey", "finding": "One sentence finding" },
+    "narrative": { "score": "green|yellow|red|grey", "finding": "One sentence finding" }
   },
   "active_failure_modes": ["list only failure modes that are active or at elevated risk"],
   "recommendations": [
@@ -902,23 +943,22 @@ Respond ONLY in this exact JSON format:
   ]
 }
 
-Be direct and specific. Base your assessment on what the user describes — don't assume what you don't know. If a property cannot be assessed from the description, say so and mark yellow.`;
+What the scores mean:
+- green: the description shows this property is in place
+- yellow: the description shows a real concern or partial gap
+- red: the description shows this property is failing
+- grey: the description doesn't say enough to assess this property. Grey is not a mild concern, it is no result. The finding should name what you would need to know.
+
+Be direct and specific. Base your assessment on what the user describes — don't assume what you don't know. Never use yellow for missing information; use grey. Only list a failure mode if the description gives evidence for it.`;
 
   const userPrompt = `Container description: ${input}\nContainer type: ${containerType}\nRunning for: ${containerAge}\n\nAssess this governance container. Return only valid JSON.`;
 
   try {
-    const response = await fetch("/api/synthesize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ purpose: "report", tool: "transition", model: "claude-sonnet-4-20250514", max_tokens: 2500, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] })
-    });
-
-    const data = await response.json();
-    const text = data.content.map(i => i.text || '').join('');
-    const result = JSON.parse(text.replace(/```json|```/g, '').trim());
+    const reply = await askAI(systemPrompt, userPrompt);
+    const result = parseJSON(reply);
     loading.style.display = 'none';
 
-    const scoreColors = { green: 'score-green', yellow: 'score-yellow', red: 'score-red' };
+    const scoreColors = { green: 'score-green', yellow: 'score-yellow', red: 'score-red', grey: 'score-grey' };
     const propLabels = {
       legitimacy: 'Legitimacy without capture — credible and independent, not owned by any single interest',
       safety: 'Psychological safety — participants can say uncomfortable truths without punishment',
@@ -937,35 +977,42 @@ Be direct and specific. Base your assessment on what the user describes — don'
 
     const propertyRows = Object.entries(result.properties).map(([key, val]) => `
       <div class="health-row">
-        <div style="flex-shrink:0; padding-top:3px;"><span class="score-dot ${scoreColors[val.score]}"></span></div>
-        <div><div class="health-label">${propLabels[key]}</div><div class="health-text">${val.finding}</div></div>
+        <div style="flex-shrink:0; padding-top:3px;"><span class="score-dot ${scoreColors[val.score] || 'score-grey'}" aria-label="${esc(scoreColors[val.score] ? val.score : 'grey')}"></span></div>
+        <div><div class="health-label">${propLabels[key] || esc(key)}</div><div class="health-text">${esc(val.finding)}</div></div>
       </div>
     `).join('');
 
-    const failureFlags = result.active_failure_modes.length > 0
-      ? result.active_failure_modes.map(f => {
+    const activeModes = result.active_failure_modes || [];
+    const greyCount = Object.values(result.properties).filter(v => !['green', 'yellow', 'red'].includes(v.score)).length;
+    const legend = `<div class="score-legend"><span><span class="score-dot score-green"></span>In place</span><span><span class="score-dot score-yellow"></span>Concern</span><span><span class="score-dot score-red"></span>Failing</span><span><span class="score-dot score-grey"></span>Not assessable from what you wrote</span></div>`;
+
+    const failureFlags = activeModes.length > 0
+      ? activeModes.map(f => {
           const key = f.toLowerCase().trim();
-          const label = failureDescriptors[key] || f;
+          const label = failureDescriptors[key] || esc(f);
           return `<div class="failure-flag"><div class="failure-flag-label">⚡ ${label}</div></div>`;
         }).join('')
-      : `<div class="output-content" style="border-color: var(--accent5); color: var(--accent5);">No failure modes flagged as active or at elevated risk.</div>`;
+      : greyCount > 0
+        ? `<div class="output-content">None flagged from what you described, but ${greyCount} of 5 properties couldn't be assessed, so this isn't a clean result.</div>`
+        : `<div class="output-content" style="border-color: var(--accent5); color: var(--accent5);">No failure modes flagged as active or at elevated risk.</div>`;
 
-    const recommendations = result.recommendations.map(r => `
+    const recommendations = (result.recommendations || []).map(r => `
       <div class="health-row">
         <div style="flex-shrink:0; padding-top:2px; font-family: 'DM Mono', monospace; font-size:9px; color: var(--accent2); font-weight:700;">→</div>
-        <div><div class="health-label">${r.area}</div><div class="health-text">${r.action}</div></div>
+        <div><div class="health-label">${esc(r.area)}</div><div class="health-text">${esc(r.action)}</div></div>
       </div>
     `).join('');
 
     outputContent.innerHTML = `
-      <div class="output-section"><div class="output-section-label a2">Overall assessment</div><div class="output-content">${result.overall}</div></div>
-      <div class="output-section"><div class="output-section-label a2">Five properties</div>${propertyRows}</div>
+      <div class="output-section"><div class="output-section-label a2">Overall assessment</div><div class="output-content">${esc(result.overall)}</div></div>
+      <div class="output-section"><div class="output-section-label a2">Five properties</div>${legend}${propertyRows}</div>
       <div class="output-section"><div class="output-section-label a2">Active failure mode flags</div>${failureFlags}</div>
       <div class="output-section"><div class="output-section-label a2">Recommendations</div>${recommendations}</div>
+      ${CommonsDisclaimer.html(disclaimerOpts("Container Health Check"))}
     `;
   } catch (err) {
     loading.style.display = 'none';
-    outputContent.innerHTML = `<div class="output-content" style="color: var(--accent3);">Something went wrong. Please try again.</div>`;
+    showError(outputContent, err);
   }
   btn.disabled = false;
 }
@@ -990,7 +1037,7 @@ async function runCharterBuilder() {
   loading.style.display = 'block';
   outputContent.innerHTML = '';
 
-  const systemPrompt = `You are a governance charter specialist. Your job is to generate a draft governance charter by translating six core principles into specific rules, metrics, and failsafes for the user's exact context.
+  const systemPrompt = `You are a governance charter specialist. Your job is to generate a first draft of a governance charter, for a group to argue with and mark up, by translating six core principles into specific rules, metrics, and failsafes for the user's exact context.
 
 The six charter principles to translate:
 1. Dignity before efficiency — no policy optimizes output by concentrating harm in a subgroup
@@ -1005,9 +1052,11 @@ Write a draft charter as flowing prose with clear sections. For each principle:
 - Give one concrete metric or indicator
 - Give one specific failsafe mechanism
 
-Format as a readable document, not a JSON object. Use headers for each principle. Write as if this is a real working document they can hand to their group tomorrow. Be specific to their domain and context — don't be generic. Address their highest-stakes decision and their most feared failure mode directly.
+Format as a readable document, not a JSON object. Put each principle's name on its own line as a plain heading, with no markdown symbols such as # or *. This is a starting draft the group will edit before adopting anything, not a finished charter. Be specific to their domain and context — don't be generic. Address their highest-stakes decision and their most feared failure mode directly.
 
-End with a short "How to use this charter" section of 2-3 sentences.`;
+Metrics and thresholds are suggestions for the group to set, not standards; never imply a number comes from a regulation or published standard. Where you had to assume something about their context, mark it in the text as [ASSUMED: what you assumed].
+
+End with a short "How to use this draft" section of 2-3 sentences that tells the group what to decide and change before adopting it.`;
 
   const userPrompt = `This charter is for: ${charterFor}
 Domain: ${domain}
@@ -1018,32 +1067,34 @@ Stakeholders who must be represented: ${stakeholders || 'Not specified'}
 Generate a draft governance charter for this context.`;
 
   try {
-    const response = await fetch("/api/synthesize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ purpose: "report", tool: "transition", model: "claude-sonnet-4-20250514", max_tokens: 2500, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] })
-    });
-
-    const data = await response.json();
-    const text = data.content.map(i => i.text || '').join('');
+    const reply = await askAI(systemPrompt, userPrompt);
     loading.style.display = 'none';
+
+    const opts = disclaimerOpts("Charter Builder");
+    const charter = reply.text.replace(/^#{1,6}\s+/gm, '').replace(/\*\*/g, '').trim();
+    charterForCopy = `DRAFT, for your group to mark up\n\n${charter}\n\n${CommonsDisclaimer.parts(opts).footer}`;
+    const cutOff = reply.truncated ? `<div class="output-content" style="color: var(--accent3); margin-bottom: 12px;">This draft ran long and was cut off at the end. Try a narrower charter.</div>` : '';
 
     outputContent.innerHTML = `
       <div class="output-section">
-        <div class="output-section-label a5">Draft Charter</div>
-        <div class="charter-output">${text}</div>
-        <button class="copy-btn" onclick="copyCharter(this, \`${text.replace(/`/g, '\\`')}\`)">Copy charter text</button>
+        <div class="output-section-label a5">Draft charter — for your group to mark up</div>
+        ${cutOff}
+        <div class="charter-output">${esc(charter)}</div>
+        <button class="copy-btn" onclick="copyCharter(this)">Copy charter text</button>
       </div>
+      ${CommonsDisclaimer.html(opts)}
     `;
   } catch (err) {
     loading.style.display = 'none';
-    outputContent.innerHTML = `<div class="output-content" style="color: var(--accent3);">Something went wrong. Please try again.</div>`;
+    showError(outputContent, err);
   }
   btn.disabled = false;
 }
 
-function copyCharter(btn, text) {
-  navigator.clipboard.writeText(text).then(() => {
+let charterForCopy = '';
+
+function copyCharter(btn) {
+  navigator.clipboard.writeText(charterForCopy).then(() => {
     btn.textContent = 'Copied ✓';
     setTimeout(() => { btn.textContent = 'Copy charter text'; }, 2000);
   });

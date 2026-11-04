@@ -91,7 +91,10 @@ system name/vendor/version questions, governance-area grading switched off
       default allowable error as a Commons position.
 - [ ] **Short tracks by use type.** Ambient scribes (recording consent: 11
       all-party states) and agentic workflows.
-- [ ] **Same content review for ROI, Consultation and the transition tools.**
+- [ ] **Same content review for ROI and Consultation.**
+- [x] **Transition tools review (Nov 4).** Shared disclaimer, grey "not
+      assessable" score, lived experience shown, "Can't tell from this" instead
+      of invented detail, charter as a draft to mark up, AI text escaped.
 - [ ] **Rebuild governance-area grading** against `src/data/nodes.json`.
 - [ ] **Section 6 readiness verdict.** Computed but never printed, and it can
       disagree with the overall rating. Decide: print it, merge it with the
