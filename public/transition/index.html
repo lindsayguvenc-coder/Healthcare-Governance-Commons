@@ -802,7 +802,7 @@ async function askAI(system, user) {
   const response = await fetch("/api/synthesize", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ purpose: "report", tool: "transition", max_tokens: 2500, system, messages: [{ role: "user", content: user }] })
+    body: JSON.stringify({ purpose: "report", tool: "transition", max_tokens: 3500, system, messages: [{ role: "user", content: user }] })
   });
   const data = await response.json();
   if (!response.ok) throw new ToolMessage(typeof data.error === "string" ? data.error : "Something went wrong. Please try again.");
@@ -1052,7 +1052,7 @@ Write a draft charter as flowing prose with clear sections. For each principle:
 - Give one concrete metric or indicator
 - Give one specific failsafe mechanism
 
-Format as a readable document, not a JSON object. Put each principle's name on its own line as a plain heading, with no markdown symbols such as # or *. This is a starting draft the group will edit before adopting anything, not a finished charter. Be specific to their domain and context — don't be generic. Address their highest-stakes decision and their most feared failure mode directly.
+Keep the whole draft under 900 words so it finishes cleanly. Format as a readable document, not a JSON object. Put each principle's name on its own line as a plain heading, with no markdown symbols such as # or *. This is a starting draft the group will edit before adopting anything, not a finished charter. Be specific to their domain and context — don't be generic. Address their highest-stakes decision and their most feared failure mode directly.
 
 Metrics and thresholds are suggestions for the group to set, not standards; never imply a number comes from a regulation or published standard. Where you had to assume something about their context, mark it in the text as [ASSUMED: what you assumed].
 

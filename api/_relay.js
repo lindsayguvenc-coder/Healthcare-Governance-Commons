@@ -23,7 +23,11 @@ const { strongHit, strings, REFUSAL } = require("./_phi.js");
 const Redis = require("ioredis");
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
-const MAX_OUTPUT_TOKENS = 2500;
+const MAX_OUTPUT_TOKENS = 3500;
+// Sonnet 5.5 thinks before answering by default, and that thinking spends the same
+// max_tokens budget: Transition charters cut off at 50-360 words in live runs (Nov 4).
+// These tools turn it off. It also keeps them well inside the function time limit.
+const NO_THINKING_TOOLS = ["transition"];
 const PUBLIC_MAX_BODY_CHARS = 60000;
 const PRIVATE_MAX_BODY_CHARS = 4400000;
 const PUBLIC_REQUESTS_PER_HOUR = 30;
@@ -115,6 +119,9 @@ async function relay(req, res) {
     messages,
   };
   if (typeof body.system === "string") forwarded.system = body.system;
+  if (body.purpose === "report" && NO_THINKING_TOOLS.includes(body.tool) && MODEL.startsWith("claude-sonnet-5")) {
+    forwarded.thinking = { type: "between_tools" };
+  }
 
   const size = JSON.stringify(forwarded).length;
   const limit = isPrivate ? PRIVATE_MAX_BODY_CHARS : PUBLIC_MAX_BODY_CHARS;

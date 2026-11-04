@@ -20,6 +20,9 @@
   "functions": {
     "api/queue.js": {
       "maxDuration": 60
+    },
+    "api/synthesize.js": {
+      "maxDuration": 60
     }
   },
   "git": {
