@@ -18,6 +18,13 @@ node record.js http://localhost:4300 ./video
 Next step (docs/ROADMAP.md): run the same scenarios in GitHub Actions against
 each Vercel preview, with real services, and attach the video to the pull request.
 
+## Transition tools replay
+
+Real page with scripted AI replies, including thin, hostile and cut-off ones. No
+npm build needed: serve `public/` on port 4310, then
+`node record-transition.js http://localhost:4310 ./video-transition`. Needs `playwright`
+and `ffmpeg`.
+
 ## Validation Protocol Generator replay
 
 Fills in a made-up deployment, shows the on-screen disclaimer, generates a real PDF
