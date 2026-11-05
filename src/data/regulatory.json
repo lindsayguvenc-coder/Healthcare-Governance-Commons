@@ -182,6 +182,11 @@
      "text": "California SB 1120 (2025): AI tools in utilization review must be periodically reviewed and revised",
      "binds": "health plans, insurers",
      "verified": true
+    },
+    {
+     "text": "Alabama SB 63 (Oct 2026): insurers certify yearly that prior authorization AI is monitored for accuracy and doesn't discriminate",
+     "binds": "insurers",
+     "verified": false
     }
    ],
    "recommended": [
@@ -269,6 +274,26 @@
      "text": "CMS Medicare Advantage FAQ (Feb 2024): coverage decisions on individual circumstances, not an algorithm alone",
      "binds": "MA plans",
      "verified": true
+    },
+    {
+     "text": "Washington SB 5395 (2026): AI can't be the sole basis to deny, delay, or limit care in prior authorization",
+     "binds": "insurers",
+     "verified": false
+    },
+    {
+     "text": "Indiana HB 1271 (July 2026): AI can't be the sole basis for downcoding; providers can't submit AI claims without human review",
+     "binds": "insurers and providers",
+     "verified": false
+    },
+    {
+     "text": "Georgia SB 544 (from Jan 1, 2027): no adverse determination by AI without licensed provider review",
+     "binds": "insurers",
+     "verified": false
+    },
+    {
+     "text": "Utah SB 319 (from Jan 1, 2027): disclose AI in prior authorization; adverse determinations reflect independent medical judgment",
+     "binds": "insurers",
+     "verified": false
     }
    ],
    "recommended": [
@@ -399,6 +424,16 @@
      "text": "ONC HTI-1 source attributes. Removed by HTI-5",
      "binds": "EHR developers",
      "verified": true
+    },
+    {
+     "text": "Rhode Island H7538/S2570 (2026): tell patients when AI scribes are used, with an opt-out; providers check AI notes for accuracy",
+     "binds": "providers",
+     "verified": false
+    },
+    {
+     "text": "Maine HB 2082 (2026): mental health professionals need patient consent for ambient AI recording; AI can't make therapeutic communications or treatment decisions",
+     "binds": "providers",
+     "verified": false
     }
    ],
    "recommended": [
@@ -481,6 +516,11 @@
      "text": "Texas SB 1188: the practitioner is responsible for AI-generated records",
      "binds": "practitioners",
      "verified": true
+    },
+    {
+     "text": "Maryland HB 1563 (June 2026): insurers report adverse decisions quarterly, including whether AI was used",
+     "binds": "insurers",
+     "verified": false
     }
    ],
    "recommended": [
@@ -532,6 +572,10 @@
   {
    "when": "Jan 1, 2027",
    "what": "Colorado SB 26-189 automated decision-making law (HIPAA-covered entities largely exempt)"
+  },
+  {
+   "when": "Jan 1, 2027",
+   "what": "Utah SB 319 and Georgia SB 544: human judgment on AI-aided prior authorization denials"
   },
   {
    "when": "Dec 2, 2027",
