@@ -393,6 +393,7 @@
 
   <!-- INTERACTIVE TOOLS -->
   <div class="section-label">Interactive Tools</div>
+  <p style="font-size:12px; line-height:1.9; color:var(--muted); max-width:640px; margin:-8px 0 24px;">These tools start conversations. They are not templates, assessments, or finished documents. Bring what they produce to your group and argue with it.</p>
 
   <!-- ── TOOL 1: DISAGREEMENT UNPACKER ── -->
   <div id="disagreement-unpacker" class="tool-wrapper">
@@ -1034,7 +1035,7 @@ Generate a draft governance charter for this context.`;
 
     outputContent.innerHTML = `
       <div class="output-section">
-        <div class="output-section-label a5">Draft charter — for your group to mark up</div>
+        <div class="output-section-label a5">Draft charter — a conversation starter for your group, not a template</div>
         ${cutOff}
         <div class="charter-output">${esc(charter)}</div>
         <button class="copy-btn" onclick="copyCharter(this)">Copy charter text</button>
