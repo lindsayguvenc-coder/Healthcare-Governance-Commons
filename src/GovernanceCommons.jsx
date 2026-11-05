@@ -639,8 +639,7 @@ ${chatGems || "None yet."}`;
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 2500,
+          max_tokens: 3500,
           system: `You are an AI curation assistant for a clinical AI governance commons. Your job is to synthesize governance documentation for a specific node in the governance framework.
 
 Write a synthesis of 3-4 paragraphs that:
@@ -856,8 +855,7 @@ function FacetiousCollaborator({ node }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 2500,
+          max_tokens: 3500,
           system: `You are a governance dissenter playing the role of: ${role.label}.
 
 Voice profile: ${role.voice}
@@ -1256,8 +1254,7 @@ function IntakePanel() {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-intake-password": sessionPassword },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 2500,
+          max_tokens: 3500,
           system: `You are a document intake assistant for a clinical AI governance commons. Analyze the document and respond ONLY in this exact JSON format, no other text:
 {
   "title": "...",
