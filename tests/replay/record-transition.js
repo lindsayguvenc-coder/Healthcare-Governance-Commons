@@ -1,5 +1,5 @@
 // Records a captioned video of the Transition tools review: Disagreement Unpacker,
-// Container Health Check, Charter Builder. The page is real; the AI replies are scripted
+// Container Health Check, Charter Starter. The page is real; the AI replies are scripted
 // (including hostile and thin ones), so this shows the interface, not live model judgment.
 // Usage: from public/, run a static server on 4310, then
 //   node record-transition.js http://localhost:4310 ./video-transition
@@ -112,7 +112,7 @@ let next = null;
   await page.click("#charter-btn");
   await page.waitForSelector("#charter-output-content .commons-disclaimer");
   await to("#charter-output-content");
-  await caption("Charter Builder. Decision 4: labeled a draft to mark up, assumptions flagged, no raw # or ** symbols.", 5500);
+  await caption("Charter Starter. Decision 4: labeled a draft to mark up, assumptions flagged, no raw # or ** symbols.", 5500);
   await page.locator("details[data-last-updated] summary").click();
   await to("details[data-last-updated]");
   await caption("State examples, dated, with the AI citing no laws in the draft.", 4500);

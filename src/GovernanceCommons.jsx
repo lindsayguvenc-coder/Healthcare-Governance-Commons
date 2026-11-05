@@ -307,7 +307,7 @@ const DOC_LIBRARY = [
   },
   {
     id: "tool-charter-builder",
-    title: "The Charter Builder: AI-Powered Governance Charter Generator",
+    title: "The Charter Starter: an AI draft to start your group's conversation",
     type: "practitioner", source: "Lindsay LaMere / Healthcare Governance Commons", year: "2025",
     url: "/transition#charter-builder",
     nodes: ["commons", "authority", "h2"],

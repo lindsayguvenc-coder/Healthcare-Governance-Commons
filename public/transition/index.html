@@ -489,11 +489,11 @@
     </div>
   </div>
 
-  <!-- ── TOOL 3: CHARTER BUILDER ── -->
+  <!-- ── TOOL 3: CHARTER STARTER ── -->
   <div id="charter-builder" class="tool-wrapper accent5" style="margin-bottom:80px;">
     <div class="tool-header">
       <div class="tool-tag">AI-Powered · Charter Principles</div>
-      <div class="tool-title">The <em>Charter Builder</em></div>
+      <div class="tool-title">The <em>Charter Starter</em></div>
       <p class="tool-desc">Answer five questions about your context and the AI generates a draft governance charter — all six principles translated into rules, metrics, and failsafes for your domain, plus who can stop a tool. Copy it and mark it up with your group. For baseline controls beyond a charter, see the free <a href="https://chai.org/workgroup/cross-cutting/ai-governance" style="color:inherit">CHAI governance playbooks</a>.</p>
     </div>
 
@@ -967,7 +967,7 @@ Base everything on what the user wrote. Don't assume what you don't know. Never 
   btn.disabled = false;
 }
 
-// ── CHARTER BUILDER ────────────────────────────────────────────────────────
+// ── CHARTER STARTER ────────────────────────────────────────────────────────
 async function runCharterBuilder() {
   const charterFor = document.getElementById('charter-for-input').value.trim();
   if (!charterFor) return;
@@ -1028,7 +1028,7 @@ Generate a draft governance charter for this context.`;
     const reply = await askAI(systemPrompt, userPrompt);
     loading.style.display = 'none';
 
-    const opts = disclaimerOpts("Charter Builder");
+    const opts = disclaimerOpts("Charter Starter");
     const charter = reply.text.replace(/^#{1,6}\s+/gm, '').replace(/\*\*/g, '').trim();
     charterForCopy = `DRAFT, for your group to mark up\n\n${charter}\n\n${CommonsDisclaimer.parts(opts).footer}`;
     const cutOff = reply.truncated ? `<div class="output-content" style="color: var(--accent3); margin-bottom: 12px;">This draft ran long and was cut off at the end. Try a narrower charter.</div>` : '';
