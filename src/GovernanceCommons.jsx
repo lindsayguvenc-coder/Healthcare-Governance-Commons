@@ -1563,7 +1563,7 @@ export default function GovernanceCommons() {
     return (
       <div style={{ background: C.bg, minHeight: "100vh", color: C.text }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap'); body { margin: 0; background: ${C.bg}; } a:focus-visible, button:focus-visible { outline: 2px solid ${C.commons}; outline-offset: 2px; }`}</style>
-        <div style={{ padding: "7px 20px", background: C.handoffDim, borderBottom: `1px solid ${C.border}`, fontFamily: C.mono, fontSize: 10.5, color: C.textDim, lineHeight: 1.5 }}>
+        <div style={{ position: "sticky", top: 0, zIndex: 9000, padding: "7px 20px", background: C.handoffDim, borderBottom: `1px solid ${C.border}`, fontFamily: C.mono, fontSize: 10.5, color: C.textDim, lineHeight: 1.5 }}>
           <span style={{ color: C.handoff }}>WORKING PROTOTYPE</span> · built by one person · AI answers are generated, not reviewed · <a href="/privacy" style={{ color: C.textDim }}>what's live</a>
         </div>
         <nav style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center", padding: "12px 20px", borderBottom: `1px solid ${C.border}`, background: C.surface, fontFamily: C.mono, fontSize: 11 }}>
@@ -1590,7 +1590,7 @@ export default function GovernanceCommons() {
     <div style={{ background: C.bg, minHeight: "100vh", color: C.text, display: "flex", flexDirection: "column" }}>
 
 {/* Top bar */}
-      <div style={{ padding: "7px 24px", background: C.handoffDim, borderBottom: `1px solid ${C.border}`, fontFamily: C.mono, fontSize: 10.5, color: C.textDim, letterSpacing: "0.03em", lineHeight: 1.5, flexShrink: 0 }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 9000, padding: "7px 24px", background: C.handoffDim, borderBottom: `1px solid ${C.border}`, fontFamily: C.mono, fontSize: 10.5, color: C.textDim, letterSpacing: "0.03em", lineHeight: 1.5, flexShrink: 0 }}>
         <span style={{ color: C.handoff }}>WORKING PROTOTYPE</span> · built by one person · AI answers are generated, not reviewed · registry submissions and file uploads are paused · <a href="/privacy" style={{ color: C.textDim }}>what's live</a>
       </div>
       <div style={{ borderBottom: `1px solid ${C.border}`, padding: "16px 24px", display: "flex", alignItems: "center", gap: 20, background: C.surface, flexShrink: 0, flexWrap: "wrap" }} className="topbar">
