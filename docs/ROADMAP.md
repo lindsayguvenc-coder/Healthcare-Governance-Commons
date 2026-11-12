@@ -70,6 +70,30 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       confidence per node). Until then, tools stay labeled working prototypes
       and get AI dress-rehearsal reviews. The Agent QC picker had one on
       Oct 28; its sigma step and expanded method library still need one.
+      **Review list for the statistician** (what each tool uses now, and where):
+      - VPG confidence intervals: **Wilson score, 95%** (`wilson()` in
+        `api/vpg-engines.js`), on sensitivity, specificity, alert rate and
+        PPV. Chosen Nov 12, 2026 over Clopper-Pearson because it is closed-form
+        and fast on validation sets in the tens of thousands; the picker allows
+        either. Confirm the choice, especially for small groups and rates near
+        0% or 100%, where the two differ most.
+      - Agent QC picker confidence bounds: **Clopper-Pearson, 95%**, by
+        bisection over an exact binomial tail (`cpBound()` in
+        `public/agent-qc/index.html`). The two tools now use different
+        methods; decide whether they should match.
+      - VPG net benefit: Vickers decision-curve form, net benefit =
+        sensitivity × prevalence − (1 − specificity) × (1 − prevalence) × 1/N,
+        where N = false alarms accepted per caught case (threshold probability
+        1/(1+N)). Compared against treat-all and treat-none. No interval on net
+        benefit yet.
+      - VPG PPV, NPV and alert rate: computed at the local prevalence (band
+        midpoint if a range was picked), not the validation set's. Check
+        whether band midpoints are acceptable.
+      - VPG allowable error: 3/7/12% (high), 5/12/20 (moderate), 8/18/30 (low),
+        scaled ×0.75 / ×1.3 by tier sensitivity. No source; labeled "Commons
+        position, not a standard". Replace or defend.
+      - VPG floors: none by default since Nov 12 (the old 0.97/0.93 trims had no
+        source). Hospital sets its own.
 - [ ] **PHI screening: next steps.** Oct 28 added a browser-side screen on every
       free-text field plus a server check (api/_phi.js) on the AI relay and
       contributions. Still to do: (1) the VPG upload check reads PDFs as plain
@@ -85,7 +109,7 @@ Content review of the VPG: "VPG Content Review" doc. Done Oct 29: shared
 disclaimer, PDF crash and garbled characters fixed, honest "not asked" blanks,
 system name/vendor/version questions, governance-area grading switched off
 (`NODE_GRADING_PAUSED`), Joint Commission + CHAI elements with as-of dates.
-- [ ] **Metrics swap.** Adopt the Agent QC picker's set (intervals, sample
+- [x] **Metrics swap.** (Done Nov 12, 2026, PR #24.) Adopt the Agent QC picker's set (intervals, sample
       size, calibration, per-group numbers); drop AUC-alone, F1, and the
       0.97/0.93 floors; add alert rate, override rate, net benefit. Label any
       default allowable error as a Commons position.
