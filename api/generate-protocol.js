@@ -18,7 +18,10 @@ const NODE_GRADING_PAUSED = true;
 const COMMONS_MAP_URL = "https://healthcare-governance-commons.vercel.app";
 
 // Date the regulatory and standards references in this file were last checked.
-const REFERENCES_AS_OF = "October 29, 2026";
+// Each group of references carries the date it was last checked. Bump a date only
+// when those sources were actually re-checked.
+const REFERENCES_AS_OF = "October 29, 2026";        // Joint Commission + CHAI elements
+const MODELCARD_CONSENT_AS_OF = "November 12, 2026"; // ONC HTI-5 model cards; scribe recording-consent suits
 const CHECK_SOURCE = `Current as of ${REFERENCES_AS_OF}. Rules and standards change; check the current source before relying on this.`;
 
 // Joint Commission + CHAI Responsible Use of AI in Healthcare: seven elements (guidance
@@ -184,7 +187,7 @@ function assembleProtocol({ answers, logicFlags, gapFlags, documentMeta, tiersRe
     sections: [
       buildSection1(answers, documentMeta, isFullProtocol),
       buildSection2(answers, isFullProtocol, tiersResult.metrics, tiersResult.trackResult),
-      buildSection3(biasResult, isFullProtocol),
+      buildSection3(biasResult, isFullProtocol, answers),
       buildSection4(tiersResult, isFullProtocol),
       buildSection5(nodesResult, isFullProtocol),
       buildSection6(answers, tiersResult, nodesResult, isFullProtocol),
@@ -227,7 +230,7 @@ function buildSection1(answers, documentMeta, isFullProtocol) {
       {
         title: "Documents Reviewed",
         content: {
-          documentCount: documentMeta.length,
+          documentCount: documentMeta.length || "None. Document upload is paused; this protocol is built from answers only.",
           documents: documentMeta.map((d) => ({
             name: d.name || "Unnamed document",
             type: d.type || "Unknown type",
@@ -324,7 +327,7 @@ function buildSection2(answers, isFullProtocol, m = null, tr = null) {
 }
 
 // Section 3: Bias & Fairness Assessment (from bias-crossref engine)
-function buildSection3(biasResult, isFullProtocol) {
+function buildSection3(biasResult, isFullProtocol, answers = {}) {
   if (biasResult.error) {
     return {
       sectionNumber: 3,
@@ -348,7 +351,7 @@ function buildSection3(biasResult, isFullProtocol) {
             content: {
               vendorDemographics: biasResult.vendorDemographics,
               localMethodology: biasResult.localMethodology,
-              modelCardAvailable: biasResult.modelCardAvailable,
+              modelCardAvailable: answers.Q_modelcard_detail || (biasResult.modelCardAvailable ? "Yes" : "Not answered"),
             },
           },
           {
@@ -415,7 +418,7 @@ function buildSection4(tiersResult, isFullProtocol) {
           metrics: tiersResult.metrics,
           metricsNote: !tiersResult.metrics?.calculable
             ? "PPV and NPV could not be calculated. Local prevalence was not provided or performance metrics were not provided. Thresholds below are use-type defaults."
-            : "Intervals are 95% Wilson intervals from the counts entered. PPV, NPV, alert rate and net benefit are computed at the prevalence shown; recompute if it changes. Measures follow the Commons Agent QC picker (Nov 2026).",
+            : "Intervals are 95% Wilson intervals from the counts entered. PPV, NPV, alert rate and net benefit are computed at the prevalence shown; recompute if it changes. AUROC, if shown, averages over every threshold, including ones you will never use; judge the model by the numbers at your threshold. Measures follow the Commons Agent QC picker (Nov 2026).",
         },
       },
       {
@@ -425,7 +428,11 @@ function buildSection4(tiersResult, isFullProtocol) {
           tierSensitivity: tiersResult.tierProfile?.tierSensitivity,
           thresholds: tiersResult.tierProfile?.thresholds,
           rationale: [
-            tiersResult.tierProfile?.falseNegBias ? "False-negative bias declared for this use type — sensitivity floor is a hard stop." : null,
+            tiersResult.tierProfile?.falseNegBias && !tiersResult.track
+              ? (tiersResult.tierProfile?.thresholds?.sensitivityFloor
+                ? "Missed cases are the higher-harm error for this use type, so the sensitivity floor is a hard stop."
+                : "Missed cases are the higher-harm error for this use type. Set a sensitivity floor; once set, it is a hard stop.")
+              : null,
             tiersResult.tierProfile?.ppvLow ? "PPV below 60% — thresholds tightened to reduce false positive burden." : null,
             tiersResult.tierProfile?.urgentWindow ? "Urgent decision window — thresholds tightened for time-sensitive clinical context." : null,
           ].filter(Boolean),
@@ -677,7 +684,7 @@ function buildSection7(answers, allGapFlags, overallNodeRating, isFullProtocol) 
           generatedAt: new Date().toISOString(),
           commonsUrl: "healthcare-governance-commons.vercel.app",
           shelfLifeStatement: "This document has a shelf life. A validation protocol that is never updated is not a governance document — it is a record of past intentions.",
-          referencesAsOf: "Regulatory and standards references in this protocol: " + CHECK_SOURCE,
+          referencesAsOf: `Regulatory and standards references in this protocol: Joint Commission + CHAI elements checked ${REFERENCES_AS_OF}; ONC HTI-5 (model cards) and ambient-scribe recording-consent cases checked ${MODELCARD_CONSENT_AS_OF}. Rules and standards change; check the current source before relying on this.`,
           versionStatement: "Version 1.0. Update this document when any revalidation trigger is met or when organizational context changes materially.",
         },
       },

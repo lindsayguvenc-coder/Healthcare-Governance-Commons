@@ -40,3 +40,9 @@ cd tests/replay && npm i ioredis-mock@8 playwright jspdf@2.5.1
 node server.js ../.. 3000 &
 node record-vpg.js http://localhost:3000 ./video-vpg [path-to-chrome]
 ```
+
+## VPG Nov 12 replays
+
+Same setup as above. `record-vpg-metrics.js` (counts, intervals, net benefit),
+`record-vpg-tracks.js` (scribe and agent tracks), `record-vpg-fixes.js` (second-pass
+content fixes). Each takes `base outDir [chromePath]`.
