@@ -1015,7 +1015,7 @@ function buildBiasGapFlags(vendorDemographics, localMethodology, modelCardAvaila
     flags.push("LOCAL_METHODOLOGY_UNKNOWN: Local demographic recording methodology not documented. Subgroup performance monitoring is not possible until this is resolved.");
   }
   if (!modelCardAvailable) {
-    flags.push("NO_MODEL_CARD: Model card not available or not reviewed. Bias assessment relies on self-reported vendor information only.");
+    flags.push("NO_MODEL_CARD: No model card or equivalent disclosure. Since HTI-5 (effective Dec 28, 2026) certified EHRs no longer have to provide one, so ask for it in the contract: intended use, training data and its demographics, validation results with sample sizes, known limits, and notice before model updates. Until then, bias assessment rests on the vendor's word and your own local numbers.");
   }
   if (localMethodology.inconsistencies.length > 0) {
     flags.push(`RECORDING_INCONSISTENCIES: ${localMethodology.inconsistencies.join(", ")} have known recording inconsistencies that limit audit reliability.`);

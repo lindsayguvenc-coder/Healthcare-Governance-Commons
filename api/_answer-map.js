@@ -154,6 +154,10 @@ function mapAnswers(raw = {}, documentMeta = []) {
 
   // Documents uploaded alongside the questionnaire
   if (documentMeta.some((d) => d && d.type === "model_card")) set("Q_modelcard", "yes");
+  if (a.q1_modelcard) {
+    set("Q_modelcard", /^(Yes|Built in-house)/.test(a.q1_modelcard) ? "yes" : /^(No|Partial)/.test(a.q1_modelcard) ? "no" : null);
+    set("Q_modelcard_detail", a.q1_modelcard);
+  }
 
   return a;
 }

@@ -772,14 +772,19 @@ const UPLOADS_PAUSED = true;
 
 const DOCUMENT_SLOTS = [
   {
-    id: 'model_card', label: 'Model Card', required: true,
-    description: 'Vendor-provided document describing the AI model — intended use, training population, known limitations, default threshold.',
-    hint: 'Usually provided by the AI vendor at procurement or available on their documentation portal.',
-  },
-  {
-    id: 'validation_study', label: 'Validation Study / Performance Evaluation', required: true,
+    id: 'validation_study', label: 'Your local validation results (the four counts if you have them)', required: true,
     description: 'Performance evaluation report — sensitivity, specificity, AUC/AUROC, validation population details.',
     hint: "May be titled 'Clinical Validation Report', 'Performance Evaluation', or 'Algorithm Validation Study'.",
+  },
+  {
+    id: 'contract', label: 'Your vendor contract and anything the vendor discloses', required: false,
+    description: 'What the vendor has agreed to tell you: training data, validation, known limits, notice before model updates.',
+    hint: 'Since HTI-5 (effective Dec 28, 2026) certified EHRs no longer have to show this, so the contract is where it is guaranteed.',
+  },
+  {
+    id: 'model_card', label: 'Model card, if your vendor provides one', required: false,
+    description: 'Vendor document describing intended use, training population, known limitations, default threshold. Voluntary since HTI-5.',
+    hint: 'Some vendors still publish one (CHAI has a voluntary template). If not, the report lists what to ask for.',
   },
   {
     id: 'ifu', label: 'Instructions for Use (IFU)', required: false,
@@ -787,7 +792,7 @@ const DOCUMENT_SLOTS = [
     hint: 'Recommended. Strengthens threshold calibration and contraindication mapping.',
   },
   {
-    id: 'fda_clearance', label: 'FDA 510(k) Summary or De Novo Decision', required: false,
+    id: 'fda_clearance', label: 'FDA 510(k) or De Novo summary, if it is an FDA-cleared device', required: false,
     description: 'FDA clearance documentation — cleared intended use, indications, contraindications, special conditions.',
     hint: 'Recommended for cleared devices. Find at accessdata.fda.gov. Not applicable for all AI systems.',
   },
@@ -878,7 +883,7 @@ function renderUploadPaused() {
       <h1 class="phase-title">Your answers<br><em>build the protocol</em></h1>
       <p class="phase-desc">
         Document upload is paused while the Commons is a one-person prototype. The protocol is generated from your answers
-        to the questions that follow. Keep your model card and validation study nearby, since many questions ask about them.
+        to the questions that follow. Your own validation results matter most. A vendor model card helps but is no longer required (HTI-5, effective Dec 28, 2026); if you don't have one, the report tells you what to ask for in the contract.
       </p>
       <div class="upload-shell">
         <div class="upload-shell-title">What you'll need handy</div>
@@ -1286,6 +1291,9 @@ function getSectionOrg() {
       { id: 'q1_system', text: 'Name of the AI system', type: 'text', placeholder: 'Optional — e.g. the product or model name your team uses' },
       { id: 'q1_vendor', text: 'Vendor or developer', type: 'text', placeholder: 'Optional — or "built in-house"' },
       { id: 'q1_version', text: 'Model or software version being validated', type: 'text', placeholder: 'Optional — a revalidation is tied to a specific version' },
+      { id: 'q1_modelcard', text: 'Has the vendor given you a model card or similar disclosure (training data, validation, known limits)?', type: 'select',
+        options: ['Yes — a model card or equivalent','Partial — some disclosure, not a full card','No — the vendor has not provided one','Built in-house — we have our own documentation','Unsure'],
+        note: 'Federal rules no longer require certified EHRs to show this (ONC HTI-5, effective Dec 28, 2026). Check the current source; as of Nov 2026.' },
       { id: 'q2_usetype', text: 'Which best describes how your organization plans to use this AI system?', type: 'select',
         options: [
           'Triage / prioritization — direct impact on care sequencing',

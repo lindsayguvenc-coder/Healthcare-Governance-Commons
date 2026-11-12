@@ -274,7 +274,7 @@ function buildSection2(answers, isFullProtocol, m = null) {
           modelArchitecture: field(answers, "Q10", "Not disclosed"),
           trainingDataDescription: field(answers, "Q11", "Not disclosed"),
           vendorValidationSummary: field(answers, "Q12", "Not disclosed"),
-          modelCardAvailable: answers.Q19 === "yes" || answers.Q_modelcard === "yes" ? "Yes (uploaded)" : "Not uploaded",
+          modelCardAvailable: answers.Q_modelcard_detail || (answers.Q19 === "yes" || answers.Q_modelcard === "yes" ? "Yes" : "Not answered"),
           fdaStatus: field(answers, "Q_fda", "Not specified"),
         },
       },
