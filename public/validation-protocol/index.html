@@ -3030,8 +3030,17 @@ function renderSubcontent(doc, sub, C, protocol, ctx) {
     }
   }
 
-  // Revalidation triggers
+  // Change triggers and tiers (formerly "Revalidation triggers")
   if (content.triggers) {
+    if (content.note) {
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(8);
+      doc.setTextColor(...C.midGray);
+      const tn = doc.splitTextToSize(content.note, C.contentW);
+      needsPage(tn.length * 10 + 6);
+      doc.text(tn, C.mL, y);
+      y += tn.length * 10 + 6;
+    }
     for (const t of content.triggers) {
       needsPage(14);
       doc.setFont('helvetica', 'normal');
