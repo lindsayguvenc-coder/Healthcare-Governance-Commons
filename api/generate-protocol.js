@@ -47,7 +47,7 @@ function buildTjcElements(answers) {
 const NOT_ASKED_TEXT = "Not asked by this tool. Fill in by hand.";
 const NOT_ASKED = new Set([
   "Q5", "Q10", "Q11", "Q12",
-  "Q_fda", "Q_autonomy", "Q_volume", "Q_f1", "Q_cohort_size", "Q_cohort_description",
+  "Q_fda", "Q_autonomy", "Q_volume", "Q_cohort_description",
   "Q_perf_summary", "Q_workflow_note", "Q_vendor_limitations", "Q_local_limitations",
   "Q_contraindications", "Q_preparer", "Q_reviewer", "Q_approver", "Q_next_review",
   "Q_revalidation_trigger",
@@ -183,7 +183,7 @@ function assembleProtocol({ answers, logicFlags, gapFlags, documentMeta, tiersRe
     logicFlags,
     sections: [
       buildSection1(answers, documentMeta, isFullProtocol),
-      buildSection2(answers, isFullProtocol),
+      buildSection2(answers, isFullProtocol, tiersResult.metrics),
       buildSection3(biasResult, isFullProtocol),
       buildSection4(tiersResult, isFullProtocol),
       buildSection5(nodesResult, isFullProtocol),
@@ -262,7 +262,7 @@ function buildSection1(answers, documentMeta, isFullProtocol) {
 }
 
 // Section 2: Model Characterization & Performance Baseline
-function buildSection2(answers, isFullProtocol) {
+function buildSection2(answers, isFullProtocol, m = null) {
   const hasMetrics = answers.Q15 || answers.Q16;
   return {
     sectionNumber: 2,
@@ -274,7 +274,7 @@ function buildSection2(answers, isFullProtocol) {
           modelArchitecture: field(answers, "Q10", "Not disclosed"),
           trainingDataDescription: field(answers, "Q11", "Not disclosed"),
           vendorValidationSummary: field(answers, "Q12", "Not disclosed"),
-          modelCardAvailable: answers.Q19 === "yes" || answers.Q_modelcard === "yes" ? "Yes (uploaded)" : "Not uploaded",
+          modelCardAvailable: answers.Q_modelcard_detail || (answers.Q19 === "yes" || answers.Q_modelcard === "yes" ? "Yes" : "Not answered"),
           fdaStatus: field(answers, "Q_fda", "Not specified"),
         },
       },
@@ -283,12 +283,13 @@ function buildSection2(answers, isFullProtocol) {
             title: "Local Validation Baseline",
             content: {
               localValidationPerformed: answers.Q_local_validation === "yes" ? "Yes" : "Not yet performed — see gap flags",
-              sensitivity: answers.Q15 ? `${answers.Q15}%` : "Not provided",
-              specificity: answers.Q16 ? `${answers.Q16}%` : "Not provided",
-              prevalence: answers.Q17 ? `${answers.Q17}%` : "Not provided",
-              auc: answers.Q_auc || "Not provided",
-              f1: field(answers, "Q_f1", "Not provided"),
-              validationCohortSize: field(answers, "Q_cohort_size", "Not provided"),
+              sensitivity: m?.sensDisplay || "Not provided",
+              specificity: m?.specDisplay || "Not provided",
+              prevalence: m?.prevalenceDisplay || "Not provided",
+              aurocNote: m?.aucDisplay || "Not provided",
+              calibration: m?.calibrationDisplay || "Not answered",
+              performanceByGroup: m?.subgroupDisplay || "Not answered",
+              validationCohortSize: field(answers, "Q_cohort_size", "Not provided (enter the four counts to get this and the confidence intervals)"),
               validationCohortDescription: field(answers, "Q_cohort_description", "Not provided"),
               metricsNote: !hasMetrics
                 ? "No performance metrics provided. Monitoring thresholds in Section 4 are based on use-type defaults. Provide local validation metrics to generate deployment-specific thresholds."
@@ -403,7 +404,7 @@ function buildSection4(tiersResult, isFullProtocol) {
           metrics: tiersResult.metrics,
           metricsNote: !tiersResult.metrics?.calculable
             ? "PPV and NPV could not be calculated. Local prevalence was not provided or performance metrics were not provided. Thresholds below are use-type defaults."
-            : null,
+            : "Intervals are 95% Wilson intervals from the counts entered. PPV, NPV, alert rate and net benefit are computed at the prevalence shown; recompute if it changes. Measures follow the Commons Agent QC picker (Nov 2026).",
         },
       },
       {
