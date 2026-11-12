@@ -113,7 +113,7 @@ system name/vendor/version questions, governance-area grading switched off
       size, calibration, per-group numbers); drop AUC-alone, F1, and the
       0.97/0.93 floors; add alert rate, override rate, net benefit. Label any
       default allowable error as a Commons position.
-- [ ] **Short tracks by use type.** Ambient scribes (recording consent: 11
+- [x] **Short tracks by use type.** (Done Nov 12, 2026, PR #24: Section 3 branches on use type; scribe and agent tracks with their own measures and flags.) Ambient scribes (recording consent: 11
       all-party states) and agentic workflows.
 - [ ] **Same content review for ROI and Consultation.**
 - [ ] **Check thinking vs. max_tokens on every other AI tool.** Sonnet 5.5's

@@ -183,7 +183,7 @@ function assembleProtocol({ answers, logicFlags, gapFlags, documentMeta, tiersRe
     logicFlags,
     sections: [
       buildSection1(answers, documentMeta, isFullProtocol),
-      buildSection2(answers, isFullProtocol, tiersResult.metrics),
+      buildSection2(answers, isFullProtocol, tiersResult.metrics, tiersResult.trackResult),
       buildSection3(biasResult, isFullProtocol),
       buildSection4(tiersResult, isFullProtocol),
       buildSection5(nodesResult, isFullProtocol),
@@ -262,7 +262,7 @@ function buildSection1(answers, documentMeta, isFullProtocol) {
 }
 
 // Section 2: Model Characterization & Performance Baseline
-function buildSection2(answers, isFullProtocol, m = null) {
+function buildSection2(answers, isFullProtocol, m = null, tr = null) {
   const hasMetrics = answers.Q15 || answers.Q16;
   return {
     sectionNumber: 2,
@@ -278,7 +278,15 @@ function buildSection2(answers, isFullProtocol, m = null) {
           fdaStatus: field(answers, "Q_fda", "Not specified"),
         },
       },
-      isFullProtocol
+      isFullProtocol && tr
+        ? {
+            title: "Local Validation Baseline",
+            content: Object.assign(
+              { validationTrack: tr.track === "scribe" ? "Ambient scribe / note drafting: judged on transcription, note errors and omissions, review and consent. Sensitivity and specificity do not apply." : "Agentic workflow: judged on end state, tool calls and policy adherence. Sensitivity and specificity do not apply." },
+              Object.fromEntries(tr.rows.slice(0, 3).map(([k, v]) => [k.replace(/[^A-Za-z ]/g, "").replace(/ (\w)/g, (_, c) => c.toUpperCase()).replace(/^./, (c) => c.toLowerCase()), v]))
+            ),
+          }
+        : isFullProtocol
         ? {
             title: "Local Validation Baseline",
             content: {
@@ -399,8 +407,11 @@ function buildSection4(tiersResult, isFullProtocol) {
     title: "Monitoring Framework & Tier Thresholds",
     subsections: [
       {
-        title: "Performance Metrics Baseline",
-        content: {
+        title: tiersResult.trackResult ? (tiersResult.track === "scribe" ? "Performance Baseline — Ambient Scribe Track" : "Performance Baseline — Agentic Workflow Track") : "Performance Metrics Baseline",
+        content: tiersResult.trackResult ? {
+          trackRows: tiersResult.trackResult.rows,
+          metricsNote: "Intervals are 95% Wilson intervals from the counts entered. Sensitivity, specificity and prevalence do not apply to this use type. Measures follow the Commons Agent QC picker and the Duke ambient-scribe evaluation framework (npj Digital Medicine, 2025).",
+        } : {
           metrics: tiersResult.metrics,
           metricsNote: !tiersResult.metrics?.calculable
             ? "PPV and NPV could not be calculated. Local prevalence was not provided or performance metrics were not provided. Thresholds below are use-type defaults."
