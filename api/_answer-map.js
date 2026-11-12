@@ -98,6 +98,23 @@ function mapAnswers(raw = {}, documentMeta = []) {
   set("Q17", PREVALENCE_BANDS[a.q3_prevalence]);
   set("Q_auc", a.q_auc);
 
+  // Local validation counts (added Nov 12, 2026). Counts carry the sample size, so the
+  // engines can print confidence intervals; percentages alone cannot.
+  const n4 = ["q_tp", "q_fn", "q_tn", "q_fp"].map((k) => {
+    const v = parseFloat(a[k]);
+    return Number.isFinite(v) && v >= 0 ? Math.round(v) : null;
+  });
+  if (n4.every((v) => v !== null)) {
+    const [tp, fn, tn, fp] = n4;
+    set("Q_tp", tp); set("Q_fn", fn); set("Q_tn", tn); set("Q_fp", fp);
+    if (tp + fn > 0) set("Q15", Math.round((tp / (tp + fn)) * 1000) / 10);
+    if (tn + fp > 0) set("Q16", Math.round((tn / (tn + fp)) * 1000) / 10);
+    set("Q_cohort_size", `${tp + fn + tn + fp} cases (${tp + fn} positive, ${tn + fp} negative)`);
+  }
+  set("Q_floor_sens", a.q_floor_sens);
+  set("Q_floor_spec", a.q_floor_spec);
+  set("Q_false_alarms", a.q_false_alarms);
+
   // Local validation
   if (startsYes(a.q7_cases) && a.Q15) set("Q_local_validation", "yes");
   if (a.q7_cases === "Yes — accessible and ready") set("Q35", "yes");

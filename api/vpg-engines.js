@@ -50,6 +50,20 @@ function buildWestgardTiers({ answers, logicFlags, gapFlags }) {
   const sensitivity = num(answers.Q15);
   const specificity = num(answers.Q16);
   const prevalence = num(answers.Q17);
+  const counts = {
+    tp: num(answers.Q_tp), fn: num(answers.Q_fn), tn: num(answers.Q_tn), fp: num(answers.Q_fp),
+  };
+  const extra = {
+    auc: num(answers.Q_auc),
+    falseAlarmsPerCatch: num(answers.Q_false_alarms),
+    calibration: answers.q_calibration || null,
+    calibrationValues: answers.q_calibration_values || null,
+    subgroup: answers.q_subgroup || null,
+    subgroupDetail: answers.q_subgroup_detail || null,
+    override: answers.q_override || null,
+  };
+  const floorSens = num(answers.Q_floor_sens);
+  const floorSpec = num(answers.Q_floor_spec);
   const customWarn = num(answers.Q_warn_pct);
   const customAction = num(answers.Q_action_pct);
   const population = answers.Q8 || null;
@@ -61,10 +75,10 @@ function buildWestgardTiers({ answers, logicFlags, gapFlags }) {
   const isFullProtocol = !logicFlags.includes("WORKFLOW_SUMMARY_MODE");
 
   // Derive PPV/NPV if possible
-  const metrics = deriveMetrics({ sensitivity, specificity, prevalence });
+  const metrics = deriveMetrics({ sensitivity, specificity, prevalence, counts, extra });
 
   // Select tier profile based on use type
-  const tierProfile = selectTierProfile(useType, isHighRisk, metrics, decisionWindow, { customWarn, customAction });
+  const tierProfile = selectTierProfile(useType, isHighRisk, metrics, decisionWindow, { customWarn, customAction, floorSens, floorSpec });
 
   // Apply Westgard rule mapping
   const westgardMapping = mapWestgardRules(tierProfile, metrics, priorAuditData);
@@ -85,8 +99,17 @@ function buildWestgardTiers({ answers, logicFlags, gapFlags }) {
 
   // Gap flags for tier section
   const tierGapFlags = [];
-  if (sensitivity !== null && !num(answers.Q_cohort_size)) tierGapFlags.push("Validation cohort counts not provided — confidence intervals cannot be computed. A sensitivity from 30 positive cases carries roughly ±15 points of uncertainty.");
-  if (customWarn === null) tierGapFlags.push("Warning and action thresholds not chosen locally — allowable-error defaults are starting points, not standards.");
+  if (metrics.sensitivity !== null && !metrics.hasCounts) tierGapFlags.push("Validation counts not provided, so no confidence intervals. A sensitivity from 30 positive cases carries roughly ±15 points of uncertainty; one from 3,000 carries about ±1.5. Enter the four counts to see which you have.");
+  if (metrics.hasCounts && metrics.positives < 30) tierGapFlags.push(`Only ${metrics.positives} positive cases in the validation set. The sensitivity interval is wide (${metrics.sensCIDisplay}); treat the baseline as provisional.`);
+  if (customWarn === null) tierGapFlags.push("Warning and action thresholds not chosen locally. The allowable-error defaults are the Commons' position, not a standard.");
+  if (metrics.sensitivity !== null && floorSens === null) tierGapFlags.push("No sensitivity floor set. The tool no longer invents one. Set the lowest sensitivity you would accept from intended use and harm; until then there is no hard stop on missed cases.");
+  if (metrics.auc !== null) tierGapFlags.push("AUROC reported. It summarizes every possible threshold, including ones you will never use, so it does not tell you how the model behaves at yours. Judge it by the numbers at your operating threshold.");
+  if (metrics.calculable && metrics.netBenefit === null) tierGapFlags.push("Net benefit not computed: the trade-off question (false alarms accepted per caught case) was not answered.");
+  if (metrics.netBenefit !== null && metrics.netBenefit <= metrics.netBenefitTreatAll) tierGapFlags.push("At your stated trade-off, the model does no better than treating everyone as positive. That is a reason to question the deployment, not just tune it.");
+  if (metrics.netBenefit !== null && metrics.netBenefit <= 0) tierGapFlags.push("At your stated trade-off, net benefit is zero or negative: the false alarms cost more than the cases caught are worth.");
+  if (/not measured/i.test(extra.calibration || "")) tierGapFlags.push("The model gives a probability, but calibration was not measured. A 30% risk score should mean about 30 in 100 such patients have the outcome; check it (calibration plot, Brier score or ECE) before anyone reads the score as a probability.");
+  if (extra.subgroup && !/^Yes/.test(extra.subgroup)) tierGapFlags.push("No per-group performance numbers. Comparing how groups are recorded is not the same as knowing how the model performs for each group. Run the same measures per group; small groups give wide intervals, so report them.");
+  if (extra.override && !/^Yes — source defined/.test(extra.override) && !/^Not applicable/.test(extra.override)) tierGapFlags.push("Override rate not planned with a data source. How often clinicians dismiss alerts is the earliest sign of alert fatigue; decide where it comes from before go-live.");
   if (tierProfile.generative) tierGapFlags.push("Generative or agentic use type — sensitivity/specificity do not apply directly. Grader validation and acceptable cutoffs must be defined (see AI-specific validation additions).");
   if (sensitivity === null) tierGapFlags.push("Sensitivity not provided — warning thresholds estimated from use-type defaults.");
   if (specificity === null) tierGapFlags.push("Specificity not provided — tier bounds are indicative only.");
@@ -116,7 +139,19 @@ function buildWestgardTiers({ answers, logicFlags, gapFlags }) {
 
 // ─── Metric derivation ────────────────────────────────────────────────────────
 
-function deriveMetrics({ sensitivity, specificity, prevalence }) {
+// Wilson score interval (95%). One of the two the Agent QC picker names; chosen here because
+// it is closed-form and behaves well at small n and near 0% or 100%.
+function wilson(x, n, z = 1.96) {
+  if (!n) return null;
+  const p = x / n, z2 = z * z, d = 1 + z2 / n;
+  const c = (p + z2 / (2 * n)) / d;
+  const h = (z * Math.sqrt(p * (1 - p) / n + z2 / (4 * n * n))) / d;
+  return [Math.max(0, c - h), Math.min(1, c + h)];
+}
+const pctStr = (v, d = 1) => `${(v * 100).toFixed(d)}%`;
+const ciStr = (ci) => (ci ? `${pctStr(ci[0])}–${pctStr(ci[1])}` : null);
+
+function deriveMetrics({ sensitivity, specificity, prevalence, counts = {}, extra = {} }) {
   const metrics = {
     sensitivity: sensitivity !== null ? sensitivity / 100 : null,
     specificity: specificity !== null ? specificity / 100 : null,
@@ -126,27 +161,78 @@ function deriveMetrics({ sensitivity, specificity, prevalence }) {
     likelihoodRatioPos: null,
     likelihoodRatioNeg: null,
     calculable: false,
+    hasCounts: false,
+    auc: extra.auc ?? null,
+    netBenefit: null,
+    netBenefitTreatAll: null,
   };
 
-  if (metrics.sensitivity !== null && metrics.specificity !== null && metrics.prevalence !== null) {
-    const tp = metrics.sensitivity * metrics.prevalence;
-    const fp = (1 - metrics.specificity) * (1 - metrics.prevalence);
-    const fn = (1 - metrics.sensitivity) * metrics.prevalence;
-    const tn = metrics.specificity * (1 - metrics.prevalence);
+  // Counts beat percentages: they carry the sample size, so we can say how sure we are.
+  const { tp, fn, tn, fp } = counts;
+  if ([tp, fn, tn, fp].every((v) => v !== null && v !== undefined && v >= 0) && tp + fn > 0 && tn + fp > 0) {
+    metrics.hasCounts = true;
+    metrics.counts = { tp, fn, tn, fp };
+    metrics.positives = tp + fn;
+    metrics.negatives = tn + fp;
+    metrics.n = tp + fn + tn + fp;
+    metrics.sensitivity = tp / (tp + fn);
+    metrics.specificity = tn / (tn + fp);
+    metrics.sensCI = wilson(tp, tp + fn);
+    metrics.specCI = wilson(tn, tn + fp);
+    metrics.cohortPrevalence = (tp + fn) / metrics.n;
+    metrics.cohortAlertRate = (tp + fp) / metrics.n;
+    metrics.cohortAlertRateCI = wilson(tp + fp, metrics.n);
+    if (tp + fp > 0) { metrics.cohortPPV = tp / (tp + fp); metrics.cohortPPVCI = wilson(tp, tp + fp); }
+    // Prevalence for PPV/NPV: the local figure if given, else the validation set's own
+    if (metrics.prevalence === null) { metrics.prevalence = metrics.cohortPrevalence; metrics.prevalenceSource = "validation set"; }
+  }
+  if (metrics.prevalence !== null && !metrics.prevalenceSource) metrics.prevalenceSource = "local estimate";
 
-    metrics.ppv = tp / (tp + fp);
-    metrics.npv = tn / (tn + fn);
+  if (metrics.sensitivity !== null && metrics.specificity !== null && metrics.prevalence !== null) {
+    const se = metrics.sensitivity, sp = metrics.specificity, pr = metrics.prevalence;
+    const tpR = se * pr, fpR = (1 - sp) * (1 - pr), fnR = (1 - se) * pr, tnR = sp * (1 - pr);
+    metrics.ppv = tpR + fpR > 0 ? tpR / (tpR + fpR) : null;
+    metrics.npv = tnR + fnR > 0 ? tnR / (tnR + fnR) : null;
     // 100% (or 0%) specificity makes a ratio undefined; leave it blank rather than print Infinity
-    metrics.likelihoodRatioPos = metrics.specificity < 1 ? metrics.sensitivity / (1 - metrics.specificity) : null;
-    metrics.likelihoodRatioNeg = metrics.specificity > 0 ? (1 - metrics.sensitivity) / metrics.specificity : null;
+    metrics.likelihoodRatioPos = sp < 1 ? se / (1 - sp) : null;
+    metrics.likelihoodRatioNeg = sp > 0 ? (1 - se) / sp : null;
+    // Alert rate at this prevalence: share of all patients the model flags
+    metrics.alertRate = tpR + fpR;
+    metrics.alertsPer100 = Math.round(metrics.alertRate * 1000) / 10;
+    metrics.numberToEvaluate = metrics.ppv ? 1 / metrics.ppv : null;
     metrics.calculable = true;
+
+    // Net benefit (Vickers decision-curve form): true positives minus false positives,
+    // weighted by the exchange rate the organization states. "N false alarms per caught
+    // case" means a threshold probability pt = 1/(1+N), weight pt/(1-pt) = 1/N.
+    const N = extra.falseAlarmsPerCatch;
+    if (N !== null && N !== undefined && N > 0) {
+      const w = 1 / N;
+      metrics.thresholdProbability = 1 / (1 + N);
+      metrics.netBenefit = tpR - fpR * w;
+      metrics.netBenefitTreatAll = pr - (1 - pr) * w;
+      metrics.netBenefitDisplay = `${(metrics.netBenefit * 100).toFixed(1)} net true positives per 100 patients (treat everyone: ${(metrics.netBenefitTreatAll * 100).toFixed(1)}; treat no one: 0). Trade-off: ${N} false alarm${N === 1 ? "" : "s"} accepted per caught case.`;
+    }
   }
 
   // Format for display
-  if (metrics.ppv !== null) metrics.ppvDisplay = `${(metrics.ppv * 100).toFixed(1)}%`;
-  if (metrics.npv !== null) metrics.npvDisplay = `${(metrics.npv * 100).toFixed(1)}%`;
+  if (metrics.ppv !== null) metrics.ppvDisplay = pctStr(metrics.ppv);
+  if (metrics.npv !== null) metrics.npvDisplay = pctStr(metrics.npv);
   if (metrics.likelihoodRatioPos !== null) metrics.lrPosDisplay = metrics.likelihoodRatioPos.toFixed(2);
   if (metrics.likelihoodRatioNeg !== null) metrics.lrNegDisplay = metrics.likelihoodRatioNeg.toFixed(3);
+  if (metrics.sensitivity !== null) metrics.sensDisplay = pctStr(metrics.sensitivity) + (metrics.sensCI ? ` (95% CI ${ciStr(metrics.sensCI)}, ${metrics.positives} positive cases)` : " (no interval: counts not given)");
+  if (metrics.specificity !== null) metrics.specDisplay = pctStr(metrics.specificity) + (metrics.specCI ? ` (95% CI ${ciStr(metrics.specCI)}, ${metrics.negatives} negative cases)` : " (no interval: counts not given)");
+  if (metrics.sensCI) metrics.sensCIDisplay = ciStr(metrics.sensCI);
+  if (metrics.prevalence !== null) metrics.prevalenceDisplay = `${pctStr(metrics.prevalence)} (${metrics.prevalenceSource})`;
+  if (metrics.alertRate !== undefined) metrics.alertRateDisplay = `${metrics.alertsPer100} of every 100 patients flagged` + (metrics.numberToEvaluate ? `; about ${Math.round(metrics.numberToEvaluate)} evaluated per true case` : "");
+  if (metrics.auc !== null) metrics.aucDisplay = `${metrics.auc} (summarizes all thresholds, not yours; judge the model at your threshold)`;
+  metrics.calibrationDisplay = extra.calibration
+    ? extra.calibration + (extra.calibrationValues ? ` (${extra.calibrationValues})` : "")
+    : "Not answered";
+  metrics.subgroupDisplay = extra.subgroup
+    ? extra.subgroup + (extra.subgroupDetail ? `: ${extra.subgroupDetail}` : "")
+    : "Not answered";
+  metrics.overrideDisplay = extra.override || "Not answered";
 
   return metrics;
 }
@@ -236,7 +322,7 @@ function deriveThresholds(riskClass, tierSensitivity, metrics, custom = {}) {
     warning: Math.round(base.warning * factor * 10) / 10,
     action: Math.round(base.action * factor * 10) / 10,
     stop: Math.round(base.stop * factor * 10) / 10,
-    source: "default (starting point)",
+    source: "Commons position, not a standard",
   };
   // The organization's own choices (q22 / q23) replace the defaults
   if (custom.customWarn !== null && custom.customWarn !== undefined) { thresholds.warning = custom.customWarn; thresholds.source = "set by organization"; }
@@ -245,15 +331,10 @@ function deriveThresholds(riskClass, tierSensitivity, metrics, custom = {}) {
     thresholds.stop = Math.max(thresholds.stop, Math.round(custom.customAction * 1.7 * 10) / 10);
   }
 
-  // If we have actual metrics, add absolute metric floors alongside relative thresholds
-  if (metrics.sensitivity !== null) {
-    const sensFactor = riskClass === "high" ? 0.97 : 0.93;
-    thresholds.sensitivityFloor = Math.round(metrics.sensitivity * sensFactor * 1000) / 10 + "%";
-  }
-  if (metrics.specificity !== null) {
-    const specFactor = riskClass === "high" ? 0.98 : 0.95;
-    thresholds.specificityFloor = Math.round(metrics.specificity * specFactor * 1000) / 10 + "%";
-  }
+  // Absolute floors are the organization's to set. Until Nov 12, 2026 the tool derived them
+  // by trimming validated sensitivity 3-7% (specificity 2-5%); those cuts had no source.
+  if (custom.floorSens !== null && custom.floorSens !== undefined) thresholds.sensitivityFloor = `${custom.floorSens}%`;
+  if (custom.floorSpec !== null && custom.floorSpec !== undefined) thresholds.specificityFloor = `${custom.floorSpec}%`;
 
   return thresholds;
 }
@@ -332,7 +413,7 @@ function mapWestgardRules(tierProfile, metrics, priorAuditData) {
     rules.push({
       westgardAnalog: "Sensitivity floor (adapted)",
       mlTranslation: "Sensitivity on known-positive controls drops below an absolute floor",
-      threshold: thresholds.sensitivityFloor ? `Sensitivity < ${thresholds.sensitivityFloor}` : "Floor not calculable — validated sensitivity required",
+      threshold: thresholds.sensitivityFloor ? `Sensitivity < ${thresholds.sensitivityFloor} (set by organization)` : "No floor set. The organization must set one; the tool does not supply a default.",
       response: "Immediate stop. Missed true positives carry the higher harm for this use type. Failover to human review.",
       tier: "stop",
       active: !!thresholds.sensitivityFloor,

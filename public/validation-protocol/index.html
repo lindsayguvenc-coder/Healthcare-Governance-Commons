@@ -1404,6 +1404,11 @@ function getSectionPopulation() {
 function getSectionValidation() {
   const a = state.answers;
   const isRetroAudit = a.q2_usetype && a.q2_usetype.startsWith('Retrospective audit');
+  const hasCases = !isRetroAudit && a.q7_cases && !a.q7_cases.startsWith('No') && !a.q7_cases.startsWith('Unsure');
+  const countsMode = (a.q_counts || '').startsWith('The four');
+  const pctMode = (a.q_counts || '').startsWith('Only');
+  const allCounts = ['q_tp','q_fn','q_tn','q_fp'].every(k => Number.isFinite(a[k]));
+  const hasMetrics = hasCases && ((countsMode && allCounts) || (pctMode && Number.isFinite(a.Q15)));
 
   return {
     id: 's3', num: 3, total: 6,
@@ -1434,24 +1439,64 @@ function getSectionValidation() {
         showIf: () => !isRetroAudit && a.q7_cases && !a.q7_cases.startsWith('No'),
         options: ['Yes — already submitted','Yes — not yet submitted','No — QI designation covers it','Unsure'],
         note: 'If unsure, your IRB or research compliance office can advise. Worth confirming before validation begins — not after.' },
+      { id: 'q_counts', text: 'How do you have your local validation results?', type: 'select',
+        showIf: () => hasCases,
+        options: ['The four counts (true and false positives and negatives)','Only percentages (sensitivity and specificity)','No local results yet'],
+        note: 'Counts are better. 78% from 40 cases and 78% from 4,000 cases print the same as percentages; with counts, the report shows how sure each number is.' },
+      { id: 'q_tp', text: 'True positives: cases the model flagged that had the condition', type: 'number', max: 10000000, step: 1,
+        placeholder: 'e.g. 841', showIf: () => hasCases && countsMode },
+      { id: 'q_fn', text: 'False negatives: cases with the condition the model missed', type: 'number', max: 10000000, step: 1,
+        placeholder: 'e.g. 1711', showIf: () => hasCases && countsMode },
+      { id: 'q_tn', text: 'True negatives: cases without the condition the model did not flag', type: 'number', max: 10000000, step: 1,
+        placeholder: 'e.g. 29732', showIf: () => hasCases && countsMode },
+      { id: 'q_fp', text: 'False positives: cases the model flagged that did not have the condition', type: 'number', max: 10000000, step: 1,
+        placeholder: 'e.g. 6171', showIf: () => hasCases && countsMode },
       { id: 'Q15', text: 'What sensitivity did the model achieve on your local validation cohort?', type: 'number',
         placeholder: 'e.g. 33 (enter as a percentage, 0–100)',
-        showIf: () => !isRetroAudit && a.q7_cases && !a.q7_cases.startsWith('No') && !a.q7_cases.startsWith('Unsure'),
+        showIf: () => hasCases && pctMode,
         note: 'Enter the number from your local validation run, not the vendor\'s published figure. If using vendor data only, leave blank and note that in the vendor characterization section.' },
       { id: 'Q16', text: 'What specificity did the model achieve on your local validation cohort?', type: 'number',
         placeholder: 'e.g. 83 (enter as a percentage, 0–100)',
-        showIf: () => !isRetroAudit && a.Q15 },
+        showIf: () => hasCases && pctMode && a.Q15 },
       { id: 'Q17', text: 'What is the approximate prevalence of this condition in your local patient population?', type: 'number',
         placeholder: 'e.g. 8 (enter as a percentage, 0–100)',
-        showIf: () => !isRetroAudit && a.Q15,
+        showIf: () => hasMetrics,
         note: 'Used to calculate PPV and NPV for your specific population. Your local prevalence may differ substantially from the vendor\'s validation population — that difference matters.' },
-      { id: 'q_auc', text: 'What AUC/AUROC was reported for your local validation cohort?', type: 'number',
+      { id: 'q_auc', text: 'What AUC/AUROC was reported for your local validation cohort? (optional)', type: 'number',
         placeholder: 'e.g. 0.63 (enter as a decimal, 0–1)',
-        showIf: () => !isRetroAudit && a.Q15 },
+        showIf: () => hasMetrics,
+        note: 'AUROC averages over every possible threshold, including ones you will never use. The report prints it with that warning; the numbers above, at your threshold, are what count.' },
+      { id: 'q_false_alarms', text: 'How many false alarms would you accept to catch one true case?', type: 'number', max: 1000, step: 1,
+        placeholder: 'e.g. 10',
+        showIf: () => hasMetrics,
+        note: 'This is the trade-off your clinicians actually live with. The report uses it to compute net benefit: whether the model does better than flagging everyone or no one.' },
+      { id: 'q_floor_sens', text: 'Below what sensitivity would you stop using the model? (your floor)', type: 'number',
+        placeholder: 'e.g. 75 (percentage, 0–100)',
+        showIf: () => hasMetrics,
+        note: 'No default. The tool used to suggest one by trimming your number 3–7%, and that cut had no source. Set it from intended use and the harm of a missed case. Leave blank if not decided; the report flags it.' },
+      { id: 'q_floor_spec', text: 'Below what specificity would you stop using the model? (optional)', type: 'number',
+        placeholder: 'e.g. 80 (percentage, 0–100)',
+        showIf: () => hasMetrics },
+      { id: 'q_calibration', text: 'Does the model give a probability or risk score, and was its calibration checked?', type: 'select',
+        showIf: () => hasMetrics,
+        options: ['Yes — it gives a probability, and calibration was measured','Yes — it gives a probability, calibration not measured','No — it gives a yes/no flag or a category only','Unsure'],
+        note: 'Calibration asks whether a 30% score means about 30 in 100 such patients have the outcome.' },
+      { id: 'q_calibration_values', text: 'Calibration results', type: 'text',
+        placeholder: 'e.g. Brier 0.08, ECE 0.03, plot attached',
+        showIf: () => hasMetrics && (a.q_calibration || '').includes('was measured') },
+      { id: 'q_subgroup', text: 'Do you have performance numbers per patient group (age, sex, race/ethnicity, language)?', type: 'select',
+        showIf: () => hasMetrics,
+        options: ['Yes — per-group numbers in hand (e.g. vendor or EHR validation dashboards)','Can be produced, not yet run','No','Unsure'] },
+      { id: 'q_subgroup_detail', text: 'Which groups, and anything that stood out?', type: 'textarea',
+        placeholder: 'e.g. sensitivity lower for patients over 80 (61% vs 74%); Spanish-preferred group too small to judge',
+        showIf: () => hasMetrics && (a.q_subgroup || '').startsWith('Yes') },
       { id: 'q7a_edge', text: 'Does your organization intend to implement manual review for edge cases or low-confidence outputs?', type: 'select',
         options: ['Yes — all low-confidence outputs routed to human review',
           'Yes — selective routing based on clinical context',
           'No — AI output acted on directly','Not yet defined'] },
+      { id: 'q_override', text: 'Will you measure how often clinicians override or dismiss its alerts?', type: 'select',
+        options: ['Yes — source defined (e.g. EHR alert logs)','Yes — source not yet defined','No','Not applicable — it does not alert anyone'],
+        note: 'Override rate is the earliest sign of alert fatigue, usually before accuracy numbers move.' },
     ],
   };
 }
@@ -1729,7 +1774,7 @@ function renderQuestion(q, idx) {
   const val = state.answers[q.id];
 
   if (q.type === 'select') {
-    input = `<select class="q-select" id="q-${q.id}" onchange="setAnswer('${q.id}', this.value); checkLogicFlag('${q.id}')">
+    input = `<select class="q-select" id="q-${q.id}" onchange="setAnswer('${q.id}', this.value); checkLogicFlag('${q.id}'); refreshVisibility()">
       <option value="">— Select —</option>
       ${q.options.map(o => `<option value="${o}" ${val === o ? 'selected' : ''}>${o}</option>`).join('')}
     </select>`;
@@ -1750,8 +1795,8 @@ function renderQuestion(q, idx) {
       value="${val || ''}" oninput="setAnswer('${q.id}', this.value)" style="background-image:none;">`;
   } else if (q.type === 'number') {
     input = `<input type="number" class="q-select" id="q-${q.id}" placeholder="${q.placeholder || ''}"
-      value="${val || ''}" min="0" max="${q.id === 'q_auc' ? '1' : '100'}" step="${q.id === 'q_auc' ? '0.01' : '0.1'}"
-      oninput="setAnswer('${q.id}', parseFloat(this.value))" style="background-image:none; max-width:220px;">`;
+      value="${val ?? ''}" min="0" max="${q.max ?? (q.id === 'q_auc' ? '1' : '100')}" step="${q.step ?? (q.id === 'q_auc' ? '0.01' : '0.1')}"
+      oninput="setAnswer('${q.id}', parseFloat(this.value))" onchange="refreshVisibility()" style="background-image:none; max-width:220px;">`;
   }
 
   const flagId = `flag-${q.id}`;
@@ -1776,6 +1821,27 @@ function restoreAnswer(q) {
 }
 
 function setAnswer(id, value) { state.answers[id] = value; }
+
+// Follow-up questions (showIf) appear or disappear as answers change. Before Nov 12, 2026
+// they only updated when the section was re-entered. Re-render only when the visible set
+// actually changes, keeping the scroll position; text fields never trigger it mid-typing.
+let refreshQueued = false;
+function refreshVisibility() {
+  // Deferred: re-rendering inside a change/blur handler removes the element mid-event.
+  if (refreshQueued) return;
+  refreshQueued = true;
+  setTimeout(() => { refreshQueued = false; doRefreshVisibility(); }, 0);
+}
+function doRefreshVisibility() {
+  const section = getSection(state.currentSection);
+  if (!section) return;
+  const want = section.questions.filter(q => q.id.startsWith('_') || !q.showIf || q.showIf()).map(q => q.id).join('|');
+  const have = [...document.querySelectorAll('.question-block')].map(el => el.id.replace('qblock-', '')).join('|');
+  if (want === have) return;
+  const y = window.scrollY;
+  renderSection(state.currentSection);
+  window.scrollTo(0, y);
+}
 
 function toggleMulti(id, value, el) {
   if (!state.answers[id]) state.answers[id] = [];
@@ -2545,26 +2611,35 @@ function renderSubcontent(doc, sub, C, protocol, ctx) {
   if (content.metrics) {
     const m = content.metrics;
     const metricRows = [
-      ['Sensitivity', m.sensitivity ? (m.sensitivity * 100).toFixed(1) + '%' : 'Not provided'],
-      ['Specificity', m.specificity ? (m.specificity * 100).toFixed(1) + '%' : 'Not provided'],
-      ['Prevalence', m.prevalence ? (m.prevalence * 100).toFixed(1) + '%' : 'Not provided'],
+      ['Sensitivity', m.sensDisplay || 'Not provided'],
+      ['Specificity', m.specDisplay || 'Not provided'],
+      ['Prevalence', m.prevalenceDisplay || 'Not provided'],
       ['PPV', m.ppvDisplay || (m.calculable ? '—' : 'Not calculable')],
       ['NPV', m.npvDisplay || (m.calculable ? '—' : 'Not calculable')],
+      ['Alert rate', m.alertRateDisplay || 'Not calculable'],
+      ['Net benefit', m.netBenefitDisplay || 'Not calculable (trade-off not answered)'],
+      ['AUROC', m.aucDisplay || 'Not provided'],
+      ['Calibration', m.calibrationDisplay || 'Not answered'],
+      ['Per-group numbers', m.subgroupDisplay || 'Not answered'],
+      ['Override rate', m.overrideDisplay || 'Not answered'],
     ];
     for (let i = 0; i < metricRows.length; i++) {
       const [label, val] = metricRows[i];
-      needsPage(16);
-      fillRect(C.mL, y, C.contentW, 14, i % 2 === 0 ? C.paleGray : C.white);
-      doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
+      const vl = doc.splitTextToSize(String(val), C.contentW - 126);
+      const rh = Math.max(14, vl.length * 10 + 4);
+      needsPage(rh + 2);
+      fillRect(C.mL, y, C.contentW, rh, i % 2 === 0 ? C.paleGray : C.white);
+      doc.setFont('helvetica', 'bold');
       doc.setTextColor(...C.midGray);
       doc.text(label, C.mL + 6, y + 10);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(...C.charcoal);
-      doc.text(String(val), C.mL + 120, y + 10);
-      y += 14;
+      doc.text(vl, C.mL + 120, y + 10);
+      y += rh;
     }
     if (content.metricsNote) {
+      y += 8;
       needsPage(20);
       doc.setFont('helvetica', 'italic');
       doc.setFontSize(7.5);
@@ -2580,11 +2655,11 @@ function renderSubcontent(doc, sub, C, protocol, ctx) {
   if (content.thresholds) {
     const t = content.thresholds;
     const threshRows = [
-      ['Allowable error · warning', `${t.warning}% change from validated baseline (${t.source || 'default (starting point)'})`],
+      ['Allowable error · warning', `${t.warning}% change from validated baseline (${t.source || 'Commons position, not a standard'})`],
       ['Allowable error · action', `${t.action}% change from validated baseline`],
       ['Allowable error · stop', `${t.stop}% change from validated baseline`],
-      t.sensitivityFloor ? ['Sensitivity floor (hard stop)', t.sensitivityFloor] : null,
-      t.specificityFloor ? ['Specificity floor', t.specificityFloor] : null,
+      ['Sensitivity floor (hard stop)', t.sensitivityFloor ? t.sensitivityFloor + ' (set by organization)' : 'Not set. No default: set it from intended use.'],
+      t.specificityFloor ? ['Specificity floor', t.specificityFloor + ' (set by organization)'] : null,
     ].filter(Boolean);
     for (const [label, val] of threshRows) {
       needsPage(14);
