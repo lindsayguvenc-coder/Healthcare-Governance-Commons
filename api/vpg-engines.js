@@ -97,12 +97,18 @@ function buildWestgardTiers({ answers, logicFlags, gapFlags }) {
   const lookback = buildLookback(tierProfile, answers);
   const aiValidation = buildAiValidation(tierProfile);
 
+  // Short tracks (Nov 12, 2026): scribes and agents get their own measures and flags
+  const track = useType === "generative_documentation" ? "scribe" : useType === "agentic_workflow" ? "agent" : null;
+  const trackResult = track ? buildTrackMetrics(track, answers) : null;
+  if (track) tierProfile.thresholds.isTrack = true;
+
   // Gap flags for tier section
   const tierGapFlags = [];
-  if (metrics.sensitivity !== null && !metrics.hasCounts) tierGapFlags.push("Validation counts not provided, so no confidence intervals. A sensitivity from 30 positive cases carries roughly ±15 points of uncertainty; one from 3,000 carries about ±1.5. Enter the four counts to see which you have.");
+  if (trackResult) tierGapFlags.push(...trackResult.flags);
+  if (!track) if (metrics.sensitivity !== null && !metrics.hasCounts) tierGapFlags.push("Validation counts not provided, so no confidence intervals. A sensitivity from 30 positive cases carries roughly ±15 points of uncertainty; one from 3,000 carries about ±1.5. Enter the four counts to see which you have.");
   if (metrics.hasCounts && metrics.positives < 30) tierGapFlags.push(`Only ${metrics.positives} positive cases in the validation set. The sensitivity interval is wide (${metrics.sensCIDisplay}); treat the baseline as provisional.`);
   if (customWarn === null) tierGapFlags.push("Warning and action thresholds not chosen locally. The allowable-error defaults are the Commons' position, not a standard.");
-  if (metrics.sensitivity !== null && floorSens === null) tierGapFlags.push("No sensitivity floor set. The tool no longer invents one. Set the lowest sensitivity you would accept from intended use and harm; until then there is no hard stop on missed cases.");
+  if (!track) if (metrics.sensitivity !== null && floorSens === null) tierGapFlags.push("No sensitivity floor set. The tool no longer invents one. Set the lowest sensitivity you would accept from intended use and harm; until then there is no hard stop on missed cases.");
   if (metrics.auc !== null) tierGapFlags.push("AUROC reported. It summarizes every possible threshold, including ones you will never use, so it does not tell you how the model behaves at yours. Judge it by the numbers at your operating threshold.");
   if (metrics.calculable && metrics.netBenefit === null) tierGapFlags.push("Net benefit not computed: the trade-off question (false alarms accepted per caught case) was not answered.");
   if (metrics.netBenefit !== null && metrics.netBenefit <= metrics.netBenefitTreatAll) tierGapFlags.push("At your stated trade-off, the model does no better than treating everyone as positive. That is a reason to question the deployment, not just tune it.");
@@ -110,10 +116,10 @@ function buildWestgardTiers({ answers, logicFlags, gapFlags }) {
   if (/not measured/i.test(extra.calibration || "")) tierGapFlags.push("The model gives a probability, but calibration was not measured. A 30% risk score should mean about 30 in 100 such patients have the outcome; check it (calibration plot, Brier score or ECE) before anyone reads the score as a probability.");
   if (extra.subgroup && !/^Yes/.test(extra.subgroup)) tierGapFlags.push("No per-group performance numbers. Comparing how groups are recorded is not the same as knowing how the model performs for each group. Run the same measures per group; small groups give wide intervals, so report them.");
   if (extra.override && !/^Yes — source defined/.test(extra.override) && !/^Not applicable/.test(extra.override)) tierGapFlags.push("Override rate not planned with a data source. How often clinicians dismiss alerts is the earliest sign of alert fatigue; decide where it comes from before go-live.");
-  if (tierProfile.generative) tierGapFlags.push("Generative or agentic use type — sensitivity/specificity do not apply directly. Grader validation and acceptable cutoffs must be defined (see AI-specific validation additions).");
-  if (sensitivity === null) tierGapFlags.push("Sensitivity not provided — warning thresholds estimated from use-type defaults.");
-  if (specificity === null) tierGapFlags.push("Specificity not provided — tier bounds are indicative only.");
-  if (prevalence === null) tierGapFlags.push("Local prevalence unknown — PPV/NPV cannot be calculated; fixed thresholds used.");
+  if (!track) if (tierProfile.generative) tierGapFlags.push("Generative or agentic use type — sensitivity/specificity do not apply directly. Grader validation and acceptable cutoffs must be defined (see AI-specific validation additions).");
+  if (!track) if (sensitivity === null) tierGapFlags.push("Sensitivity not provided — warning thresholds estimated from use-type defaults.");
+  if (!track) if (specificity === null) tierGapFlags.push("Specificity not provided — tier bounds are indicative only.");
+  if (!track) if (prevalence === null) tierGapFlags.push("Local prevalence unknown — PPV/NPV cannot be calculated; fixed thresholds used.");
   if (!corrActOwner) tierGapFlags.push("Corrective action owner not designated — governance accountability is unassigned.");
   if (!driftDefined) tierGapFlags.push("Drift criteria not pre-defined — recommending threshold review at 90-day intervals until criteria established.");
 
@@ -132,6 +138,8 @@ function buildWestgardTiers({ answers, logicFlags, gapFlags }) {
     changeControl,
     lookback,
     aiValidation,
+    track,
+    trackResult,
     tierGapFlags,
     generatedAt: new Date().toISOString(),
   };
@@ -235,6 +243,63 @@ function deriveMetrics({ sensitivity, specificity, prevalence, counts = {}, extr
   metrics.overrideDisplay = extra.override || "Not answered";
 
   return metrics;
+}
+
+// ─── Short tracks: scribes and agents ─────────────────────────────────────────
+
+function rateRow(label, x, n, what) {
+  if (x === null || n === null || !(n > 0) || x > n) return [label, "Not provided"];
+  const ci = wilson(x, n);
+  return [label, `${pctStr(x / n)} (95% CI ${ciStr(ci)}; ${x} of ${n} ${what})`];
+}
+
+function buildTrackMetrics(track, a) {
+  const rows = [], flags = [];
+  const yes = (v) => typeof v === "string" && v.startsWith("Yes");
+  if (track === "scribe") {
+    const n = num(a.qs_notes_n), fact = num(a.qs_notes_fact), omit = num(a.qs_notes_omit), floor = num(a.qs_floor);
+    rows.push(rateRow("Notes with a factual error", fact, n, "notes"));
+    rows.push(rateRow("Notes with an important omission", omit, n, "notes"));
+    rows.push(["Error limit (stop above)", floor !== null ? `${floor}% of notes (set by organization)` : "Not set. No default: set it from how notes are used."]);
+    rows.push(["Who judged the notes", a.qs_grader || "Not answered"]);
+    rows.push(["Transcription and speakers", a.qs_transcription ? a.qs_transcription + (a.qs_transcription_values ? ` (${a.qs_transcription_values})` : "") : "Not answered"]);
+    rows.push(["Languages and interpreters", a.qs_language || "Not answered"]);
+    rows.push(["Clinician review before signing", a.qs_review || "Not answered"]);
+    rows.push(["Edit / rejection tracking", a.qs_edit_rate || "Not answered"]);
+    rows.push(["Recording consent", a.qs_consent || "Not answered"]);
+    rows.push(["Audio after drafting", a.qs_audio || "Not answered"]);
+    if (n === null) flags.push("No local note review. Before go-live, review a set of drafted notes against what was said and count notes with factual errors and with important omissions. Vendor figures are not your patients or your clinicians.");
+    if (n !== null && n < 100) flags.push(`Only ${n} notes reviewed. An error rate from a small set has a wide interval; treat it as provisional.`);
+    if (/not checked|no written definition|Vendor-reported/i.test(a.qs_grader || "")) flags.push("The note grader is not validated. Write down what counts as a factual error and an omission, and check that two reviewers agree, before trusting the rate.");
+    if (floor === null) flags.push("No error limit set. Decide the share of notes with factual errors at which you would stop, based on how the notes are used downstream.");
+    if (!yes(a.qs_review) || /not enforced/.test(a.qs_review || "")) flags.push("Clinician review is not enforced. Unreviewed drafts in the record are the main way scribe errors reach patients.");
+    if (!/source defined/.test(a.qs_edit_rate || "")) flags.push("Edit and rejection rates are not tracked with a data source. They are the earliest sign that drafts got worse or that clinicians stopped reading them.");
+    if (/Notice only|Not yet decided/.test(a.qs_consent || "") || !a.qs_consent) flags.push("Recording consent relies on notice or is undecided. In all-party consent states such as California, patient class actions (Sharp, Dec 2024; Sutter Health and MemorialCare, Apr 2026) argue notice is not enough. Get legal review. Check the current source; as of Nov 2026.");
+    if (/vendor|Unknown/i.test(a.qs_audio || "")) flags.push("Audio retention by the vendor, or unknown. Put retention, deletion and any training use in the contract.");
+    if (/^(No|Partly)/.test(a.qs_language || "")) flags.push("Not tested across the languages, accents and interpreter visits your patients have. Errors cluster there; report them per group.");
+  } else {
+    const runs = num(a.qa_runs), ok = num(a.qa_success), viol = num(a.qa_policy_viol), floor = num(a.qa_floor);
+    rows.push(rateRow("Task success (correct end state)", ok, runs, "runs"));
+    rows.push(rateRow("Runs with a policy violation", viol, runs, "runs"));
+    rows.push(["Success floor (stop below)", floor !== null ? `${floor}% (set by organization)` : "Not set. No default: set it from what a wrong action costs."]);
+    rows.push(["Consistency (pass^k)", a.qa_repeat_k || a.qa_repeat || "Not answered"]);
+    rows.push(["Tool calls checked", a.qa_toolcalls || "Not answered"]);
+    rows.push(["Hard-to-undo actions", a.qa_irreversible || "Not answered"]);
+    rows.push(["Human approval required for", a.qa_approval || (/^No/.test(a.qa_irreversible || "") ? "Not needed (read-only or drafts)" : "Not answered")]);
+    rows.push(["Permissions", a.qa_permissions || "Not answered"]);
+    rows.push(["Action log", a.qa_log || "Not answered"]);
+    rows.push(["Stop / undo tracking", a.qa_override || "Not answered"]);
+    if (runs === null) flags.push("No local task runs. Before go-live, run a fixed task set with known correct end states and judge the end state in the system, not the agent's report.");
+    if (runs !== null && runs < 100) flags.push(`Only ${runs} task runs. A success rate from a small set has a wide interval; treat it as provisional.`);
+    if (!(a.qa_repeat || "").startsWith("Yes")) flags.push("Tasks were not repeated. One pass does not show the agent passes reliably; run each task several times and report pass^k.");
+    if (floor === null) flags.push("No success floor set. Decide the success rate below which you would stop, based on what a wrong action costs.");
+    if (viol !== null && viol > 0) flags.push(`${viol} run(s) broke a policy. A right end state reached the wrong way still counts as a failure for governance.`);
+    if (!/^No/.test(a.qa_irreversible || "") && !/^All/.test(a.qa_approval || "")) flags.push("It can take hard-to-undo actions without a human approving each one. Require approval for those actions, at least until the success rate is established.");
+    if (!/^Yes/.test(a.qa_permissions || "")) flags.push("Permissions are not scoped to its tasks. An agent can only do the damage its access allows; limit it.");
+    if (!/^Yes/.test(a.qa_log || "")) flags.push("Actions are not fully logged. Without a replayable log, lookback after a failure is not possible.");
+    if (!/source defined/.test(a.qa_override || "")) flags.push("Stop / undo rate not tracked with a data source. It is the earliest sign of trouble in use.");
+  }
+  return { track, rows, flags };
 }
 
 // ─── Tier profile selection ───────────────────────────────────────────────────

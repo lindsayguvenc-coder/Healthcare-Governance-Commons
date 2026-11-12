@@ -1418,6 +1418,12 @@ function getSectionValidation() {
   const allCounts = ['q_tp','q_fn','q_tn','q_fp'].every(k => Number.isFinite(a[k]));
   const hasMetrics = hasCases && ((countsMode && allCounts) || (pctMode && Number.isFinite(a.Q15)));
 
+  // Short tracks by use type (Nov 12, 2026): scribes and agents never see the
+  // yes/no-classifier questions (prevalence, counts, sensitivity, net benefit).
+  const track = useTrack(a);
+  if (track === 'scribe') return getScribeTrack(a);
+  if (track === 'agent') return getAgentTrack(a);
+
   return {
     id: 's3', num: 3, total: 6,
     title: 'Validation Approach',
@@ -1505,6 +1511,95 @@ function getSectionValidation() {
       { id: 'q_override', text: 'Will you measure how often clinicians override or dismiss its alerts?', type: 'select',
         options: ['Yes — source defined (e.g. EHR alert logs)','Yes — source not yet defined','No','Not applicable — it does not alert anyone'],
         note: 'Override rate is the earliest sign of alert fatigue, usually before accuracy numbers move.' },
+    ],
+  };
+}
+
+function useTrack(a) {
+  const u = a.q2_usetype || '';
+  if (u.startsWith('Documentation / generative drafting')) return 'scribe';
+  if (u.startsWith('Agentic workflow')) return 'agent';
+  return null;
+}
+
+const COUNT = { type: 'number', max: 10000000, step: 1 };
+const AS_OF = 'Check the current source; as of Nov 2026.';
+
+function getScribeTrack(a) {
+  const hasSet = (a.qs_eval_set || '').startsWith('Yes');
+  return {
+    id: 's3', num: 3, total: 6,
+    title: 'Validation Approach — Ambient Scribe / Note Drafting Track',
+    desc: 'For tools that listen and draft notes. Sensitivity and specificity do not apply; transcription, note quality, review and consent do.',
+    questions: [
+      { id: 'qs_eval_set', text: 'Do you have a local evaluation set: recorded encounters with a reference to check against (transcript or clinician-written note)?', type: 'select',
+        options: ['Yes — ready to use','Yes — but needs approvals or consent first','Limited — a handful of encounters','No','Unsure'] },
+      { id: 'qs_notes_n', text: 'How many draft notes were reviewed against the reference?', ...COUNT, placeholder: 'e.g. 200',
+        showIf: () => hasSet },
+      { id: 'qs_notes_fact', text: 'How many of those notes had at least one factual error (something stated that was not said or is wrong)?', ...COUNT, placeholder: 'e.g. 14',
+        showIf: () => hasSet && Number.isFinite(a.qs_notes_n), note: 'Count notes, not errors. One note with three errors counts once.' },
+      { id: 'qs_notes_omit', text: 'How many had at least one clinically important omission?', ...COUNT, placeholder: 'e.g. 22',
+        showIf: () => hasSet && Number.isFinite(a.qs_notes_n) },
+      { id: 'qs_grader', text: 'Who judged the notes?', type: 'select', showIf: () => hasSet,
+        options: ['Clinicians, with a written definition of an error','Clinicians, no written definition','A model grader, checked against clinicians','A model grader, not checked','Vendor-reported only'],
+        note: 'The grader is an instrument too. If two reviewers would disagree on what counts as an error, the error rate means little.' },
+      { id: 'qs_transcription', text: 'Was transcription accuracy measured (e.g. word error rate), including speaker attribution (who said what)?', type: 'select',
+        options: ['Yes — both','Transcription only','Vendor-reported only','No'] },
+      { id: 'qs_transcription_values', text: 'Transcription results', type: 'text', placeholder: 'e.g. WER 8%; speaker errors in 3 of 50 encounters',
+        showIf: () => (a.qs_transcription || '').startsWith('Yes') || (a.qs_transcription || '').startsWith('Transcription') },
+      { id: 'qs_language', text: 'Was it tested on the languages, accents and interpreter-present visits your patients actually have?', type: 'select',
+        options: ['Yes — tested per group','Partly','No — English only so far','Not applicable'] },
+      { id: 'qs_floor', text: 'Above what share of notes with a factual error would you stop using it? (your limit)', type: 'number',
+        placeholder: 'e.g. 5 (percentage)', note: 'No default. Set it from how notes are used downstream. Leave blank if not decided; the report flags it.' },
+      { id: 'qs_review', text: 'Does a clinician review and sign every drafted note before it enters the record?', type: 'select',
+        options: ['Yes — required, enforced in the workflow','Yes — expected, not enforced','No — some notes go in without review'] },
+      { id: 'qs_edit_rate', text: 'Will you track how much clinicians edit or reject drafts?', type: 'select',
+        options: ['Yes — source defined','Yes — source not yet defined','No'],
+        note: 'Edit rate is the scribe version of override rate: the first sign drafts are getting worse, or that clinicians stopped reading them.' },
+      { id: 'qs_consent', text: 'How is recording consent obtained?', type: 'select',
+        options: ['Verbal consent from everyone present, documented each visit','Written consent','Notice only (signage, portal, intake form)','Not yet decided'],
+        note: 'California requires consent from all parties to record a confidential conversation, and several other states do too. Patient class actions over ambient scribes (Sharp, Dec 2024; Sutter Health and MemorialCare, Apr 2026) argue notice alone is not enough. ' + AS_OF },
+      { id: 'qs_audio', text: 'What happens to the audio after the note is drafted?', type: 'select',
+        options: ['Deleted once the note is signed','Kept for a set period','Kept by the vendor, including for model training','Unknown'] },
+    ],
+  };
+}
+
+function getAgentTrack(a) {
+  const hasTasks = (a.qa_tasks || '').startsWith('Yes');
+  return {
+    id: 's3', num: 3, total: 6,
+    title: 'Validation Approach — Agentic Workflow Track',
+    desc: 'For tools that take multi-step actions in your systems. Judged on what it does: end state, tool calls, policy.',
+    questions: [
+      { id: 'qa_tasks', text: 'Do you have a fixed set of test tasks with known correct end states?', type: 'select',
+        options: ['Yes — ready to run','Yes — still being built','No','Unsure'] },
+      { id: 'qa_runs', text: 'How many test task runs were done?', ...COUNT, placeholder: 'e.g. 150', showIf: () => hasTasks },
+      { id: 'qa_success', text: 'How many reached the correct end state?', ...COUNT, placeholder: 'e.g. 131',
+        showIf: () => hasTasks && Number.isFinite(a.qa_runs), note: 'Judge the end state in the system (the order placed, the message sent), not what the agent says it did.' },
+      { id: 'qa_policy_viol', text: 'In those runs, how many broke a policy or rule, even if the end state was right?', ...COUNT, placeholder: 'e.g. 4',
+        showIf: () => hasTasks && Number.isFinite(a.qa_runs) },
+      { id: 'qa_repeat', text: 'Were the same tasks run more than once to check consistency?', type: 'select', showIf: () => hasTasks,
+        options: ['Yes — each task run several times','No — one run per task'],
+        note: 'The same task can pass once and fail the next time. Run each task several times; the share that passes every time (pass^k) is the reliability number.' },
+      { id: 'qa_repeat_k', text: 'Runs per task, and how many tasks passed every time?', type: 'text', placeholder: 'e.g. 5 runs each; 38 of 50 tasks passed all 5',
+        showIf: () => hasTasks && (a.qa_repeat || '').startsWith('Yes') },
+      { id: 'qa_toolcalls', text: 'Were its individual tool calls checked (right tool, right inputs), not just the end state?', type: 'select',
+        options: ['Yes','Partly','No'] },
+      { id: 'qa_floor', text: 'Below what success rate would you stop using it? (your floor)', type: 'number', placeholder: 'e.g. 90 (percentage)',
+        note: 'No default. Set it from what a wrong action costs. Leave blank if not decided; the report flags it.' },
+      { id: 'qa_irreversible', text: 'Can it take actions that are hard to undo (orders, messages to patients, billing, record changes)?', type: 'select',
+        options: ['Yes','No — read-only or drafts only','Unsure'] },
+      { id: 'qa_approval', text: 'Which of its actions need a human to approve before they happen?', type: 'select',
+        showIf: () => !(a.qa_irreversible || '').startsWith('No'),
+        options: ['All hard-to-undo actions','Some','None','Not yet decided'] },
+      { id: 'qa_permissions', text: 'Are its system permissions limited to what its tasks need?', type: 'select',
+        options: ['Yes — scoped and reviewed','Mostly','No — broad access','Unknown'] },
+      { id: 'qa_log', text: 'Is every action logged with enough detail to replay what it did and why?', type: 'select',
+        options: ['Yes','Partly','No'] },
+      { id: 'qa_override', text: 'Will you track how often staff stop, undo or redo its actions?', type: 'select',
+        options: ['Yes — source defined','Yes — source not yet defined','No'],
+        note: 'The agent version of override rate.' },
     ],
   };
 }
@@ -1660,6 +1755,7 @@ function getSectionMonitoring() {
         options: ['3%','5%','7%','10%','12%','15%','20%','Not yet defined'],
         note: 'Action threshold should exceed your warning threshold.' },
       { id: 'q22_symmetric', text: 'Should warning and action thresholds apply equally to sensitivity and specificity?', type: 'select',
+        showIf: () => !useTrack(state.answers),
         options: ['Same threshold for both','Different thresholds — specify in notes','Unsure — apply same for now'] },
       { id: 'q_roi', text: 'What value is this AI system expected to deliver, and how will your organization measure it?', type: 'select',
         options: ['Defined and measurable','Defined but not yet formally measured',
@@ -2615,10 +2711,10 @@ function renderSubcontent(doc, sub, C, protocol, ctx) {
     y += 8;
   }
 
-  // Metrics block
-  if (content.metrics) {
-    const m = content.metrics;
-    const metricRows = [
+  // Metrics block (track rows for scribes/agents, classifier metrics otherwise)
+  if (content.metrics || content.trackRows) {
+    const m = content.metrics || {};
+    const metricRows = content.trackRows ? content.trackRows : [
       ['Sensitivity', m.sensDisplay || 'Not provided'],
       ['Specificity', m.specDisplay || 'Not provided'],
       ['Prevalence', m.prevalenceDisplay || 'Not provided'],
@@ -2634,7 +2730,8 @@ function renderSubcontent(doc, sub, C, protocol, ctx) {
     for (let i = 0; i < metricRows.length; i++) {
       const [label, val] = metricRows[i];
       doc.setFontSize(8);
-      const vl = doc.splitTextToSize(String(val), C.contentW - 126);
+      const lw = content.trackRows ? 170 : 120;
+      const vl = doc.splitTextToSize(String(val), C.contentW - lw - 6);
       const rh = Math.max(14, vl.length * 10 + 4);
       needsPage(rh + 2);
       fillRect(C.mL, y, C.contentW, rh, i % 2 === 0 ? C.paleGray : C.white);
@@ -2643,7 +2740,7 @@ function renderSubcontent(doc, sub, C, protocol, ctx) {
       doc.text(label, C.mL + 6, y + 10);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(...C.charcoal);
-      doc.text(vl, C.mL + 120, y + 10);
+      doc.text(vl, C.mL + lw, y + 10);
       y += rh;
     }
     if (content.metricsNote) {
@@ -2666,7 +2763,7 @@ function renderSubcontent(doc, sub, C, protocol, ctx) {
       ['Allowable error · warning', `${t.warning}% change from validated baseline (${t.source || 'Commons position, not a standard'})`],
       ['Allowable error · action', `${t.action}% change from validated baseline`],
       ['Allowable error · stop', `${t.stop}% change from validated baseline`],
-      ['Sensitivity floor (hard stop)', t.sensitivityFloor ? t.sensitivityFloor + ' (set by organization)' : 'Not set. No default: set it from intended use.'],
+      t.isTrack ? null : ['Sensitivity floor (hard stop)', t.sensitivityFloor ? t.sensitivityFloor + ' (set by organization)' : 'Not set. No default: set it from intended use.'],
       t.specificityFloor ? ['Specificity floor', t.specificityFloor + ' (set by organization)'] : null,
     ].filter(Boolean);
     for (const [label, val] of threshRows) {
