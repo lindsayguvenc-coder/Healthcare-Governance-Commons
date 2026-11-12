@@ -92,6 +92,10 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       - VPG allowable error: 3/7/12% (high), 5/12/20 (moderate), 8/18/30 (low),
         scaled ×0.75 / ×1.3 by tier sensitivity. No source; labeled "Commons
         position, not a standard". Replace or defend.
+      - VPG "monitoring rule set performance" figures (false rejection ~5.9%,
+        1 SD / 2 SD shift detection ~44.9% / ~98.6% in 10 runs) come from a
+        simulation in `simulateRuleSetPerformance()` in `api/vpg-engines.js`.
+        Check the simulation and its assumptions.
       - VPG floors: none by default since Nov 12 (the old 0.97/0.93 trims had no
         source). Hospital sets its own.
 - [ ] **PHI screening: next steps.** Oct 28 added a browser-side screen on every

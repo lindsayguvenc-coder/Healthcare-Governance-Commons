@@ -109,7 +109,7 @@ function buildWestgardTiers({ answers, logicFlags, gapFlags }) {
   if (metrics.hasCounts && metrics.positives < 30) tierGapFlags.push(`Only ${metrics.positives} positive cases in the validation set. The sensitivity interval is wide (${metrics.sensCIDisplay}); treat the baseline as provisional.`);
   if (customWarn === null) tierGapFlags.push("Warning and action thresholds not chosen locally. The allowable-error defaults are the Commons' position, not a standard.");
   if (!track) if (metrics.sensitivity !== null && floorSens === null) tierGapFlags.push("No sensitivity floor set. The tool no longer invents one. Set the lowest sensitivity you would accept from intended use and harm; until then there is no hard stop on missed cases.");
-  if (metrics.auc !== null) tierGapFlags.push("AUROC reported. It summarizes every possible threshold, including ones you will never use, so it does not tell you how the model behaves at yours. Judge it by the numbers at your operating threshold.");
+  // AUROC caution lives in the metrics note, not the gap list (it is not something to close)
   if (metrics.calculable && metrics.netBenefit === null) tierGapFlags.push("Net benefit not computed: the trade-off question (false alarms accepted per caught case) was not answered.");
   if (metrics.netBenefit !== null && metrics.netBenefit <= metrics.netBenefitTreatAll) tierGapFlags.push("At your stated trade-off, the model does no better than treating everyone as positive. That is a reason to question the deployment, not just tune it.");
   if (metrics.netBenefit !== null && metrics.netBenefit <= 0) tierGapFlags.push("At your stated trade-off, net benefit is zero or negative: the false alarms cost more than the cases caught are worth.");
@@ -767,7 +767,17 @@ function parseVendorDemographics(answers) {
   // Q_vendor_demographics or S2 answers map to vendor model card reported categories
   // Expected: array of axis IDs that vendor reported, or "not_disclosed"
   const raw = answers.Q_vendor_demographics || answers.Q21 || null;
-  if (!raw || raw === "not_disclosed" || raw === "") {
+  // Nothing asked yet: no question collects vendor-disclosed demographics (Nov 12, 2026).
+  // Say so, rather than recording the vendor as a non-discloser.
+  if (raw === null || raw === undefined) {
+    return {
+      reported: [],
+      notDisclosed: true,
+      notAsked: true,
+      note: "Not asked by this tool: what the vendor disclosed about the demographics of its training data. Ask the vendor, and put it in the contract.",
+    };
+  }
+  if (raw === "not_disclosed" || raw === "") {
     return {
       reported: [],
       notDisclosed: true,
@@ -829,7 +839,10 @@ function runMappingFunction(vendorDemographics, localMethodology) {
     } else if (vendorDemographics.notDisclosed) {
       compatibility = "unknown";
       numericalMismatchRisk = axis.riskWeight === "high" ? "high" : "moderate";
-      recommendedAction = `Vendor non-disclosure on ${axis.label} — cannot assess compatibility. Local site records this axis. Treat as potential mismatch pending vendor disclosure.`;
+      const localPart = localRecorded ? "Your site records this axis." : "Your site's recording of this axis was not documented.";
+      recommendedAction = vendorDemographics.notAsked
+        ? `Vendor training data for ${axis.label} not asked by this tool, so compatibility can't be assessed. ${localPart} Ask the vendor; until then treat it as a possible mismatch.`
+        : `Vendor non-disclosure on ${axis.label}, so compatibility can't be assessed. ${localPart} Treat it as a possible mismatch until the vendor discloses.`;
     } else if (!vendorReported && !localRecorded) {
       compatibility = "not_tracked";
       numericalMismatchRisk = "unquantifiable";
@@ -1073,6 +1086,9 @@ function narrativeMismatchFlags(vendorDemographics, localMethodology) {
 function buildBiasGapFlags(vendorDemographics, localMethodology, modelCardAvailable, vendorNonDisclosure, existingGapFlags) {
   const flags = [];
 
+  if (vendorDemographics.notAsked) {
+    flags.push("VENDOR_DEMOGRAPHICS_NOT_ASKED: This tool does not yet ask what the vendor disclosed about its training data, so the compatibility table cannot be completed. Get it from the vendor (model card or contract).");
+  }
   if (vendorNonDisclosure) {
     flags.push("VENDOR_NON_DISCLOSURE: Vendor has not provided demographic breakdown of training data. Compatibility assessment is incomplete.");
   }

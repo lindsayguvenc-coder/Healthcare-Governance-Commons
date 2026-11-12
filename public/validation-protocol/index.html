@@ -2123,7 +2123,7 @@ function goToReady() {
 }
 
 // Disclaimer identity for this tool. Bump VPG_VERSION when the protocol logic changes.
-const VPG_VERSION = '2026-10-29';
+const VPG_VERSION = '2026-11-12';
 const VPG_DISCLAIMER = { tool: 'Validation Protocol Generator', version: VPG_VERSION, ai: 'none' };
 
 // ── PDF GENERATION ────────────────────────────────────────────────────────
@@ -2667,7 +2667,8 @@ function renderSubcontent(doc, sub, C, protocol, ctx) {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8.5);
       doc.setTextColor(...C.charcoal);
-      doc.text(`${s.compatible || 0} compatible · ${s.partial || 0} partial · ${s.incompatible || 0} incompatible · ${s.unknown || 0} unknown`, C.mL, y);
+      const sc = s.counts || s;
+      doc.text(`${sc.compatible || 0} compatible · ${sc.partial || 0} partial · ${sc.incompatible || 0} incompatible · ${sc.unknown || 0} unknown` + (sc.not_tracked ? ` · ${sc.not_tracked} not tracked` : ''), C.mL, y);
       y += 14;
       if (s.highRiskIncompatibleCount > 0) {
         needsPage(28);
