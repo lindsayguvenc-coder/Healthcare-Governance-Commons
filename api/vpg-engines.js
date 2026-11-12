@@ -95,6 +95,7 @@ function buildWestgardTiers({ answers, logicFlags, gapFlags }) {
   const prevalenceMonitoring = buildPrevalenceMonitoring(metrics);
   const changeControl = buildChangeControl(tierProfile);
   const lookback = buildLookback(tierProfile, answers);
+  const responseLayer = buildResponseLayer(answers);
   const aiValidation = buildAiValidation(tierProfile);
 
   // Short tracks (Nov 12, 2026): scribes and agents get their own measures and flags
@@ -137,6 +138,7 @@ function buildWestgardTiers({ answers, logicFlags, gapFlags }) {
     prevalenceMonitoring,
     changeControl,
     lookback,
+    responseLayer,
     aiValidation,
     track,
     trackResult,
@@ -459,7 +461,7 @@ function mapWestgardRules(tierProfile, metrics, priorAuditData) {
       westgardAnalog: "10ₓ (Drift rule)",
       mlTranslation: "Ten consecutive control results on the same side of the baseline mean",
       threshold: "10 consecutive, same side of mean",
-      response: "Reject. Sustained systematic drift: revalidation per the change classification.",
+      response: "Reject. Sustained systematic drift: hold, find the cause, and classify the change (re-baseline, verification or revalidation).",
       tier: "stop",
       active: priorAuditData,
       note: priorAuditData ? null : "Phased in once a baseline of at least 20 control runs exists.",
@@ -531,7 +533,7 @@ function simulateRuleSetPerformance() {
       `With no error present, the reject rules fire in about ${p(pfr)} of 10-run windows (false rejection).`,
       `A 1 SD shift is caught within 10 runs about ${p(ped1)} of the time; a 2 SD shift about ${p(ped2)}.`,
       "These are the monitor's own sensitivity and specificity, separate from the model's. Its PPV depends on how often real errors occur: when they are rare, most rejects are false alarms.",
-      "Tuning the rule set trades systematic-error detection against random-error detection. Any change to the rule set is a validation change and requires reverification.",
+      "Tuning the rule set trades systematic-error detection against random-error detection. Any change to the rule set is a locked-parameter change: logged old → new, re-signed by the independent authority, and the affected controls re-baselined.",
     ],
   };
 }
@@ -552,11 +554,29 @@ function buildChangeControl(tierProfile) {
   const high = tierProfile.riskClass === "high";
   return {
     rationale: [
-      "Change control is risk-based and decided in advance, by the system's classification and the type of change (like FDA change control plans and IQCP).",
-      `Configuration or prompt change within validated scope → ${high ? "pre/post comparison on control tasks against allowable error" : "QC check on control tasks"}.`,
-      "Vendor model version change → pre/post comparison against allowable error; synthetic controls also need a real-task check.",
-      "Change to intended use, population, data source or retrieval corpus → revalidation under a new on-site plan.",
-      "Any change to locked validation parameters (limits, rule set, acceptable cutoffs) → logged old → new and re-signed.",
+      "Change control is risk-based and decided in advance, by the system's classification and the type of change (like FDA change control plans and IQCP). Three tiers, used precisely, so routine changes stay proportionate and full revalidation stays rare.",
+      "Re-baseline: a new or replaced control item, or a new lot of control material. Establish a new mean and SD for that control only, run alongside the current material; each control has its own chart, so the others are unaffected. No performance claim is re-proven. Signed by the operator.",
+      `Verification: the agent changed but its intended use did not (a vendor model version, or a prompt or configuration change within validated scope). Requires the control set and a sample of real tasks, judged against the existing acceptance limits with criteria set in advance; controls alone are only QC. The real-task sample is sized to what the decision needs${high ? " (larger for this high-risk use)" : ""}, not maximized. Pass: re-baseline and release. Fail: the change does not go live. Signed by the independent authority, because a model change is a locked-parameter change.`,
+      "Revalidation: the claim changed (new intended use, population, data source or retrieval corpus, or a modification to how the agent works). Spec, acceptance limits, accuracy, precision, subgroup performance and validated range are set again under a new on-site plan. Signed by the independent authority and clinical leadership.",
+      "Any change to locked validation parameters (limits, rule set, acceptable cutoffs) is logged old → new and re-signed by the independent authority.",
+    ],
+  };
+}
+
+// Response layer (Nov 12, Commons tool knob 4): what happens after a rule fires.
+function buildResponseLayer(answers) {
+  const authority = answers.Q33 ? `sign-off by ${answers.Q33} (the independent authority)` : "sign-off by the independent authority (not yet named; see gap flags)";
+  return {
+    rationale: [
+      "Auto-release: results release without human review only when no rejection rule has fired, no warning is past its acknowledgment deadline, the model version is unchanged, and no locked parameter has changed. Acknowledged warnings do not block auto-release.",
+      "First response to a rejection: hold, and route the agent's work to the human queue. One automatic rerun is allowed only when random error is suspected; repeated reruns until a run passes conceal real error. Alternatives: fail over to a backup that carries its own QC, or switch to the contingency procedure.",
+      "Warnings: set an acknowledgment deadline at validation. A warning not acknowledged in time holds the agent like a rejection, with a defined walk-back (escalate, then log).",
+      "Human queue: owned by a named role, with a response time set at validation. If the owner does not respond in time, the item escalates to a named backup role, then to the independent authority. The same timer applies to every approval in this layer, so nothing waits on one person.",
+      `Release authority: the operator may release after a first-line fix (non-analytic cause or clean correction, no failover, no locked parameter changed). Release requires ${authority} if the agent failed over, the cause was not found, a rerun failed, or a locked parameter changed during the hold. The person who loosened a limit does not also release under it.`,
+      "Corrected outputs: decide at validation who is told when a released output is found wrong, and how (clinician, patient, chart correction). Fixing the agent does not fix outputs already acted on.",
+      "Contingency: time on the manual procedure is monitored, with escalating reminders at intervals set at validation, so contingency does not become the permanent workflow.",
+      "A failure the QC missed triggers a QC design review, not an automatic new control: were the controls at the right decision points, and were the rules strong enough for the method's sigma? Move or replace a control before adding one. Size the set by decision points: one control near each boundary that matters, plus a few anchors and drift sensors. Each added control adds false alarms.",
+      "Outward reporting: confirmed failures go to the vendor and the organization's safety event reporting; optionally to the Commons Peer Challenge Registry until a standard registry exists.",
     ],
   };
 }
