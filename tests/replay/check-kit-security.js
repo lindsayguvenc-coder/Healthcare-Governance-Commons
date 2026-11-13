@@ -14,7 +14,11 @@ fs.mkdirSync(out, { recursive: true });
   const ctx = await b.newContext({ acceptDownloads: true });
   const page = await ctx.newPage(); const errs = []; page.on("pageerror", (e) => errs.push(e.message));
   const r = {};
+  // 0. Paused for review: without ?review=1 only the header and the pause notice show.
   await page.goto(`${base}/local-validation/`);
+  r.pausedHidesTool = !(await page.isVisible("#pack")) && !(await page.isVisible("#security")) && await page.isVisible("#paused");
+  await page.goto(`${base}/local-validation/?review=1`);
+  r.reviewModeShowsTool = await page.isVisible("#pack");
   await page.click("#security summary");
   r.hashShown = await page.textContent("#offline-hash");
   const dl = page.waitForEvent("download"); await page.click("#offline-link");
@@ -34,7 +38,7 @@ fs.mkdirSync(out, { recursive: true });
   // Offline copy from disk
   const op = await ctx.newPage(); const oerrs = []; op.on("pageerror", (e) => oerrs.push(e.message));
   let reqs = 0; op.on("request", (q) => { if (!q.url().startsWith("file:") && !q.url().startsWith("data:") && !q.url().startsWith("blob:")) reqs++; });
-  await op.goto("file://" + offline); await op.waitForTimeout(400);
+  await op.goto("file://" + offline); r.offlinePausedByDefault = await op.evaluate(() => document.body.classList.contains("kit-paused")); await op.goto("file://" + offline + "?review=1"); await op.waitForTimeout(400);
   r.offlineFlag = await op.evaluate(() => !!window.LVK_OFFLINE);
   r.offlineFetchBlocked = await op.evaluate(() => fetch("https://example.com").then(() => false, () => true));
   await op.click("#sample"); await op.waitForTimeout(200);

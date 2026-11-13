@@ -1479,7 +1479,7 @@ function getSectionValidation() {
         showIf: () => !isRetroAudit,
         options: ['Yes — accessible and ready','Yes — but access requires additional approvals',
           'Yes — but ground truth verification needed','Limited — small number available','No','Unsure'],
-        note: 'No cases yet, or no ground truth? The Local Validation Kit (/local-validation/) gets you the counts from your own data: rules label most cases, and a person reviews only the hard ones. It runs in your browser and uploads nothing.' },
+        note: 'No cases yet, or no ground truth? A Local Validation Kit is coming to the Commons to get these counts from your own data. It is paused until its rules and math are reviewed.' },
       { id: 'q7_irb', text: 'Would use of these cases require IRB review or waiver determination?', type: 'select',
         showIf: () => !isRetroAudit && a.q7_cases && !a.q7_cases.startsWith('No'),
         options: ['Yes — already submitted','Yes — not yet submitted','No — QI designation covers it','Unsure'],

@@ -51,7 +51,14 @@ code{font-family:var(--mono);font-size:.84em}
 .warn{color:var(--warn)} .bad{color:var(--bad)} .ok{color:var(--ok)}
 details summary{cursor:pointer;font-weight:600}
 pre{background:var(--tint);padding:10px;border-radius:6px;overflow:auto;font-size:.8rem}
+body.kit-paused .wrap > :not(header):not(#paused){display:none}
+#paused{border-left:4px solid var(--warn)}
 </style>
+<script>
+/* Paused until clinician sign-off and statistician review. Reviewers: add ?review=1 */
+if (!/[?&]review=1\b/.test(location.search)) document.documentElement.classList.add('kit-paused-root');
+document.addEventListener('DOMContentLoaded', function(){ if (document.documentElement.classList.contains('kit-paused-root')) document.body.classList.add('kit-paused'); else { var p=document.getElementById('paused'); if (p) p.querySelector('.paused-msg').textContent='Review mode. This kit is paused for everyone else until the sepsis rules are signed off by a clinician and the math is checked by a statistician. Don\u2019t use these results for a real decision yet.'; } });
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -60,6 +67,10 @@ pre{background:var(--tint);padding:10px;border-radius:6px;overflow:auto;font-siz
     <h1>Local Validation Kit</h1>
     <p class="lede">Test a clinical AI model on your own past patients before you trust it. Rules label most cases automatically. A person reviews only the cases the rules can't decide, plus a blind sample that checks the rules themselves. You get the four counts the <a href="https://healthcare-governance-commons.vercel.app/validation-protocol/">Validation Protocol Generator</a> needs, with confidence intervals and numbers for each patient group.</p>
   </header>
+
+  <div class="card" id="paused" role="status">
+    <strong>Paused for review.</strong> <span class="paused-msg">The kit isn't open for use yet. Before any hospital relies on it, the sepsis rules need sign-off from a clinician and the math needs a check by a statistician. It will open here once both are done. The <a href="https://healthcare-governance-commons.vercel.app/validation-protocol/">Validation Protocol Generator</a> still works with counts you already have.</span>
+  </div>
 
   <div class="card safe" role="note">
     <strong>Your file never leaves this browser.</strong> The page reads it on your computer and sends nothing anywhere. That's enforced, not just promised: the page's security policy blocks all network requests. Still, use a study ID, not an MRN, and leave out names and dates. The kit doesn't need them.

@@ -60,7 +60,7 @@ function reviewerAnswer(id) {
   const to = (sel) => page.locator(sel).first().evaluate((e) => e.scrollIntoView({ block: "start" }));
   const results = {};
 
-  await page.goto(`${base}/local-validation/`);
+  await page.goto(`${base}/local-validation/?review=1`);
   await page.waitForTimeout(500);
   await caption("Local Validation Kit. Test a model on your own past patients: rules first, a person only for the hard cases.", 4200);
   await to(".safe");
@@ -184,7 +184,7 @@ function reviewerAnswer(id) {
   await caption("The protocol's At a Glance page: local sensitivity and specificity with intervals, from the kit's counts. The source is recorded in Section 2.", 5600);
 
   // A file missing required columns gets a plain message
-  await page.goto(`${base}/local-validation/`);
+  await page.goto(`${base}/local-validation/?review=1`);
   const bad = path.join(out, "bad.csv");
   fs.writeFileSync(bad, "encounter_id,model_score\nX1,0.4\n");
   await page.setInputFiles("#file", bad);
