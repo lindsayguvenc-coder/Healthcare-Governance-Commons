@@ -144,7 +144,7 @@ function reviewerAnswer(id) {
   results.counts = await page.locator("#counts .stat b").allTextContents();
   results.perf = await page.textContent("#perf");
   results.ruleAcc = await page.textContent("#rule-acc");
-  results.moreAuditOffered = !(await page.locator("#more-audit").isHidden());
+  results.fixBoxShown = !(await page.locator("#fix-box").isHidden());
   results.kappa = await page.textContent("#kappa");
   await caption("Results: the four counts, sensitivity and specificity with intervals, how often the rules matched the reviewer, and reviewer agreement.", 6000);
   await to("#group-table");

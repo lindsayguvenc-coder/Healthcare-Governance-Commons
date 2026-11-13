@@ -211,12 +211,13 @@ system name/vendor/version questions, governance-area grading switched off
 - [x] **Kit: audit sized by precision (Nov 13).** The user sets "show the rules
       are at least X% accurate" (default 90%) and an assumed accuracy (95%);
       the audit is the smallest sample whose Wilson interval would clear X
-      (127 cases at the defaults). If it falls short, the page offers exactly
-      the extra cases needed, or says the data can't confirm it.
+      (127 cases at the defaults). If it falls short: fix, then re-audit (decided
+      Nov 13). The page lists the disagreements; after the rules or query are
+      fixed, a fresh audit draws new cases only, and earlier audit cases stop
+      counting toward rule accuracy. No topping up an audit after a first look.
 - [ ] **Statistician: the kit's math.** Wilson intervals, the audit-size
-      search, adding audit cases after a first look (sequential testing
-      inflates error a little), Cohen's kappa on a 20% second-review sample,
-      and the 10% "near" margin.
+      search, whether the fresh re-audit design needs any correction, Cohen's
+      kappa on a 20% second-review sample, and the 10% "near" margin.
 - [ ] **More rule packs**, one at a time, each with a clinician's sign-off:
       imaging triage, deterioration, readmission.
 - [ ] **VPG: unpause or not.** Rule-based, no AI. Open statistician items
