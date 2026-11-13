@@ -73,8 +73,10 @@ Gaps, in priority order:
       which reviews it needs. Also the starting list for Section 1557's duty to
       identify tools that use protected inputs.
 - [ ] **Safety event and override log** (element 5; Override, Stop, Cold
-      Trigger, Learning Loop). Lindsay found something someone else made to
-      borrow concepts from (in past chats; still to locate). Her notes from
+      Trigger, Learning Loop). Borrow concepts from swarms.wiki, the AI
+      agent incident tracker Lindsay went through on Nov 7: it separates
+      attempted from confirmed, and rates confidence separately from
+      severity. Her notes from
       Oct: healthcare already classifies events well, near-miss included; and
       reviewers should watch for business or personal complaints recast as
       incidents to get traction.
