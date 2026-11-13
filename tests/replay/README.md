@@ -75,3 +75,11 @@ checks that the page makes no network requests while working and that fetch is b
 and the real model, and saves each report's JSON and a full-page screenshot. Needs
 `ANTHROPIC_API_KEY` (short-lived, spend-capped; delete it after) and `playwright`.
 `ANTHROPIC_API_KEY=... node real-roi.js ../.. ./real-roi [path-to-chrome]`
+
+## Kit security checks (Nov 13)
+
+`node check-kit-security.js http://localhost:3000 ./out [chromePath]`: the offline
+copy's SHA-256 shown on the page matches the published file; a loaded file with
+formula-looking IDs downloads as spreadsheet-safe CSV; the offline copy opened from
+disk works with zero network requests, blocks fetch, and shows the counts to enter
+by hand.

@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs && node scripts/build-kit-offline.mjs --verify"
   },
   "dependencies": {
     "react": "^18.2.0",

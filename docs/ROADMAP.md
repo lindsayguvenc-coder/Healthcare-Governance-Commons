@@ -223,6 +223,23 @@ system name/vendor/version questions, governance-area grading switched off
       Adult Sepsis Event (`public/local-validation/sepsis-ase.js`). Ships with SQL and FHIR
       starting points and 800 made-up encounters
       (`scripts/make-sample-sepsis.py`). Replay: `tests/replay/record-lvk.js`.
+- [x] **Kit: security hardening (Nov 13, 2026).** Offline single-file copy
+      (`local-validation-kit-offline.html`, built by
+      `scripts/build-kit-offline.mjs`, deterministic) with `default-src 'none'`,
+      so it can't load or send anything; its SHA-256 is published next to it
+      and shown on the online page. `npm run check` fails if the committed
+      offline copy is stale. Downloads are spreadsheet-safe (formula injection
+      neutralized). Security notes for hospital IT on the page, including the
+      one thing the page can't control: browser extensions. Checks:
+      `tests/replay/check-kit-security.js`.
+- [ ] **Two-factor login on GitHub and Vercel** (Lindsay): the offline copy
+      protects hospitals from a changed website, but 2FA is what protects the
+      website.
+- [x] **Kit paused for review (Nov 13, 2026).** Public page, offline copy, Tools
+      card and VPG note all show it as paused; the tool itself only appears with
+      `?review=1` (for reviewers). Unpause = remove the gate in
+      `public/local-validation/index.html`, restore the Tools card and VPG note,
+      rebuild the offline copy. Opens only after both reviews below.
 - [ ] **Clinician sign-off on the sepsis rule pack** before anyone relies on its
       labels. Includes the "too close to call" band (within 10% of a cutoff),
       the antimicrobial-day handling, and the baselines in the SQL notes.
