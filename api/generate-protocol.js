@@ -9,6 +9,9 @@
 
 const { mapAnswers } = require("./_answer-map.js");
 const { isPaused } = require("./_pause.js");
+// The site's regulatory map (also behind each node page). The VPG reads its references
+// from here, so the two can't drift apart (wired in Nov 13, 2026).
+const REG = require("../src/data/regulatory.json");
 
 // Governance-area grading (old Section 5 and the cover rating) is off while it is rebuilt
 // against the current Commons map (src/data/nodes.json). It graded 10 areas from the spring
@@ -22,6 +25,7 @@ const COMMONS_MAP_URL = "https://healthcare-governance-commons.vercel.app";
 // when those sources were actually re-checked.
 const REFERENCES_AS_OF = "October 29, 2026";        // Joint Commission + CHAI elements
 const MODELCARD_CONSENT_AS_OF = "November 12, 2026"; // ONC HTI-5 model cards; scribe recording-consent suits
+const SECOND_PASS_AS_OF = "November 13, 2026";       // Section 1557 §92.210, California AB 3030, FDA CDS guidance (Jan 2026)
 const CHECK_SOURCE = `Current as of ${REFERENCES_AS_OF}. Rules and standards change; check the current source before relying on this.`;
 
 // Joint Commission + CHAI Responsible Use of AI in Healthcare: seven elements (guidance
@@ -50,9 +54,9 @@ function buildTjcElements(answers) {
 const NOT_ASKED_TEXT = "Not asked by this tool. Fill in by hand.";
 const NOT_ASKED = new Set([
   "Q5", "Q10", "Q11", "Q12",
-  "Q_fda", "Q_autonomy", "Q_volume", "Q_cohort_description",
-  "Q_perf_summary", "Q_workflow_note", "Q_vendor_limitations", "Q_local_limitations",
-  "Q_contraindications", "Q_preparer", "Q_reviewer", "Q_approver", "Q_next_review",
+  "Q_volume", "Q_cohort_description",
+  "Q_perf_summary", "Q_workflow_note",
+  "Q_preparer", "Q_reviewer", "Q_approver", "Q_next_review",
   "Q_revalidation_trigger",
 ]);
 // value if answered; the not-asked note if the questionnaire has no question for it;
@@ -69,6 +73,73 @@ function check(answers, key, isComplete) {
   return NOT_ASKED.has(key) && (v === undefined || v === null || v === "") ? "not-asked" : "incomplete";
 }
 
+// ─── Second content pass (Nov 13, 2026) ─────────────────────────────────────
+
+function autonomyFlags(raw) {
+  const v = raw.q_autonomy || "";
+  const flags = [];
+  if (v.startsWith("Acts unless") || v.startsWith("Acts on its own")) flags.push("HIGH_AUTONOMY");
+  if (v.startsWith("Recommends a specific")) flags.push("DIRECT_CLINICAL_DECISION");
+  return flags;
+}
+
+const yes = (v) => typeof v === "string" && v.startsWith("Yes");
+const unknownish = (v) => !v || v === "Unknown" || v === "Unsure";
+
+function secondPassGapFlags(a) {
+  const f = [];
+  if (unknownish(a.q_autonomy)) f.push("Autonomy level not set. Say how much stands between its output and the patient; high-autonomy systems get tighter thresholds and an independent sign-off on changes.");
+  const fda = a.q_fda || "";
+  if (unknownish(fda)) f.push("FDA status unknown. Ask the vendor for the clearance number (510(k), De Novo or PMA) or its basis for calling it non-device. It decides which FDA duties apply, including reporting device-related deaths and serious injuries (21 CFR 803).");
+  if (fda.startsWith("Built in-house")) f.push("Built in-house and not reviewed against FDA criteria. Check whether it meets the non-device clinical decision support criteria (FDA guidance revised Jan 6, 2026) or is a device.");
+  if (fda.startsWith("Cleared, with a predetermined")) f.push("The FDA-cleared change control plan (PCCP) lets the vendor update the model within that plan without a new FDA review. Get the plan, and make sure the contract gives you notice and time to re-check each update.");
+  const inp = a.q_inputs_protected || "";
+  if (inp.startsWith("Yes")) f.push("It uses race, color, national origin, sex, age or disability as an input. Under Section 1557 (45 CFR 92.210), covered entities must make reasonable efforts to identify this and reduce the risk of discrimination. Document both.");
+  if (unknownish(inp)) f.push("Not known whether it uses race, color, national origin, sex, age or disability as an input. Section 1557 (45 CFR 92.210) expects covered entities to find out. Ask the vendor for its input variables.");
+  const msg = a.q_patient_msgs || "";
+  if (msg.startsWith("Yes — some go out")) f.push("Some AI-written clinical messages reach patients without clinician review. In California (AB 3030) each one needs a disclaimer that AI wrote it and instructions for reaching a person. Check your state's rules.");
+  const vd = Array.isArray(a.q_vendor_demo) ? a.q_vendor_demo : [];
+  if (vd.some((x) => x.startsWith("None"))) f.push("The vendor did not disclose who was in its training data. Make disclosure a contract condition; until then, local subgroup numbers are the only check.");
+  const out = a.q_outcomes || "";
+  if (out.startsWith("No") || unknownish(out)) f.push("No plan to measure whether the outcome it targets changed. Accuracy alone can't show it helps patients. Pick one outcome measure and a data source.");
+  if (out.startsWith("Planned, no data source")) f.push("An outcome measure is planned but has no data source yet.");
+  const cd = a.q_contract_data || "";
+  if (!cd.startsWith("Yes")) f.push("The contract doesn't secure the performance data you need to monitor it yourself. Without it, monitoring depends on the vendor's reports.");
+  const cu = a.q_contract_updates || "";
+  if (!cu.startsWith("Yes — with time")) f.push(cu.startsWith("Yes — notice only") ? "The vendor gives notice of model updates but no time to test them before go-live." : "No contract duty to tell you before a model update goes live. An unannounced update can change performance overnight.");
+  const cdu = a.q_contract_datause || "";
+  if (!cdu.startsWith("Yes")) f.push("The contract doesn't limit what the vendor may do with your data or how long it keeps it.");
+  const ce = a.q_contract_exit || "";
+  if (ce === "No" || ce === "Only at renewal") f.push("You can't suspend it for safety or performance reasons without a penalty" + (ce === "Only at renewal" ? " until renewal" : "") + ". A stop decision should not cost money.");
+  const dc = a.q_decommission || "";
+  if (!dc.startsWith("Yes")) f.push("No written plan for retiring it for good: criteria, who decides, what replaces it, and what happens to its data.");
+  return f;
+}
+
+// References drawn from src/data/regulatory.json, chosen by the answers. Verified
+// entries only.
+function regulatoryReferences(a) {
+  const fda = a.q_fda || "";
+  const device = /^(FDA-cleared|Cleared)/.test(fda);
+  const pccp = fda.startsWith("Cleared, with a predetermined");
+  const nonDevice = fda.startsWith("Vendor says") || fda.startsWith("Built in-house");
+  const fdaUnknown = unknownish(fda);
+  const msgs = a.q_patient_msgs || "";
+  const nodes = REG.nodes || {};
+  const pick = (node, tier, re) => ((nodes[node] || {})[tier] || []).filter((i) => i.verified && re.test(i.text));
+  const refs = [
+    ...pick("equity", "required", /1557/),
+    ...(device || fdaUnknown ? [...pick("validation", "required", /premarket/), ...pick("watcher", "required", /803/)] : []),
+    ...(pccp ? pick("h2", "required", /change control/i) : []),
+    ...(nonDevice || fdaUnknown ? pick("explainability", "required", /CDS/) : []),
+    ...(msgs.startsWith("Yes") || unknownish(msgs) ? pick("explainability", "required", /3030/) : []),
+    ...pick("validation", "recommended", /Joint Commission/),
+  ];
+  const seen = new Set();
+  return refs.filter((r) => !seen.has(r.text) && seen.add(r.text))
+    .map((r) => `${r.text}. Applies to: ${r.binds}.`);
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -78,7 +149,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { logicFlags = [], gapFlags = [], documentMeta = [] } = req.body;
+    const { logicFlags: logicFlagsIn = [], gapFlags: gapFlagsIn = [], documentMeta = [] } = req.body;
     const rawAnswers = req.body.answers || {};
 
     if (!rawAnswers || Object.keys(rawAnswers).length === 0) {
@@ -91,6 +162,10 @@ export default async function handler(req, res) {
 
     // Translate questionnaire ids (q2_usetype, q19_owner, ...) into engine keys (Q2, Q28, ...)
     const answers = mapAnswers(rawAnswers, documentMeta);
+    // The engines tighten tiers on HIGH_AUTONOMY / DIRECT_CLINICAL_DECISION, but until
+    // Nov 13, 2026 no question set either flag. Now the autonomy answer does.
+    const logicFlags = [...logicFlagsIn, ...autonomyFlags(rawAnswers)];
+    const gapFlags = [...gapFlagsIn, ...secondPassGapFlags(rawAnswers)];
 
     // Call all three engines in parallel
     const [tiersResult, biasResult, nodesResult] = await Promise.all([
@@ -165,7 +240,18 @@ function assembleProtocol({ answers, logicFlags, gapFlags, documentMeta, tiersRe
     : (nodesResult.overallRating || { rating: "unknown", label: "Assessment incomplete", summary: "" });
   const biasSummaryRating = biasResult.compatibilityTable?.summary?.overallRating || (biasResult.mode === "qualitative" ? "qualitative" : "unknown");
 
+  const sections = [
+      buildSection1(answers, documentMeta, isFullProtocol),
+      buildSection2(answers, isFullProtocol, tiersResult.metrics, tiersResult.trackResult),
+      buildSection3(biasResult, isFullProtocol, answers),
+      buildSection4(tiersResult, isFullProtocol),
+      buildSection5(nodesResult, isFullProtocol),
+      buildSection6(answers, tiersResult, nodesResult, isFullProtocol),
+      buildSection7(answers, allGapFlags, overallNodeRating, isFullProtocol),
+  ];
+
   return {
+    summary: buildSummary(answers, sections, tiersResult, biasResult, allGapFlags),
     meta: {
       title: `Validation Protocol: ${deploymentName}`,
       deploymentName,
@@ -184,15 +270,41 @@ function assembleProtocol({ answers, logicFlags, gapFlags, documentMeta, tiersRe
     biasSummaryRating,
     allGapFlags,
     logicFlags,
-    sections: [
-      buildSection1(answers, documentMeta, isFullProtocol),
-      buildSection2(answers, isFullProtocol, tiersResult.metrics, tiersResult.trackResult),
-      buildSection3(biasResult, isFullProtocol, answers),
-      buildSection4(tiersResult, isFullProtocol),
-      buildSection5(nodesResult, isFullProtocol),
-      buildSection6(answers, tiersResult, nodesResult, isFullProtocol),
-      buildSection7(answers, allGapFlags, overallNodeRating, isFullProtocol),
-    ],
+    sections,
+  };
+}
+
+// One-page summary up front (Nov 13, 2026): the verdict, the key facts, what must close
+// before go-live, and the first open items. Everything here is repeated from the
+// sections; nothing new is computed.
+function buildSummary(answers, sections, tiersResult, biasResult, allGapFlags) {
+  const s6 = sections.find((s) => s.sectionNumber === 6) || {};
+  const m = tiersResult.metrics || {};
+  const tp = tiersResult.tierProfile || {};
+  const counts = biasResult.compatibilityTable?.summary?.counts || biasResult.compatibilityTable?.summary || null;
+  const cond = ((s6.subsections || []).find((x) => x.title === "Deployment Conditions") || {}).content?.conditions || [];
+  const short = (v) => (typeof v === "string" ? v.split(" — ")[0] : v);
+  const facts = [
+    ["System", answers.Q1 || "Not named"],
+    ["Use", short(answers.q2_usetype) || "Not answered"],
+    ["Autonomy", short(answers.q_autonomy) || "Not answered"],
+    ["FDA status", short(answers.q_fda) || "Not answered"],
+    ["Risk class", tp.riskClass ? `${tp.riskClass} (sets how tight the monitoring is)` : "Not set"],
+  ];
+  if (tiersResult.trackResult) facts.push(["Validation track", tiersResult.trackResult.track === "scribe" ? "Ambient scribe: note errors, omissions, review" : "Agent: end state, tool calls, policy"]);
+  else {
+    facts.push(["Local sensitivity", m.sensDisplay || "Not provided"]);
+    facts.push(["Local specificity", m.specDisplay || "Not provided"]);
+  }
+  if (counts) facts.push(["Bias table", `${counts.compatible || 0} compatible, ${counts.partial || 0} partial, ${counts.incompatible || 0} incompatible, ${counts.unknown || 0} unknown`]);
+  facts.push(["Who can stop it", answers.Q33 || "Not named"]);
+  facts.push(["Monitoring owner", answers.Q28 || "Not named"]);
+  return {
+    verdict: s6.overallRating || null,
+    facts,
+    required: cond.filter((c) => c.startsWith("REQUIRED")).map((c) => c.replace(/^REQUIRED( BEFORE GO-LIVE)?:\s*/, "")),
+    topItems: allGapFlags.slice(0, 6).map((f) => String(f).replace(/^[A-Z_]+:\s*/, "")),
+    totalOpen: allGapFlags.length,
   };
 }
 
@@ -222,7 +334,9 @@ function buildSection1(answers, documentMeta, isFullProtocol) {
           clinicalSetting: answers.Q8 || "Not specified",
           targetPopulation: answers.Q9 || "Not specified",
           intendedUseDescription: answers.Q_use_description || answers.Q_S1_describe || "Not provided",
-          autonomyLevel: field(answers, "Q_autonomy", "Not specified"),
+          autonomyLevel: field(answers, "Q_autonomy", "Not answered"),
+          protectedInputs: answers.q_inputs_protected || "Not answered",
+          aiMessagesToPatients: answers.q_patient_msgs || "Not answered",
           decisionWindow: answers.Q24 || "Not specified",
           patientVolumeAffected: field(answers, "Q_volume", "Not specified"),
         },
@@ -278,7 +392,8 @@ function buildSection2(answers, isFullProtocol, m = null, tr = null) {
           trainingDataDescription: field(answers, "Q11", "Not disclosed"),
           vendorValidationSummary: field(answers, "Q12", "Not disclosed"),
           modelCardAvailable: answers.Q_modelcard_detail || (answers.Q19 === "yes" || answers.Q_modelcard === "yes" ? "Yes" : "Not answered"),
-          fdaStatus: field(answers, "Q_fda", "Not specified"),
+          fdaStatus: field(answers, "Q_fda", "Not answered"),
+          vendorDisclosedPatientGroups: Array.isArray(answers.q_vendor_demo) && answers.q_vendor_demo.length ? answers.q_vendor_demo.join(", ") : "Not answered",
         },
       },
       isFullProtocol && tr
@@ -317,9 +432,7 @@ function buildSection2(answers, isFullProtocol, m = null, tr = null) {
       {
         title: "Known Limitations",
         content: {
-          vendorDisclosedLimitations: field(answers, "Q_vendor_limitations", "None disclosed"),
-          locallyIdentifiedLimitations: field(answers, "Q_local_limitations", "None identified during elicitation"),
-          contraindications: field(answers, "Q_contraindications", "None specified"),
+          knownLimitsAndContraindications: field(answers, "Q_contraindications", "None entered. Ask the vendor for known limits, and add what your own testing found."),
         },
       },
     ],
@@ -536,12 +649,19 @@ function buildSection6(answers, tiersResult, nodesResult, isFullProtocol) {
   const hasFailover = !!answers.Q_failover;
   const hasMonitoringOwner = !!answers.Q28;
 
-  const deploymentReadiness = deriveReadiness(criticalNodeCount, hasStopCriteria, hasMonitoringOwner, isFullProtocol);
+  // Readiness comes from the deployment conditions printed below, so the two can't
+  // disagree (Nov 13, 2026). The old verdict counted critical governance nodes, which
+  // are paused, and was never printed.
+  const conditions = buildDeploymentConditions(answers, tiersResult, nodesResult, isFullProtocol);
+  const required = conditions.filter((c) => c.startsWith("REQUIRED")).length;
+  const overallRating = required
+    ? { status: "conditional", label: `Not ready to go live: ${required} required condition${required > 1 ? "s" : ""} open`, rationale: "Close the required conditions below, then re-run this protocol." }
+    : { status: "recommended", label: "Baseline go-live conditions met", rationale: "Monitoring, the open items in Section 7 and periodic review still apply." };
 
   return {
     sectionNumber: 6,
     title: "Implementation Readiness & Deployment Conditions",
-    deploymentReadiness,
+    overallRating,
     subsections: [
       {
         title: "Pre-Deployment Checklist",
@@ -571,7 +691,24 @@ function buildSection6(answers, tiersResult, nodesResult, isFullProtocol) {
       {
         title: "Deployment Conditions",
         content: {
-          conditions: buildDeploymentConditions(answers, tiersResult, nodesResult, isFullProtocol),
+          conditions,
+        },
+      },
+      {
+        title: "Contract Terms",
+        content: {
+          performanceDataAccess: answers.q_contract_data || "Not answered",
+          noticeBeforeModelUpdates: answers.q_contract_updates || "Not answered",
+          dataUseAndRetention: answers.q_contract_datause || "Not answered",
+          suspendWithoutPenalty: answers.q_contract_exit || "Not answered",
+          note: "These terms decide whether you can monitor it yourself and react to updates. They matter more since HTI-5 removed the federal model-card requirement for certified EHRs.",
+        },
+      },
+      {
+        title: "Outcomes and Retirement",
+        content: {
+          outcomeMeasure: answers.q_outcomes || "Not answered",
+          retirementPlan: answers.q_decommission || "Not answered",
         },
       },
       {
@@ -590,28 +727,6 @@ function buildSection6(answers, tiersResult, nodesResult, isFullProtocol) {
         },
       },
     ],
-  };
-}
-
-function deriveReadiness(criticalNodeCount, hasStopCriteria, hasMonitoringOwner, isFullProtocol) {
-  if (criticalNodeCount >= 3 || (!hasStopCriteria && !hasMonitoringOwner)) {
-    return {
-      status: "not_recommended",
-      label: "Deployment Not Recommended",
-      rationale: "Multiple critical governance gaps identified. Address critical node gaps before proceeding.",
-    };
-  }
-  if (criticalNodeCount >= 1 || !hasStopCriteria || !hasMonitoringOwner) {
-    return {
-      status: "conditional",
-      label: "Conditional Deployment",
-      rationale: "Deployment may proceed with documented risk acceptance and a remediation plan with defined timelines for critical gap resolution.",
-    };
-  }
-  return {
-    status: "recommended",
-    label: "Deployment Conditions Met",
-    rationale: "Baseline governance requirements are met. Ongoing monitoring and periodic review remain required.",
   };
 }
 
@@ -682,13 +797,20 @@ function buildSection7(answers, allGapFlags, overallNodeRating, isFullProtocol) 
         },
       },
       {
+        title: "Regulatory References for This Deployment",
+        content: {
+          rationale: regulatoryReferences(answers),
+          source: `Chosen from your answers, out of the Commons regulatory map (as of ${REG.asOf}; Section 1557, AB 3030 and the FDA CDS guidance re-checked ${SECOND_PASS_AS_OF}). The same map is on each node page of the Commons. Not legal advice; check the current source.`,
+        },
+      },
+      {
         title: "Protocol Provenance",
         content: {
           generatedBy: "Healthcare Governance Commons — Validation Protocol Generator",
           generatedAt: new Date().toISOString(),
           commonsUrl: "healthcare-governance-commons.vercel.app",
           shelfLifeStatement: "This document has a shelf life. A validation protocol that is never updated is not a governance document — it is a record of past intentions.",
-          referencesAsOf: `Regulatory and standards references in this protocol: Joint Commission + CHAI elements checked ${REFERENCES_AS_OF}; ONC HTI-5 (model cards) and ambient-scribe recording-consent cases checked ${MODELCARD_CONSENT_AS_OF}. Rules and standards change; check the current source before relying on this.`,
+          referencesAsOf: `Regulatory and standards references in this protocol: Joint Commission + CHAI elements checked ${REFERENCES_AS_OF}; ONC HTI-5 (model cards) and ambient-scribe recording-consent cases checked ${MODELCARD_CONSENT_AS_OF}; Section 1557 §92.210, California AB 3030 and the FDA clinical decision support guidance checked ${SECOND_PASS_AS_OF}. Rules and standards change; check the current source before relying on this.`,
           versionStatement: "Version 1.0. Update this document at every verification or revalidation or when organizational context changes materially.",
         },
       },

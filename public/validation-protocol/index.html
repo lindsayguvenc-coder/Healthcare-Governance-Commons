@@ -1310,6 +1310,36 @@ function getSectionOrg() {
       },
       { id: 'q2_usetype_other', text: 'Is there anything about your specific application the above does not capture?', type: 'textarea',
         placeholder: '2 sentences max — optional', showIf: () => true },
+      // Added Nov 13, 2026 (second content pass). The engines already had slots for these.
+      { id: 'q_autonomy', text: 'How much stands between its output and the patient?', type: 'select',
+        options: ['Informs only — a clinician decides and can ignore it',
+          'Recommends a specific diagnosis or treatment — a clinician approves each one',
+          'Acts unless someone stops it — e.g. routes, orders or sends on its own, reviewed after',
+          'Acts on its own with no routine human review',
+          'Unsure'],
+        note: 'The last two count as high autonomy: tighter thresholds and an independent sign-off on changes.' },
+      { id: 'q_fda', text: 'What is its FDA status?', type: 'select',
+        options: ['FDA-cleared or approved device (510(k), De Novo or PMA)',
+          'Cleared, with a predetermined change control plan (PCCP) for updates',
+          'Vendor says it is non-device clinical decision support (meets the FDA criteria)',
+          'Not a medical device — administrative or operational only',
+          'Built in-house — not reviewed against FDA criteria',
+          'Unknown'],
+        note: 'Ask the vendor for the clearance number, or its basis for calling it non-device. FDA revised its clinical decision support guidance on Jan 6, 2026. As of Nov 13, 2026.' },
+      { id: 'q_vendor_demo', text: 'What did the vendor disclose about the patients in its training and validation data?', type: 'multi',
+        options: ['Race / ethnicity','Sex / gender','Age','Socioeconomic status / insurance','Language','Geographic region','Comorbidities','Disability status','BMI / body habitus','Social determinants of health',
+          'None — the vendor did not disclose this','Not asked yet'],
+        note: 'Feeds the bias compatibility table in Section 3. Pick each group the vendor actually broke out.' },
+      { id: 'q_inputs_protected', text: 'Does it use race, color, national origin, sex, age or disability as an input?', type: 'select',
+        options: ['Yes — and we know which','Yes — not sure which','No — confirmed with the vendor','Unknown'],
+        note: 'Section 1557 (45 CFR 92.210) asks covered entities to identify tools that use these inputs and reduce the risk of discrimination. In force; checked Nov 13, 2026.' },
+      { id: 'q_patient_msgs', text: 'Does it write messages to patients about their health (portal replies, results, instructions)?', type: 'select',
+        options: ['Yes — a licensed clinician reads and approves each one before it goes out',
+          'Yes — some go out without clinician review',
+          'No','Unknown'],
+        note: 'California AB 3030 (in effect Jan 1, 2025): AI-written clinical messages need a disclaimer and a way to reach a person, unless a licensed clinician reviewed them.' },
+      { id: 'q_limits', text: 'Known limits and contraindications (from the vendor or your own testing)', type: 'textarea',
+        placeholder: 'Optional — e.g. not validated under 18, unreliable with interpreter-present visits' },
     ],
   };
 }
@@ -1757,6 +1787,21 @@ function getSectionMonitoring() {
       { id: 'q22_symmetric', text: 'Should warning and action thresholds apply equally to sensitivity and specificity?', type: 'select',
         showIf: () => !useTrack(state.answers),
         options: ['Same threshold for both','Different thresholds — specify in notes','Unsure — apply same for now'] },
+      // Added Nov 13, 2026 (second content pass)
+      { id: 'q_outcomes', text: 'Will you measure whether the outcome it targets actually changed, not just its accuracy?', type: 'select',
+        options: ['Yes — before/after measure planned, with a data source','Planned, no data source yet','No — accuracy only','Not applicable — administrative tool','Unknown'],
+        note: 'Examples: time to antibiotics for a sepsis model, missed fractures for an imaging tool. An accurate model can still change nothing.' },
+      { id: 'q_contract_data', text: 'Does the contract give you the performance data you need to monitor it yourself?', type: 'select',
+        options: ['Yes — written into the contract','An informal promise only','No','Contract not signed yet','Unknown'] },
+      { id: 'q_contract_updates', text: 'Must the vendor tell you before a model update goes live?', type: 'select',
+        options: ['Yes — with time to re-check it before go-live','Yes — notice only, no time to test','No','Unknown'],
+        note: 'With a PCCP, the vendor can update within its FDA-cleared plan without a new FDA review. Your own re-check still has to catch those updates.' },
+      { id: 'q_contract_datause', text: 'Does the contract limit what the vendor may do with your data (such as training other models) and how long it keeps it?', type: 'select',
+        options: ['Yes — both use and retention','Only one of the two','No','Unknown'] },
+      { id: 'q_contract_exit', text: 'Can you suspend or stop using it for safety or performance reasons without a penalty?', type: 'select',
+        options: ['Yes','Only at renewal','No','Unknown'] },
+      { id: 'q_decommission', text: 'Is there a plan for retiring it for good: criteria, who decides, what replaces it, what happens to its data?', type: 'select',
+        options: ['Yes — written','Criteria only','No','Unknown'] },
       { id: 'q_roi', text: 'What value is this AI system expected to deliver, and how will your organization measure it?', type: 'select',
         options: ['Defined and measurable','Defined but not yet formally measured',
           'Informally understood but not documented','Not yet defined','Unknown'] },
@@ -2123,7 +2168,7 @@ function goToReady() {
 }
 
 // Disclaimer identity for this tool. Bump VPG_VERSION when the protocol logic changes.
-const VPG_VERSION = '2026-11-12';
+const VPG_VERSION = '2026-11-13';
 const VPG_DISCLAIMER = { tool: 'Validation Protocol Generator', version: VPG_VERSION, ai: 'none' };
 
 // ── PDF GENERATION ────────────────────────────────────────────────────────
@@ -2392,6 +2437,59 @@ function renderProtocolPDF(doc, protocol) {
   doc.setTextColor(...C.midGray);
   const shelfLines = doc.splitTextToSize(protocol.meta.shelfLifeStatement, C.contentW);
   doc.text(shelfLines, C.mL, C.pageH - 78);
+
+  // ── AT A GLANCE (one page up front, Nov 13, 2026) ──
+  const S = protocol.summary;
+  if (S) {
+    addPage();
+    fillRect(C.mL, y, C.contentW, 28, C.purple);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...C.white);
+    doc.text('At a Glance', C.mL + 12, y + 18);
+    y += 40;
+    if (S.verdict) {
+      const ok = S.verdict.status === 'recommended';
+      const bg = ok ? C.greenBg : C.amberBg, fg = ok ? C.green : C.amber;
+      const vLines = doc.splitTextToSize(S.verdict.rationale || '', C.contentW - 20);
+      const vH = 26 + vLines.length * 10;
+      fillRect(C.mL, y, C.contentW, vH, bg);
+      doc.setDrawColor(...fg); doc.setLineWidth(1); doc.rect(C.mL, y, C.contentW, vH, 'S');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...fg);
+      doc.text(S.verdict.label || '', C.mL + 10, y + 16);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...C.charcoal);
+      doc.text(vLines, C.mL + 10, y + 28);
+      y += vH + 14;
+    }
+    for (const [k, v] of S.facts || []) {
+      needsPage(14);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...C.midGray);
+      doc.text(String(k).toUpperCase(), C.mL, y);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...C.charcoal);
+      const fl = doc.splitTextToSize(String(v), C.contentW - 130);
+      doc.text(fl, C.mL + 130, y);
+      y += Math.max(14, fl.length * 11);
+    }
+    const list = (title, items, color) => {
+      if (!items || !items.length) return;
+      y += 8; needsPage(30);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...C.purple);
+      doc.text(title, C.mL, y); y += 12;
+      items.forEach((it, i) => {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+        const ll = doc.splitTextToSize(String(it), C.contentW - 18);
+        needsPage(ll.length * 10 + 6);
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...color);
+        doc.text(`${i + 1}.`, C.mL + 2, y);
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(...C.charcoal);
+        doc.text(ll, C.mL + 16, y);
+        y += ll.length * 10 + 4;
+      });
+    };
+    list('Required before go-live', S.required, C.red);
+    list(`First open items (${S.totalOpen} in all; every one is in Section 7)`, S.topItems, C.amber);
+    y += 6; needsPage(14);
+    doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5); doc.setTextColor(...C.midGray);
+    doc.text('Everything on this page is repeated from the sections that follow.', C.mL, y);
+  }
 
   // ── SECTIONS ──
   const sections = protocol.sections || [];

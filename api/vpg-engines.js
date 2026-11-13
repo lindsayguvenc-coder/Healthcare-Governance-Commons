@@ -787,14 +787,14 @@ function parseVendorDemographics(answers) {
   // Q_vendor_demographics or S2 answers map to vendor model card reported categories
   // Expected: array of axis IDs that vendor reported, or "not_disclosed"
   const raw = answers.Q_vendor_demographics || answers.Q21 || null;
-  // Nothing asked yet: no question collects vendor-disclosed demographics (Nov 12, 2026).
-  // Say so, rather than recording the vendor as a non-discloser.
+  // Not recorded: the question (q_vendor_demo, added Nov 13, 2026) was left blank or
+  // answered "Not asked yet". Say so, rather than recording the vendor as a non-discloser.
   if (raw === null || raw === undefined) {
     return {
       reported: [],
       notDisclosed: true,
       notAsked: true,
-      note: "Not asked by this tool: what the vendor disclosed about the demographics of its training data. Ask the vendor, and put it in the contract.",
+      note: "Not recorded: what the vendor disclosed about the patients in its training data. Ask the vendor, and put it in the contract.",
     };
   }
   if (raw === "not_disclosed" || raw === "") {
@@ -861,7 +861,7 @@ function runMappingFunction(vendorDemographics, localMethodology) {
       numericalMismatchRisk = axis.riskWeight === "high" ? "high" : "moderate";
       const localPart = localRecorded ? "Your site records this axis." : "Your site's recording of this axis was not documented.";
       recommendedAction = vendorDemographics.notAsked
-        ? `Vendor training data for ${axis.label} not asked by this tool, so compatibility can't be assessed. ${localPart} Ask the vendor; until then treat it as a possible mismatch.`
+        ? `What the vendor disclosed about ${axis.label} isn't recorded yet, so compatibility can't be assessed. ${localPart} Ask the vendor; until then treat it as a possible mismatch.`
         : `Vendor non-disclosure on ${axis.label}, so compatibility can't be assessed. ${localPart} Treat it as a possible mismatch until the vendor discloses.`;
     } else if (!vendorReported && !localRecorded) {
       compatibility = "not_tracked";
@@ -1107,7 +1107,7 @@ function buildBiasGapFlags(vendorDemographics, localMethodology, modelCardAvaila
   const flags = [];
 
   if (vendorDemographics.notAsked) {
-    flags.push("VENDOR_DEMOGRAPHICS_NOT_ASKED: This tool does not yet ask what the vendor disclosed about its training data, so the compatibility table cannot be completed. Get it from the vendor (model card or contract).");
+    flags.push("VENDOR_DEMOGRAPHICS_NOT_RECORDED: What the vendor disclosed about the patients in its training data isn't recorded (Section 1), so the compatibility table can't be completed. Get it from the vendor (model card or contract).");
   }
   if (vendorNonDisclosure) {
     flags.push("VENDOR_NON_DISCLOSURE: Vendor has not provided demographic breakdown of training data. Compatibility assessment is incomplete.");
