@@ -642,7 +642,7 @@ function buildStratifiedLimits(population, metrics, tierProfile) {
       axis: ax.axis,
       subgroups: ax.subgroups,
       monitoringRecommendation: ax.priority === "high"
-        ? `Disaggregate monitoring metrics by ${ax.axis}. Flag if any subgroup performance deviates >${tierProfile.thresholds.warning}% from aggregate.`
+        ? `Disaggregate monitoring metrics by ${ax.axis}. Flag a subgroup for review when its error rate is at least 1.5 times the aggregate error rate (ratio set at validation; 1.5 is the starting value in the Commons Agent QC Setup) and the lower bound of its 95% interval is above the aggregate rate, confirmed on the next review window. A gap that meets the ratio but not the interval is watched, not acted on.`
         : `Monitor ${ax.axis} subgroups quarterly or when aggregate threshold crossings occur.`,
       dataRequirement: `Local EHR stratification by ${ax.axis} required. If unavailable, flag as monitoring gap.`,
       priority: ax.priority,
