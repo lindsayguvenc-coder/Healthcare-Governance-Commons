@@ -67,9 +67,9 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       statistics plus lanes and the response layer, and the VPG's "set at
       validation" lines quote the Setup's starting values. Still open: one
       source per value (the QC plan holds the number, the VPG carries it in),
-      and the subgroup trigger, where the VPG flags a group more than the tier
-      warning % from aggregate and the Setup uses 10 percentage points judged
-      on intervals. Pick one. `/agent-qc` now forwards to `/qc-setup` (Nov 12); the old page's file stays in the repo for reference.
+      Subgroup trigger decided Nov 12: both tools use a ratio on the error rate
+      (starting value 1.5× aggregate) for size, plus the group's 95% interval
+      clearing the aggregate rate, confirmed on the next window, for evidence. `/agent-qc` now forwards to `/qc-setup` (Nov 12); the old page's file stays in the repo for reference.
 - [ ] **Statistician: hire before the first of these.** Someone uses a tool's
       numbers to set up QC on a real system (e.g. a hospital sizing its
       baseline); a published piece cites a tool's numbers as evidence; or work
@@ -111,7 +111,7 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
         Setup's own set-point figures use Wilson intervals and one-sided exact
         zero-failure bounds, so one page now uses both methods. Also review
         the starting values: control set 12, stop-using 95%, agreement 95%,
-        minimum subgroup 30, subgroup review gap 10 points, 20 runs per
+        minimum subgroup 30, subgroup ratio 1.5× aggregate error rate (with the interval rule), 20 runs per
         required-behavior control, warning deadline 1 business day,
         contingency reminders 24 h / 72 h / 7 days.
 - [ ] **PHI screening: next steps.** Oct 28 added a browser-side screen on every
