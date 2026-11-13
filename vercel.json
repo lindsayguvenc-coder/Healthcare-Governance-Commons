@@ -45,6 +45,16 @@
       "source": "/agent-qc/index.html",
       "destination": "/qc-setup",
       "permanent": true
+    },
+    {
+      "source": "/consultation",
+      "destination": "/tools",
+      "permanent": true
+    },
+    {
+      "source": "/consultation/:path*",
+      "destination": "/tools",
+      "permanent": true
     }
   ]
 }

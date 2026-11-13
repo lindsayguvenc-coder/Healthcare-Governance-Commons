@@ -1,5 +1,5 @@
 // Report pause switch. Each report page loads this with data-tool="vpg" (or roi,
-// consultation, transition). If /api/status lists that tool as paused, report
+// transition). If /api/status lists that tool as paused, report
 // generation stops and a notice explains why. The questions still work.
 // Which tools are paused: api/_pause.js.
 (function () {

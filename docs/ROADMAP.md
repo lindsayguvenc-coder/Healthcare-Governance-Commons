@@ -135,11 +135,16 @@ system name/vendor/version questions, governance-area grading switched off
       default allowable error as a Commons position.
 - [x] **Short tracks by use type.** (Done Nov 12, 2026, PR #24: Section 3 branches on use type; scribe and agent tracks with their own measures and flags.) Ambient scribes (recording consent: 11
       all-party states) and agentic workflows.
-- [ ] **Same content review for ROI and Consultation.**
+- [ ] **Same content review for ROI.**
+- [x] **Consultation (Governance Assessment) retired (Nov 13, 2026).** Scrapped
+      instead of reviewed: a big intake feeding 10 AI essays, mostly covered
+      better now by the VPG, QC Setup and Transition tools. `/consultation`
+      redirects to `/tools`. The old page is in git history. Rescued pieces are
+      parked under "Rescued from the Consultation tool" below.
 - [ ] **Check thinking vs. max_tokens on every other AI tool.** Sonnet 5.5's
       thinking spends the max_tokens budget. Transition charters cut off at
       2,500 tokens on Nov 4 until thinking was turned off for them. ROI,
-      Consultation, map Synthesize and the Collaborator still ask for 2,500.
+      map Synthesize and the Collaborator still ask for 2,500.
 - [x] **Transition tools review (Nov 4).** Shared disclaimer, grey "not
       assessable" score, lived experience shown, "Can't tell from this" instead
       of invented detail, charter as a draft to mark up, AI text escaped.
@@ -151,3 +156,36 @@ system name/vendor/version questions, governance-area grading switched off
 - [ ] **Face lift, last.** One consistent look across all report PDFs, once
       the content has settled.
 
+
+## Rescued from the Consultation tool (parked Nov 13, 2026)
+The Consultation tool was retired, not rebuilt. These are the parts worth keeping.
+Nothing here is scheduled yet. The old wording is in git history
+(`public/consultation/index.html`, before the retire-consultation PR).
+
+- [ ] **Dissent Surface.** The best part of the old tool. For each stakeholder
+      group: the concern, stated as a signal worth taking seriously; what taking
+      it seriously looks like; the change-management implication. Keep the
+      workforce paragraph as written, especially: "We have no plans for layoffs"
+      is not a governance response; a governance response describes what
+      structural commitments protect workforce interests. Could be its own small
+      tool, or a section the other report tools borrow.
+- [ ] **Readiness questions no other tool asks.** Could become a short
+      fixed-rules "ready to govern this?" check (flags, no AI), or get folded
+      into Transition or the VPG:
+      - Is there a named person with formal authority to halt a deployed tool?
+      - Has anyone been held formally accountable for an AI-related event?
+      - Has a staff concern ever changed a deployment or governance decision?
+      - How much tolerance is there for pausing or rolling back a tool?
+      - Is AI governance framed as compliance, patient safety, or both?
+      - Is there a policy on unsanctioned (shadow) AI use, and has anyone
+        checked what staff actually use?
+      - What does success look like at 90 days and at 1 year, measured how,
+        and decided by whom?
+      - What would make you conclude the deployment failed?
+      - What haven't you found a governance answer to yet?
+- [ ] **Culture-of-safety anchor.** Tie AI readiness to the safety culture
+      survey the organization already runs (AHRQ SOPS or similar): weakest
+      domains, especially non-punitive response to error and communication
+      openness. Two or three questions somewhere else, not a whole section.
+      Note: SAFER Guides are ONC's, not the Joint Commission's (the old tool
+      had this wrong).
