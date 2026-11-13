@@ -186,6 +186,8 @@ system name/vendor/version questions, governance-area grading switched off
       flags for each. Regulatory references now come from
       `src/data/regulatory.json`, chosen by the answers, verified entries only.
       Replay: `tests/replay/record-vpg-second.js` (17 checks, real engines and PDFs).
+      Plus an "At a Glance" page after the cover: verdict, key facts, what must
+      close before go-live, the first open items. All repeated from the sections.
 - [ ] **VPG: unpause or not.** Rule-based, no AI. Open statistician items
       (simulation figures, Westgard defaults) are labeled in the report.
 - [ ] **Literature pass on metrics** for anything newer worth adding.

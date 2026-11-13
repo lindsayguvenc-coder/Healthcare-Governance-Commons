@@ -240,7 +240,18 @@ function assembleProtocol({ answers, logicFlags, gapFlags, documentMeta, tiersRe
     : (nodesResult.overallRating || { rating: "unknown", label: "Assessment incomplete", summary: "" });
   const biasSummaryRating = biasResult.compatibilityTable?.summary?.overallRating || (biasResult.mode === "qualitative" ? "qualitative" : "unknown");
 
+  const sections = [
+      buildSection1(answers, documentMeta, isFullProtocol),
+      buildSection2(answers, isFullProtocol, tiersResult.metrics, tiersResult.trackResult),
+      buildSection3(biasResult, isFullProtocol, answers),
+      buildSection4(tiersResult, isFullProtocol),
+      buildSection5(nodesResult, isFullProtocol),
+      buildSection6(answers, tiersResult, nodesResult, isFullProtocol),
+      buildSection7(answers, allGapFlags, overallNodeRating, isFullProtocol),
+  ];
+
   return {
+    summary: buildSummary(answers, sections, tiersResult, biasResult, allGapFlags),
     meta: {
       title: `Validation Protocol: ${deploymentName}`,
       deploymentName,
@@ -259,15 +270,41 @@ function assembleProtocol({ answers, logicFlags, gapFlags, documentMeta, tiersRe
     biasSummaryRating,
     allGapFlags,
     logicFlags,
-    sections: [
-      buildSection1(answers, documentMeta, isFullProtocol),
-      buildSection2(answers, isFullProtocol, tiersResult.metrics, tiersResult.trackResult),
-      buildSection3(biasResult, isFullProtocol, answers),
-      buildSection4(tiersResult, isFullProtocol),
-      buildSection5(nodesResult, isFullProtocol),
-      buildSection6(answers, tiersResult, nodesResult, isFullProtocol),
-      buildSection7(answers, allGapFlags, overallNodeRating, isFullProtocol),
-    ],
+    sections,
+  };
+}
+
+// One-page summary up front (Nov 13, 2026): the verdict, the key facts, what must close
+// before go-live, and the first open items. Everything here is repeated from the
+// sections; nothing new is computed.
+function buildSummary(answers, sections, tiersResult, biasResult, allGapFlags) {
+  const s6 = sections.find((s) => s.sectionNumber === 6) || {};
+  const m = tiersResult.metrics || {};
+  const tp = tiersResult.tierProfile || {};
+  const counts = biasResult.compatibilityTable?.summary?.counts || biasResult.compatibilityTable?.summary || null;
+  const cond = ((s6.subsections || []).find((x) => x.title === "Deployment Conditions") || {}).content?.conditions || [];
+  const short = (v) => (typeof v === "string" ? v.split(" — ")[0] : v);
+  const facts = [
+    ["System", answers.Q1 || "Not named"],
+    ["Use", short(answers.q2_usetype) || "Not answered"],
+    ["Autonomy", short(answers.q_autonomy) || "Not answered"],
+    ["FDA status", short(answers.q_fda) || "Not answered"],
+    ["Risk class", tp.riskClass ? `${tp.riskClass} (sets how tight the monitoring is)` : "Not set"],
+  ];
+  if (tiersResult.trackResult) facts.push(["Validation track", tiersResult.trackResult.track === "scribe" ? "Ambient scribe: note errors, omissions, review" : "Agent: end state, tool calls, policy"]);
+  else {
+    facts.push(["Local sensitivity", m.sensDisplay || "Not provided"]);
+    facts.push(["Local specificity", m.specDisplay || "Not provided"]);
+  }
+  if (counts) facts.push(["Bias table", `${counts.compatible || 0} compatible, ${counts.partial || 0} partial, ${counts.incompatible || 0} incompatible, ${counts.unknown || 0} unknown`]);
+  facts.push(["Who can stop it", answers.Q33 || "Not named"]);
+  facts.push(["Monitoring owner", answers.Q28 || "Not named"]);
+  return {
+    verdict: s6.overallRating || null,
+    facts,
+    required: cond.filter((c) => c.startsWith("REQUIRED")).map((c) => c.replace(/^REQUIRED( BEFORE GO-LIVE)?:\s*/, "")),
+    topItems: allGapFlags.slice(0, 6).map((f) => String(f).replace(/^[A-Z_]+:\s*/, "")),
+    totalOpen: allGapFlags.length,
   };
 }
 
