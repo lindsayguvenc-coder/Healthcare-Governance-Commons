@@ -63,6 +63,13 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       vendor claims before go-live; the Agent QC picker monitors after. The
       picker's "vendor's claimed failure rate" should come from the VPG's
       model-card answers instead of being asked twice.
+      Nov 12: the Agent QC Setup (`/qc-setup`) now holds the picker's
+      statistics plus lanes and the response layer, and the VPG's "set at
+      validation" lines quote the Setup's starting values. Still open: one
+      source per value (the QC plan holds the number, the VPG carries it in),
+      and the subgroup trigger, where the VPG flags a group more than the tier
+      warning % from aggregate and the Setup uses 10 percentage points judged
+      on intervals. Pick one. Forwarding `/agent-qc` to `/qc-setup`: deferred.
 - [ ] **Statistician: hire before the first of these.** Someone uses a tool's
       numbers to set up QC on a real system (e.g. a hospital sizing its
       baseline); a published piece cites a tool's numbers as evidence; or work
@@ -98,6 +105,15 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
         Check the simulation and its assumptions.
       - VPG floors: none by default since Nov 12 (the old 0.97/0.93 trims had no
         source). Hospital sets its own.
+      - Agent QC Setup (`/qc-setup`, Nov 12): the picker's engine moved in
+        unchanged (Levey-Jennings simulation, binomial count limits,
+        drift-sensor limits with Clopper-Pearson, simplified sigma tiers). The
+        Setup's own set-point figures use Wilson intervals and one-sided exact
+        zero-failure bounds, so one page now uses both methods. Also review
+        the starting values: control set 12, stop-using 95%, agreement 95%,
+        minimum subgroup 30, subgroup review gap 10 points, 20 runs per
+        required-behavior control, warning deadline 1 business day,
+        contingency reminders 24 h / 72 h / 7 days.
 - [ ] **PHI screening: next steps.** Oct 28 added a browser-side screen on every
       free-text field plus a server check (api/_phi.js) on the AI relay and
       contributions. Still to do: (1) the VPG upload check reads PDFs as plain
