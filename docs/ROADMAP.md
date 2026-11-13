@@ -54,6 +54,41 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
 - [ ] **Claim labels as data.** Sourced / Field consensus / Commons position /
       Needs source as a field on each claim, so the checks can enforce them.
 
+## Missing tools: gap assessment (Nov 13, 2026)
+Checked against the seven elements of the Joint Commission + CHAI guidance
+(Responsible Use of AI in Healthcare, Sept 17, 2025; voluntary, expected to
+shape a certification program) and the Commons nodes. Covered today: policies
+and governance structure (Charter Starter, Container Health Check,
+Disagreement Unpacker), risk and bias assessment (VPG, kit per-group results),
+pre-deployment validation (VPG, kit when it reopens), value (ROI).
+
+Gaps, in priority order:
+- [ ] **Monitoring setup for predictive models** (element 4; Watcher,
+      Threshold Review, Equity nodes). Agent QC Setup covers agents only, and
+      the VPG writes a monitoring plan but nothing helps run it. Lab-QC rules
+      on alert rates, PPV and subgroup gaps, with what to do on a breach.
+      Builds on the kit's math and Agent QC Setup.
+- [ ] **AI inventory and risk tiering** (element 1; Accountability,
+      Authority). The front door: what AI is in use, who owns it, how risky,
+      which reviews it needs. Also the starting list for Section 1557's duty to
+      identify tools that use protected inputs.
+- [ ] **Safety event and override log** (element 5; Override, Stop, Cold
+      Trigger, Learning Loop). A near-miss / unsafe-output report and an
+      override review sheet, shaped so reports can go to a PSO.
+- [ ] **Threshold re-check** (Threshold Review). From local scores and
+      labels, show sensitivity, PPV and alert volume at each threshold. Small
+      once the kit is reviewed; same data.
+- [ ] **Patient notice and challenge pathway** (element 2; Contestation,
+      Explainability). Plain-language disclosure drafts, when consent applies,
+      how a patient questions an AI-influenced decision. State rules differ;
+      examples only, not legal advice.
+- [ ] **Role-specific training sheet** (element 7). One page per tool per
+      role: what it does, its limits, when to override, who to tell. Could
+      draw on the VPG answers and the Urban Thesaurus.
+- [ ] **Vendor data-use terms** (element 3; Vendor Risk). The VPG has
+      contract questions; a standalone checklist for data-use agreements
+      (permitted uses, re-identification ban, audit rights) may be enough.
+
 ## Tools: rebuild once-over (added Oct 28, 2026)
 - [ ] **Once-over of every tool.** All tools were first passes: Validation
       Protocol Generator, ROI Assessment, Peer Challenge Registry, Facetious
@@ -251,6 +286,44 @@ system name/vendor/version questions, governance-area grading switched off
       tool page now says answers go to an AI model and to leave out patient
       details. Kit downloads from an unsigned pack say DRAFT in the file name.
       Privacy notice covers the kit.
+- [x] **Tools cleanup (Nov 13, 2026).**
+      - Governance Architecture: Westgard rules corrected (1-2s is one result
+        past 2 SD and only a warning; 2-2s and R-4s described properly),
+        example windows and cadences labeled as examples, unsupported
+        "required for accreditation" claim removed. Off the Tools page; it's
+        Episode 07's interactive figure.
+      - Peer Challenge Registry: now a paused preview. Demo entries rewritten
+        with invented organizations and generic system types (the old ones
+        named real products and a real health system with made-up results).
+        Sign-up form viewable but disabled; introductions shown as paused.
+      - Document upload removed from the VPG, with its `phi-check` and
+        `strip-metadata` endpoints. Uploaded files never fed the protocol.
+- **Removed (Nov 13, 2026), kept here so they're tracked:**
+      - `public/agent-qc/index.html`: the old Agent QC Metric Picker, kept
+        "for reference" after `/qc-setup` replaced it. `/agent-qc` still
+        forwards.
+      - `public/checklist.html`: an index of three checklists that were never
+        on the site; its doc-library entry went with it.
+      - `api/phi-check.js`, `api/strip-metadata.js`: upload-only endpoints.
+- [ ] **Checklist recovery ×3** (not for the site; needed as source
+      material). All three are in Lindsay's Drive, March 2026 originals in
+      one folder and Aug 31 copies in another:
+      - Healthcare AI Governance Checklist (`governance_checklist.html`, also
+        a .docx)
+      - Bias & Demographic Fairness Checklist
+        (`bias_demographics_checklist.html`)
+      - Healthcare Data Quality & Provenance Checklist
+        (`healthcare_data_checklist_v2.html`; a shorter `-1` copy exists too)
+      - plus the index that tied them together
+        (`governance_commons_checklists.html`, several numbered copies).
+      Next: pick the canonical copy of each, check them against today's
+      Commons, decide where they live.
+- [ ] **Episode 07 PDF has the same errors as the old Architecture page**
+      (the 1-2s and R4s wording, "required for accreditation", fixed hours).
+      It's Lindsay's published piece: her call whether to post a correction.
+- [ ] **Rename the Facetious Collaborator** (Lindsay loves it; needs a new
+      name). It lives on every node page, not the Tools page. Consider a
+      Tools-page card so people can find it.
 - [ ] **Clinician sign-off on the sepsis rule pack** before anyone relies on its
       labels. Includes the "too close to call" band (within 10% of a cutoff),
       the antimicrobial-day handling, and the baselines in the SQL notes.

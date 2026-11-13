@@ -492,6 +492,7 @@ html{scroll-padding-top:56px}
     The <strong>internal technical loop</strong> runs continuously — monitoring, flagging, logging. The <strong>external human governance loop</strong> holds authority — deciding, dissenting, intervening. They are not the same system. They are not supposed to be.<br><br>
     Click any component to see what it does and why it exists.
   </p>
+  <p class="intro-text" style="font-size:.85em;opacity:.85">This is the interactive figure for <a href="/community_weaving_ep07.pdf">Episode 07</a>. The tiers, time windows and review cadences in it are one example design, not a standard. Set your own. Applying lab QC rules to AI models is a Commons position, not established practice.</p>
 
   <div class="instruction">Click any component to open its detail panel</div>
 
@@ -654,8 +655,9 @@ html{scroll-padding-top:56px}
       title: 'Performance Monitor',
       desc: 'Westgard rules, adapted for AI. Originally designed to detect drift in lab instrument performance, these rules now watch the model — flagging systematic bias, sensitivity degradation, and population shift before they compound into harm.',
       list: [
-        '1-2s rule: two consecutive results beyond 2 standard deviations → flag',
-        'R4s rule: sudden range jump within a batch → investigate',
+        '1-2s: one result beyond 2 SD → a warning to look closer, not a rejection on its own',
+        '2-2s: two results in a row beyond 2 SD on the same side → systematic shift, investigate',
+        'R-4s: in one run, one result above +2 SD and another below −2 SD → random error, investigate',
         'Population shift monitor: demographic drift in flagged cases',
         'All violations logged to institutional memory, not silently corrected'
       ]
@@ -681,7 +683,7 @@ html{scroll-padding-top:56px}
         'Immutable audit log: entries cannot be edited, only appended',
         'Artifact protection: governance documents are versioned, not overwritten',
         'Dissent events logged with full context, including resolution',
-        'Required for accreditation review and retrospective analysis'
+        'Gives auditors, reviewers and future committees the record of what was decided and why'
       ]
     },
     'clinical': {
@@ -727,8 +729,8 @@ html{scroll-padding-top:56px}
       desc: 'Escalation thresholds and review gates. Not every signal requires a governance meeting. The trigger layer defines which conditions automatically escalate, which require scheduled review, and which can be handled operationally — preventing both under-response and governance fatigue.',
       list: [
         'Performance monitor violations → automatic escalation to EXT-02',
-        'Dissent volume threshold → mandatory governance review within 72hrs',
-        'Population shift flags → clinical leadership notification within 24hrs',
+        'Dissent volume threshold → governance review within a set window (for example, 72 hours)',
+        'Population shift flags → clinical leadership notified within a set window (for example, 24 hours)',
         'Stop mechanism activation → immediate Tier 4 authority convening'
       ]
     },
@@ -750,8 +752,8 @@ html{scroll-padding-top:56px}
       title: 'Monitor',
       desc: 'The ongoing handoff: performance data from the internal loop surfaces to human reviewers on a defined cadence. H2 is not an alarm — it is a scheduled conversation between the technical and human systems. Most governance happens here, quietly, before anything goes wrong.',
       list: [
-        'Weekly performance dashboard to operational governance lead',
-        'Monthly review with clinical stakeholders',
+        'A regular performance report to the operational governance lead (for example, weekly)',
+        'A regular review with clinical stakeholders (for example, monthly)',
         'Westgard violations trigger immediate H2 event outside schedule',
         'H2 outputs logged to institutional memory as governance record'
       ]
@@ -786,7 +788,7 @@ html{scroll-padding-top:56px}
       title: 'Stop Mechanism',
       desc: 'The hard halt. When either loop detects conditions that risk irreversible harm, the model stops. Not pauses. Stops. The stop mechanism is the most important component in the architecture — not because it will be used often, but because its existence changes how every other component behaves.',
       list: [
-        'Triggers: safety pre-filter violation, Westgard R4s breach, population shift beyond threshold',
+        'Triggers: safety pre-filter violation, a monitoring rule breach your committee defined as a stop condition, population shift beyond threshold',
         'Effect: model output suspended, failover activated, H4 initiated',
         'Cannot be overridden below Tier 4 authority',
         'Every activation generates a mandatory post-incident review'

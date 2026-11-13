@@ -752,12 +752,7 @@ html{scroll-padding-top:56px}
 
 const state = {
   phase: 'upload',        // upload | preelicit | elicit | ready
-  documents: {},
   gapFlags: [],
-  uploadStates: {},
-  phiWarnings: {},
-  warningAcknowledged: {},
-  attested: false,
   answers: {},
   currentSection: -1,    // -1 = pre-elicit Q0, -2 = pre-elicit Q0b, 0-5 = sections
   logicFlags: [],
@@ -765,10 +760,9 @@ const state = {
 
 // ── DOCUMENT SLOTS ────────────────────────────────────────────────────────
 
-// Document upload is paused on the public site. Uploaded files were never read
-// into the protocol (only filename and size reached it), so the step added
-// handling risk for no output. Set to false to bring the upload step back.
-const UPLOADS_PAUSED = true;
+// Document upload was removed (Nov 13, 2026). Uploaded files were never read
+// into the protocol, so the step added handling risk for no output. These
+// slots now only list what to have open while answering.
 
 const DOCUMENT_SLOTS = [
   {
@@ -827,7 +821,7 @@ function renderSidebar() {
   );
 
   const steps = [
-    { id: 'upload', label: UPLOADS_PAUSED ? 'Getting Started' : 'Document Upload', tag: '↑' },
+    { id: 'upload', label: 'Getting Started', tag: '↑' },
     { id: 'pre0',   label: 'Primary / Secondary',    tag: 'Q0' },
     { id: 'pre0b',  label: 'Protocol Mode',          tag: 'Q0b' },
     { id: 's1',     label: 'Organization & System',  tag: 'S1' },
@@ -882,8 +876,7 @@ function renderUploadPaused() {
       <div class="phase-tag">Step 1 of 3 · Before you start</div>
       <h1 class="phase-title">Your answers<br><em>build the protocol</em></h1>
       <p class="phase-desc">
-        Document upload is paused while the Commons is a one-person prototype. The protocol is generated from your answers
-        to the questions that follow. Your own validation results matter most. A vendor model card helps but is no longer required (HTI-5, effective Dec 28, 2026); if you don't have one, the report tells you what to ask for in the contract.
+        You don't upload anything. The protocol is built from your answers to the questions that follow, so have the documents below open while you answer. Your own validation results matter most. A vendor model card helps but is no longer required (HTI-5, effective Dec 28, 2026); if you don't have one, the report tells you what to ask for in the contract.
       </p>
       <div class="upload-shell">
         <div class="upload-shell-title">What you'll need handy</div>
@@ -897,276 +890,15 @@ function renderUploadPaused() {
 }
 
 function renderUpload() {
-  if (UPLOADS_PAUSED) {
-    document.getElementById('status-phase').textContent = 'Getting Started';
-    document.getElementById('status-mode').textContent = '—';
-    document.getElementById('status-track').textContent = '—';
-    renderSidebar();
-    renderUploadPaused();
-    return;
-  }
-  document.getElementById('status-phase').textContent = 'Document Upload';
+  document.getElementById('status-phase').textContent = 'Getting Started';
   document.getElementById('status-mode').textContent = '—';
   document.getElementById('status-track').textContent = '—';
   renderSidebar();
-
-  const content = document.getElementById('content');
-  content.innerHTML = `
-    <div class="upload-phase">
-      <div class="phase-tag">Step 1 of 3 · Document Ingestion</div>
-      <h1 class="phase-title">Upload your<br><em>source documents</em></h1>
-      <p class="phase-desc">
-        The generator extracts relevant fields from your documents before the elicitation begins.
-        Questions your documents already answer will not appear. Works best on desktop — you'll need your documents handy.
-      </p>
-
-      <div class="upload-shell">
-        <div class="upload-shell-title">Document Upload</div>
-        <div class="upload-shell-desc">Upload your AI system's documentation below. Required documents must be submitted to proceed. Recommended documents improve protocol quality.</div>
-
-        <div class="attest-box">
-          <label class="attest-label">
-            <input type="checkbox" class="attest-checkbox" id="attest-check" onchange="handleAttest(this.checked)">
-            <span class="attest-text">
-              I confirm that the documents I am uploading do not contain protected health information (PHI) as defined under HIPAA.
-              Model cards, validation studies, Instructions for Use, and FDA clearance documents are vendor-generated documents
-              and should not contain patient-level data. If I am uploading an internally-generated document, I have reviewed it
-              for patient-identifiable information.
-            </span>
-          </label>
-        </div>
-
-        <div class="doc-slots" id="doc-slots">
-          ${DOCUMENT_SLOTS.map(slot => renderSlotHTML(slot)).join('')}
-        </div>
-
-        <div id="missing-required" style="display:none" class="missing-required">
-          <strong>Both required documents must be uploaded to proceed.</strong>
-          Without a model card and validation study, threshold calibration and performance sections cannot be populated.
-        </div>
-
-        <button class="proceed-btn" id="proceed-btn" disabled onclick="handleProceed()">
-          Begin elicitation →
-        </button>
-        <p class="proceed-note" id="proceed-note"></p>
-        <p class="privacy-link"><a href="/privacy" target="_blank">Privacy notice</a> — how submitted documents are handled.</p>
-      </div>
-    </div>`;
-
-  restoreUploadStates();
-}
-
-function renderSlotHTML(slot) {
-  return `
-    <div class="doc-slot locked" id="slot-${slot.id}">
-      <div class="slot-label-row">
-        <span class="slot-label">${slot.label}</span>
-        <span class="slot-badge ${slot.required ? 'req' : 'rec'}">${slot.required ? 'Required' : 'Recommended'}</span>
-      </div>
-      <p class="slot-desc">${slot.description}</p>
-      <p class="slot-hint">${slot.hint}</p>
-      <div id="slot-body-${slot.id}">
-        <div class="slot-upload-row">
-          <input type="file" accept=".pdf,application/pdf" class="slot-file-input" id="file-${slot.id}"
-            onchange="handleFileSelect('${slot.id}', this.files[0])">
-          <label for="file-${slot.id}" class="slot-upload-btn disabled" id="label-${slot.id}">
-            ↑ Confirm attestation above to upload
-          </label>
-          <span class="slot-upload-hint">PDF only · Max 20MB</span>
-        </div>
-      </div>
-    </div>`;
-}
-
-function handleAttest(checked) {
-  state.attested = checked;
-  DOCUMENT_SLOTS.forEach(slot => {
-    const el = document.getElementById(`slot-${slot.id}`);
-    const lbl = document.getElementById(`label-${slot.id}`);
-    const inp = document.getElementById(`file-${slot.id}`);
-    if (el) el.classList.toggle('locked', !checked);
-    if (lbl) {
-      lbl.classList.toggle('disabled', !checked);
-      if (checked) { lbl.textContent = '↑ Select PDF'; inp && (inp.disabled = false); }
-      else { lbl.textContent = '↑ Confirm attestation above to upload'; inp && (inp.disabled = true); }
-    }
-  });
-  updateProceedButton();
-}
-
-function restoreUploadStates() {
-  if (state.attested) handleAttest(true);
-  Object.entries(state.uploadStates).forEach(([docId, s]) => {
-    if (s === 'ready' && state.documents[docId]) setSlotReady(docId, state.documents[docId].filename);
-  });
-  const check = document.getElementById('attest-check');
-  if (check) check.checked = state.attested;
-}
-
-async function handleFileSelect(docId, file) {
-  if (!file) return;
-  if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
-    setSlotBlocked(docId, 'Only PDF files are accepted. Please convert your document to PDF before uploading.');
-    return;
-  }
-  setSlotScanning(docId);
-  try {
-    let textContent = file.name;
-    try { textContent = await readFileAsText(file); } catch {}
-
-    const phiRes = await fetch('/api/phi-check', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: textContent.substring(0, 100000), source: `upload_${docId}` }),
-    });
-    const phiResult = await phiRes.json();
-
-    if (phiResult.summary?.status === 'BLOCK') { setSlotBlocked(docId, phiResult.summary.message); return; }
-    if (phiResult.summary?.status === 'WARN') { setSlotWarning(docId, phiResult.summary.message, file); return; }
-    await processCleanFile(docId, file);
-  } catch (err) {
-    setSlotError(docId);
-  }
-}
-
-async function processCleanFile(docId, file) {
-  setSlotStripping(docId);
-  try {
-    const base64 = await readFileAsBase64(file);
-    const stripRes = await fetch('/api/strip-metadata', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ base64pdf: base64, filename: file.name }),
-    });
-    const stripResult = await stripRes.json();
-    state.documents[docId] = {
-      id: docId, filename: file.name,
-      base64: stripResult.base64pdf || base64,
-      size: file.size,
-      processedAt: stripResult.strippedAt || new Date().toISOString(),
-    };
-    state.uploadStates[docId] = 'ready';
-    setSlotReady(docId, file.name);
-  } catch (err) {
-    try {
-      const base64 = await readFileAsBase64(file);
-      state.documents[docId] = { id: docId, filename: file.name, base64, size: file.size };
-      state.uploadStates[docId] = 'ready';
-      setSlotReady(docId, file.name);
-    } catch { setSlotError(docId); }
-  }
-}
-
-function acknowledgeWarning(docId) {
-  const pendingFile = state.documents[`${docId}_pending`];
-  if (pendingFile) { delete state.documents[`${docId}_pending`]; processCleanFile(docId, pendingFile); }
-}
-
-function removeDocument(docId) {
-  delete state.documents[docId];
-  delete state.documents[`${docId}_pending`];
-  delete state.uploadStates[docId];
-  delete state.phiWarnings[docId];
-  const body = document.getElementById(`slot-body-${docId}`);
-  const slotEl = document.getElementById(`slot-${docId}`);
-  if (body) body.innerHTML = `
-    <div class="slot-upload-row">
-      <input type="file" accept=".pdf,application/pdf" class="slot-file-input" id="file-${docId}"
-        onchange="handleFileSelect('${docId}', this.files[0])">
-      <label for="file-${docId}" class="slot-upload-btn" id="label-${docId}">↑ Select PDF</label>
-      <span class="slot-upload-hint">PDF only · Max 20MB</span>
-    </div>`;
-  if (slotEl) slotEl.className = 'doc-slot';
-  updateProceedButton();
-}
-
-function setSlotScanning(docId) {
-  state.uploadStates[docId] = 'scanning';
-  const body = document.getElementById(`slot-body-${docId}`);
-  if (body) body.innerHTML = `<div class="slot-processing"><div class="slot-spinner"></div><span class="slot-processing-text">Scanning for PHI patterns...</span></div>`;
-}
-
-function setSlotStripping(docId) {
-  state.uploadStates[docId] = 'stripping';
-  const body = document.getElementById(`slot-body-${docId}`);
-  if (body) body.innerHTML = `<div class="slot-processing"><div class="slot-spinner"></div><span class="slot-processing-text">Stripping metadata...</span></div>`;
-}
-
-function setSlotReady(docId, filename) {
-  const slotEl = document.getElementById(`slot-${docId}`);
-  const body = document.getElementById(`slot-body-${docId}`);
-  if (slotEl) slotEl.className = 'doc-slot ready';
-  if (body) body.innerHTML = `
-    <div class="slot-ready-row">
-      <span class="slot-check">✓</span>
-      <span class="slot-filename">${filename}</span>
-      <button class="slot-remove" onclick="removeDocument('${docId}')">Remove</button>
-    </div>`;
-  updateProceedButton();
-}
-
-function setSlotBlocked(docId, message) {
-  state.uploadStates[docId] = 'blocked';
-  const slotEl = document.getElementById(`slot-${docId}`);
-  const body = document.getElementById(`slot-body-${docId}`);
-  if (slotEl) slotEl.className = 'doc-slot blocked';
-  if (body) body.innerHTML = `
-    <p class="slot-blocked-msg">⚠ ${message}</p>
-    <button class="slot-retry-btn" onclick="removeDocument('${docId}')">Try a different file</button>`;
-  updateProceedButton();
-}
-
-function setSlotWarning(docId, message, file) {
-  state.uploadStates[docId] = 'warning';
-  state.documents[`${docId}_pending`] = file;
-  const slotEl = document.getElementById(`slot-${docId}`);
-  const body = document.getElementById(`slot-body-${docId}`);
-  if (slotEl) slotEl.className = 'doc-slot warning-state';
-  if (body) body.innerHTML = `
-    <p class="slot-warning-msg">⚠ ${message}</p>
-    <div class="slot-warning-actions">
-      <button class="slot-ack-btn" onclick="acknowledgeWarning('${docId}')">I have reviewed this document — proceed</button>
-      <button class="slot-retry-btn" onclick="removeDocument('${docId}')">Use a different file</button>
-    </div>`;
-  updateProceedButton();
-}
-
-function setSlotError(docId) {
-  state.uploadStates[docId] = 'error';
-  const body = document.getElementById(`slot-body-${docId}`);
-  if (body) body.innerHTML = `
-    <p class="slot-blocked-msg">Something went wrong processing this file. Please try again.</p>
-    <button class="slot-retry-btn" onclick="removeDocument('${docId}')">Try again</button>`;
-  updateProceedButton();
-}
-
-function updateProceedButton() {
-  const btn = document.getElementById('proceed-btn');
-  const note = document.getElementById('proceed-note');
-  const missingEl = document.getElementById('missing-required');
-  if (!btn) return;
-
-  const requiredMet = DOCUMENT_SLOTS.filter(s => s.required).every(s => state.uploadStates[s.id] === 'ready');
-  const noBlocks = !Object.values(state.uploadStates).some(s => ['blocked','scanning','stripping','warning','error'].includes(s));
-  const canProceed = state.attested && requiredMet && noBlocks;
-
-  btn.disabled = !canProceed;
-  if (missingEl) missingEl.style.display = (state.attested && !requiredMet) ? 'block' : 'none';
-
-  if (note && state.attested && requiredMet) {
-    const missingRec = DOCUMENT_SLOTS.filter(s => !s.required && state.uploadStates[s.id] !== 'ready');
-    note.textContent = missingRec.length > 0
-      ? `${missingRec.length} recommended document${missingRec.length > 1 ? 's' : ''} not submitted — affected sections will note reduced confidence.`
-      : '';
-  }
+  renderUploadPaused();
 }
 
 function handleProceed() {
-  const gapFlags = DOCUMENT_SLOTS
-    .filter(s => (UPLOADS_PAUSED || !s.required) && state.uploadStates[s.id] !== 'ready')
-    .map(s => ({ type: 'DOCUMENT_ABSENT', docId: s.id, docLabel: s.label, severity: 'MEDIUM',
-      message: `${s.label} was not submitted. Sections dependent on this document will note reduced confidence.` }));
-  state.gapFlags = gapFlags;
+  state.gapFlags = [];
   state.phase = 'preelicit';
   state.currentSection = -1;
   renderPreElicit();
@@ -2071,7 +1803,6 @@ function goToReady() {
 
   const a = state.answers;
   const isFullProtocol = a.q0b === 'full';
-  const docCount = Object.keys(state.documents).length;
   const answeredCount = Object.keys(a).filter(k => a[k] && a[k] !== '').length;
   const gapCount = state.gapFlags.length;
   const logicCount = state.logicFlags.length;
@@ -2081,7 +1812,6 @@ function goToReady() {
     { key: 'Use type', val: a.q2_usetype ? a.q2_usetype.split(' — ')[0] : '—' },
     { key: 'Protocol mode', val: isFullProtocol ? 'Full validation protocol' : 'Workflow validation summary' },
     { key: 'Model role', val: a.q0 === 'primary' ? 'Primary deployed model' : 'Secondary / backup model' },
-    { key: 'Documents uploaded', val: `${docCount} of ${DOCUMENT_SLOTS.length}` },
     { key: 'Questions answered', val: `${answeredCount} responses captured` },
   ].map(r => `
     <div class="ready-summary-row">
@@ -2115,14 +1845,6 @@ function goToReady() {
         <div class="ready-stat">
           <div class="ready-stat-num">${answeredCount}</div>
           <div class="ready-stat-label">Responses</div>
-        </div>
-        <div class="ready-stat">
-          <div class="ready-stat-num">${docCount}</div>
-          <div class="ready-stat-label">Documents</div>
-        </div>
-        <div class="ready-stat ${gapCount > 0 ? 'warn' : ''}">
-          <div class="ready-stat-num">${gapCount}</div>
-          <div class="ready-stat-label">Gap flags</div>
         </div>
         <div class="ready-stat ${logicCount > 0 ? 'alert' : ''}">
           <div class="ready-stat-num">${logicCount}</div>
@@ -2215,12 +1937,7 @@ async function handleGeneratePDF() {
         answers: state.answers || {},
         logicFlags: (state.logicFlags || []).map(f => f.id || f),
         gapFlags: (state.gapFlags || []).map(f => f.message || f),
-        documentMeta: Object.values(state.documents || {}).map(d => ({
-          name: d.filename || d.name,
-          type: d.id,
-          size: d.size ? Math.round(d.size / 1024) + 'KB' : null,
-          phiResult: d.phiResult || null,
-        })),
+        documentMeta: [],
       }),
     });
 
