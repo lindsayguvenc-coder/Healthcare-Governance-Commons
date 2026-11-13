@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!-- Nothing leaves this page. connect-src 'none' blocks every fetch, XHR and beacon, so
+     the file you load cannot be sent anywhere, even by mistake. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="description" content="Local Validation Kit: get the counts a validation protocol needs from your own patients, with rules first and a short chart-review workqueue. Runs in your browser; nothing is uploaded.">
+<title>Local Validation Kit (offline copy)</title>
+<style>
+:root{--bg:#f2f2f6;--panel:#fff;--ink:#1d1e2a;--muted:#5d5f72;--line:#d6d6e2;--tint:#ebebf3;--accent:#62619a;--accent-ink:#fff;--ok:#2d7a57;--warn:#a8701a;--bad:#b33a2e;
+  --body:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#14141c;--panel:#1c1c27;--ink:#e7e7f0;--muted:#9d9eb4;--line:#30303f;--tint:#232331;--accent:#a3a2d8;--accent-ink:#14141c;--ok:#62c294;--warn:#e2a64d;--bad:#ec7366;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--body)}
+[hidden]{display:none!important}
+.wrap{max-width:980px;margin:0 auto;padding:24px max(16px,env(safe-area-inset-left,0px)) 64px;display:grid;gap:20px}
+.eyebrow{font:600 .72rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.eyebrow a{color:inherit;text-decoration:none}
+h1{font-size:clamp(1.6rem,3.4vw,2.2rem);line-height:1.1;margin:4px 0 6px;letter-spacing:-.02em}
+h2{font-size:1.15rem;margin:0 0 8px}
+p{margin:0 0 8px}
+.lede{color:var(--muted);max-width:72ch}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.safe{border-left:4px solid var(--ok)}
+.draft{border-left:4px solid var(--warn)}
+.step{font:600 .7rem var(--mono);color:var(--accent);letter-spacing:.08em;text-transform:uppercase}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+button{font:600 .88rem var(--body);padding:8px 13px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+input[type=number],select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{font:600 .7rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+code{font-family:var(--mono);font-size:.84em}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:var(--tint);border-radius:8px;padding:10px 12px}
+.stat b{display:block;font-size:1.4rem}
+.stat span{font-size:.8rem;color:var(--muted)}
+.q{display:grid;gap:12px}
+.qhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.check{background:color-mix(in srgb,var(--warn) 14%,transparent);border-radius:6px;padding:8px 10px;font-size:.88rem}
+.answers button{min-width:120px}
+.progress{height:6px;background:var(--tint);border-radius:3px;overflow:hidden}
+.progress div{height:100%;background:var(--accent)}
+.warn{color:var(--warn)} .bad{color:var(--bad)} .ok{color:var(--ok)}
+details summary{cursor:pointer;font-weight:600}
+pre{background:var(--tint);padding:10px;border-radius:6px;overflow:auto;font-size:.8rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow"><a href="https://healthcare-governance-commons.vercel.app/">Healthcare Governance Commons</a> · <a href="https://healthcare-governance-commons.vercel.app/tools">Tools</a> · Local Validation Kit</div>
+    <h1>Local Validation Kit</h1>
+    <p class="lede">Test a clinical AI model on your own past patients before you trust it. Rules label most cases automatically. A person reviews only the cases the rules can't decide, plus a blind sample that checks the rules themselves. You get the four counts the <a href="https://healthcare-governance-commons.vercel.app/validation-protocol/">Validation Protocol Generator</a> needs, with confidence intervals and numbers for each patient group.</p>
+  </header>
+
+  <div class="card safe" role="note">
+    <strong>Your file never leaves this browser.</strong> The page reads it on your computer and sends nothing anywhere. That's enforced, not just promised: the page's security policy blocks all network requests. Still, use a study ID, not an MRN, and leave out names and dates. The kit doesn't need them.
+    <details style="margin-top:8px" id="security"><summary>For your security team</summary>
+      <ul class="small" style="margin:8px 0 0;padding-left:18px">
+        <li><b>Run it offline.</b> <span id="offline-online">Download the kit as one file and run it from your own computer. After that, nothing on this website can change it, even if the website were ever compromised.</span><span id="offline-here" hidden>You're running the offline copy. Nothing on the website can change it.</span> <span id="offline-dl"><a id="offline-link" href="local-validation-kit-offline.html" download>Download the offline kit</a>.</span></li>
+        <li><b>Check the fingerprint.</b> The offline file's SHA-256 should be <code id="offline-hash">see local-validation-kit-offline.html.sha256</code>. On a Mac: <code>shasum -a 256 local-validation-kit-offline.html</code>. On Windows: <code>certutil -hashfile local-validation-kit-offline.html SHA256</code>. A different value means the file isn't the one published here: don't use it.</li>
+        <li><b>No network.</b> The page's Content-Security-Policy sets <code>connect-src 'none'</code>; the offline file also sets <code>default-src 'none'</code>, so it can't load anything at all.</li>
+        <li><b>No third-party code.</b> Three small script files written for the Commons, no libraries.</li>
+        <li><b>Rule packs can't run code.</b> They're plain data, checked before use. A bad pack can give wrong labels, which is why packs show their clinician sign-off status.</li>
+        <li><b>Downloads are spreadsheet-safe.</b> Cells that start with = + - or @ are neutralized, so nothing in a loaded file can run as a formula when a download is opened in Excel.</li>
+        <li><b>One thing the page can't control: browser extensions.</b> An extension with permission to read pages can read this one too. Use a browser profile with no extensions, or the managed browser your security team already locks down.</li>
+        <li><b>Source:</b> the kit's code is public in the Commons repository on GitHub (<code>public/local-validation/</code>).</li>
+      </ul>
+    </details>
+  </div>
+
+  <section class="card draft" id="pack">
+    <div class="step">Step 1 · Rule pack</div>
+    <div class="bar small" style="margin-bottom:8px">
+      <label>Pack <select id="pack-pick"></select></label>
+      <label>or load your own <input type="file" id="pack-file" accept=".json,application/json"></label>
+      <button id="dl-pack">Download this pack to edit</button>
+      <button id="dl-pack-template">Blank pack template</button>
+    </div>
+    <p id="pack-msg" class="small" role="status"></p>
+    <h2 id="pack-name"></h2>
+    <p id="pack-source" class="small"></p>
+    <p id="pack-caveat" class="small muted"></p>
+    <p class="small"><strong id="pack-status"></strong></p>
+    <details open><summary>The rules, in plain English (what a clinician signs off on)</summary>
+      <p class="small" style="margin-top:8px"><b>Every one of these must hold</b>, or the answer is "<span class="lbl-no"></span>":</p>
+      <ol class="small" id="rules-gate"></ol>
+      <p class="small"><b>Then any one of these is enough</b> for "<span class="lbl-yes"></span>":</p>
+      <ol class="small" id="rules-crit"></ol>
+      <p class="small muted" id="rules-more"></p>
+    </details>
+    <p class="small muted">A pack is plain data: columns, conditions, cutoffs. Any outcome that can be written as "these must hold, then any one of these" fits, and the kit does the rest: the queue, the audit, the counts. Download a pack to see the format.</p>
+  </section>
+
+  <section class="card">
+    <div class="step">Step 2 · Get your data out</div>
+    <h2>One row per encounter, these columns</h2>
+    <p class="small">Your analyst writes one query against your own EHR data. It does the date math (the "within 2 days of the blood culture" windows) and hands over the columns below. If your model logged its scores when it ran, as many EHR models do, you don't need to re-run it.</p>
+    <details><summary>Columns (<span id="col-count"></span>)</summary><table id="col-table"><thead><tr><th>Column</th><th>What goes in it</th><th>Needed</th></tr></thead><tbody></tbody></table></details>
+    <div class="bar" style="margin-top:10px">
+      <button id="dl-template">Blank CSV template</button>
+      <button id="dl-sql">SQL starting point</button>
+      <button id="dl-fhir">FHIR field map</button>
+    </div>
+    <p class="small muted" style="margin-top:6px">The SQL and FHIR files are starting points with placeholder table names. Your analyst maps them to your system and checks every code.</p>
+  </section>
+
+  <section class="card">
+    <div class="step">Step 3 · Load it and let the rules go first</div>
+    <div class="bar">
+      <label class="button"><input type="file" id="file" accept=".csv,text/csv"></label>
+      <button id="sample">Try it with made-up data</button>
+    </div>
+    <div class="bar small" style="margin-top:10px">
+      <label>Model counts as positive at score ≥ <input type="number" id="thresh" value="0.5" step="0.05" min="0" max="1" style="width:80px"></label>
+      <label>Show the rules are at least <input type="number" id="target" value="90" min="50" max="99" style="width:64px">% accurate</label>
+      <label>assuming they're right about <input type="number" id="expected" value="95" min="51" max="99.9" step="0.5" style="width:70px">% of the time</label>
+    </div>
+    <p id="load-msg" class="small" role="status"></p>
+    <div id="sorted" hidden>
+      <div class="stats" id="sort-stats"></div>
+      <p class="small" id="work-line" style="margin-top:8px"></p>
+      <p class="small muted" id="audit-line"></p>
+      <button class="primary" id="start">Open the workqueue</button>
+    </div>
+  </section>
+
+  <section class="card" id="queue" hidden>
+    <div class="step">Step 4 · Workqueue</div>
+    <div class="q">
+      <div class="qhead"><h2 id="q-title"></h2><span class="small muted" id="q-count"></span></div>
+      <div class="progress"><div id="q-bar" style="width:0"></div></div>
+      <p class="small muted">Open this encounter in your EHR and decide by the pack's definition (Step 1). The rule's answer is hidden so it doesn't steer you. Keys: 1, 2, 3; ← to go back.</p>
+      <div id="q-check" class="check" hidden></div>
+      <table><tbody id="q-fields"></tbody></table>
+      <div class="bar answers">
+        <button data-a="yes">1 · <span class="lbl-yes"></span></button>
+        <button data-a="no">2 · <span class="lbl-no"></span></button>
+        <button data-a="unsure">3 · Can't tell</button>
+        <button id="q-back">← Back</button>
+      </div>
+      <div class="bar small">
+        <label>Reviewer <select id="reviewer"><option value="A">A (first)</option><option value="B">B (second, for agreement)</option></select></label>
+        <button id="q-second">Second-review sample (20%)</button>
+        <button id="q-done">See results</button>
+        <button id="save">Save progress</button>
+        <label class="small">Load progress <input type="file" id="load-progress" accept=".json"></label>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="results" hidden>
+    <div class="step">Step 5 · Results</div>
+    <h2>Your four counts</h2>
+    <div class="stats" id="counts"></div>
+    <p class="small" id="perf"></p>
+    <p class="small" id="rule-acc"></p>
+    <div id="fix-box" hidden class="check" style="margin:6px 0 10px">
+      <p class="small" style="margin:0 0 6px"><b>Fix, then re-audit.</b> 1. Look at where the rules and the reviewer disagreed. 2. Fix the rules (edit and reload the pack) or the query (reload your file). 3. Start a fresh audit: new cases only. Earlier audit cases stay as reviewed labels but no longer count toward rule accuracy, so the new number is a clean test of the fixed rules.</p>
+      <table id="disagree" class="small"><thead><tr><th>Encounter</th><th>Rules said</th><th>Reviewer said</th><th>Why the rules said it</th></tr></thead><tbody></tbody></table>
+      <div class="bar" style="margin-top:8px"><button id="dl-disagree">Download disagreements</button><button class="primary" id="fresh-audit">Start a fresh audit</button></div>
+    </div>
+    <p class="small" id="kappa"></p>
+    <h2 style="margin-top:12px">By patient group</h2>
+    <div class="bar small"><label>Group by <select id="groupby"></select></label></div>
+    <table id="group-table"><thead><tr><th>Group</th><th>Cases</th><th>With the outcome</th><th>Sensitivity</th><th>Specificity</th></tr></thead><tbody></tbody></table>
+    <p class="small muted">Small groups have wide intervals. A group with fewer than 30 sepsis cases can't show a reliable sensitivity on its own.</p>
+    <div class="bar" style="margin-top:12px">
+      <button class="primary" id="to-vpg">Use these counts in the Validation Protocol</button>
+      <button id="dl-counts">Download counts</button>
+      <button id="dl-labels">Download labels</button>
+    </div>
+    <p class="small check" id="vpg-hand" hidden></p>
+    <p class="small muted">Only the counts go to the Validation Protocol, in this browser. The labels file stays on your computer.</p>
+  </section>
+
+  <footer class="small muted">
+    Working prototype · built by one person · not independently reviewed. The rule pack is a draft until a clinician signs it off; the statistics are on the Commons list for an independent statistician. Problems: <a href="mailto:lmlamerereads@gmail.com">lmlamerereads@gmail.com</a>
+  </footer>
+</div>
+
+<script>window.LVK_OFFLINE = true;</script>
+<script>
+// engine.js (inlined for the offline copy)
+// Local Validation Kit engine (Nov 13, 2026). Runs any rule pack. A pack is plain data:
+// columns, a gate (all must hold), and criteria (any one is enough). Every condition is
+// three-valued: true, false, or unknown (a blank field). Numeric cutoffs can carry a
+// "near" margin; values inside it go to a person instead of being decided.
+// Works in the browser (window.LVK) and in Node (module.exports), so tests use the same code.
+(function (root) {
+  const TRUE = ["1", "y", "yes", "true"], FALSE = ["0", "n", "no", "false"];
+  function value(row, col) {
+    const v = row[col];
+    return v === undefined || v === null || String(v).trim() === "" ? null : String(v).trim();
+  }
+  function num(v) { const n = Number(v); return v !== null && Number.isFinite(n) ? n : null; }
+  const OPS = { ">=": (a, b) => a >= b, ">": (a, b) => a > b, "<=": (a, b) => a <= b, "<": (a, b) => a < b, "==": (a, b) => a === b };
+  const OP_WORDS = { ">=": "at least", ">": "over", "<=": "at most", "<": "under", "==": "exactly" };
+
+  // Returns { v: true|false|null, near: bool, text: "what was found" }
+  function evalCond(c, row) {
+    if (c.any || c.all) {
+      const parts = (c.any || c.all).map((x) => evalCond(x, row));
+      const isAny = !!c.any;
+      const hit = parts.filter((p) => p.v === true), miss = parts.filter((p) => p.v === false), unk = parts.filter((p) => p.v === null);
+      let v;
+      if (isAny) v = hit.length ? true : unk.length ? null : false;
+      else v = miss.length ? false : unk.length ? null : true;
+      // Near: the group's answer could flip with a small change in one part
+      const near = isAny ? (v === true ? hit.length === 1 && hit[0].near : parts.some((p) => p.near))
+        : (v === false ? miss.length === 1 && miss[0].near : parts.some((p) => p.near));
+      // Found: the label. Blank: say which part is blank. Otherwise: what each part showed.
+      const text = v === true && c.label ? c.label
+        : (v === true ? hit : v === null ? unk : parts).map((p) => p.text).filter(Boolean).join(", ");
+      return { v, near: !!near, text };
+    }
+    if (c.unless) {
+      const inner = evalCond({ ...c, unless: undefined }, row);
+      if (inner.v !== true) return inner;
+      const u = evalCond(c.unless, row);
+      if (u.v === true) return { v: false, near: false, text: "" };
+      // Would be a hit but for a blank exception field: never decide this one by rule.
+      if (u.v === null) return { v: null, near: false, critical: true, text: `${inner.text}, but ${c.unless.col.replace(/_/g, " ")} is blank` };
+      return inner;
+    }
+    let x, name;
+    if (c.ratio) {
+      const a = num(value(row, c.ratio[0])), b = num(value(row, c.ratio[1]));
+      x = a === null || b === null || b === 0 ? null : a / b;
+      name = `${c.ratio[0]} / ${c.ratio[1]}`.replace(/_/g, " ");
+    } else { x = value(row, c.col); name = (c.label || c.col).replace(/_/g, " "); }
+    if (x === null) return { v: null, near: false, text: `${name} is blank` };
+    if (c.is !== undefined) {
+      const s = String(x).toLowerCase();
+      const b = TRUE.includes(s) ? true : FALSE.includes(s) ? false : null;
+      if (b === null) return { v: null, near: false, text: `${name} is "${x}"` };
+      return { v: b === c.is, near: false, text: b === c.is ? name : "" };
+    }
+    const n = typeof x === "number" ? x : num(x);
+    if (n === null) return { v: null, near: false, text: `${name} is "${x}"` };
+    const v = OPS[c.op](n, c.value);
+    const near = c.near ? Math.abs(n - c.value) <= Math.abs(c.value) * c.near : false;
+    const shown = Math.round(n * 100) / 100;
+    return { v, near, text: `${name} ${shown}` };
+  }
+
+  // One row -> { label: "yes" | "no" | "unsure", why: [...], check: [...] }
+  function labelRow(pack, row) {
+    const why = [], check = [];
+    for (const g of pack.gate || []) {
+      const r = evalCond(g, row);
+      if (r.v === false && !r.near) return { label: "no", why: [g.failText || `Not met: ${describe(g)}`], check: [] };
+      if (r.v === false && r.near) check.push(`${r.text} is just short of: ${describe(g)}`);
+      else if (r.v === null) check.push(r.text || `Can't tell: ${describe(g)}`);
+      else { why.push(r.text || describe(g)); if (r.near) check.push(`${r.text} is right at the cutoff`); }
+    }
+    if (check.length) return { label: "unsure", why, check };
+    const res = (pack.criteria || []).map((c) => ({ c, r: evalCond(c, row) }));
+    const hits = res.filter((x) => x.r.v === true);
+    const unknown = res.filter((x) => x.r.v === null);
+    const nearMiss = res.filter((x) => x.r.v === false && x.r.near);
+    if (hits.length) {
+      if (hits.length === 1 && hits[0].r.near) return { label: "unsure", why, check: [`the only criterion met, ${hits[0].r.text}, is right at its cutoff`] };
+      return { label: "yes", why: why.concat(hits.map((h) => h.r.text || describe(h.c))), check: [] };
+    }
+    if (nearMiss.length) return { label: "unsure", why, check: nearMiss.map((x) => `${x.r.text} is just short of: ${describe(x.c)}`) };
+    const critical = unknown.filter((x) => x.r.critical);
+    if (critical.length) return { label: "unsure", why, check: critical.map((x) => x.r.text) };
+    const maxBlank = pack.maxBlankCriteria === undefined ? 0 : pack.maxBlankCriteria;
+    if (unknown.length > maxBlank) return { label: "unsure", why, check: unknown.map((x) => x.r.text || `Can't tell: ${describe(x.c)}`) };
+    return { label: "no", why: why.concat([pack.noCriteriaText || "No criterion met"]), check: [] };
+  }
+
+  // Plain-English version of a condition, for the sign-off view
+  function describe(c) {
+    const inner = c.any ? "any of: " + c.any.map(describe).join("; or ") : c.all ? c.all.map(describe).join(", and ") : null;
+    if (inner) return c.label ? `${c.label} (${inner})` : inner;
+    let s;
+    if (c.ratio) s = `${c.ratio[0]} ÷ ${c.ratio[1]} is ${OP_WORDS[c.op]} ${c.value}`;
+    else if (c.is !== undefined) s = `${c.col} is ${c.is ? "yes" : "no"}`;
+    else s = `${c.col} is ${OP_WORDS[c.op]} ${c.value}`;
+    s = s.replace(/_/g, " ");
+    if (c.near) s += ` (within ${Math.round(c.near * 100)}% of the cutoff goes to a person)`;
+    if (c.unless) s += `, unless ${describe(c.unless)}`;
+    return s;
+  }
+
+  function validatePack(p) {
+    const errs = [];
+    if (!p || typeof p !== "object") return ["Not a rule pack."];
+    for (const k of ["id", "name", "columns", "gate", "criteria", "labels"]) if (!(k in p)) errs.push(`Missing "${k}".`);
+    const cols = new Set((p.columns || []).map((c) => c.name));
+    const walk = (c, where) => {
+      if (c.any || c.all) return (c.any || c.all).forEach((x) => walk(x, where));
+      if (c.unless) walk(c.unless, where);
+      const used = c.ratio ? c.ratio : [c.col];
+      for (const u of used) if (!cols.has(u)) errs.push(`${where} uses "${u}", which isn't in columns.`);
+      if (!c.ratio && c.is === undefined && !OPS[c.op]) errs.push(`${where}: operator "${c.op}" isn't one of ${Object.keys(OPS).join(" ")}.`);
+    };
+    (p.gate || []).forEach((c) => walk(c, "gate"));
+    (p.criteria || []).forEach((c) => walk(c, "criteria"));
+    return errs;
+  }
+
+  // Wilson score interval, 95%
+  function wilson(k, n) {
+    if (!n) return null;
+    const z = 1.96, p = k / n, d = 1 + z * z / n;
+    const c = (p + z * z / (2 * n)) / d, h = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d;
+    return [Math.max(0, c - h), Math.min(1, c + h)];
+  }
+  // Smallest audit that would show accuracy >= target, if the rules are right `expected` of the time
+  function auditSize(target, expected, cap) {
+    for (let n = 10; n <= Math.max(10, cap || 5000); n++) {
+      if (wilson(Math.round(expected * n), n)[0] >= target) return n;
+    }
+    return null;
+  }
+
+  const api = { labelRow, describe, validatePack, wilson, auditSize, evalCond };
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.LVK = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
+<script>
+// sepsis-ase.js (inlined for the offline copy)
+// Rule pack: sepsis, after the CDC Adult Sepsis Event (ASE) surveillance definition.
+// Pure data; the engine (engine.js) runs it. Drafted Nov 13, 2026 from published
+// descriptions of the definition (Rhee et al., JAMA 2017 and BMJ Qual Saf 2019; CDC ASE
+// toolkit). DRAFT until a clinician signs it off (fill in "signoff").
+(function (root) {
+  const pack = {
+    id: "sepsis_ase",
+    name: "Sepsis (CDC Adult Sepsis Event)",
+    version: "2026-11-13",
+    labels: { yes: "Sepsis", no: "Not sepsis" },
+    signoff: null, // { name, role, date } once a clinician has reviewed every rule below
+    source: "CDC Adult Sepsis Event surveillance definition: presumed serious infection (blood culture plus 4 or more qualifying antimicrobial days starting within 2 days of it) plus acute organ dysfunction within 2 days of the blood culture.",
+    caveat: "A surveillance definition built for looking back, not a bedside diagnosis. It needs 4 antibiotic days on purpose, to drop patients whose empiric antibiotics were stopped. Some patients your clinicians would call sepsis won't meet it, and the reverse.",
+    columns: [
+      { name: "encounter_id", desc: "Your own study ID for the encounter. Not an MRN.", required: true },
+      { name: "model_score", desc: "The model's highest score during the encounter (or use model_alert)." },
+      { name: "model_alert", desc: "1 if the model alerted during the encounter, 0 if not." },
+      { name: "blood_culture", desc: "1 if a blood culture was drawn, 0 if not.", required: true, show: true },
+      { name: "qad_count", desc: "Consecutive qualifying antimicrobial days starting within 2 days of the blood culture day.", required: true, show: true },
+      { name: "short_course_ok", desc: "1 if death, hospice, transfer or comfort care came before 4 antimicrobial days were possible.", show: true },
+      { name: "vasopressor_start", desc: "1 if a vasopressor was started within 2 days of the blood culture day.", show: true },
+      { name: "mech_vent_start", desc: "1 if mechanical ventilation was started within 2 days of the blood culture day.", show: true },
+      { name: "lactate_max", desc: "Highest lactate (mmol/L) within 2 days of the blood culture day.", show: true },
+      { name: "creatinine_ratio", desc: "Highest creatinine in the window divided by baseline.", show: true },
+      { name: "esrd", desc: "1 if the patient has end-stage renal disease.", show: true },
+      { name: "bilirubin_max", desc: "Highest total bilirubin (mg/dL) in the window.", show: true },
+      { name: "bilirubin_ratio", desc: "Highest bilirubin divided by baseline.", show: true },
+      { name: "platelet_min", desc: "Lowest platelet count (x10^3/uL) in the window.", show: true },
+      { name: "platelet_baseline", desc: "Baseline platelet count (x10^3/uL).", show: true },
+      { name: "age_group", desc: "For per-group numbers, e.g. 18-44, 45-64, 65+.", group: true },
+      { name: "sex", desc: "For per-group numbers.", group: true },
+      { name: "race_ethnicity", desc: "For per-group numbers.", group: true },
+      { name: "language", desc: "For per-group numbers.", group: true },
+      { name: "payer", desc: "For per-group numbers.", group: true },
+    ],
+    // Every gate condition must hold, or the answer is "no".
+    gate: [
+      { col: "blood_culture", is: true, label: "blood culture drawn", failText: "No blood culture drawn" },
+      { label: "presumed serious infection", failText: "Fewer than 4 qualifying antimicrobial days",
+        any: [
+          { col: "qad_count", op: ">=", value: 4 },
+          { all: [ { col: "qad_count", op: ">=", value: 1 }, { col: "short_course_ok", is: true } ] },
+        ] },
+    ],
+    // Any one criterion is enough for "yes" (acute organ dysfunction).
+    criteria: [
+      { col: "vasopressor_start", is: true, label: "vasopressor started" },
+      { col: "mech_vent_start", is: true, label: "mechanical ventilation started" },
+      { col: "lactate_max", op: ">=", value: 2.0, near: 0.1 },
+      { col: "creatinine_ratio", op: ">=", value: 2.0, near: 0.1, unless: { col: "esrd", is: true } },
+      { label: "bilirubin at least 2.0 and doubled", all: [
+        { col: "bilirubin_max", op: ">=", value: 2.0, near: 0.1 },
+        { col: "bilirubin_ratio", op: ">=", value: 2.0, near: 0.1 } ] },
+      { label: "platelets under 100 and halved from a baseline of at least 100", all: [
+        { col: "platelet_baseline", op: ">=", value: 100 },
+        { col: "platelet_min", op: "<", value: 100, near: 0.1 },
+        { ratio: ["platelet_min", "platelet_baseline"], op: "<=", value: 0.5, near: 0.1 } ] },
+    ],
+    maxBlankCriteria: 3, // 4 or more blank organ-dysfunction criteria with no hit: a person decides
+    noCriteriaText: "No organ dysfunction criterion met",
+  };
+  if (typeof module !== "undefined" && module.exports) module.exports = pack;
+  else { root.RULE_PACKS = root.RULE_PACKS || {}; root.RULE_PACKS[pack.id] = pack; }
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
+<script>
+// sample-sepsis.js (inlined for the offline copy)
+// Made-up encounters for trying the kit. No real patients. Generated by scripts/make-sample-sepsis.py
+window.SAMPLE_SEPSIS_CSV = "encounter_id,model_score,blood_culture,qad_count,short_course_ok,vasopressor_start,mech_vent_start,lactate_max,creatinine_ratio,esrd,bilirubin_max,bilirubin_ratio,platelet_min,platelet_baseline,age_group,sex,race_ethnicity,language,payer\nE0001,0.14,0,0,0,0,0,1.2,0.87,0,0.9,1.22,147,236,18-44,F,Hispanic,Spanish,Medicaid\nE0002,0.1,0,0,0,0,0,1.5,1.14,0,0.7,1.31,174,365,65+,M,Other,Other,Uninsured\nE0003,0.12,1,3,0,0,0,0.7,1.11,0,0.7,1.13,213,374,18-44,F,White,Spanish,Uninsured\nE0004,0.13,0,0,0,0,0,1.7,1.16,0,1.0,0.94,223,183,18-44,F,Hispanic,English,Uninsured\nE0005,0.07,0,0,0,0,0,1.1,1.3,0,0.4,0.9,144,362,65+,F,Other,English,Medicare\nE0006,0.01,0,0,0,0,0,0.8,1.14,0,0.4,1.18,218,160,65+,F,Hispanic,Spanish,Medicare\nE0007,0.12,0,0,0,0,0,1.3,1.02,0,1.2,0.91,274,249,65+,F,Asian,Spanish,Commercial\nE0008,0.39,0,0,0,0,0,0.7,1.22,0,0.9,0.85,240,221,65+,F,Black,Spanish,Medicare\nE0009,0.05,0,0,0,0,0,1.7,1.25,0,0.8,0.96,364,293,18-44,M,Black,Other,Medicare\nE0010,0.01,0,0,0,0,0,0.7,1.19,0,1.1,1.01,229,189,45-64,F,Other,Spanish,Uninsured\nE0011,0.52,1,5,0,0,0,2.8,0.89,0,0.7,2.27,163,330,18-44,F,Asian,Other,Uninsured\nE0012,0.6,1,2,0,0,0,0.9,1.14,0,1.3,1.41,281,305,65+,F,Other,English,Medicare\nE0013,0.15,1,0,0,0,0,1.3,0.89,0,0.4,1.26,225,315,45-64,M,White,English,Medicare\nE0014,0.47,1,7,0,0,0,1.0,1.42,0,0.3,0.81,288,244,18-44,M,Other,Other,Commercial\nE0015,0.16,0,0,0,0,0,0.7,0.85,0,0.7,1.44,181,193,65+,F,White,English,Medicare\nE0016,0.11,0,0,0,0,0,0.8,1.34,0,1.2,0.96,376,235,65+,F,White,Spanish,Commercial\nE0017,0.27,1,6,0,0,0,1.3,2.4,,1.0,0.97,340,232,65+,F,Asian,English,Medicare\nE0018,0.01,1,3,0,0,0,0.9,0.82,0,1.3,0.82,275,364,45-64,M,Asian,Spanish,Medicare\nE0019,0.26,1,4,0,0,0,1.2,1.9,0,1.1,1.01,354,371,65+,F,Black,Spanish,Medicaid\nE0020,0.01,0,0,0,0,0,1.6,1.16,1,0.7,1.02,367,196,18-44,M,White,English,Medicare\nE0021,0.06,0,0,0,0,0,1.3,0.82,0,0.9,1.44,274,347,45-64,M,Asian,Other,Medicare\nE0022,0.4,1,2,0,0,0,1.6,1.2,0,0.9,0.98,234,283,45-64,M,White,Other,Uninsured\nE0023,0.26,0,0,0,0,0,0.9,1.34,0,0.9,1.28,318,257,18-44,F,Other,English,Medicare\nE0024,0.21,0,0,0,0,0,1.6,1.02,0,0.7,1.17,314,227,18-44,M,Black,English,Uninsured\nE0025,0.17,1,1,0,0,0,0.8,1.3,0,0.3,1.48,355,201,18-44,F,Other,Spanish,Medicaid\nE0026,0.19,0,0,0,0,0,1.1,0.98,0,0.9,1.5,165,298,45-64,F,Black,Other,Medicaid\nE0027,0.14,0,0,0,0,0,1.0,1.29,0,0.3,1.47,287,179,18-44,M,Hispanic,Other,Medicaid\nE0028,0.13,1,0,0,0,0,1.0,1.16,0,0.5,0.84,268,242,18-44,M,Other,Spanish,Uninsured\nE0029,0.17,0,0,0,0,0,1.2,1.05,0,0.3,1.03,247,258,45-64,M,Other,Other,Commercial\nE0030,0.54,1,7,0,0,0,2.5,0.99,0,0.6,1.34,314,257,65+,F,Black,Other,Medicaid\nE0031,0.17,0,0,0,0,0,1.3,1.01,0,0.8,0.87,187,195,65+,F,White,Other,Medicaid\nE0032,0.19,0,0,0,0,0,1.6,1.2,0,1.0,1.2,203,296,45-64,F,White,Spanish,Medicaid\nE0033,0.29,1,1,0,0,0,1.5,0.88,0,1.2,1.28,261,242,18-44,M,Hispanic,Other,Uninsured\nE0034,0.19,0,0,0,0,0,1.7,1.27,0,1.4,1.42,349,202,45-64,F,Hispanic,Other,Commercial\nE0035,0.19,0,0,0,0,0,1.0,1.15,0,0.7,1.27,182,236,65+,M,Black,English,Medicare\nE0036,0.16,1,2,,0,0,1.4,0.92,0,1.0,1.03,174,187,18-44,F,Asian,Other,Medicaid\nE0037,0.01,0,0,0,0,0,1.2,1.22,0,1.0,1.48,157,266,65+,F,Asian,English,Medicaid\nE0038,0.09,0,0,0,0,0,1.7,0.9,0,1.4,1.13,267,376,45-64,F,White,Spanish,Commercial\nE0039,0.14,1,2,0,0,0,0.7,0.99,0,0.4,1.27,225,315,65+,M,Other,Other,Medicaid\nE0040,0.2,0,0,0,0,0,1.6,1.46,0,0.9,0.92,305,244,65+,M,Asian,Spanish,Commercial\nE0041,0.37,0,0,0,0,0,0.6,1.47,0,0.4,1.34,248,230,45-64,F,Other,Other,Medicare\nE0042,0.12,1,0,1,0,0,0.6,1.03,1,0.5,1.48,150,315,18-44,F,Hispanic,Other,Commercial\nE0043,0.57,1,9,0,0,0,0.6,1.37,0,1.2,1.33,241,330,65+,M,Asian,Other,Uninsured\nE0044,0.49,1,9,0,0,0,1.4,2.2,0,1.1,1.09,374,271,18-44,F,Asian,English,Medicaid\nE0045,0.14,1,2,0,0,0,0.6,1.09,0,0.9,1.16,170,253,18-44,F,Other,Spanish,Uninsured\nE0046,0.01,0,0,0,0,0,0.9,1.35,0,0.8,1.42,311,280,45-64,F,Asian,Spanish,Medicaid\nE0047,0.01,1,0,0,0,0,1.1,0.8,0,1.1,1.38,361,291,45-64,F,Asian,Other,Commercial\nE0048,0.01,0,0,0,0,0,0.8,0.9,0,0.9,0.82,205,288,18-44,F,Asian,English,Medicaid\nE0049,0.08,0,0,0,0,0,0.9,1.32,0,0.6,0.94,291,317,45-64,M,Asian,English,Medicare\nE0050,0.45,0,0,0,0,0,0.9,1.35,0,0.5,1.28,190,324,65+,F,Black,Other,Medicare\nE0051,0.57,1,7,0,0,0,1.3,3.0,0,2.7,1.34,287,260,18-44,M,Hispanic,English,Medicare\nE0052,0.21,1,1,0,0,0,1.0,1.49,0,1.2,1.24,198,258,45-64,F,Black,Other,Medicaid\nE0053,0.26,0,0,0,0,0,1.6,1.4,0,1.1,1.31,156,257,18-44,M,Other,Spanish,Commercial\nE0054,0.03,1,2,0,0,0,0.9,1.04,0,0.9,0.83,166,276,45-64,M,Other,English,Medicare\nE0055,0.13,1,2,0,0,0,1.3,1.31,0,0.7,1.48,242,359,65+,M,Asian,Spanish,Medicaid\nE0056,0.18,0,0,0,0,0,1.0,1.48,0,0.4,0.97,309,308,65+,F,Other,Spanish,Uninsured\nE0057,0.59,1,4,0,0,0,0.7,2.58,0,0.7,3.11,213,260,45-64,M,White,Spanish,Medicaid\nE0058,0.01,0,0,0,0,0,1.4,1.36,0,0.4,1.06,265,348,18-44,F,Black,Other,Medicaid\nE0059,0.61,1,4,0,0,0,4.6,1.03,0,1.4,1.16,64,245,18-44,F,White,Other,Uninsured\nE0060,0.01,0,0,0,0,0,1.3,1.02,0,0.5,1.46,184,211,65+,F,Asian,English,Commercial\nE0061,0.57,1,3,1,1,1,5.1,2.45,0,1.1,1.42,297,331,45-64,F,Black,English,Commercial\nE0062,0.26,1,2,0,0,0,0.9,1.01,0,0.7,0.92,377,330,18-44,F,Other,Other,Medicare\nE0063,0.13,1,,0,0,0,1.6,1.29,0,0.7,1.31,301,249,45-64,M,Asian,Spanish,Medicaid\nE0064,0.33,0,0,0,0,0,0.9,0.82,0,0.4,1.09,276,304,18-44,M,Hispanic,Spanish,Uninsured\nE0065,0.33,0,0,0,0,0,1.1,0.94,0,1.2,1.2,148,329,45-64,M,Other,English,Uninsured\nE0066,0.2,0,0,0,0,0,1.4,1.28,0,0.4,1.05,308,347,18-44,M,White,Other,Commercial\nE0067,0.21,0,0,0,0,0,0.7,1.44,0,1.3,1.4,280,259,65+,F,Asian,English,Medicare\nE0068,0.01,0,0,0,0,0,0.8,0.82,0,0.5,0.98,356,361,65+,M,White,English,Uninsured\nE0069,0.44,0,0,0,0,0,1.5,1.03,0,0.7,1.19,289,268,65+,M,Other,English,Uninsured\nE0070,0.59,0,0,0,0,0,0.7,1.29,0,1.2,1.34,205,240,18-44,M,Hispanic,Other,Medicare\nE0071,0.68,1,6,0,0,0,3.2,1.11,0,1.2,1.13,232,300,18-44,M,Other,Spanish,Commercial\nE0072,0.36,0,0,0,0,0,1.3,0.89,0,0.4,1.44,197,166,18-44,F,Black,English,Uninsured\nE0073,0.19,1,2,0,0,0,0.7,1.26,0,0.3,1.47,380,296,45-64,M,Hispanic,English,Medicaid\nE0074,0.01,0,0,0,0,0,0.7,0.9,0,0.8,0.89,329,239,45-64,F,Black,Other,Medicaid\nE0075,0.32,0,0,0,0,0,1.7,1.31,0,0.5,1.0,278,363,18-44,M,Other,English,Medicare\nE0076,0.5,1,9,0,1,0,5.7,1.25,0,1.1,1.15,179,300,18-44,F,White,Other,Medicaid\nE0077,0.09,1,0,0,0,0,1.5,0.91,0,1.0,0.91,146,363,45-64,M,Other,English,Medicare\nE0078,0.55,1,1,1,0,0,2.7,0.99,0,1.3,1.36,145,177,65+,F,Hispanic,Spanish,Commercial\nE0079,0.58,1,5,0,1,0,2.6,2.23,0,1.1,3.02,315,297,18-44,M,Other,Spanish,Commercial\nE0080,0.01,0,0,0,0,0,1.1,1.18,0,0.4,0.99,171,278,45-64,F,Asian,Other,Uninsured\nE0081,0.16,1,1,0,0,0,0.7,1.01,0,0.5,1.01,345,279,45-64,M,Black,Other,Uninsured\nE0082,0.11,0,0,0,0,0,1.1,0.8,0,0.5,1.36,241,310,45-64,F,Asian,English,Medicare\nE0083,0.24,0,0,0,0,0,0.8,0.81,0,0.8,0.9,380,354,45-64,M,Black,Spanish,Medicaid\nE0084,0.33,0,0,0,0,0,1.0,0.98,0,1.1,0.92,357,373,65+,F,Other,Other,Medicaid\nE0085,0.31,0,0,0,0,0,1.1,1.16,0,0.9,1.19,333,173,45-64,F,Hispanic,Other,Uninsured\nE0086,0.27,0,0,0,0,0,1.1,1.39,0,1.2,0.92,223,369,45-64,M,Asian,Other,Uninsured\nE0087,0.16,1,0,0,0,0,1.7,1.34,0,0.6,1.12,168,203,18-44,F,Other,Spanish,Medicare\nE0088,0.17,1,1,0,0,0,0.8,0.82,0,0.3,1.24,267,277,18-44,F,Other,Spanish,Uninsured\nE0089,0.22,1,1,0,0,0,0.9,0.84,0,0.3,1.24,186,334,18-44,M,Black,Other,Uninsured\nE0090,0.07,0,0,0,0,0,0.9,1.15,0,1.1,1.26,321,287,45-64,M,Asian,English,Medicaid\nE0091,0.01,1,3,0,0,0,0.8,1.0,0,0.8,1.01,175,216,45-64,M,White,English,Commercial\nE0092,0.01,0,0,0,0,0,1.0,1.5,0,1.3,1.02,206,214,18-44,F,Asian,Spanish,Uninsured\nE0093,0.01,0,0,0,0,0,1.4,1.16,0,0.6,1.21,349,337,65+,M,Hispanic,English,Commercial\nE0094,0.02,0,0,0,0,0,1.3,1.41,0,1.3,1.17,361,340,18-44,F,Other,Spanish,Medicare\nE0095,0.1,1,0,0,0,0,1.3,1.26,0,1.1,1.35,209,350,18-44,M,White,Other,Commercial\nE0096,0.03,1,2,0,0,0,1.2,1.07,0,0.9,1.18,150,251,18-44,M,Hispanic,Other,Commercial\nE0097,0.23,0,0,0,0,0,1.4,1.14,0,0.8,1.18,330,368,65+,F,Other,Spanish,Medicaid\nE0098,0.22,1,0,0,0,0,0.9,0.83,0,0.7,0.94,253,355,45-64,F,Hispanic,English,Uninsured\nE0099,0.01,1,2,0,0,0,1.5,1.28,0,1.0,1.39,315,251,65+,M,Black,Spanish,Medicaid\nE0100,0.28,1,2,0,0,0,0.8,1.39,0,1.2,1.18,340,318,65+,F,Black,English,Commercial\nE0101,0.42,1,3,0,0,0,0.7,1.48,0,1.0,1.16,309,218,45-64,F,Other,Other,Uninsured\nE0102,0.02,1,,0,0,0,1.3,1.16,0,1.0,1.42,322,212,65+,F,Black,Spanish,Uninsured\nE0103,0.28,0,0,0,0,0,1.6,1.45,0,0.6,1.33,337,351,65+,F,Asian,English,Commercial\nE0104,0.13,1,2,0,0,0,1.4,1.12,0,1.2,1.06,323,379,65+,M,Hispanic,Other,Medicare\nE0105,0.01,0,0,0,0,0,1.5,0.97,0,1.1,1.03,228,246,18-44,M,Hispanic,Spanish,Commercial\nE0106,0.01,0,0,0,0,0,1.1,1.41,0,1.2,0.86,316,241,65+,M,Asian,English,Medicare\nE0107,0.12,1,2,0,0,0,1.4,1.42,0,0.8,1.05,358,366,18-44,F,Other,English,Uninsured\nE0108,0.01,1,0,0,0,0,1.0,1.44,0,0.6,1.29,365,221,45-64,F,Asian,Spanish,Medicare\nE0109,0.01,1,0,0,0,0,0.9,1.18,0,0.5,1.37,244,181,65+,M,Hispanic,Other,Medicare\nE0110,0.66,1,9,0,0,0,3.7,1.11,0,1.3,1.1,310,257,18-44,M,Black,English,Medicaid\nE0111,0.01,0,0,0,0,0,0.8,1.34,0,0.4,1.36,158,176,45-64,F,Hispanic,English,Medicaid\nE0112,0.01,0,0,0,0,0,1.1,1.34,0,0.7,0.99,144,177,45-64,F,Other,English,Medicaid\nE0113,0.17,1,0,0,0,0,1.3,0.89,0,0.6,1.34,334,288,18-44,M,Asian,Other,Medicaid\nE0114,0.05,1,0,0,0,0,1.1,1.5,0,1.0,1.2,221,271,65+,M,Asian,English,Commercial\nE0115,0.36,1,9,0,1,0,3.3,0.93,0,1.1,0.91,361,224,45-64,M,Hispanic,Spanish,Medicaid\nE0116,0.66,1,4,0,0,0,1.6,1.5,0,0.3,1.08,358,203,45-64,F,Other,Other,Medicare\nE0117,0.48,1,1,1,1,0,1.7,1.39,0,4.4,0.88,78,215,45-64,M,White,Spanish,Medicare\nE0118,0.01,1,0,0,0,0,1.2,0.92,0,1.1,1.42,216,174,65+,F,Asian,English,Commercial\nE0119,0.17,1,3,0,0,0,1.5,1.19,0,1.2,0.84,246,235,45-64,F,Hispanic,English,Commercial\nE0120,0.24,1,2,0,0,0,1.4,0.88,0,1.2,1.3,309,338,18-44,M,White,English,Commercial\nE0121,0.1,1,2,0,0,0,1.5,1.47,0,0.3,1.02,244,258,65+,F,Hispanic,English,Medicaid\nE0122,0.14,0,0,0,0,0,0.8,1.48,0,0.8,1.4,169,179,18-44,M,Other,English,Commercial\nE0123,0.1,0,0,0,0,0,1.2,1.23,0,1.3,1.45,333,267,45-64,M,Other,English,Uninsured\nE0124,0.01,0,0,0,0,0,1.1,1.07,0,0.9,1.38,253,337,45-64,M,White,Spanish,Medicare\nE0125,0.9,1,3,1,0,0,4.0,1.39,0,3.9,1.25,296,310,18-44,F,Hispanic,Spanish,Commercial\nE0126,0.01,0,0,0,0,0,1.1,1.33,0,1.0,1.42,288,280,45-64,F,Asian,Spanish,Medicare\nE0127,0.25,0,0,0,0,0,0.6,1.28,0,0.4,1.02,239,231,65+,M,Black,Other,Commercial\nE0128,0.24,1,1,0,0,0,0.6,0.92,0,0.4,0.97,318,246,18-44,F,Hispanic,Spanish,Medicaid\nE0129,0.2,0,0,0,0,0,0.8,1.14,0,1.2,1.38,258,320,65+,M,White,Spanish,Medicaid\nE0130,0.01,1,5,0,0,0,2.1,1.0,0,0.6,1.15,267,224,65+,F,Black,Spanish,Uninsured\nE0131,0.53,0,0,0,0,0,1.5,0.98,0,0.5,1.19,259,271,65+,F,Black,Spanish,Commercial\nE0132,0.01,0,0,0,0,0,0.6,1.12,0,0.3,0.81,340,372,18-44,M,Hispanic,English,Commercial\nE0133,0.01,0,0,0,0,0,0.7,1.24,0,0.8,0.91,261,198,45-64,M,Other,English,Medicaid\nE0134,0.01,0,0,0,0,0,0.9,1.44,0,0.6,0.8,272,330,65+,F,Black,Other,Medicare\nE0135,0.06,1,2,0,0,0,1.1,1.3,0,0.4,0.93,278,269,45-64,F,Black,Spanish,Medicare\nE0136,0.9,1,5,0,0,0,3.2,1.08,0,0.5,0.86,158,219,45-64,F,Other,Other,Medicaid\nE0137,0.09,1,1,0,0,0,1.0,0.82,0,0.4,1.07,151,185,45-64,F,Asian,Spanish,Commercial\nE0138,0.33,0,0,0,0,0,0.8,0.93,0,0.6,1.29,232,346,18-44,M,Asian,Other,Commercial\nE0139,0.01,1,5,0,0,0,2.1,1.32,0,0.8,1.07,255,162,65+,F,White,Other,Uninsured\nE0140,0.19,0,0,0,0,0,0.7,1.13,0,0.9,1.35,209,283,45-64,F,Asian,English,Commercial\nE0141,0.3,0,0,0,0,0,1.5,1.45,1,0.4,0.88,330,246,18-44,M,Asian,Spanish,Uninsured\nE0142,0.37,1,0,0,0,0,1.1,1.17,0,0.7,1.48,230,344,65+,F,Hispanic,Spanish,Commercial\nE0143,0.8,1,2,1,0,0,0.8,1.27,0,0.7,1.34,240,173,45-64,F,White,Spanish,Uninsured\nE0144,0.21,1,1,0,0,0,1.1,1.2,0,0.6,1.47,214,207,45-64,M,Asian,English,Commercial\nE0145,0.24,0,0,0,0,0,1.0,0.97,0,1.0,1.34,237,211,65+,F,Black,Spanish,Medicare\nE0146,0.68,1,6,0,1,0,1.6,1.02,0,0.8,1.01,151,221,18-44,F,Black,Other,Uninsured\nE0147,0.64,1,5,0,0,0,2.5,1.13,0,1.0,2.75,313,164,18-44,M,Hispanic,English,Medicaid\nE0148,0.29,1,3,0,0,0,0.8,1.25,1,0.4,1.38,210,208,65+,F,Other,English,Medicare\nE0149,0.07,1,2,0,0,0,1.7,1.06,0,0.9,1.4,166,367,18-44,M,Other,English,Medicaid\nE0150,0.09,0,0,0,0,0,0.8,0.97,0,1.0,1.19,218,207,18-44,F,Asian,Other,Commercial\nE0151,0.46,1,4,0,1,1,3.8,2.45,0,0.3,1.09,353,329,18-44,M,Asian,Spanish,Commercial\nE0152,0.41,1,4,0,1,0,2.8,3.02,0,1.0,1.15,378,176,45-64,M,White,Other,Commercial\nE0153,0.04,1,1,0,0,0,1.3,1.06,0,1.0,0.93,190,283,45-64,F,White,English,Commercial\nE0154,0.6,1,5,0,0,0,0.7,1.35,0,1.2,3.76,228,312,65+,F,Other,Spanish,Commercial\nE0155,0.01,1,1,0,0,0,1.1,1.25,0,0.6,0.84,372,193,65+,F,Hispanic,Spanish,Uninsured\nE0156,0.5,1,9,0,0,0,1.1,0.94,0,1.1,1.1,312,192,45-64,M,Black,English,Commercial\nE0157,0.01,1,3,0,0,0,0.8,1.11,0,1.3,1.37,152,271,18-44,F,Asian,Other,Medicare\nE0158,0.01,0,0,0,0,0,0.9,1.13,0,0.3,1.38,213,324,45-64,F,Other,English,Medicaid\nE0159,0.01,0,0,0,0,0,0.6,0.91,0,0.3,0.9,280,217,65+,M,White,Spanish,Uninsured\nE0160,0.03,1,1,0,0,0,1.3,1.48,0,0.5,1.03,329,276,18-44,M,Other,English,Medicaid\nE0161,0.07,1,1,0,0,0,1.4,1.43,0,1.0,1.29,233,317,45-64,F,Asian,Other,Uninsured\nE0162,0.24,0,0,0,0,0,0.8,1.46,0,1.1,0.86,286,173,45-64,M,Asian,English,Uninsured\nE0163,0.09,1,6,0,0,0,1.4,2.4,,1.3,1.04,312,376,45-64,M,Asian,Other,Medicaid\nE0164,0.01,1,1,0,0,0,1.3,1.16,0,0.9,1.18,340,295,65+,M,Black,Spanish,Uninsured\nE0165,0.08,1,2,0,0,0,1.3,1.11,0,1.2,1.15,242,250,18-44,F,Other,Spanish,Commercial\nE0166,0.35,0,0,0,0,0,0.8,0.91,0,0.9,1.17,294,379,18-44,F,Black,Other,Commercial\nE0167,0.13,1,2,0,0,0,1.2,1.2,0,0.9,0.95,311,310,65+,F,White,English,Uninsured\nE0168,0.18,0,0,0,0,0,0.7,1.3,0,0.3,1.22,263,247,18-44,M,Black,Spanish,Medicaid\nE0169,0.03,1,3,0,0,0,1.4,1.43,0,0.3,0.84,175,291,45-64,F,Hispanic,Spanish,Commercial\nE0170,0.01,1,3,0,0,0,1.3,1.46,0,0.5,1.13,334,283,45-64,M,White,Other,Uninsured\nE0171,0.25,1,2,0,0,0,1.7,0.91,0,0.6,1.18,176,325,65+,F,White,Spanish,Medicaid\nE0172,0.8,1,7,0,1,0,0.7,2.32,0,1.3,0.96,172,259,45-64,M,Asian,English,Medicaid\nE0173,0.24,1,5,0,0,0,1.5,0.95,0,1.3,1.22,249,290,45-64,F,Other,English,Medicaid\nE0174,0.18,1,5,0,0,0,0.7,1.03,0,0.6,1.46,301,181,18-44,F,Black,Spanish,Medicaid\nE0175,0.23,0,0,0,0,0,0.8,1.09,0,1.4,1.44,325,214,65+,F,Other,Other,Medicare\nE0176,0.22,0,0,0,0,0,1.1,1.41,1,0.8,0.94,324,229,45-64,M,White,Other,Medicaid\nE0177,0.01,0,0,0,0,0,1.4,0.94,0,0.9,1.31,350,361,65+,M,White,Spanish,Uninsured\nE0178,0.04,1,0,1,0,0,1.0,0.95,0,0.7,1.26,373,241,65+,M,Black,English,Medicaid\nE0179,0.35,1,0,0,0,0,1.2,1.43,0,0.3,1.44,181,265,18-44,M,Asian,English,Medicare\nE0180,0.25,1,,0,0,0,1.0,1.27,0,1.1,1.45,221,270,65+,M,Black,English,Uninsured\nE0181,0.01,0,0,0,0,0,1.4,1.26,0,0.7,1.45,254,302,65+,M,Hispanic,Other,Medicaid\nE0182,0.34,0,0,0,0,0,0.8,1.03,0,1.3,1.13,263,256,45-64,M,White,Spanish,Medicaid\nE0183,0.02,1,0,0,0,0,1.3,1.34,0,0.9,1.1,163,309,45-64,M,Asian,Other,Uninsured\nE0184,0.01,0,0,0,0,0,1.1,1.23,0,1.3,1.05,272,336,45-64,F,Black,English,Medicare\nE0185,0.28,0,0,0,0,0,1.4,1.35,0,1.0,0.91,370,348,18-44,M,Other,Other,Commercial\nE0186,0.57,1,4,0,0,1,2.2,3.12,0,0.9,0.91,320,232,45-64,F,Black,Other,Medicare\nE0187,0.1,1,1,0,0,0,0.7,1.39,0,1.3,1.21,243,322,18-44,M,White,English,Medicare\nE0188,0.27,1,4,0,0,0,1.2,1.9,0,1.3,1.47,275,190,18-44,F,Other,Other,Medicaid\nE0189,0.29,0,0,0,0,0,1.3,1.32,0,1.3,1.28,146,258,18-44,M,Hispanic,English,Medicaid\nE0190,0.81,1,5,0,0,0,3.1,1.05,0,1.0,1.29,331,334,65+,M,Black,English,Medicare\nE0191,0.34,0,0,0,0,0,1.3,0.93,0,0.6,1.45,203,309,18-44,M,Black,Spanish,Medicare\nE0192,0.01,0,0,0,0,0,1.4,1.5,0,0.9,1.0,196,374,45-64,F,White,Other,Medicaid\nE0193,0.09,0,0,0,0,0,0.8,1.45,0,0.5,1.47,362,346,65+,M,Black,Other,Uninsured\nE0194,0.01,1,2,0,0,0,1.0,0.84,0,1.2,1.4,293,196,45-64,M,Other,Spanish,Medicare\nE0195,0.07,1,0,0,0,0,0.9,1.45,0,0.3,1.01,328,280,18-44,M,Black,Spanish,Medicare\nE0196,0.2,1,3,0,0,0,1.0,1.06,0,0.7,1.38,249,216,18-44,M,White,Other,Commercial\nE0197,0.18,0,0,0,0,0,1.6,1.07,0,1.0,1.37,225,319,18-44,F,Hispanic,English,Commercial\nE0198,0.27,1,3,0,0,0,1.4,0.94,0,0.9,1.4,305,190,18-44,F,Black,English,Uninsured\nE0199,0.2,1,3,0,0,0,0.8,1.4,0,1.2,1.38,219,337,45-64,M,Asian,Other,Uninsured\nE0200,0.07,0,0,0,0,0,0.9,1.06,0,1.1,0.85,203,232,18-44,F,White,Other,Uninsured\nE0201,0.53,0,0,0,0,0,1.4,0.82,0,1.2,0.92,311,351,18-44,M,Other,Other,Medicaid\nE0202,0.67,1,6,0,1,0,1.4,1.0,0,0.6,1.27,163,233,45-64,F,White,Spanish,Commercial\nE0203,0.25,1,0,0,0,0,0.9,1.48,0,0.5,0.91,341,215,18-44,F,Hispanic,English,Commercial\nE0204,0.01,1,0,0,0,0,1.7,0.93,0,1.2,1.2,178,197,45-64,M,White,English,Medicaid\nE0205,0.01,1,0,0,0,0,1.0,1.02,0,1.3,1.15,375,196,18-44,F,Other,English,Medicare\nE0206,0.24,0,0,0,0,0,0.8,0.82,0,0.7,0.97,172,373,18-44,M,White,Other,Uninsured\nE0207,0.14,0,0,0,0,0,1.5,1.12,0,1.1,1.22,278,379,18-44,F,White,Other,Uninsured\nE0208,0.25,1,4,0,0,0,1.2,1.9,0,0.8,0.88,206,197,45-64,F,Black,English,Medicaid\nE0209,0.05,0,0,0,0,0,1.1,1.07,0,0.9,1.12,315,274,18-44,F,Asian,Other,Medicaid\nE0210,0.54,1,4,0,0,0,0.6,1.07,0,0.9,1.38,321,293,65+,F,Other,Other,Uninsured\nE0211,0.62,0,0,0,0,0,1.3,0.8,0,0.5,0.82,183,216,45-64,F,White,English,Commercial\nE0212,0.68,1,7,0,0,0,5.8,0.99,0,2.2,0.89,94,199,45-64,M,Other,Spanish,Medicaid\nE0213,0.03,0,0,0,0,0,1.4,1.28,0,0.7,1.37,342,218,18-44,F,Other,Spanish,Medicaid\nE0214,0.06,0,0,0,0,0,0.6,0.91,0,0.7,1.29,369,172,45-64,F,Asian,English,Uninsured\nE0215,0.26,1,1,0,0,0,1.1,1.17,0,1.2,1.35,283,190,18-44,M,Black,English,Commercial\nE0216,0.17,1,1,0,0,0,0.7,1.47,0,0.7,1.49,367,283,18-44,M,Other,English,Medicaid\nE0217,0.1,0,0,0,0,0,0.6,0.85,0,0.7,1.3,197,195,65+,F,White,English,Uninsured\nE0218,0.07,0,0,0,0,0,0.7,1.34,0,0.5,1.33,276,340,18-44,M,White,Other,Medicaid\nE0219,0.21,1,0,0,0,0,1.2,1.0,0,0.7,1.26,306,256,18-44,F,Other,Other,Medicaid\nE0220,0.26,0,0,0,0,0,1.4,0.89,1,1.1,0.9,310,325,45-64,M,Asian,English,Uninsured\nE0221,0.16,1,1,0,0,0,1.4,1.07,0,1.2,1.3,353,318,45-64,M,Black,Spanish,Commercial\nE0222,0.31,0,0,0,0,0,1.0,1.21,1,0.9,1.2,379,199,18-44,M,White,Spanish,Medicaid\nE0223,0.04,1,,0,0,0,1.0,1.21,0,1.4,1.42,184,248,45-64,F,Hispanic,English,Uninsured\nE0224,0.26,1,3,0,0,0,0.6,1.31,0,0.9,0.96,173,352,18-44,F,Hispanic,English,Medicare\nE0225,0.01,1,6,0,0,0,1.2,2.4,,0.5,1.44,247,161,65+,F,Hispanic,Spanish,Medicare\nE0226,0.24,1,3,0,0,0,0.8,1.31,0,1.2,1.03,147,332,65+,M,Other,Other,Medicaid\nE0227,0.67,1,9,0,1,0,4.4,0.89,0,0.8,0.91,363,355,65+,F,Black,Other,Uninsured\nE0228,0.46,1,3,1,1,0,1.7,2.24,0,1.1,1.26,51,210,65+,F,Asian,Other,Medicare\nE0229,0.01,1,1,0,0,0,0.7,1.29,0,1.1,1.19,232,343,65+,F,Black,Spanish,Commercial\nE0230,0.06,0,0,0,0,0,1.7,1.1,0,1.3,1.19,151,334,18-44,M,White,Other,Medicaid\nE0231,0.12,1,6,0,0,0,1.6,2.4,,0.6,1.36,174,221,18-44,F,Hispanic,Other,Medicare\nE0232,0.11,0,0,0,0,0,1.1,1.07,0,1.3,1.4,216,313,18-44,F,Asian,Spanish,Medicare\nE0233,0.05,0,0,0,0,0,1.6,0.86,0,0.3,1.09,265,376,65+,M,Hispanic,English,Medicare\nE0234,0.18,0,0,0,0,0,1.0,1.1,0,1.2,0.83,248,323,65+,F,Hispanic,Spanish,Medicare\nE0235,0.8,1,6,0,0,0,1.7,1.38,0,1.4,1.38,56,315,18-44,F,White,Spanish,Commercial\nE0236,0.22,0,0,0,0,0,0.9,1.32,0,1.2,1.16,276,193,45-64,M,Black,English,Medicaid\nE0237,0.04,1,3,0,0,0,0.9,1.19,0,0.5,1.33,224,280,45-64,F,Black,Spanish,Uninsured\nE0238,0.71,1,3,1,0,0,3.4,0.95,0,0.6,1.28,95,353,18-44,F,Other,Other,Uninsured\nE0239,0.29,1,1,0,0,0,1.1,1.41,0,1.3,1.12,275,209,65+,F,Black,Spanish,Commercial\nE0240,0.06,1,0,0,0,0,1.2,1.16,0,0.7,1.42,249,274,65+,M,Other,Spanish,Commercial\nE0241,0.04,0,0,0,0,0,1.6,0.94,0,0.7,1.11,289,312,18-44,F,Hispanic,Spanish,Medicare\nE0242,0.04,1,0,0,0,0,0.7,1.08,0,0.6,1.49,202,378,65+,M,Other,Spanish,Commercial\nE0243,0.01,0,0,0,0,0,1.1,1.06,0,0.3,1.01,258,320,45-64,F,Black,Spanish,Uninsured\nE0244,0.16,1,0,0,0,0,1.4,1.15,0,0.8,0.96,145,274,65+,F,Hispanic,Spanish,Medicare\nE0245,0.53,1,9,0,0,0,0.7,1.09,0,3.6,1.0,159,344,18-44,M,Asian,Other,Medicare\nE0246,0.22,0,0,0,0,0,1.0,1.11,0,1.1,1.19,296,273,18-44,F,Hispanic,Spanish,Uninsured\nE0247,0.25,0,0,0,0,0,0.7,1.07,0,1.1,1.33,272,291,65+,F,Black,English,Commercial\nE0248,0.28,0,0,0,0,0,1.6,1.16,0,1.2,1.22,219,257,18-44,F,Black,Other,Uninsured\nE0249,0.17,0,0,0,0,0,0.9,1.09,0,1.2,0.83,187,257,65+,F,White,Spanish,Commercial\nE0250,0.34,1,7,0,0,0,4.9,1.12,1,0.8,1.07,75,308,65+,M,White,English,Uninsured\nE0251,0.01,0,0,0,0,0,0.8,1.13,0,0.9,1.15,178,312,45-64,F,Hispanic,Other,Commercial\nE0252,0.18,0,0,0,0,0,1.7,1.21,0,0.5,1.12,379,325,65+,F,Hispanic,Other,Medicare\nE0253,0.76,1,5,0,0,0,1.1,0.83,0,1.4,1.29,306,349,18-44,M,Other,English,Medicare\nE0254,0.3,1,3,0,0,0,1.1,1.04,0,1.4,1.19,189,299,45-64,M,Asian,Spanish,Uninsured\nE0255,0.12,1,1,0,0,0,0.7,1.18,0,0.6,1.03,170,213,65+,F,White,English,Medicaid\nE0256,0.01,0,0,0,0,0,1.5,1.48,0,1.0,1.15,241,350,18-44,F,Asian,English,Uninsured\nE0257,0.01,0,0,0,0,0,1.5,1.02,0,0.8,1.23,308,267,18-44,F,White,Spanish,Commercial\nE0258,0.58,0,0,0,0,0,1.7,1.18,0,0.4,0.89,277,369,65+,M,Asian,English,Commercial\nE0259,0.49,1,9,0,1,1,0.8,3.16,0,0.5,0.98,258,252,45-64,F,Black,Spanish,Medicaid\nE0260,0.04,0,0,0,0,0,1.0,1.2,0,0.4,0.86,194,280,45-64,M,Other,English,Uninsured\nE0261,0.07,1,3,0,0,0,0.7,1.22,0,0.5,1.05,195,169,65+,F,Black,English,Medicaid\nE0262,0.36,0,0,0,0,0,0.8,0.86,0,0.4,0.84,251,323,45-64,F,Hispanic,Spanish,Medicare\nE0263,0.11,0,0,0,0,0,1.6,1.25,0,1.3,1.47,338,178,45-64,F,Other,Spanish,Commercial\nE0264,0.29,0,0,0,0,0,1.7,0.93,0,1.4,1.31,193,288,18-44,F,Asian,English,Medicare\nE0265,0.01,0,0,0,0,0,1.2,0.95,0,0.8,1.48,221,260,65+,F,Asian,Spanish,Medicare\nE0266,0.01,0,0,0,0,0,0.8,0.83,0,0.4,1.05,233,289,65+,F,Asian,Other,Uninsured\nE0267,0.21,1,2,0,0,0,1.6,1.02,1,0.8,1.35,228,353,65+,M,Other,English,Medicaid\nE0268,0.76,1,9,0,0,1,4.7,2.35,0,1.3,1.01,300,218,18-44,M,Black,Other,Medicare\nE0269,0.31,1,1,0,0,0,1.2,1.24,0,0.4,1.44,220,360,18-44,F,Black,Spanish,Medicare\nE0270,0.39,1,7,0,0,0,1.3,1.11,0,0.5,0.83,351,187,65+,F,Hispanic,Other,Medicare\nE0271,0.01,0,0,0,0,0,1.5,1.17,0,0.5,1.02,374,237,18-44,M,Asian,Other,Commercial\nE0272,0.13,0,0,0,0,0,0.6,1.1,0,0.5,1.04,380,207,18-44,F,Hispanic,Spanish,Medicaid\nE0273,0.06,1,6,0,0,0,1.3,2.4,,0.6,1.3,296,296,18-44,F,White,English,Commercial\nE0274,0.01,0,0,0,0,0,1.4,1.4,0,1.2,1.23,223,332,45-64,M,White,Spanish,Medicaid\nE0275,0.03,0,0,0,0,0,0.8,0.91,0,1.1,1.15,272,273,18-44,F,White,Other,Uninsured\nE0276,0.25,1,1,0,0,0,1.7,1.42,0,0.7,1.19,222,278,45-64,M,White,English,Uninsured\nE0277,0.72,1,6,0,0,0,4.6,1.37,0,0.6,0.94,296,230,65+,F,Other,Spanish,Medicaid\nE0278,0.01,1,2,0,0,0,0.8,0.87,0,1.2,1.2,262,249,65+,M,Other,English,Uninsured\nE0279,0.33,1,3,0,0,0,0.9,1.46,0,0.6,0.97,171,377,45-64,F,White,English,Medicare\nE0280,0.31,1,2,0,0,0,1.6,0.99,0,0.9,1.1,294,207,65+,M,Asian,Other,Uninsured\nE0281,0.21,0,0,0,0,0,0.7,0.91,1,0.7,0.92,168,347,65+,F,White,Other,Medicare\nE0282,0.03,1,1,0,0,0,1.0,1.24,0,0.5,0.83,252,186,45-64,M,Black,Spanish,Commercial\nE0283,0.01,0,0,0,0,0,0.8,1.43,0,0.4,0.85,322,195,18-44,F,Other,English,Uninsured\nE0284,0.59,1,7,0,0,0,2.4,3.06,0,0.8,0.89,257,200,65+,F,Black,English,Uninsured\nE0285,0.07,0,0,0,0,0,1.7,1.02,0,0.5,1.04,185,187,45-64,F,Black,Spanish,Uninsured\nE0286,0.16,0,0,0,0,0,1.6,1.33,0,1.3,1.08,239,232,45-64,M,Asian,English,Uninsured\nE0287,0.31,1,7,0,1,0,2.8,1.3,0,0.7,0.9,85,241,65+,M,Black,English,Medicare\nE0288,0.01,0,0,0,0,0,1.6,1.08,0,1.0,1.12,349,264,18-44,M,White,English,Commercial\nE0289,0.36,1,7,0,1,0,4.8,0.99,0,1.1,0.85,60,251,45-64,F,Other,Other,Uninsured\nE0290,0.21,0,0,0,0,0,1.4,1.38,0,0.8,1.05,143,221,45-64,F,Asian,English,Medicare\nE0291,0.04,0,0,0,0,0,1.4,1.15,0,1.1,1.38,192,216,18-44,M,Asian,Spanish,Medicare\nE0292,0.18,0,0,0,0,0,1.1,1.17,0,0.4,0.9,295,213,18-44,F,Hispanic,Other,Medicaid\nE0293,0.28,0,0,0,0,0,1.1,1.3,0,1.1,1.45,354,200,65+,M,Hispanic,English,Uninsured\nE0294,0.29,0,0,0,0,0,0.9,1.12,0,0.4,1.2,233,259,65+,F,Hispanic,Other,Medicaid\nE0295,0.15,1,1,0,0,0,1.2,1.3,0,1.1,1.49,177,331,65+,F,White,Spanish,Commercial\nE0296,0.13,0,0,0,0,0,1.6,0.9,0,0.9,1.09,184,281,65+,F,White,Spanish,Uninsured\nE0297,0.17,1,0,0,0,0,0.6,0.97,0,0.5,1.19,346,307,65+,M,Asian,Other,Medicaid\nE0298,0.03,0,0,0,0,0,1.2,1.08,0,0.6,1.39,253,311,65+,F,Black,Other,Medicaid\nE0299,0.01,1,,0,0,0,0.9,0.9,0,0.8,0.99,231,255,45-64,F,Asian,Spanish,Medicaid\nE0300,0.22,0,0,0,0,0,0.9,0.92,0,1.0,0.84,285,194,45-64,M,Other,English,Medicare\nE0301,0.01,0,0,0,0,0,1.5,1.14,0,0.4,0.97,249,326,18-44,F,Asian,Other,Commercial\nE0302,0.13,0,0,0,0,0,0.9,0.92,0,0.4,0.92,288,288,18-44,M,Asian,English,Medicaid\nE0303,0.22,0,0,0,0,0,1.1,1.5,0,0.6,1.24,346,286,45-64,F,Asian,English,Medicare\nE0304,0.01,0,0,0,0,0,0.8,1.3,0,0.4,0.87,198,287,65+,F,Hispanic,Spanish,Uninsured\nE0305,0.17,0,0,0,0,0,1.4,1.34,0,0.9,1.14,311,191,65+,M,Other,Other,Commercial\nE0306,0.01,0,0,0,0,0,1.4,0.89,0,0.5,1.33,248,290,18-44,F,Black,Spanish,Commercial\nE0307,0.04,0,0,0,0,0,1.3,0.82,0,0.4,0.81,195,222,45-64,M,White,English,Medicare\nE0308,0.28,0,0,0,0,0,0.8,1.24,0,0.7,1.23,278,316,45-64,M,Other,Spanish,Commercial\nE0309,0.17,0,0,0,0,0,1.4,0.86,0,1.0,0.86,286,236,45-64,F,Asian,English,Uninsured\nE0310,0.01,0,0,0,0,0,0.9,1.41,0,0.3,1.01,230,186,45-64,M,White,English,Medicaid\nE0311,0.29,0,0,0,0,0,1.0,1.07,0,1.4,1.39,348,249,18-44,M,Other,English,Medicare\nE0312,0.66,1,4,0,0,0,5.7,1.09,0,0.7,0.83,199,262,45-64,F,Other,Spanish,Medicaid\nE0313,0.16,1,3,0,0,0,1.1,1.28,0,1.4,0.9,268,194,65+,M,Asian,English,Medicare\nE0314,0.2,0,0,0,0,0,1.1,0.9,0,0.3,1.31,373,207,45-64,M,Black,Spanish,Uninsured\nE0315,0.01,0,0,0,0,0,0.6,1.38,0,0.6,1.47,277,263,45-64,F,Black,Other,Commercial\nE0316,0.13,0,0,0,0,0,1.2,1.36,0,1.2,0.82,153,165,45-64,F,Hispanic,Spanish,Medicare\nE0317,0.05,0,0,0,0,0,1.3,1.35,1,0.6,1.21,330,376,65+,M,Other,English,Uninsured\nE0318,0.3,1,2,0,0,0,1.3,0.91,0,1.0,1.25,232,205,65+,F,Other,English,Uninsured\nE0319,0.08,0,0,0,0,0,1.6,0.93,0,0.3,1.0,304,373,45-64,M,Hispanic,Other,Medicare\nE0320,0.25,1,2,0,0,0,1.7,1.04,0,0.7,1.28,364,313,18-44,M,Asian,Other,Commercial\nE0321,0.27,0,0,0,0,0,0.6,1.04,0,0.6,1.29,224,200,65+,M,Other,Spanish,Commercial\nE0322,0.25,1,5,0,0,0,1.9,1.03,0,0.4,1.37,159,374,45-64,F,Other,English,Medicare\nE0323,0.32,1,6,0,0,0,1.7,2.81,0,0.6,0.98,366,342,45-64,F,White,English,Uninsured\nE0324,0.24,1,6,0,0,0,1.5,1.14,0,0.5,0.99,277,237,18-44,F,Black,English,Medicare\nE0325,0.13,1,1,0,0,0,1.3,1.2,0,1.2,1.38,183,194,65+,M,Other,Spanish,Medicare\nE0326,0.76,1,5,0,1,1,4.0,3.05,0,0.5,1.14,87,217,65+,F,Black,English,Medicare\nE0327,0.26,0,0,0,0,0,0.6,1.39,0,1.3,1.21,376,232,65+,M,White,Other,Uninsured\nE0328,0.3,0,0,0,0,0,1.2,0.97,1,0.3,1.46,302,289,18-44,M,Black,Spanish,Medicare\nE0329,0.17,0,0,0,0,0,1.2,0.93,0,0.4,1.09,216,304,65+,M,Other,English,Medicaid\nE0330,0.01,1,2,0,0,0,0.7,1.12,0,1.2,1.2,266,195,18-44,F,Asian,Spanish,Commercial\nE0331,0.14,0,0,0,0,0,1.0,1.02,0,1.1,1.19,265,282,65+,M,Black,English,Commercial\nE0332,0.04,1,4,0,0,0,0.9,0.9,0,0.4,1.45,251,291,65+,M,Black,Spanish,Medicaid\nE0333,0.14,0,0,0,0,0,1.1,1.35,0,0.4,1.28,210,177,45-64,F,Other,Other,Uninsured\nE0334,0.04,1,3,0,0,0,1.6,1.36,0,1.4,1.35,175,311,65+,F,White,Other,Commercial\nE0335,0.02,0,0,0,0,0,1.6,1.27,0,1.1,1.38,210,199,45-64,M,Black,Other,Uninsured\nE0336,0.07,0,0,0,0,0,1.6,0.96,0,1.3,1.18,375,284,45-64,F,Other,English,Commercial\nE0337,0.31,0,0,0,0,0,1.5,1.35,0,1.3,1.07,249,352,65+,F,Other,Spanish,Uninsured\nE0338,0.12,1,2,0,0,0,0.7,1.48,0,1.1,0.86,187,198,65+,M,Asian,Other,Medicaid\nE0339,0.39,1,1,0,0,0,1.0,1.26,0,0.8,0.87,140,311,65+,M,White,English,Commercial\nE0340,0.05,0,0,0,0,0,0.7,1.28,0,0.3,1.2,337,351,65+,M,Asian,English,Uninsured\nE0341,0.01,0,0,0,0,0,0.6,0.9,0,0.9,1.06,294,181,45-64,M,Hispanic,Spanish,Medicare\nE0342,0.14,0,0,0,0,0,1.1,1.47,0,0.4,0.87,208,187,45-64,M,White,English,Medicare\nE0343,0.02,1,2,0,0,0,0.6,1.33,0,0.4,1.25,266,326,18-44,M,Hispanic,Other,Commercial\nE0344,0.01,0,0,0,0,0,0.9,0.93,0,0.9,1.04,311,299,45-64,M,Asian,Other,Commercial\nE0345,0.37,0,0,0,0,0,1.5,1.22,0,1.2,1.39,244,163,65+,F,White,Spanish,Medicaid\nE0346,0.38,1,4,0,1,1,1.4,1.1,0,3.4,0.96,208,273,45-64,F,White,English,Commercial\nE0347,0.15,0,0,0,0,0,1.7,1.15,0,1.3,0.81,296,203,65+,F,Hispanic,English,Commercial\nE0348,0.59,1,3,1,0,0,5.1,1.41,0,0.8,0.9,266,282,65+,M,Black,English,Commercial\nE0349,0.27,1,1,0,0,0,1.2,1.07,0,0.3,1.42,215,344,18-44,F,White,Other,Medicare\nE0350,0.1,0,0,0,0,0,1.3,0.94,0,0.5,0.91,240,170,18-44,F,Hispanic,English,Commercial\nE0351,0.01,1,5,0,0,0,1.9,1.03,0,0.6,0.88,366,194,45-64,M,Hispanic,English,Medicare\nE0352,0.17,1,5,0,0,0,2.1,1.38,0,0.8,1.09,159,243,45-64,F,Other,English,Commercial\nE0353,0.01,1,3,0,0,0,0.6,1.15,0,0.7,0.97,279,234,65+,F,White,Other,Uninsured\nE0354,0.01,0,0,0,0,0,0.9,0.99,0,1.1,0.83,346,336,18-44,M,White,Other,Commercial\nE0355,0.43,0,0,0,0,0,1.4,1.37,0,0.9,0.89,186,173,45-64,M,Hispanic,English,Medicaid\nE0356,0.19,1,7,0,0,0,0.7,1.37,0,1.0,1.41,176,234,18-44,M,Black,Other,Medicaid\nE0357,0.36,0,0,0,0,0,1.1,1.3,0,1.2,1.12,292,177,65+,M,Hispanic,Other,Commercial\nE0358,0.01,0,0,0,0,0,0.8,1.06,0,0.4,0.87,317,365,65+,M,Other,Other,Medicaid\nE0359,0.07,1,0,0,0,0,1.5,0.95,0,1.3,0.82,252,273,45-64,F,White,Other,Medicare\nE0360,0.19,1,1,0,0,0,1.7,1.21,0,0.8,1.08,209,265,18-44,F,Other,Other,Medicare\nE0361,0.21,0,0,0,0,0,0.8,1.44,0,1.4,1.28,248,379,65+,F,Black,Spanish,Uninsured\nE0362,0.01,0,0,0,0,0,1.0,1.42,0,0.9,1.33,296,336,45-64,M,Asian,Spanish,Uninsured\nE0363,0.61,1,4,0,0,0,2.9,1.38,0,0.4,1.07,246,369,65+,M,Hispanic,Other,Commercial\nE0364,0.13,0,0,0,0,0,1.6,1.03,0,0.5,1.24,210,288,45-64,F,White,Spanish,Medicare\nE0365,0.01,1,3,0,0,0,1.1,1.31,1,1.2,1.1,355,233,18-44,M,Asian,Other,Medicaid\nE0366,0.17,1,1,0,0,0,1.0,0.84,0,1.3,1.18,274,344,18-44,F,Hispanic,Spanish,Commercial\nE0367,0.01,0,0,0,0,0,1.4,1.1,0,0.5,1.34,191,350,65+,M,White,Spanish,Uninsured\nE0368,0.01,0,0,0,0,0,1.5,1.45,0,1.4,0.87,254,298,65+,M,White,English,Medicare\nE0369,0.2,0,0,0,0,0,1.1,1.12,0,0.5,1.1,285,246,65+,M,Asian,Spanish,Medicaid\nE0370,0.23,0,0,0,0,0,1.0,0.97,0,0.7,0.95,149,249,18-44,M,White,Other,Medicaid\nE0371,0.05,0,0,0,0,0,0.9,1.0,0,0.8,1.34,378,266,45-64,M,Other,Spanish,Medicaid\nE0372,0.01,0,0,0,0,0,1.0,1.28,0,1.0,1.23,373,306,45-64,F,Black,English,Commercial\nE0373,0.17,0,0,0,0,0,1.3,0.83,0,1.3,1.42,379,348,65+,F,Hispanic,Spanish,Commercial\nE0374,0.33,1,1,0,0,0,1.7,1.26,0,0.7,0.81,276,290,65+,M,Asian,English,Commercial\nE0375,0.24,1,9,0,0,0,1.7,1.15,0,1.1,1.06,164,279,65+,M,Other,Spanish,Uninsured\nE0376,0.26,0,0,0,0,0,1.5,1.32,0,1.4,1.36,239,290,45-64,M,Other,Spanish,Uninsured\nE0377,0.37,0,0,0,0,0,0.9,1.26,0,0.4,0.98,197,337,65+,F,Other,English,Medicare\nE0378,0.19,1,3,0,0,0,0.6,0.88,0,0.8,1.4,270,352,65+,M,Asian,Spanish,Medicaid\nE0379,0.01,1,3,0,0,0,0.7,1.0,0,0.7,1.24,206,327,45-64,F,Asian,English,Commercial\nE0380,0.44,1,2,1,0,0,2.8,1.28,1,0.4,1.32,209,250,65+,M,Other,Spanish,Medicare\nE0381,0.11,0,0,0,0,0,1.5,1.01,0,1.2,0.86,337,195,65+,M,Hispanic,Other,Commercial\nE0382,0.21,1,4,0,0,0,1.2,1.9,0,1.1,1.35,362,240,45-64,M,White,Other,Medicaid\nE0383,0.01,1,3,0,0,0,1.2,0.8,0,0.8,1.24,287,377,18-44,M,Asian,Spanish,Medicaid\nE0384,0.03,1,2,0,0,0,1.0,1.39,0,1.0,1.1,196,226,18-44,F,White,Spanish,Uninsured\nE0385,0.01,1,3,0,0,0,1.0,0.97,0,0.3,1.48,245,256,65+,M,White,Other,Uninsured\nE0386,0.01,0,0,0,0,0,1.3,1.32,0,1.1,1.06,307,249,65+,F,Asian,English,Commercial\nE0387,0.01,1,0,0,0,0,1.3,1.46,0,0.5,1.04,166,300,18-44,F,White,Spanish,Medicaid\nE0388,0.07,0,0,0,0,0,0.7,1.27,0,1.3,0.9,228,234,45-64,F,Hispanic,English,Uninsured\nE0389,0.81,1,5,0,0,0,2.7,2.93,0,0.5,1.28,63,292,65+,F,White,Spanish,Uninsured\nE0390,0.08,1,2,0,0,0,1.3,0.81,0,1.0,1.31,237,329,65+,F,Hispanic,English,Uninsured\nE0391,0.28,1,7,0,0,0,1.3,0.83,0,0.4,0.86,192,258,18-44,M,Asian,Spanish,Commercial\nE0392,0.04,1,0,0,0,0,1.3,1.2,0,0.7,0.8,349,207,65+,F,Other,Spanish,Commercial\nE0393,0.03,1,0,1,0,0,1.6,1.08,0,1.0,1.1,307,252,65+,F,Asian,English,Medicare\nE0394,0.03,1,3,0,0,0,1.2,1.34,0,1.1,1.06,213,232,18-44,F,Black,English,Commercial\nE0395,0.27,0,0,0,0,0,0.8,1.23,0,1.3,1.4,141,326,18-44,F,Hispanic,English,Uninsured\nE0396,0.01,0,0,0,0,0,0.7,0.89,0,0.4,1.04,220,359,45-64,F,Asian,Other,Medicare\nE0397,0.36,0,0,0,0,0,1.1,1.08,0,0.3,1.31,214,292,45-64,M,Black,Spanish,Commercial\nE0398,0.76,1,4,0,0,0,1.6,1.12,0,0.4,1.15,81,344,65+,M,Hispanic,Spanish,Commercial\nE0399,0.53,1,9,0,0,0,1.6,0.84,1,1.0,1.45,196,236,65+,M,Black,Other,Commercial\nE0400,0.59,0,0,0,0,0,1.3,1.16,0,1.2,1.35,336,338,18-44,F,Other,Other,Commercial\nE0401,0.01,1,1,0,0,0,1.3,1.47,0,0.8,0.86,344,347,65+,F,Other,Spanish,Uninsured\nE0402,0.27,0,0,0,0,0,0.8,1.39,0,1.3,0.82,328,347,45-64,M,White,English,Commercial\nE0403,0.11,0,0,0,0,0,1.0,1.12,0,1.3,0.96,237,321,45-64,M,Asian,English,Medicaid\nE0404,0.01,0,0,0,0,0,1.4,0.87,1,0.9,1.04,366,302,45-64,F,Other,Spanish,Medicaid\nE0405,0.17,0,0,0,0,0,0.8,1.34,0,1.1,1.05,285,359,65+,M,Asian,Spanish,Medicare\nE0406,0.11,1,3,0,0,0,1.7,1.22,0,0.8,1.19,182,361,18-44,F,Other,Spanish,Uninsured\nE0407,0.01,1,1,0,0,0,1.0,1.23,0,0.8,1.19,279,376,45-64,F,Asian,Other,Uninsured\nE0408,0.01,0,0,0,0,0,1.3,1.46,0,0.8,1.12,226,244,45-64,F,Asian,Spanish,Commercial\nE0409,0.01,0,0,0,0,0,0.6,1.31,0,0.6,1.31,222,255,45-64,F,White,English,Medicare\nE0410,0.11,1,3,0,0,0,1.6,0.9,0,0.4,1.42,268,376,45-64,M,White,Spanish,Commercial\nE0411,0.09,0,0,0,0,0,1.2,1.25,0,1.3,1.2,177,169,45-64,M,Other,Spanish,Uninsured\nE0412,0.28,0,0,0,0,0,1.3,1.11,0,1.1,1.06,298,299,45-64,F,Black,Other,Uninsured\nE0413,0.46,1,1,1,1,0,0.9,1.38,0,0.5,3.99,294,170,18-44,F,Hispanic,English,Medicaid\nE0414,0.01,0,0,0,0,0,1.0,1.32,0,1.2,1.48,181,200,45-64,M,Hispanic,Other,Medicare\nE0415,0.01,0,0,0,0,0,0.9,1.0,0,1.0,1.32,236,361,18-44,M,Black,Spanish,Medicaid\nE0416,0.01,1,2,0,0,0,0.7,0.91,0,1.2,0.85,215,302,65+,M,White,Other,Medicare\nE0417,0.12,0,0,0,0,0,0.6,1.28,0,1.3,1.49,292,347,65+,F,Black,English,Uninsured\nE0418,0.3,0,0,0,0,0,1.2,1.08,0,0.9,0.86,145,185,18-44,F,Other,Other,Medicaid\nE0419,0.5,1,5,0,0,0,5.0,1.33,0,0.3,3.27,332,254,18-44,M,Asian,English,Commercial\nE0420,0.14,0,0,0,0,0,1.2,0.93,0,0.6,0.82,348,224,65+,M,White,Other,Medicare\nE0421,0.11,0,0,0,0,0,1.2,1.09,0,1.0,1.47,242,213,45-64,F,Hispanic,Spanish,Uninsured\nE0422,0.02,0,0,0,0,0,1.2,0.88,0,1.2,0.81,182,264,65+,F,Other,Spanish,Medicaid\nE0423,0.04,0,0,0,0,0,1.6,1.44,0,1.2,0.85,340,178,18-44,F,Hispanic,English,Commercial\nE0424,0.25,0,0,0,0,0,1.4,0.98,0,0.4,1.15,316,378,65+,M,Asian,Spanish,Medicaid\nE0425,0.21,1,3,0,0,0,0.7,1.34,0,0.5,1.3,144,187,65+,F,Hispanic,English,Uninsured\nE0426,0.39,1,4,0,0,0,1.2,1.9,0,1.1,1.46,278,344,18-44,M,Hispanic,Other,Medicare\nE0427,0.27,0,0,0,0,0,1.4,0.97,0,1.3,1.24,154,340,18-44,M,Black,Other,Uninsured\nE0428,0.12,0,0,0,0,0,0.6,1.08,0,0.6,0.85,142,332,65+,M,Other,English,Uninsured\nE0429,0.04,0,0,0,0,0,1.0,1.0,0,0.4,0.84,273,187,18-44,F,Black,Other,Uninsured\nE0430,0.13,0,0,0,0,0,1.2,1.36,0,1.2,1.17,354,274,45-64,F,Hispanic,English,Medicare\nE0431,0.16,1,1,0,0,0,1.2,1.01,0,0.5,0.82,203,261,45-64,M,Asian,Spanish,Medicare\nE0432,0.37,1,3,0,0,0,1.5,1.42,0,0.4,1.43,335,274,65+,F,Other,English,Medicaid\nE0433,0.04,0,0,0,0,0,0.7,0.89,0,1.1,1.29,334,342,45-64,F,White,English,Medicaid\nE0434,0.05,1,1,0,0,0,0.7,1.33,0,0.5,1.18,290,314,18-44,M,Asian,Spanish,Uninsured\nE0435,0.52,1,6,0,1,0,3.4,2.29,0,1.4,1.02,244,324,65+,F,Asian,English,Uninsured\nE0436,0.03,0,0,0,0,0,0.9,1.37,0,0.7,1.27,267,193,18-44,F,Black,Spanish,Medicaid\nE0437,0.15,0,0,0,0,0,0.6,1.29,0,1.2,0.86,155,349,45-64,M,Black,Other,Commercial\nE0438,0.19,0,0,0,0,0,0.6,1.19,0,1.1,1.16,210,222,65+,M,Other,Other,Commercial\nE0439,0.01,0,0,0,0,0,0.8,1.22,0,1.0,1.36,349,224,65+,M,Asian,Other,Uninsured\nE0440,0.1,0,0,0,0,0,1.3,0.81,0,1.2,0.96,275,266,18-44,F,Black,Spanish,Medicare\nE0441,0.18,0,0,0,0,0,1.4,1.26,0,0.6,1.02,369,236,65+,M,Other,Spanish,Medicare\nE0442,0.34,1,7,0,0,0,1.6,1.3,0,0.8,0.98,252,270,65+,F,Other,English,Commercial\nE0443,0.52,0,0,0,0,0,0.8,0.83,0,1.4,0.92,237,318,18-44,M,Black,Spanish,Medicare\nE0444,0.01,0,0,0,0,0,1.1,1.48,0,1.1,1.24,269,290,18-44,M,Black,English,Medicaid\nE0445,0.01,0,0,0,0,0,1.0,1.26,0,0.8,0.94,269,207,45-64,F,Asian,Other,Medicare\nE0446,0.09,0,0,0,0,0,1.4,1.08,0,1.0,1.15,168,173,18-44,F,Hispanic,Spanish,Medicare\nE0447,0.07,1,3,0,0,0,0.9,1.41,0,1.1,0.9,288,336,18-44,M,White,English,Medicare\nE0448,0.22,1,2,0,0,0,0.9,0.85,0,0.7,1.49,269,233,45-64,F,Black,Spanish,Medicare\nE0449,0.01,0,0,0,0,0,1.0,0.9,0,0.6,0.9,311,353,65+,F,Other,Spanish,Medicare\nE0450,0.18,0,0,0,0,0,1.6,1.39,0,0.9,1.29,200,252,18-44,F,Other,English,Medicaid\nE0451,0.01,1,3,0,0,0,0.9,1.49,0,0.7,1.12,221,170,65+,F,Asian,English,Medicare\nE0452,0.05,0,0,0,0,0,0.7,1.12,0,1.1,1.05,240,316,65+,F,Other,Other,Commercial\nE0453,0.01,0,0,0,0,0,1.6,1.35,0,0.6,1.1,239,338,18-44,F,White,Other,Medicare\nE0454,0.22,1,0,0,0,0,1.1,1.37,0,0.8,1.37,186,202,18-44,F,Hispanic,Spanish,Medicare\nE0455,0.4,0,0,0,0,0,0.8,1.48,0,1.1,1.34,249,209,18-44,M,Asian,English,Medicare\nE0456,0.14,0,0,0,0,0,1.5,0.84,0,0.9,1.01,302,164,18-44,F,White,Other,Commercial\nE0457,0.75,1,,0,1,0,0.7,0.83,0,0.4,3.4,163,349,45-64,F,White,Other,Commercial\nE0458,0.01,0,0,0,0,0,1.1,0.99,0,1.3,1.3,166,369,18-44,F,Other,English,Medicaid\nE0459,0.76,1,6,0,0,0,5.5,2.32,0,0.9,1.02,352,351,45-64,F,Asian,English,Medicare\nE0460,0.01,0,0,0,0,0,1.2,1.45,0,0.7,1.27,248,308,18-44,F,Asian,Spanish,Commercial\nE0461,0.18,1,2,0,0,0,0.9,1.0,0,0.4,0.85,278,318,18-44,M,Hispanic,Spanish,Commercial\nE0462,0.38,0,0,0,0,0,0.9,0.9,0,0.9,1.38,283,203,65+,M,Black,Spanish,Uninsured\nE0463,0.01,0,0,0,0,0,0.9,1.41,0,1.3,1.48,193,315,65+,M,Hispanic,Other,Medicare\nE0464,0.05,0,0,0,0,0,1.3,0.87,0,1.0,1.13,266,345,18-44,F,White,English,Commercial\nE0465,0.14,0,0,0,0,0,0.8,1.04,0,0.4,0.84,191,342,65+,F,Asian,Spanish,Commercial\nE0466,0.87,1,7,0,1,0,2.5,1.33,0,1.2,1.41,343,288,65+,M,Hispanic,Other,Medicaid\nE0467,0.45,0,0,0,0,0,0.7,0.85,0,1.1,1.05,165,268,18-44,M,Asian,Other,Medicare\nE0468,0.1,0,0,0,0,0,1.3,0.85,0,1.1,1.41,178,366,65+,F,White,English,Uninsured\nE0469,0.06,1,3,0,0,0,1.5,1.15,0,1.2,1.24,329,278,65+,F,Other,Other,Medicaid\nE0470,0.15,0,0,0,0,0,1.0,1.45,0,0.7,1.28,316,371,18-44,M,Black,Spanish,Uninsured\nE0471,0.06,1,0,0,0,0,1.2,0.88,0,0.7,1.08,236,222,18-44,M,Asian,Spanish,Commercial\nE0472,0.15,1,2,0,0,0,1.2,1.37,0,1.4,1.33,337,351,45-64,F,Hispanic,English,Medicare\nE0473,0.01,0,0,0,0,0,0.7,1.37,0,1.2,1.29,285,339,45-64,F,White,Spanish,Uninsured\nE0474,0.03,0,0,0,0,0,1.2,1.41,0,0.4,1.17,169,238,65+,M,White,Spanish,Medicaid\nE0475,0.09,1,4,0,0,0,1.2,1.9,0,1.1,1.24,250,202,65+,M,Other,Other,Commercial\nE0476,0.03,0,0,0,0,0,0.6,1.27,0,0.7,0.9,350,259,65+,M,Black,Spanish,Commercial\nE0477,0.15,0,0,0,0,0,1.6,1.01,0,0.4,1.46,173,231,18-44,M,White,Spanish,Medicare\nE0478,0.32,0,0,0,0,0,0.8,1.27,0,0.7,1.26,375,280,45-64,M,Asian,English,Commercial\nE0479,0.03,0,0,0,0,0,1.4,1.14,0,1.4,0.83,170,251,18-44,F,Other,Spanish,Commercial\nE0480,0.29,1,2,0,0,0,1.6,1.34,0,1.3,1.02,313,165,18-44,F,Other,Spanish,Medicare\nE0481,0.43,1,3,1,0,0,1.4,1.11,0,0.7,2.79,346,292,45-64,M,Black,English,Medicare\nE0482,0.01,0,0,0,0,0,1.2,1.21,0,0.9,1.01,266,360,18-44,F,Black,Spanish,Medicaid\nE0483,0.01,1,2,0,0,0,1.0,1.12,0,0.7,1.06,352,365,18-44,F,Black,Other,Medicare\nE0484,0.11,1,2,0,0,0,1.0,1.34,0,0.4,0.86,165,317,45-64,M,Other,Spanish,Medicare\nE0485,0.31,0,0,0,0,0,1.4,1.15,0,0.8,0.9,203,271,45-64,F,White,English,Uninsured\nE0486,0.06,0,0,0,0,0,1.2,1.41,0,0.4,1.13,221,233,18-44,M,Hispanic,English,Uninsured\nE0487,0.13,1,0,0,0,0,1.7,1.33,0,0.6,0.8,229,373,45-64,F,White,English,Uninsured\nE0488,0.01,0,0,0,0,0,1.5,1.38,0,1.1,1.06,175,201,18-44,M,Black,English,Uninsured\nE0489,0.56,1,4,0,0,0,1.2,1.9,0,3.4,0.93,276,236,18-44,F,Other,Spanish,Medicaid\nE0490,0.01,1,5,0,0,0,2.0,0.92,0,1.2,1.49,279,290,65+,M,Black,English,Uninsured\nE0491,0.36,1,4,0,0,0,4.0,2.97,0,0.7,3.68,224,248,18-44,F,White,English,Medicaid\nE0492,0.42,1,2,0,0,0,1.4,1.43,1,0.4,1.06,277,258,18-44,F,Black,English,Commercial\nE0493,0.26,0,0,0,0,0,1.3,1.2,0,0.7,1.34,193,323,65+,F,Other,Other,Medicare\nE0494,0.09,0,0,0,0,0,1.4,1.13,0,0.7,1.4,236,316,18-44,M,Black,English,Medicare\nE0495,0.62,1,4,0,0,0,1.2,1.9,0,0.3,1.11,186,243,45-64,M,White,English,Medicare\nE0496,0.01,0,0,0,0,0,1.4,1.31,0,1.1,1.03,248,201,65+,M,Hispanic,Other,Uninsured\nE0497,0.01,1,2,,0,0,0.8,1.14,1,0.7,1.24,283,288,45-64,M,Hispanic,Spanish,Uninsured\nE0498,0.11,1,1,0,0,0,0.7,1.06,0,0.6,0.9,277,369,45-64,M,Hispanic,Other,Medicare\nE0499,0.7,1,7,0,0,0,1.5,1.24,0,5.0,1.02,55,361,18-44,F,White,Other,Commercial\nE0500,0.2,0,0,0,0,0,1.3,1.41,0,1.4,1.33,280,168,18-44,F,White,Spanish,Medicaid\nE0501,0.2,0,0,0,0,0,0.7,0.91,0,0.7,1.23,141,161,18-44,M,White,English,Uninsured\nE0502,0.68,1,7,0,0,1,1.1,1.21,1,2.8,0.91,296,252,45-64,M,Other,Other,Commercial\nE0503,0.21,1,3,0,0,0,0.7,1.48,0,0.9,1.39,155,283,18-44,F,White,English,Medicaid\nE0504,0.12,0,0,0,0,0,1.0,1.0,0,1.0,1.19,153,188,65+,F,Black,Spanish,Medicare\nE0505,0.07,0,0,0,0,0,1.3,1.25,0,1.3,1.12,202,164,18-44,M,Black,Spanish,Medicaid\nE0506,0.06,0,0,0,0,0,0.9,0.93,0,0.4,1.13,314,295,45-64,F,Asian,English,Uninsured\nE0507,0.33,0,0,0,0,0,0.6,1.04,0,0.4,1.37,234,196,45-64,M,Hispanic,Other,Uninsured\nE0508,0.02,0,0,0,0,0,1.1,1.08,0,0.7,1.1,167,378,18-44,M,Other,Other,Uninsured\nE0509,0.45,0,0,0,0,0,0.6,1.16,0,0.6,0.82,165,212,18-44,F,Asian,Other,Commercial\nE0510,0.08,0,0,0,0,0,1.5,1.47,0,0.8,1.07,305,348,65+,F,Hispanic,Other,Commercial\nE0511,0.4,0,0,0,0,0,1.4,1.08,0,0.6,1.08,209,163,45-64,M,White,Spanish,Commercial\nE0512,0.02,0,0,0,0,0,1.5,1.39,0,0.4,1.08,221,302,45-64,F,Asian,Spanish,Medicare\nE0513,0.22,0,0,0,0,0,1.4,0.82,0,0.3,1.25,263,328,65+,F,Hispanic,Spanish,Medicaid\nE0514,0.01,0,0,0,0,0,1.0,1.46,0,0.7,1.34,321,199,18-44,F,Black,Other,Uninsured\nE0515,0.27,1,0,1,0,0,1.0,1.36,0,1.2,1.23,149,342,45-64,F,Asian,English,Uninsured\nE0516,0.01,0,0,0,0,0,1.5,1.02,1,1.1,1.16,143,238,45-64,F,Black,Other,Medicare\nE0517,0.08,0,0,0,0,0,1.5,1.33,0,0.4,1.28,315,251,18-44,F,Black,English,Medicare\nE0518,0.01,0,0,0,0,0,0.9,0.85,1,0.8,1.45,290,215,45-64,M,White,Other,Medicare\nE0519,0.24,0,0,0,0,0,1.6,1.3,0,0.5,0.85,357,203,45-64,M,Other,Other,Medicaid\nE0520,0.01,0,0,0,0,0,1.4,1.04,0,1.0,1.4,329,180,45-64,F,Black,Spanish,Commercial\nE0521,0.12,0,0,0,0,0,1.4,1.42,0,1.4,1.17,362,255,65+,M,Black,English,Medicaid\nE0522,0.31,1,,0,0,0,0.6,0.87,0,1.2,1.42,322,188,18-44,M,Asian,Spanish,Medicaid\nE0523,0.18,0,0,0,0,0,0.7,1.45,0,0.6,0.9,365,266,45-64,F,Asian,English,Commercial\nE0524,0.01,0,0,0,0,0,1.5,1.04,0,0.7,1.26,356,185,65+,M,Hispanic,Spanish,Uninsured\nE0525,0.35,0,0,0,0,0,1.4,1.17,0,0.4,1.29,323,286,18-44,F,White,English,Uninsured\nE0526,0.31,0,0,0,0,0,0.8,1.06,0,0.9,1.36,303,322,45-64,M,Black,English,Medicare\nE0527,0.04,0,0,0,0,0,0.7,0.85,0,1.3,0.91,363,291,18-44,M,Other,Other,Commercial\nE0528,0.51,1,2,0,0,0,0.6,1.09,0,1.2,0.88,141,290,65+,F,White,Spanish,Uninsured\nE0529,0.16,0,0,0,0,0,1.5,0.95,0,1.0,1.21,162,320,18-44,M,White,Spanish,Medicare\nE0530,0.36,1,7,0,0,0,2.7,1.12,0,1.0,1.02,238,223,65+,M,Black,Spanish,Medicaid\nE0531,0.39,1,2,0,0,0,1.4,0.91,0,0.6,1.48,161,165,65+,M,Black,English,Commercial\nE0532,0.37,1,2,0,0,0,1.4,1.33,0,1.2,0.99,253,350,45-64,M,White,Other,Medicaid\nE0533,0.68,1,2,1,0,0,3.7,2.47,0,1.2,1.39,242,311,18-44,F,Other,Other,Commercial\nE0534,0.01,0,0,0,0,0,0.7,0.81,0,1.2,0.96,359,375,65+,M,Hispanic,Spanish,Medicaid\nE0535,0.23,0,0,0,0,0,1.0,0.94,0,0.4,0.98,199,291,18-44,F,Black,Spanish,Medicaid\nE0536,0.06,0,0,0,0,0,0.6,1.06,1,1.2,0.91,288,196,65+,M,White,English,Medicare\nE0537,0.23,0,0,0,0,0,0.8,0.88,0,1.3,1.49,357,168,65+,M,Asian,Other,Uninsured\nE0538,0.41,1,7,0,0,0,1.0,1.47,0,1.3,1.19,232,373,45-64,M,Asian,English,Uninsured\nE0539,0.32,0,0,0,0,0,1.5,1.32,1,1.1,1.35,142,222,45-64,F,Asian,Other,Uninsured\nE0540,0.12,0,0,0,0,0,0.9,1.0,0,0.5,0.91,291,185,65+,M,Asian,Other,Commercial\nE0541,0.05,1,0,0,0,0,1.4,1.4,0,1.0,1.11,371,348,65+,F,Black,Other,Medicaid\nE0542,0.08,0,0,0,0,0,1.5,1.25,0,0.4,1.43,372,260,65+,F,White,English,Commercial\nE0543,0.19,0,0,0,0,0,0.9,1.45,0,0.6,1.23,334,332,45-64,M,Black,Other,Commercial\nE0544,0.01,0,0,0,0,0,0.9,1.1,0,0.9,1.08,194,161,65+,M,Hispanic,Spanish,Uninsured\nE0545,0.01,0,0,0,0,0,1.1,0.87,0,1.1,1.01,371,309,18-44,F,Hispanic,Other,Medicaid\nE0546,0.3,0,0,0,0,0,1.3,0.91,0,0.7,1.29,296,279,45-64,M,Other,English,Medicare\nE0547,0.18,0,0,0,0,0,0.7,1.01,1,1.3,0.85,213,316,65+,F,White,English,Medicaid\nE0548,0.24,0,0,0,0,0,1.2,1.38,0,1.2,1.49,207,168,18-44,M,Hispanic,Spanish,Medicaid\nE0549,0.11,0,0,0,0,0,0.8,1.49,0,1.0,0.81,225,253,65+,F,Black,English,Medicare\nE0550,0.18,0,0,0,0,0,0.8,1.2,0,0.5,1.24,286,257,65+,M,Hispanic,Other,Commercial\nE0551,0.33,0,0,0,0,0,1.3,1.42,0,0.6,1.17,353,312,18-44,F,White,Spanish,Medicare\nE0552,0.01,0,0,0,0,0,1.4,1.3,0,1.1,0.96,248,331,45-64,M,Other,Other,Commercial\nE0553,0.01,0,0,0,0,0,1.6,1.49,0,0.7,1.09,361,262,45-64,F,Hispanic,English,Medicaid\nE0554,0.01,0,0,0,0,0,1.5,1.25,0,0.3,1.47,188,326,45-64,F,White,English,Medicare\nE0555,0.13,0,0,0,0,0,1.1,1.16,0,1.0,1.1,169,166,18-44,F,Hispanic,Other,Uninsured\nE0556,0.07,1,6,0,0,0,1.4,2.4,,1.4,1.35,150,280,45-64,M,Hispanic,Other,Commercial\nE0557,0.09,0,0,0,0,0,0.9,1.36,0,0.7,1.06,185,363,65+,M,Black,English,Medicaid\nE0558,0.7,1,6,0,0,0,2.3,0.84,0,0.5,0.82,146,286,45-64,F,Other,Spanish,Medicare\nE0559,0.22,0,0,0,0,0,1.5,0.86,1,1.3,1.04,240,180,45-64,F,Other,English,Medicare\nE0560,0.12,0,0,0,0,0,1.1,1.05,0,0.9,1.12,263,326,45-64,F,Other,English,Medicare\nE0561,0.21,1,0,0,0,0,1.2,1.19,0,0.9,1.4,291,299,18-44,M,Hispanic,Spanish,Commercial\nE0562,0.15,0,0,0,0,0,0.6,1.3,1,1.0,1.36,219,253,65+,F,White,Spanish,Medicare\nE0563,0.27,0,0,0,0,0,1.3,0.82,0,0.6,1.3,163,184,18-44,M,Black,English,Commercial\nE0564,0.09,1,2,0,0,0,0.9,1.37,0,0.5,0.95,307,361,45-64,F,Hispanic,Spanish,Medicaid\nE0565,0.21,0,0,0,0,0,1.1,1.1,0,0.3,1.33,375,246,18-44,M,White,Spanish,Medicaid\nE0566,0.26,0,0,0,0,0,0.7,1.35,0,1.3,1.18,155,305,65+,F,Hispanic,Other,Uninsured\nE0567,0.88,1,2,,1,1,4.2,0.93,0,1.2,1.01,140,255,18-44,M,Hispanic,English,Medicaid\nE0568,0.28,1,7,0,0,0,0.7,1.31,0,0.3,1.19,179,311,45-64,M,Asian,Spanish,Uninsured\nE0569,0.01,1,0,0,0,0,0.7,1.47,0,0.5,1.35,227,278,65+,F,Other,English,Uninsured\nE0570,0.55,0,0,0,0,0,1.2,0.9,0,0.7,1.31,158,251,45-64,F,White,English,Commercial\nE0571,0.7,1,4,0,0,0,0.7,1.37,1,3.4,0.88,178,353,18-44,M,White,Spanish,Medicaid\nE0572,0.43,0,0,0,0,0,0.9,0.98,0,0.9,1.45,175,309,18-44,M,Black,Spanish,Medicare\nE0573,0.47,1,5,0,0,1,4.1,1.43,0,3.3,1.06,284,348,45-64,M,Other,Other,Commercial\nE0574,0.2,0,0,0,0,0,1.2,1.39,0,1.2,1.33,379,186,18-44,M,Black,Other,Commercial\nE0575,0.01,0,0,0,0,0,1.1,1.16,0,0.4,0.84,237,165,65+,M,Asian,English,Commercial\nE0576,0.31,0,0,0,0,0,1.4,1.47,1,0.7,1.31,148,261,65+,F,Asian,Spanish,Medicaid\nE0577,0.31,1,1,0,0,0,1.1,0.98,0,0.7,1.09,209,305,45-64,F,Hispanic,Spanish,Uninsured\nE0578,0.63,1,7,0,0,0,4.6,0.85,0,0.8,1.06,293,271,65+,M,Other,English,Commercial\nE0579,0.18,0,0,0,0,0,1.1,1.42,0,1.3,1.27,378,176,18-44,M,White,Spanish,Uninsured\nE0580,0.26,0,0,0,0,0,1.4,0.83,0,0.5,1.26,161,253,65+,F,Asian,Other,Uninsured\nE0581,0.14,1,1,0,0,0,0.8,1.42,0,0.9,1.22,152,187,65+,M,Other,Spanish,Uninsured\nE0582,0.08,0,0,0,0,0,1.1,1.46,1,0.8,0.96,241,278,45-64,M,Black,English,Medicare\nE0583,0.62,1,7,0,1,0,0.7,0.82,0,0.6,0.86,307,190,18-44,F,Hispanic,English,Uninsured\nE0584,0.01,1,0,0,0,0,1.6,1.03,0,0.4,0.92,163,208,45-64,F,White,English,Commercial\nE0585,0.76,1,3,1,0,0,0.7,3.45,0,0.9,1.3,210,299,45-64,M,Black,Other,Medicare\nE0586,0.68,1,2,1,0,0,3.0,1.37,0,0.3,1.44,230,218,18-44,M,Black,English,Commercial\nE0587,0.1,1,3,0,0,0,0.8,1.31,0,0.7,1.18,183,260,65+,F,Other,Spanish,Commercial\nE0588,0.18,0,0,0,0,0,1.1,0.81,0,1.2,1.39,230,309,65+,F,Hispanic,English,Medicare\nE0589,0.11,1,1,0,0,0,1.3,0.96,0,0.4,1.23,178,277,45-64,M,Asian,Spanish,Medicare\nE0590,0.74,1,4,0,0,0,2.6,1.13,0,1.3,2.96,300,251,65+,F,White,Other,Medicare\nE0591,0.01,1,2,0,0,0,1.2,1.15,0,0.4,0.97,144,326,18-44,M,Other,English,Commercial\nE0592,0.11,1,0,0,0,0,1.1,1.19,0,0.7,0.94,266,239,65+,M,Hispanic,English,Medicaid\nE0593,0.38,1,6,0,0,0,1.2,2.4,,0.4,1.34,271,314,65+,F,Other,Other,Uninsured\nE0594,0.04,0,0,0,0,0,1.5,0.84,0,1.2,1.49,226,260,65+,M,Asian,Other,Uninsured\nE0595,0.06,1,3,0,0,0,1.1,0.94,0,1.0,1.2,223,192,18-44,F,Black,Other,Commercial\nE0596,0.01,0,0,0,0,0,0.9,1.05,0,1.3,1.45,286,373,45-64,M,Other,English,Commercial\nE0597,0.14,1,2,0,0,0,1.5,0.99,0,1.0,0.85,190,284,65+,M,Other,English,Commercial\nE0598,0.21,0,0,0,0,0,1.3,1.13,0,0.6,1.28,292,280,18-44,F,Black,English,Medicare\nE0599,0.19,1,1,0,0,0,1.4,0.97,0,1.0,1.22,295,266,65+,M,Other,Spanish,Medicaid\nE0600,0.1,1,2,0,0,0,0.6,1.39,0,0.8,1.16,272,315,65+,M,Asian,Other,Uninsured\nE0601,0.01,0,0,0,0,0,1.1,1.3,0,1.2,0.96,280,376,45-64,M,White,English,Medicare\nE0602,0.23,0,0,0,0,0,1.3,1.47,0,0.4,1.11,285,274,45-64,M,Hispanic,English,Commercial\nE0603,0.01,0,0,0,0,0,1.2,1.48,0,1.1,1.41,215,222,45-64,F,Hispanic,English,Uninsured\nE0604,0.03,0,0,0,0,0,1.6,1.24,0,0.7,1.28,253,312,45-64,F,Hispanic,English,Medicare\nE0605,0.32,1,2,0,0,0,1.1,0.87,0,1.4,1.21,253,354,45-64,M,White,Spanish,Commercial\nE0606,0.22,0,0,0,0,0,1.6,1.06,0,0.3,1.24,190,256,18-44,M,Black,English,Medicaid\nE0607,0.23,1,3,0,0,0,1.4,0.95,0,0.4,1.45,154,284,18-44,M,Asian,Spanish,Medicare\nE0608,0.26,1,1,0,0,0,1.4,1.35,0,0.8,0.92,317,266,65+,F,White,English,Medicare\nE0609,0.17,1,3,0,0,0,0.9,0.95,0,1.3,0.94,268,309,65+,M,Other,Other,Medicaid\nE0610,0.01,0,0,0,0,0,1.4,1.38,1,1.1,1.3,315,166,65+,M,White,Spanish,Commercial\nE0611,0.36,0,0,0,0,0,1.6,1.17,1,1.3,1.26,145,380,45-64,M,Black,Spanish,Commercial\nE0612,0.29,1,2,0,0,0,0.7,1.37,0,0.5,1.18,239,185,45-64,M,White,English,Uninsured\nE0613,0.09,1,0,0,0,0,1.2,1.37,0,1.3,1.4,240,330,65+,F,Black,English,Medicaid\nE0614,0.51,1,9,0,0,0,1.4,1.28,0,1.0,1.02,242,303,65+,F,White,English,Commercial\nE0615,0.25,0,0,0,0,0,1.0,0.85,0,1.2,1.48,212,297,65+,F,Black,English,Medicare\nE0616,0.28,0,0,0,0,0,0.7,1.15,0,0.4,1.24,334,339,65+,M,White,Spanish,Medicare\nE0617,0.82,1,6,0,1,0,0.8,2.12,0,0.5,1.2,266,196,45-64,M,White,English,Uninsured\nE0618,0.44,1,1,1,0,0,1.3,1.4,0,0.4,0.87,57,240,45-64,M,Other,Other,Uninsured\nE0619,0.02,1,6,0,0,0,0.7,2.4,,1.2,0.85,239,356,45-64,F,Hispanic,English,Commercial\nE0620,0.43,1,7,0,0,0,1.4,1.12,0,1.1,1.49,168,186,18-44,F,Asian,English,Commercial\nE0621,0.01,0,0,0,0,0,1.2,1.21,0,0.8,1.45,379,367,65+,M,Asian,English,Uninsured\nE0622,0.25,0,0,0,0,0,1.7,1.15,0,1.0,1.04,349,170,18-44,M,Black,Spanish,Uninsured\nE0623,0.15,0,0,0,0,0,1.2,0.82,0,1.1,0.83,151,218,18-44,M,Black,Spanish,Medicare\nE0624,0.36,0,0,0,0,0,1.6,1.37,0,1.3,0.94,190,282,45-64,F,Black,Other,Medicare\nE0625,0.11,1,4,0,0,0,0.7,1.33,0,1.3,0.86,210,173,65+,M,Other,Spanish,Medicare\nE0626,0.04,0,0,0,0,0,0.9,1.04,0,0.7,1.22,248,246,18-44,F,Asian,Other,Medicaid\nE0627,0.32,1,7,0,0,0,1.2,1.47,0,0.8,1.24,202,273,45-64,M,Other,English,Medicaid\nE0628,0.54,1,9,0,0,0,0.6,1.43,0,0.8,1.11,151,370,18-44,M,Black,English,Uninsured\nE0629,0.01,1,0,0,0,0,1.5,0.94,0,1.2,0.89,313,293,45-64,M,Asian,Other,Uninsured\nE0630,0.05,0,0,0,0,0,0.9,0.83,0,1.2,1.35,248,375,45-64,M,White,Other,Uninsured\nE0631,0.03,0,0,0,0,0,0.6,1.07,0,0.4,1.09,143,247,45-64,F,Hispanic,Spanish,Medicare\nE0632,0.01,0,0,0,0,0,1.6,1.27,0,0.7,1.07,188,354,45-64,F,Black,English,Uninsured\nE0633,0.77,1,6,0,1,0,1.4,1.06,0,0.4,1.38,168,333,65+,F,Asian,Other,Medicare\nE0634,0.21,0,0,0,0,0,1.6,1.18,0,1.4,1.24,156,281,65+,F,Asian,Spanish,Commercial\nE0635,0.08,1,2,0,0,0,0.8,1.45,0,1.4,0.89,247,261,65+,F,Hispanic,Spanish,Medicare\nE0636,0.16,0,0,0,0,0,1.5,1.41,0,1.0,1.49,153,169,65+,F,Hispanic,English,Commercial\nE0637,0.15,0,0,0,0,0,0.8,0.95,0,1.3,1.07,303,299,65+,F,Other,Spanish,Uninsured\nE0638,0.18,0,0,0,0,0,1.2,1.46,0,1.1,1.33,141,240,18-44,M,White,Spanish,Medicaid\nE0639,0.52,1,,0,0,0,0.7,1.05,0,0.7,0.81,172,226,45-64,F,Other,Other,Uninsured\nE0640,0.2,0,0,0,0,0,0.9,1.18,0,0.6,1.21,380,215,65+,M,Hispanic,Spanish,Medicaid\nE0641,0.18,0,0,0,0,0,0.9,1.38,0,0.7,1.06,147,283,65+,F,Black,Other,Medicaid\nE0642,0.01,0,0,0,0,0,1.0,1.09,0,1.1,0.85,314,305,65+,M,Hispanic,Spanish,Commercial\nE0643,0.25,1,0,0,0,0,1.0,1.44,0,1.0,1.42,145,241,18-44,M,Other,Spanish,Uninsured\nE0644,0.78,1,5,0,0,0,1.4,2.59,0,0.7,0.84,140,269,18-44,F,White,English,Medicaid\nE0645,0.01,0,0,0,0,0,0.7,0.91,0,1.3,1.08,340,169,45-64,F,Asian,English,Commercial\nE0646,0.1,0,0,0,0,0,1.6,1.31,0,1.0,0.93,266,282,65+,M,Hispanic,Spanish,Medicare\nE0647,0.01,0,0,0,0,0,1.4,0.96,0,0.7,1.19,264,162,18-44,F,Black,Other,Medicare\nE0648,0.2,1,1,0,0,0,1.3,1.05,0,0.9,0.93,235,360,18-44,F,Other,English,Medicare\nE0649,0.05,1,1,0,0,0,0.8,1.39,0,0.8,1.45,169,258,45-64,F,White,Spanish,Commercial\nE0650,0.13,0,0,0,0,0,1.2,1.22,0,1.3,1.0,203,233,18-44,F,Hispanic,Spanish,Uninsured\nE0651,0.5,1,3,0,0,0,1.2,1.11,0,1.1,1.2,203,333,45-64,F,White,Spanish,Uninsured\nE0652,0.25,0,0,0,0,0,0.9,1.33,0,0.8,1.01,235,327,18-44,M,Other,English,Medicaid\nE0653,0.01,1,3,0,0,0,1.3,1.08,0,1.3,1.15,201,170,18-44,M,Other,Spanish,Uninsured\nE0654,0.14,1,2,0,0,0,1.7,0.95,0,1.3,1.44,231,320,18-44,M,Asian,English,Uninsured\nE0655,0.01,1,3,0,0,0,0.8,1.21,0,0.4,1.42,241,173,45-64,F,Other,Spanish,Uninsured\nE0656,0.3,0,0,0,0,0,0.8,1.32,0,0.6,1.22,321,162,45-64,M,Asian,Other,Uninsured\nE0657,0.17,0,0,0,0,0,1.2,0.88,0,1.1,1.15,239,275,65+,M,Other,Other,Commercial\nE0658,0.4,1,3,0,0,0,1.3,1.09,0,0.8,1.44,314,226,65+,F,Hispanic,English,Uninsured\nE0659,0.05,0,0,0,0,0,1.5,1.27,0,1.4,0.98,321,314,45-64,M,White,English,Medicaid\nE0660,0.15,0,0,0,0,0,1.2,0.98,0,0.8,0.88,221,351,65+,F,Black,Other,Medicaid\nE0661,0.04,1,1,0,0,0,1.6,1.0,0,0.5,0.96,257,329,65+,F,White,Other,Medicaid\nE0662,0.35,0,0,0,0,0,0.7,1.37,0,0.5,1.3,369,367,45-64,F,White,English,Medicaid\nE0663,0.74,1,9,0,0,0,0.8,0.83,0,0.4,1.17,322,173,45-64,M,Other,Spanish,Medicaid\nE0664,0.42,1,5,0,0,0,0.8,1.04,0,0.8,0.91,297,336,18-44,M,Hispanic,Other,Uninsured\nE0665,0.85,1,6,0,0,0,3.3,1.08,0,0.3,2.39,261,286,45-64,F,Asian,Other,Commercial\nE0666,0.01,0,0,0,0,0,1.3,1.42,0,0.5,0.84,371,275,45-64,M,Hispanic,Other,Medicaid\nE0667,0.13,1,3,0,0,0,0.8,0.92,0,0.6,1.12,203,240,18-44,F,White,Spanish,Uninsured\nE0668,0.01,0,0,0,0,0,1.3,1.4,0,0.5,1.16,376,247,45-64,M,White,Spanish,Medicare\nE0669,0.01,1,3,0,0,0,1.4,0.96,0,0.7,1.17,154,183,65+,M,Hispanic,English,Commercial\nE0670,0.62,1,9,0,0,0,1.3,0.98,0,0.5,0.96,292,224,65+,M,Other,Spanish,Uninsured\nE0671,0.01,0,0,0,0,0,1.6,1.26,0,1.2,1.38,309,235,18-44,M,Other,English,Medicaid\nE0672,0.24,1,1,0,0,0,1.2,1.11,0,0.3,1.3,275,300,65+,F,Hispanic,Spanish,Commercial\nE0673,0.15,0,0,0,0,0,0.8,1.4,0,1.3,1.46,301,358,65+,F,White,Spanish,Uninsured\nE0674,0.27,0,0,0,0,0,0.7,1.25,0,0.8,1.45,309,232,45-64,F,Other,Other,Uninsured\nE0675,0.2,0,0,0,0,0,1.1,1.39,0,0.8,1.49,301,369,18-44,M,Hispanic,Other,Medicare\nE0676,0.22,0,0,0,0,0,0.6,1.34,0,1.0,1.06,310,319,45-64,F,Hispanic,Other,Medicaid\nE0677,0.55,1,5,0,0,0,2.2,0.98,0,0.6,0.92,296,220,18-44,F,Black,English,Uninsured\nE0678,0.01,1,,0,0,0,1.1,1.1,0,1.0,0.95,349,306,65+,M,Other,Spanish,Medicare\nE0679,0.05,0,0,0,0,0,1.6,1.49,0,0.5,1.24,285,338,45-64,M,Hispanic,English,Medicare\nE0680,0.2,0,0,0,0,0,1.2,0.97,0,0.7,1.29,294,359,18-44,F,Asian,Other,Uninsured\nE0681,0.01,0,0,0,0,0,1.2,1.14,0,1.3,1.2,148,339,18-44,M,White,English,Medicare\nE0682,0.74,1,9,0,1,0,1.4,1.48,0,0.4,1.43,155,273,65+,F,Hispanic,Other,Commercial\nE0683,0.98,1,9,0,0,0,5.9,1.48,0,1.3,1.4,354,196,18-44,F,Other,Spanish,Commercial\nE0684,0.16,1,0,0,0,0,1.1,1.39,0,1.0,0.91,235,256,18-44,M,Black,English,Medicare\nE0685,0.01,0,0,0,0,0,1.4,1.21,0,1.3,1.46,159,205,65+,F,Black,Other,Uninsured\nE0686,0.04,0,0,0,0,0,0.7,1.21,0,0.4,0.86,170,376,18-44,F,White,Other,Commercial\nE0687,0.23,1,2,0,0,0,0.9,1.33,0,0.9,1.31,303,268,45-64,M,Other,Other,Uninsured\nE0688,0.18,0,0,0,0,0,1.3,0.89,0,0.5,1.21,226,182,45-64,F,Other,Spanish,Medicaid\nE0689,0.3,1,5,0,0,0,1.1,1.28,0,1.0,0.88,260,364,18-44,F,Hispanic,Spanish,Medicaid\nE0690,0.01,0,0,0,0,0,1.0,1.32,0,1.0,1.26,262,274,65+,F,Black,Other,Commercial\nE0691,0.32,1,4,1,0,0,1.2,1.9,0,0.4,1.39,356,347,65+,F,White,Other,Medicaid\nE0692,0.25,1,0,0,0,0,1.0,1.46,0,1.2,0.93,210,174,65+,F,White,Spanish,Medicare\nE0693,0.01,1,3,0,0,0,1.3,1.03,0,1.3,1.05,335,359,45-64,M,White,Other,Medicaid\nE0694,0.13,0,0,0,0,0,1.5,1.29,0,1.2,1.15,308,373,18-44,M,White,Spanish,Medicaid\nE0695,0.24,0,0,0,0,0,0.9,1.12,0,0.5,1.01,164,252,45-64,M,Asian,Other,Medicare\nE0696,0.51,1,2,,1,1,5.0,1.14,0,0.7,2.54,158,355,18-44,M,Other,Other,Commercial\nE0697,0.14,0,0,0,0,0,0.8,1.43,0,1.1,1.32,231,201,18-44,M,Asian,Other,Commercial\nE0698,0.11,0,0,0,0,0,1.2,0.91,0,0.9,1.14,339,188,65+,M,Other,Other,Commercial\nE0699,0.01,0,0,0,0,0,0.8,1.19,0,0.8,0.92,244,187,45-64,M,Hispanic,Other,Uninsured\nE0700,0.01,0,0,0,0,0,0.6,1.17,0,1.0,1.45,318,181,45-64,F,Hispanic,Spanish,Commercial\nE0701,0.38,1,3,0,0,0,1.2,1.06,0,0.7,0.93,228,213,65+,M,Hispanic,Other,Commercial\nE0702,0.01,1,2,,0,0,1.5,1.28,0,0.7,0.89,366,261,65+,F,White,Spanish,Medicare\nE0703,0.01,0,0,0,0,0,1.2,1.34,0,1.2,1.47,204,212,45-64,F,Asian,English,Uninsured\nE0704,0.01,1,3,0,0,0,1.7,1.45,1,0.7,0.91,213,318,45-64,M,Hispanic,Other,Medicaid\nE0705,0.42,0,0,0,0,0,0.9,0.99,0,0.8,1.29,195,274,18-44,M,Hispanic,English,Medicaid\nE0706,0.38,0,0,0,0,0,0.9,1.23,0,0.3,1.33,244,249,65+,F,Black,Spanish,Medicare\nE0707,0.39,1,1,0,0,0,0.7,1.49,0,1.3,1.45,230,196,18-44,F,Black,Other,Medicaid\nE0708,0.01,0,0,0,0,0,0.7,1.32,0,0.3,0.84,259,341,45-64,F,Black,Other,Uninsured\nE0709,0.23,0,0,0,0,0,1.2,1.39,0,1.0,0.96,302,273,18-44,M,White,English,Commercial\nE0710,0.01,0,0,0,0,0,0.6,1.46,0,0.6,0.94,161,313,45-64,F,Asian,Spanish,Medicaid\nE0711,0.15,1,1,0,0,0,0.9,0.83,0,0.7,0.85,353,322,45-64,F,Black,Spanish,Medicaid\nE0712,0.19,1,2,0,0,0,1.1,1.49,0,1.4,1.11,270,237,65+,M,Asian,Other,Medicaid\nE0713,0.21,1,9,0,0,1,1.2,2.91,0,0.3,3.02,284,287,65+,F,Hispanic,Spanish,Medicare\nE0714,0.25,0,0,0,0,0,0.9,1.11,0,0.5,1.21,176,204,18-44,M,Other,Other,Medicare\nE0715,0.36,1,5,0,0,1,4.2,1.22,0,0.4,3.17,291,269,18-44,F,Hispanic,Spanish,Commercial\nE0716,0.06,1,2,0,0,0,0.7,0.88,0,1.2,0.86,337,213,45-64,F,Black,English,Commercial\nE0717,0.59,1,4,0,1,0,3.7,1.21,0,0.6,1.32,181,165,65+,M,Other,Other,Medicaid\nE0718,0.71,1,4,0,0,0,5.1,1.09,0,0.9,0.98,377,363,65+,F,Asian,Spanish,Medicare\nE0719,0.01,1,3,0,0,0,1.7,1.33,0,1.3,1.0,231,316,18-44,F,Asian,English,Uninsured\nE0720,0.19,0,0,0,0,0,1.5,1.47,0,1.3,1.05,224,216,45-64,F,Black,Other,Medicaid\nE0721,0.17,0,0,0,0,0,1.6,1.29,0,0.4,0.91,377,244,65+,F,Asian,Spanish,Commercial\nE0722,0.01,0,0,0,0,0,1.5,1.38,0,0.4,0.84,169,261,45-64,M,Black,Spanish,Commercial\nE0723,0.11,0,0,0,0,0,0.8,1.11,0,0.4,1.34,276,183,65+,F,Hispanic,English,Commercial\nE0724,0.18,1,2,0,0,0,0.8,1.17,0,0.9,1.38,314,376,45-64,F,Hispanic,Spanish,Medicare\nE0725,0.01,1,1,0,0,0,0.7,1.24,0,1.1,1.1,380,205,18-44,M,Black,Spanish,Uninsured\nE0726,0.01,0,0,0,0,0,1.5,0.86,0,0.4,1.11,286,196,18-44,F,White,English,Medicaid\nE0727,0.29,1,3,1,0,0,1.0,0.83,0,0.8,0.85,373,241,45-64,F,Hispanic,Other,Medicare\nE0728,0.33,0,0,0,0,0,1.5,0.84,0,1.3,1.31,377,363,45-64,M,Hispanic,English,Uninsured\nE0729,0.01,0,0,0,0,0,1.2,1.03,0,0.4,0.94,258,223,65+,M,Other,Spanish,Medicare\nE0730,0.65,1,9,0,0,0,3.1,1.46,0,0.9,1.31,357,362,18-44,M,Black,Spanish,Uninsured\nE0731,0.25,1,2,0,0,0,1.1,0.95,0,0.5,1.38,193,276,65+,M,Hispanic,Spanish,Medicare\nE0732,0.73,1,9,0,0,0,1.2,2.0,0,0.4,1.01,248,283,18-44,M,Other,Spanish,Medicaid\nE0733,0.14,0,0,0,0,0,1.5,1.44,0,0.3,1.29,333,165,45-64,F,White,Other,Medicaid\nE0734,0.14,1,3,0,0,0,1.5,1.28,0,1.3,1.02,246,175,18-44,F,White,Other,Medicare\nE0735,0.01,0,0,0,0,0,1.1,1.4,0,0.4,1.42,353,286,65+,F,Hispanic,Other,Commercial\nE0736,0.17,1,2,,0,0,1.4,1.33,0,0.7,0.95,297,325,18-44,F,Hispanic,English,Medicaid\nE0737,0.26,0,0,0,0,0,1.2,1.44,0,0.6,1.2,150,369,18-44,M,Hispanic,Spanish,Uninsured\nE0738,0.2,1,5,0,0,0,2.0,1.45,0,0.5,1.1,284,253,45-64,F,Asian,English,Uninsured\nE0739,0.24,1,4,0,0,0,1.2,1.9,0,0.6,1.1,246,372,18-44,M,Black,Spanish,Medicaid\nE0740,0.08,0,0,0,0,0,1.1,1.12,0,0.3,1.06,379,269,65+,F,Black,Spanish,Medicaid\nE0741,0.14,0,0,0,0,0,0.7,1.17,0,1.2,1.36,175,173,45-64,F,White,English,Uninsured\nE0742,0.44,0,0,0,0,0,1.5,1.27,0,0.5,1.48,349,298,45-64,M,Hispanic,Other,Uninsured\nE0743,0.08,0,0,0,0,0,1.3,1.48,0,0.5,1.06,230,268,18-44,F,Hispanic,English,Commercial\nE0744,0.14,0,0,0,0,0,0.9,1.03,0,0.6,1.29,260,361,65+,F,Asian,English,Uninsured\nE0745,0.5,1,4,0,0,0,5.8,0.88,0,1.0,1.29,363,299,65+,F,Other,Spanish,Medicare\nE0746,0.27,1,1,1,0,0,0.8,1.3,0,1.1,1.41,186,324,18-44,M,Other,English,Commercial\nE0747,0.09,1,2,0,0,0,1.5,1.07,0,0.5,0.9,286,238,65+,M,Hispanic,Spanish,Medicare\nE0748,0.01,1,3,0,0,0,1.0,1.34,0,0.5,1.24,176,338,18-44,M,Hispanic,Other,Uninsured\nE0749,0.12,1,3,0,0,0,0.9,1.41,0,1.2,1.19,320,256,18-44,M,White,Other,Medicare\nE0750,0.01,1,0,0,0,0,1.2,0.81,0,1.0,1.23,265,375,45-64,M,Asian,Other,Commercial\nE0751,0.11,0,0,0,0,0,1.5,0.8,0,0.6,0.84,214,364,18-44,M,Other,Other,Medicaid\nE0752,0.01,0,0,0,0,0,0.7,1.21,0,0.5,1.16,291,286,45-64,M,Black,English,Uninsured\nE0753,0.03,1,2,0,0,0,1.1,0.98,0,0.9,1.19,380,308,18-44,F,Hispanic,English,Medicaid\nE0754,0.22,1,2,0,0,0,1.3,0.9,0,1.3,1.05,256,233,45-64,F,Hispanic,Spanish,Commercial\nE0755,0.78,1,3,1,0,0,5.6,0.95,0,0.7,1.48,217,282,18-44,F,Black,Spanish,Commercial\nE0756,0.42,0,0,0,0,0,1.5,0.81,1,0.9,1.47,211,175,45-64,F,Asian,Spanish,Medicare\nE0757,0.21,0,0,0,0,0,1.6,1.0,0,0.9,1.15,366,372,18-44,F,Black,Other,Medicare\nE0758,0.63,1,7,0,1,0,3.2,1.11,0,1.2,1.3,151,327,65+,M,Hispanic,English,Medicaid\nE0759,0.04,0,0,0,0,0,1.7,1.36,0,0.7,0.96,251,308,18-44,F,Other,Spanish,Medicare\nE0760,0.36,1,0,0,0,0,1.6,1.04,0,1.1,1.04,204,323,65+,F,White,Other,Medicaid\nE0761,0.05,0,0,0,0,0,1.3,1.2,0,1.3,1.29,206,238,65+,M,Asian,English,Uninsured\nE0762,0.18,1,0,0,0,0,1.3,1.42,0,1.3,1.4,269,316,18-44,M,Black,Spanish,Commercial\nE0763,0.47,1,5,0,0,0,1.3,0.87,0,0.9,1.04,363,340,65+,F,Other,Other,Commercial\nE0764,0.11,1,3,0,0,0,0.7,0.83,0,1.4,1.33,272,282,18-44,M,White,English,Uninsured\nE0765,0.01,0,0,0,0,0,1.6,1.18,0,1.2,1.49,222,194,45-64,M,White,English,Medicare\nE0766,0.01,0,0,0,0,0,1.6,1.1,0,0.5,1.19,218,259,18-44,M,Other,English,Medicaid\nE0767,0.03,0,0,0,0,0,1.7,0.84,0,0.9,0.9,358,280,65+,F,Asian,English,Medicaid\nE0768,0.49,1,1,1,1,0,1.1,0.96,0,0.6,2.38,204,225,65+,M,Black,Spanish,Commercial\nE0769,0.11,1,5,0,0,0,0.6,1.43,0,1.1,1.01,218,169,65+,M,Hispanic,English,Medicare\nE0770,0.35,1,3,0,0,0,1.1,0.9,0,0.4,1.22,256,247,18-44,M,Other,English,Medicaid\nE0771,0.64,1,4,0,1,0,4.8,2.1,0,0.7,1.14,311,333,18-44,F,Other,English,Commercial\nE0772,0.01,0,0,0,0,0,0.7,1.25,0,0.4,0.88,174,370,65+,F,Asian,Other,Medicaid\nE0773,0.97,1,7,0,0,0,3.2,2.08,0,1.3,1.47,370,229,18-44,F,Black,Other,Medicaid\nE0774,0.65,1,4,0,0,1,1.4,2.61,0,1.2,1.39,283,327,18-44,M,Asian,Spanish,Uninsured\nE0775,0.05,1,0,0,0,0,0.7,1.08,0,0.8,1.36,164,301,45-64,M,Black,English,Commercial\nE0776,0.01,1,0,0,0,0,1.2,1.29,0,1.1,1.05,343,183,45-64,F,Asian,English,Commercial\nE0777,0.29,0,0,0,0,0,1.3,1.12,0,1.2,1.04,324,266,65+,F,Other,Spanish,Medicare\nE0778,0.08,1,2,0,0,0,1.4,0.92,0,0.5,1.28,141,244,45-64,F,Black,Spanish,Uninsured\nE0779,0.23,0,0,0,0,0,1.0,0.86,0,0.8,1.42,311,305,18-44,F,White,Spanish,Medicare\nE0780,0.25,0,0,0,0,0,1.2,0.83,0,0.5,1.18,196,202,18-44,F,Hispanic,Other,Commercial\nE0781,0.18,0,0,0,0,0,1.6,1.43,0,0.7,1.28,274,307,65+,M,Other,English,Uninsured\nE0782,0.01,0,0,0,0,0,1.4,0.85,0,0.8,0.93,218,243,65+,F,Hispanic,Spanish,Medicaid\nE0783,0.14,0,0,0,0,0,1.5,0.89,0,1.0,0.99,253,316,18-44,F,White,Other,Uninsured\nE0784,0.24,1,6,0,0,0,1.2,1.0,0,1.2,1.27,240,165,45-64,M,Asian,Spanish,Medicare\nE0785,0.01,0,0,0,0,0,1.7,1.39,0,1.3,0.8,172,209,65+,M,White,Other,Uninsured\nE0786,0.54,1,3,0,0,0,1.2,1.18,0,0.4,1.01,201,214,65+,M,Black,Other,Medicare\nE0787,0.07,0,0,0,0,0,1.2,0.84,0,1.3,1.41,194,160,65+,F,Black,Other,Medicare\nE0788,0.01,1,0,0,0,0,1.0,1.07,0,0.8,1.4,351,341,65+,F,Black,English,Commercial\nE0789,0.17,1,3,0,0,0,1.2,1.26,0,0.7,1.44,328,289,18-44,F,Asian,Other,Medicare\nE0790,0.01,0,0,0,0,0,0.8,0.87,0,1.2,1.45,180,364,45-64,F,Asian,Spanish,Commercial\nE0791,0.19,1,0,0,0,0,0.8,1.06,1,0.5,1.09,175,352,45-64,M,Asian,Other,Uninsured\nE0792,0.25,0,0,0,0,0,1.5,0.89,0,0.5,1.39,207,185,65+,F,Hispanic,English,Uninsured\nE0793,0.13,0,0,0,0,0,1.4,0.88,0,1.0,1.35,276,257,18-44,F,White,Spanish,Uninsured\nE0794,0.63,1,5,0,1,0,0.7,3.38,0,0.6,1.31,341,293,18-44,M,White,Spanish,Medicare\nE0795,0.32,1,3,0,0,0,1.1,1.5,0,0.7,0.88,167,378,18-44,F,Hispanic,Other,Medicaid\nE0796,0.2,0,0,0,0,0,0.9,1.02,0,0.5,1.33,169,279,18-44,F,Hispanic,Spanish,Medicaid\nE0797,0.07,0,0,0,0,0,0.6,1.34,0,0.3,1.36,357,164,18-44,M,Hispanic,English,Uninsured\nE0798,0.2,1,3,0,0,0,1.1,1.03,0,1.0,0.93,348,279,45-64,M,Asian,Other,Uninsured\nE0799,0.01,1,1,0,0,0,1.3,1.05,0,1.4,1.31,291,319,65+,M,Other,Other,Commercial\nE0800,0.06,0,0,0,0,0,0.7,0.82,0,1.2,1.03,326,262,65+,F,Other,Other,Commercial\n";
+
+</script>
+<script>
+(function () {
+const LVK = window.LVK;
+const PACKS = Object.assign({}, window.RULE_PACKS);
+let PACK = PACKS.sepsis_ase;
+const $ = (id) => document.getElementById(id);
+const st = { rows: [], cols: [], auto: {}, queue: [], i: 0, human: { A: {}, B: {} }, audit: new Set(), second: [] };
+
+// ── Step 1 and 2 ───────────────────────────────────────────────────────────
+function li(list, text) { const l = document.createElement('li'); l.textContent = text; list.appendChild(l); }
+function showPack() {
+  $('pack-name').textContent = `${PACK.name} · ${PACK.version || 'no version'}`;
+  $('pack-source').textContent = PACK.source || '';
+  $('pack-caveat').textContent = PACK.caveat || '';
+  const so = PACK.signoff;
+  $('pack-status').textContent = so && so.name ? `Signed off by ${so.name}${so.role ? ', ' + so.role : ''}${so.date ? ', ' + so.date : ''}.`
+    : 'Draft: no clinician has signed off on these rules yet. Get that before anyone relies on the automatic labels.';
+  $('pack-status').className = so && so.name ? 'ok' : 'warn';
+  $('pack').classList.toggle('draft', !(so && so.name));
+  document.querySelectorAll('.lbl-yes').forEach((e) => { e.textContent = PACK.labels.yes; });
+  document.querySelectorAll('.lbl-no').forEach((e) => { e.textContent = PACK.labels.no; });
+  $('rules-gate').innerHTML = ''; $('rules-crit').innerHTML = '';
+  (PACK.gate || []).forEach((g) => li($('rules-gate'), LVK.describe(g)));
+  (PACK.criteria || []).forEach((c) => li($('rules-crit'), LVK.describe(c)));
+  $('rules-more').textContent = 'A blank field never decides a case: it goes to a person. ' +
+    (PACK.maxBlankCriteria ? `With no criterion met, ${PACK.maxBlankCriteria + 1} or more blank criteria also go to a person. ` : '') +
+    'Values within a cutoff\'s margin go to a person too.';
+  $('col-count').textContent = PACK.columns.length;
+  const tb = $('col-table').querySelector('tbody'); tb.innerHTML = '';
+  for (const c of PACK.columns) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td><code></code></td><td></td><td></td>';
+    tr.children[0].firstChild.textContent = c.name; tr.children[1].textContent = c.desc || ''; tr.children[2].textContent = c.required ? 'Yes' : c.group ? 'Optional (groups)' : 'Optional';
+    tb.appendChild(tr);
+  }
+  $('dl-sql').hidden = !SQL[PACK.id]; $('dl-fhir').hidden = !FHIR[PACK.id];
+  $('sorted').hidden = true; $('queue').hidden = true; $('results').hidden = true;
+}
+function fillPicker() {
+  const s = $('pack-pick'); s.innerHTML = '';
+  for (const p of Object.values(PACKS)) { const o = document.createElement('option'); o.value = p.id; o.textContent = p.name + (p.signoff && p.signoff.name ? '' : ' (draft)'); s.appendChild(o); }
+  s.value = PACK.id;
+}
+$('pack-pick').onchange = () => { PACK = PACKS[$('pack-pick').value]; showPack(); };
+$('pack-file').onchange = (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    let p; try { p = JSON.parse(String(r.result)); } catch (err) { $('pack-msg').className = 'small bad'; $('pack-msg').textContent = 'That file isn\'t valid JSON.'; return; }
+    const errs = LVK.validatePack(p);
+    if (errs.length) { $('pack-msg').className = 'small bad'; $('pack-msg').textContent = 'That pack has problems: ' + errs.join(' '); return; }
+    PACKS[p.id] = p; PACK = p; fillPicker(); showPack();
+    $('pack-msg').className = 'small ok'; $('pack-msg').textContent = `Loaded your pack "${p.name}". It stays in this browser.`;
+  };
+  r.readAsText(f);
+};
+$('dl-pack').onclick = () => download(`${PACK.id}.json`, JSON.stringify(PACK, null, 2), 'application/json');
+$('dl-pack-template').onclick = () => download('rule-pack-template.json', JSON.stringify(PACK_TEMPLATE, null, 2), 'application/json');
+const PACK_TEMPLATE = {
+  id: 'my_outcome', name: 'My outcome (describe the definition)', version: 'YYYY-MM-DD',
+  labels: { yes: 'Outcome', no: 'No outcome' },
+  signoff: null,
+  source: 'Where the definition comes from.',
+  caveat: 'What the definition misses.',
+  columns: [
+    { name: 'encounter_id', desc: 'Study ID, not an MRN.', required: true },
+    { name: 'model_score', desc: 'The model\'s highest score in the encounter.' },
+    { name: 'test_done', desc: '1 if the qualifying test was done.', required: true, show: true },
+    { name: 'lab_value', desc: 'The key lab value.', show: true },
+    { name: 'age_group', desc: 'For per-group numbers.', group: true },
+  ],
+  gate: [ { col: 'test_done', is: true, label: 'qualifying test done', failText: 'Qualifying test not done' } ],
+  criteria: [ { col: 'lab_value', op: '>=', value: 10, near: 0.1 } ],
+  maxBlankCriteria: 0,
+  noCriteriaText: 'No criterion met',
+};
+// Spreadsheet-safe CSV cell: quoted, and a leading = + - @ tab or return is
+// neutralized with an apostrophe, so a cell like =HYPERLINK(...) in someone's file
+// can't run as a formula when the download is opened in Excel (Nov 13, 2026).
+function csvCell(v) {
+  let s = String(v === undefined || v === null ? '' : v);
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+function csvLine(cells) { return cells.map(csvCell).join(','); }
+function download(name, text, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: type || 'text/plain' }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+$('dl-template').onclick = () => download(`${PACK.id}-template.csv`, PACK.columns.map((c) => c.name).join(',') + '\n', 'text/csv');
+$('dl-sql').onclick = () => download(`${PACK.id}-starting-point.sql`, SQL[PACK.id]);
+$('dl-fhir').onclick = () => download(`${PACK.id}-fhir-map.txt`, FHIR[PACK.id]);
+
+// ── Step 3: load and label ───────────────────────────────────────────────
+function parseCSV(text) {
+  const out = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === ',') { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); out.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  if (cell !== '' || row.length) { row.push(cell); out.push(row); }
+  return out.filter((r) => r.some((c) => c.trim() !== ''));
+}
+// Seeded shuffle, so the audit sample is the same if you reload the same file.
+function rng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+function load(text, name) {
+  st.lastText = text; st.lastName = name;
+  const grid = parseCSV(text);
+  if (grid.length < 2) { $('load-msg').textContent = 'That file has no rows.'; return; }
+  const cols = grid[0].map((c) => c.trim());
+  const need = PACK.columns.filter((c) => c.required).map((c) => c.name);
+  const missing = need.filter((c) => !cols.includes(c));
+  if (!cols.includes('model_score') && !cols.includes('model_alert')) missing.push('model_score or model_alert');
+  if (missing.length) { $('load-msg').innerHTML = ''; $('load-msg').append(`Missing columns: ${missing.join(', ')}. Use the blank template in Step 2.`); $('load-msg').className = 'small bad'; return; }
+  st.cols = cols;
+  st.rows = grid.slice(1).map((r) => Object.fromEntries(cols.map((c, i) => [c, (r[i] || '').trim()])));
+  // Reviewed labels are keyed by encounter, so they survive reloading a fixed query
+  // or pack in the same session. A different file (no shared IDs) starts clean.
+  const ids = new Set(grid.slice(1).map((r) => (r[cols.indexOf('encounter_id')] || '').trim()));
+  const overlap = Object.keys(st.human.A).some((id) => ids.has(id));
+  if (!overlap) { st.human = { A: {}, B: {} }; st.second = []; st.usedAudit = new Set(); }
+  st.usedAudit = st.usedAudit || new Set();
+  // Reloading the same encounters retires the last audit, so any reload is a clean re-audit.
+  if (overlap) for (const id of st.audit) st.usedAudit.add(id);
+  st.i = 0;
+  const counts = { yes: 0, no: 0, unsure: 0 };
+  st.auto = {};
+  for (const r of st.rows) { const o = LVK.labelRow(PACK, r); st.auto[r.encounter_id] = o; counts[o.label]++; }
+  // Blind audit: a random sample of the cases the rules decided, checked by a person.
+  // Cases already used in an earlier audit can't be audited again (clean re-audit).
+  const decided = st.rows.filter((r) => st.auto[r.encounter_id].label !== 'unsure' && !st.usedAudit.has(r.encounter_id)).map((r) => r.encounter_id);
+  // Audit size: the smallest sample whose interval would clear the target, if the rules
+  // are as accurate as assumed (Nov 13, 2026: sized by precision, not a flat percent).
+  const target = Math.min(0.99, Math.max(0.5, (Number($('target').value) || 90) / 100));
+  const expected = Math.min(0.999, Math.max(target + 0.005, (Number($('expected').value) || 95) / 100));
+  const want = LVK.auditSize(target, expected, 5000) || decided.length;
+  const n = Math.min(decided.length, want);
+  const rand = rng(st.rows.length * 7919 + decided.length + st.usedAudit.size * 13);
+  const pool = decided.slice();
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  st.pool = pool;
+  st.audit = new Set(pool.slice(0, n));
+  st.target = target;
+  const unsureIds = st.rows.filter((r) => st.auto[r.encounter_id].label === 'unsure' && !st.human.A[r.encounter_id]).map((r) => r.encounter_id);
+  // Mix the two so a reviewer can't tell an audit case from a hard one by its place in line.
+  const mixed = unsureIds.concat([...st.audit]);
+  for (let i = mixed.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [mixed[i], mixed[j]] = [mixed[j], mixed[i]]; }
+  st.queue = mixed;
+  $('load-msg').className = 'small ok';
+  $('load-msg').textContent = `Loaded ${st.rows.length} encounters from ${name}. Nothing was uploaded.`;
+  const S = $('sort-stats'); S.innerHTML = '';
+  const add = (b, s) => { const d = document.createElement('div'); d.className = 'stat'; d.innerHTML = '<b></b><span></span>'; d.firstChild.textContent = b; d.lastChild.textContent = s; S.appendChild(d); };
+  add(counts.yes, 'sepsis by the rules');
+  add(counts.no, 'not sepsis by the rules');
+  add(counts.unsure, 'too close to call: a person decides');
+  add(st.audit.size, 'blind audit sample: checks the rules');
+  const work = st.queue.length;
+  $('work-line').textContent = `A person reviews ${work} of ${st.rows.length} encounters (${Math.round(work / st.rows.length * 100)}%). The rules handle the rest, and the audit sample tells you how far to trust them.`;
+  $('audit-line').textContent = `Audit size: ${n} cases, enough to show the rules are at least ${Math.round(target * 100)}% accurate if they're right about ${+(expected * 100).toFixed(1)}% of the time.` +
+    (n < want ? ` (Only ${decided.length} decided cases exist, so all of them are in the audit.)` : '') +
+    ' If they turn out less accurate, the results will say how many more cases to add. Lower the target or raise the assumption to see the trade-off.';
+  $('sorted').hidden = false; $('queue').hidden = true; $('results').hidden = true;
+}
+$('file').onchange = (e) => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => load(String(r.result), f.name); r.readAsText(f); };
+$('sample').onclick = () => {
+  if (PACK.id !== 'sepsis_ase') { PACK = PACKS.sepsis_ase; fillPicker(); showPack(); }
+  load(window.SAMPLE_SEPSIS_CSV, 'the made-up sample (800 encounters, no real patients)');
+};
+$('start').onclick = () => { $('queue').hidden = false; show(); $('queue').scrollIntoView(); };
+
+// ── Step 4: workqueue ─────────────────────────────────────────────────────
+function showCols() { return PACK.columns.filter((c) => c.show).map((c) => c.name); }
+function currentList() { return $('reviewer').value === 'B' ? st.second : st.queue; }
+function show() {
+  const list = currentList();
+  const who = $('reviewer').value;
+  if (!list.length) { $('q-title').textContent = who === 'B' ? 'Pick the second-review sample first' : 'Nothing to review'; $('q-fields').innerHTML = ''; $('q-check').hidden = true; return; }
+  st.i = Math.max(0, Math.min(st.i, list.length - 1));
+  const id = list[st.i];
+  const row = st.rows.find((r) => r.encounter_id === id);
+  const done = Object.keys(st.human[who]).filter((k) => list.includes(k)).length;
+  $('q-title').textContent = `Encounter ${id}`;
+  $('q-count').textContent = `Case ${st.i + 1} of ${list.length} · ${done} answered · reviewer ${who}`;
+  $('q-bar').style.width = `${Math.round(done / list.length * 100)}%`;
+  const a = st.auto[id];
+  // Hard cases show what to check. Audit cases show nothing extra, and neither shows the rule's answer.
+  if (a.label === 'unsure' && who === 'A') { $('q-check').hidden = false; $('q-check').textContent = 'Check: ' + a.check.join('; ') + '.'; }
+  else $('q-check').hidden = true;
+  const f = $('q-fields'); f.innerHTML = '';
+  for (const c of showCols()) {
+    const tr = document.createElement('tr'); tr.innerHTML = '<th></th><td></td>';
+    tr.firstChild.textContent = c.replace(/_/g, ' '); tr.lastChild.textContent = row[c] === '' || row[c] === undefined ? '(blank)' : row[c];
+    f.appendChild(tr);
+  }
+  const prev = st.human[who][id];
+  document.querySelectorAll('.answers [data-a]').forEach((b) => { b.classList.toggle('primary', b.dataset.a === prev); });
+}
+function answer(v) {
+  const list = currentList(); if (!list.length) return;
+  st.human[$('reviewer').value][list[st.i]] = v;
+  if (st.i < list.length - 1) st.i++;
+  show();
+}
+document.querySelectorAll('.answers [data-a]').forEach((b) => { b.onclick = () => answer(b.dataset.a); });
+$('q-back').onclick = () => { st.i = Math.max(0, st.i - 1); show(); };
+document.addEventListener('keydown', (e) => {
+  if ($('queue').hidden || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === '1') answer('yes'); else if (e.key === '2') answer('no'); else if (e.key === '3') answer('unsure');
+  else if (e.key === 'ArrowLeft') { st.i = Math.max(0, st.i - 1); show(); }
+});
+$('reviewer').onchange = () => { st.i = 0; show(); };
+$('q-second').onclick = () => {
+  const answered = Object.keys(st.human.A);
+  if (answered.length < 10) { alertLine('Answer at least 10 cases as reviewer A first.'); return; }
+  const rand = rng(answered.length * 31 + 7);
+  const pool = answered.slice();
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  st.second = pool.slice(0, Math.max(10, Math.round(answered.length * 0.2)));
+  $('reviewer').value = 'B'; st.i = 0; show();
+};
+function alertLine(t) { $('q-count').textContent = t; }
+$('save').onclick = () => download('validation-progress.json', JSON.stringify({ pack: PACK.id, threshold: $('thresh').value, human: st.human, second: st.second }, null, 1), 'application/json');
+$('load-progress').onchange = (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { try { const p = JSON.parse(String(r.result)); st.human = p.human || st.human; st.second = p.second || []; show(); } catch (err) { alertLine('That progress file could not be read.'); } };
+  r.readAsText(f);
+};
+$('q-done').onclick = () => { results(); $('results').hidden = false; $('results').scrollIntoView(); };
+
+// ── Step 5: results ──────────────────────────────────────────────────────
+function wilson(k, n) {
+  if (!n) return null;
+  const z = 1.96, p = k / n, d = 1 + z * z / n;
+  const c = (p + z * z / (2 * n)) / d, h = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d;
+  return [Math.max(0, c - h), Math.min(1, c + h)];
+}
+const pc = (x) => (x * 100).toFixed(1) + '%';
+const withCI = (k, n) => { if (!n) return 'n/a'; const ci = wilson(k, n); return `${pc(k / n)} (95% CI ${pc(ci[0])}–${pc(ci[1])}, ${k} of ${n})`; };
+function truthOf(id) {
+  const h = st.human.A[id];
+  if (h) return { label: h, source: 'reviewer' };
+  const a = st.auto[id];
+  return { label: a.label, source: a.label === 'unsure' ? 'not reviewed' : 'rules' };
+}
+function modelPos(r) {
+  if (r.model_score !== undefined && r.model_score !== '') return Number(r.model_score) >= Number($('thresh').value);
+  return ['1', 'y', 'yes', 'true'].includes(String(r.model_alert).toLowerCase());
+}
+function tally(rows) {
+  const c = { tp: 0, fn: 0, tn: 0, fp: 0, excluded: 0 };
+  for (const r of rows) {
+    const t = truthOf(r.encounter_id).label;
+    if (t !== 'yes' && t !== 'no') { c.excluded++; continue; }
+    const m = modelPos(r);
+    if (t === 'yes') m ? c.tp++ : c.fn++; else m ? c.fp++ : c.tn++;
+  }
+  return c;
+}
+function results() {
+  const c = tally(st.rows);
+  const C = $('counts'); C.innerHTML = '';
+  for (const [k, lbl] of [['tp', 'true positives'], ['fn', 'false negatives (missed)'], ['tn', 'true negatives'], ['fp', 'false positives (false alarms)']]) {
+    const d = document.createElement('div'); d.className = 'stat'; d.innerHTML = '<b></b><span></span>'; d.firstChild.textContent = c[k]; d.lastChild.textContent = lbl; C.appendChild(d);
+  }
+  const pos = c.tp + c.fn, neg = c.tn + c.fp;
+  $('perf').textContent = `At score ≥ ${$('thresh').value}: sensitivity ${withCI(c.tp, pos)}; specificity ${withCI(c.tn, neg)}; sepsis in ${pos} of ${pos + neg} encounters. ${c.excluded ? `${c.excluded} encounters left out: can't tell, or still unreviewed.` : ''}`;
+  // How well the rules did, from the blind audit
+  const aud = [...st.audit].filter((id) => st.human.A[id] === 'yes' || st.human.A[id] === 'no');
+  const agree = aud.filter((id) => st.human.A[id] === st.auto[id].label).length;
+  const ra = $('rule-acc');
+  const T = st.target || 0.9, Tp = Math.round(T * 100);
+  $('fix-box').hidden = true;
+  if (!aud.length) { ra.className = 'small warn'; ra.textContent = 'Rule accuracy: no audit cases answered yet. Without them you can\'t tell whether to trust the automatic labels.'; }
+  else {
+    const ci = wilson(agree, aud.length);
+    const p = agree / aud.length;
+    ra.className = 'small ' + (ci[0] >= T ? 'ok' : 'warn');
+    let msg = `Rule accuracy (blind audit): the rules matched the reviewer on ${withCI(agree, aud.length)}.`;
+    if (ci[0] >= T) msg += ` That shows they're at least ${Tp}% accurate.`;
+    else {
+      msg += p > T + 0.005
+        ? ` That doesn't show at least ${Tp}%. Accuracy this close to the target needs a large audit; fixing the disagreements below is usually the faster way.`
+        : ` That's below ${Tp}%.`;
+      msg += ' Don\'t trust the automatic labels yet.';
+      showFix(aud);
+    }
+    ra.textContent = msg;
+  }
+  // Reviewer agreement (Cohen's kappa) on the second-review sample
+  const both = st.second.filter((id) => ['yes', 'no'].includes(st.human.A[id]) && ['yes', 'no'].includes(st.human.B[id]));
+  const kp = $('kappa');
+  if (both.length >= 10) {
+    const n = both.length, ag = both.filter((id) => st.human.A[id] === st.human.B[id]).length / n;
+    const pa = both.filter((id) => st.human.A[id] === 'yes').length / n, pb = both.filter((id) => st.human.B[id] === 'yes').length / n;
+    const pe = pa * pb + (1 - pa) * (1 - pb);
+    const k = pe === 1 ? 1 : (ag - pe) / (1 - pe);
+    kp.textContent = `Reviewer agreement: ${pc(ag)} raw, Cohen's kappa ${k.toFixed(2)} on ${n} cases both reviewers answered.`;
+  } else kp.textContent = 'Reviewer agreement: not measured yet. Have a second reviewer do the 20% sample to get it.';
+  // Per group
+  const gs = $('groupby');
+  if (!gs.options.length) {
+    for (const g of PACK.columns.filter((c) => c.group).map((c) => c.name).filter((g) => st.cols.includes(g))) { const o = document.createElement('option'); o.value = o.textContent = g; gs.appendChild(o); }
+    gs.onchange = groups;
+  }
+  groups();
+}
+function groups() {
+  const g = $('groupby').value; const body = $('group-table').querySelector('tbody'); body.innerHTML = '';
+  if (!g) return;
+  const vals = [...new Set(st.rows.map((r) => r[g] || '(blank)'))].sort();
+  for (const v of vals) {
+    const c = tally(st.rows.filter((r) => (r[g] || '(blank)') === v));
+    const tr = document.createElement('tr');
+    [v, c.tp + c.fn + c.tn + c.fp, c.tp + c.fn, withCI(c.tp, c.tp + c.fn), withCI(c.tn, c.tn + c.fp)].forEach((x) => { const td = document.createElement('td'); td.textContent = x; tr.appendChild(td); });
+    body.appendChild(tr);
+  }
+}
+function countsPayload() {
+  const c = tally(st.rows);
+  const aud = [...st.audit].filter((id) => ['yes', 'no'].includes(st.human.A[id]));
+  return { kit: 'local-validation', pack: PACK.id, packVersion: PACK.version, packSignedOff: !!(PACK.signoff && PACK.signoff.name), threshold: Number($('thresh').value), made: new Date().toISOString().slice(0, 10),
+    tp: c.tp, fn: c.fn, tn: c.tn, fp: c.fp, excluded: c.excluded,
+    ruleAudit: { answered: aud.length, agreed: aud.filter((id) => st.human.A[id] === st.auto[id].label).length } };
+}
+function disagreements(aud) { return aud.filter((id) => st.human.A[id] !== st.auto[id].label); }
+function showFix(aud) {
+  const d = disagreements(aud);
+  const body = $('disagree').querySelector('tbody'); body.innerHTML = '';
+  for (const id of d.slice(0, 50)) {
+    const tr = document.createElement('tr');
+    [id, st.auto[id].label, st.human.A[id], (st.auto[id].why || []).join('; ')].forEach((x) => { const td = document.createElement('td'); td.textContent = x; tr.appendChild(td); });
+    body.appendChild(tr);
+  }
+  const left = st.rows.filter((r) => st.auto[r.encounter_id].label !== 'unsure' && !st.usedAudit.has(r.encounter_id) && !st.audit.has(r.encounter_id)).length;
+  $('fresh-audit').disabled = left < 10;
+  $('fresh-audit').textContent = left < 10 ? 'Not enough unaudited cases left for a fresh audit' : 'Start a fresh audit';
+  $('fix-box').hidden = false;
+}
+$('dl-disagree').onclick = () => {
+  const aud = [...st.audit].filter((id) => ['yes', 'no'].includes(st.human.A[id]));
+  download('rule-disagreements.csv', 'encounter_id,rules_said,reviewer_said,why\n' + disagreements(aud).map((id) => csvLine([id, st.auto[id].label, st.human.A[id], (st.auto[id].why || []).join('; ')])).join('\n') + '\n', 'text/csv');
+};
+// Clean re-audit: retire this audit, re-run the (possibly fixed) rules, draw new cases.
+$('fresh-audit').onclick = () => {
+  for (const id of st.audit) st.usedAudit.add(id);
+  st.audit = new Set();
+  load(st.lastText, st.lastName);
+  $('load-msg').textContent += ` Fresh audit: ${st.audit.size} new cases; ${st.usedAudit.size} earlier audit cases retired.`;
+  $('start').click();
+};
+$('dl-counts').onclick = () => download('validation-counts.json', JSON.stringify(countsPayload(), null, 1), 'application/json');
+$('dl-labels').onclick = () => download('validation-labels.csv', 'encounter_id,label,source\n' + st.rows.map((r) => { const t = truthOf(r.encounter_id); return csvLine([r.encounter_id, t.label, t.source]); }).join('\n') + '\n', 'text/csv');
+// Hand the counts (numbers only) to the Validation Protocol in this browser.
+// Offline copy: no hand-off (different origin). Show the numbers to type in instead.
+if (window.LVK_OFFLINE) {
+  $('offline-online').hidden = true; $('offline-dl').hidden = true; $('offline-here').hidden = false;
+  $('to-vpg').textContent = 'Show the numbers for the Validation Protocol';
+}
+$('to-vpg').onclick = () => {
+  if (window.LVK_OFFLINE) {
+    const c = countsPayload();
+    $('vpg-hand').hidden = false;
+    $('vpg-hand').textContent = `Enter these in the Validation Protocol, Section 3 (local validation counts): true positives ${c.tp}, false negatives ${c.fn}, true negatives ${c.tn}, false positives ${c.fp}. Rule pack ${c.pack} (${c.packVersion}), model positive at score >= ${c.threshold}.`;
+    return;
+  }
+  try { localStorage.setItem('commons.lvk.counts', JSON.stringify(countsPayload())); } catch (e) { /* storage blocked: fall back to the download */ download('validation-counts.json', JSON.stringify(countsPayload(), null, 1), 'application/json'); return; }
+  location.href = '/validation-protocol/?counts=local';
+};
+
+const SQL_TEMPLATE = `-- Local Validation Kit: sepsis (CDC Adult Sepsis Event) starting point.
+-- Placeholder names in <ANGLE_BRACKETS>. Your analyst maps them to your EHR's reporting
+-- database and checks every code list. One row per inpatient encounter of adults (18+).
+-- Windows are calendar days relative to the FIRST blood culture day of the encounter.
+WITH enc AS (
+  SELECT e.<ENCOUNTER_ID> AS enc_key, e.<PATIENT_ID> AS pat_key, e.<ADMIT_DATE> AS admit_dt, e.<DISCHARGE_DATE> AS disch_dt,
+         e.<DISCHARGE_DISPOSITION> AS dispo
+  FROM <ENCOUNTERS> e
+  WHERE e.<ADMIT_DATE> BETWEEN <START_DATE> AND <END_DATE> AND e.<AGE_AT_ADMIT> >= 18
+),
+bc AS (   -- first blood culture order or collection per encounter (any result)
+  SELECT enc_key, MIN(CAST(<COLLECTED_AT> AS DATE)) AS bc_day
+  FROM <LAB_ORDERS> WHERE <PROCEDURE_CODE> IN (<BLOOD_CULTURE_CODES>) GROUP BY enc_key
+),
+abx AS (  -- one row per day a qualifying antimicrobial (IV or IM, or oral from the qualifying list) was given
+  SELECT DISTINCT a.enc_key, CAST(a.<ADMIN_TIME> AS DATE) AS abx_day
+  FROM <MED_ADMINISTRATIONS> a WHERE a.<MED_CLASS> IN (<QUALIFYING_ANTIMICROBIALS>) AND a.<ACTION> = 'Given'
+)
+-- qad_count: the longest run of consecutive antimicrobial days whose FIRST day falls within
+-- bc_day - 2 to bc_day + 2, and is a NEW antimicrobial (not given in the 2 days before).
+-- short_course_ok: 1 if death, discharge to hospice, transfer to another acute hospital,
+-- or comfort care started before that run could reach 4 days.
+-- Organ dysfunction fields: within bc_day - 2 to bc_day + 2.
+--   vasopressor_start: first norepinephrine, epinephrine, phenylephrine, vasopressin, dopamine or angiotensin II
+--   mech_vent_start:   first invasive mechanical ventilation episode
+--   lactate_max:       highest lactate (mmol/L)
+--   creatinine_ratio:  highest creatinine / baseline (lowest in the encounter)
+--   esrd:              end-stage renal disease on the problem list or dialysis before admission
+--   bilirubin_max, bilirubin_ratio: highest total bilirubin and its ratio to baseline (lowest in the encounter)
+--   platelet_min, platelet_baseline: lowest platelets in the window, and baseline (highest in the encounter)
+-- model_score: the model's highest logged score during the encounter (from its score table or flowsheet).
+-- Group columns (optional): age_group, sex, race_ethnicity, language, payer, as your EHR records them.
+SELECT enc.enc_key AS encounter_id /* replace with a study ID before export */,
+       <MAX_MODEL_SCORE> AS model_score,
+       CASE WHEN bc.bc_day IS NULL THEN 0 ELSE 1 END AS blood_culture,
+       <QAD_RUN_LENGTH> AS qad_count, <SHORT_COURSE_FLAG> AS short_course_ok,
+       <VASO_START_FLAG> AS vasopressor_start, <VENT_START_FLAG> AS mech_vent_start,
+       <LACTATE_MAX> AS lactate_max, <CREATININE_RATIO> AS creatinine_ratio, <ESRD_FLAG> AS esrd,
+       <BILI_MAX> AS bilirubin_max, <BILI_RATIO> AS bilirubin_ratio,
+       <PLT_MIN> AS platelet_min, <PLT_BASELINE> AS platelet_baseline,
+       <AGE_GROUP> AS age_group, <SEX> AS sex, <RACE_ETHNICITY> AS race_ethnicity, <LANGUAGE> AS language, <PAYER> AS payer
+FROM enc LEFT JOIN bc ON bc.enc_key = enc.enc_key;
+`;
+const FHIR_MAP = `Local Validation Kit: sepsis (CDC Adult Sepsis Event), FHIR R4 field map.
+Starting point only. Check every code against what your system actually uses.
+
+Encounter                inpatient encounters, age 18+ at admission; hospitalization.dischargeDisposition for hospice/transfer
+Blood culture            ServiceRequest or Specimen for blood culture (e.g. LOINC 600-7, Bacteria identified in Blood by Culture); use the collection date
+Antimicrobials           MedicationAdministration, status completed, qualifying antimicrobial list; one day per calendar day given
+Vasopressors             MedicationAdministration: norepinephrine, epinephrine, phenylephrine, vasopressin, dopamine, angiotensin II
+Mechanical ventilation   Procedure (invasive mechanical ventilation) or device/flowsheet data
+Lactate                  Observation, e.g. LOINC 2524-7 (serum/plasma) or 32693-4 (blood), mmol/L
+Creatinine               Observation, LOINC 2160-0, mg/dL; baseline = lowest in the encounter
+Total bilirubin          Observation, LOINC 1975-2, mg/dL; baseline = lowest in the encounter
+Platelets                Observation, LOINC 777-3, 10*3/uL; baseline = highest in the encounter
+ESRD                     Condition (end-stage renal disease) or dialysis before admission
+Comfort care             ServiceRequest/Procedure or code status, per your site
+Model score              wherever your system logs the model's scores (often a flowsheet or a vendor score table)
+Groups                   Patient.extension (US Core race/ethnicity), Patient.communication.language, Coverage.type
+`;
+const SQL = { sepsis_ase: SQL_TEMPLATE }, FHIR = { sepsis_ase: FHIR_MAP };
+fillPicker(); showPack();
+if (window.LVK_OFFLINE_HASH) $('offline-hash').textContent = window.LVK_OFFLINE_HASH;
+})();
+</script>
+</body>
+</html>

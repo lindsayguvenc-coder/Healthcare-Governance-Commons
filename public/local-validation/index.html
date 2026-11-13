@@ -63,6 +63,18 @@ pre{background:var(--tint);padding:10px;border-radius:6px;overflow:auto;font-siz
 
   <div class="card safe" role="note">
     <strong>Your file never leaves this browser.</strong> The page reads it on your computer and sends nothing anywhere. That's enforced, not just promised: the page's security policy blocks all network requests. Still, use a study ID, not an MRN, and leave out names and dates. The kit doesn't need them.
+    <details style="margin-top:8px" id="security"><summary>For your security team</summary>
+      <ul class="small" style="margin:8px 0 0;padding-left:18px">
+        <li><b>Run it offline.</b> <span id="offline-online">Download the kit as one file and run it from your own computer. After that, nothing on this website can change it, even if the website were ever compromised.</span><span id="offline-here" hidden>You're running the offline copy. Nothing on the website can change it.</span> <span id="offline-dl"><a id="offline-link" href="local-validation-kit-offline.html" download>Download the offline kit</a>.</span></li>
+        <li><b>Check the fingerprint.</b> The offline file's SHA-256 should be <code id="offline-hash">see local-validation-kit-offline.html.sha256</code>. On a Mac: <code>shasum -a 256 local-validation-kit-offline.html</code>. On Windows: <code>certutil -hashfile local-validation-kit-offline.html SHA256</code>. A different value means the file isn't the one published here: don't use it.</li>
+        <li><b>No network.</b> The page's Content-Security-Policy sets <code>connect-src 'none'</code>; the offline file also sets <code>default-src 'none'</code>, so it can't load anything at all.</li>
+        <li><b>No third-party code.</b> Three small script files written for the Commons, no libraries.</li>
+        <li><b>Rule packs can't run code.</b> They're plain data, checked before use. A bad pack can give wrong labels, which is why packs show their clinician sign-off status.</li>
+        <li><b>Downloads are spreadsheet-safe.</b> Cells that start with = + - or @ are neutralized, so nothing in a loaded file can run as a formula when a download is opened in Excel.</li>
+        <li><b>One thing the page can't control: browser extensions.</b> An extension with permission to read pages can read this one too. Use a browser profile with no extensions, or the managed browser your security team already locks down.</li>
+        <li><b>Source:</b> the kit's code is public in the Commons repository on GitHub (<code>public/local-validation/</code>).</li>
+      </ul>
+    </details>
   </div>
 
   <section class="card draft" id="pack">
@@ -166,6 +178,7 @@ pre{background:var(--tint);padding:10px;border-radius:6px;overflow:auto;font-siz
       <button id="dl-counts">Download counts</button>
       <button id="dl-labels">Download labels</button>
     </div>
+    <p class="small check" id="vpg-hand" hidden></p>
     <p class="small muted">Only the counts go to the Validation Protocol, in this browser. The labels file stays on your computer.</p>
   </section>
 
@@ -174,6 +187,7 @@ pre{background:var(--tint);padding:10px;border-radius:6px;overflow:auto;font-siz
   </footer>
 </div>
 
+<script src="offline-hash.js"></script>
 <script src="engine.js"></script>
 <script src="sepsis-ase.js"></script>
 <script src="sample-sepsis.js"></script>
@@ -253,6 +267,15 @@ const PACK_TEMPLATE = {
   maxBlankCriteria: 0,
   noCriteriaText: 'No criterion met',
 };
+// Spreadsheet-safe CSV cell: quoted, and a leading = + - @ tab or return is
+// neutralized with an apostrophe, so a cell like =HYPERLINK(...) in someone's file
+// can't run as a formula when the download is opened in Excel (Nov 13, 2026).
+function csvCell(v) {
+  let s = String(v === undefined || v === null ? '' : v);
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+function csvLine(cells) { return cells.map(csvCell).join(','); }
 function download(name, text, type) {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([text], { type: type || 'text/plain' }));
@@ -514,7 +537,7 @@ function showFix(aud) {
 }
 $('dl-disagree').onclick = () => {
   const aud = [...st.audit].filter((id) => ['yes', 'no'].includes(st.human.A[id]));
-  download('rule-disagreements.csv', 'encounter_id,rules_said,reviewer_said,why\n' + disagreements(aud).map((id) => `${id},${st.auto[id].label},${st.human.A[id]},"${(st.auto[id].why || []).join('; ').replace(/"/g, "'")}"`).join('\n') + '\n', 'text/csv');
+  download('rule-disagreements.csv', 'encounter_id,rules_said,reviewer_said,why\n' + disagreements(aud).map((id) => csvLine([id, st.auto[id].label, st.human.A[id], (st.auto[id].why || []).join('; ')])).join('\n') + '\n', 'text/csv');
 };
 // Clean re-audit: retire this audit, re-run the (possibly fixed) rules, draw new cases.
 $('fresh-audit').onclick = () => {
@@ -525,9 +548,20 @@ $('fresh-audit').onclick = () => {
   $('start').click();
 };
 $('dl-counts').onclick = () => download('validation-counts.json', JSON.stringify(countsPayload(), null, 1), 'application/json');
-$('dl-labels').onclick = () => download('validation-labels.csv', 'encounter_id,label,source\n' + st.rows.map((r) => { const t = truthOf(r.encounter_id); return `${r.encounter_id},${t.label},${t.source}`; }).join('\n') + '\n', 'text/csv');
+$('dl-labels').onclick = () => download('validation-labels.csv', 'encounter_id,label,source\n' + st.rows.map((r) => { const t = truthOf(r.encounter_id); return csvLine([r.encounter_id, t.label, t.source]); }).join('\n') + '\n', 'text/csv');
 // Hand the counts (numbers only) to the Validation Protocol in this browser.
+// Offline copy: no hand-off (different origin). Show the numbers to type in instead.
+if (window.LVK_OFFLINE) {
+  $('offline-online').hidden = true; $('offline-dl').hidden = true; $('offline-here').hidden = false;
+  $('to-vpg').textContent = 'Show the numbers for the Validation Protocol';
+}
 $('to-vpg').onclick = () => {
+  if (window.LVK_OFFLINE) {
+    const c = countsPayload();
+    $('vpg-hand').hidden = false;
+    $('vpg-hand').textContent = `Enter these in the Validation Protocol, Section 3 (local validation counts): true positives ${c.tp}, false negatives ${c.fn}, true negatives ${c.tn}, false positives ${c.fp}. Rule pack ${c.pack} (${c.packVersion}), model positive at score >= ${c.threshold}.`;
+    return;
+  }
   try { localStorage.setItem('commons.lvk.counts', JSON.stringify(countsPayload())); } catch (e) { /* storage blocked: fall back to the download */ download('validation-counts.json', JSON.stringify(countsPayload(), null, 1), 'application/json'); return; }
   location.href = '/validation-protocol/?counts=local';
 };
@@ -594,6 +628,7 @@ Groups                   Patient.extension (US Core race/ethnicity), Patient.com
 `;
 const SQL = { sepsis_ase: SQL_TEMPLATE }, FHIR = { sepsis_ase: FHIR_MAP };
 fillPicker(); showPack();
+if (window.LVK_OFFLINE_HASH) $('offline-hash').textContent = window.LVK_OFFLINE_HASH;
 })();
 </script>
 </body>
