@@ -147,8 +147,15 @@ system name/vendor/version questions, governance-area grading switched off
       left out the AI. Added: shared disclaimer, scribe/agent/admin use types with
       scribe and agent questions, alert and override rate, the cost of checking
       the tool (net vs. gross), grey "too little to assess", a check when the
-      self-rated overall evidence is higher than the answers support. Replay:
-      `tests/replay/record-roi.js`.
+      self-rated overall evidence is higher than the answers support. Second
+      pass (same day, from the 2025-26 ROI debate: PHTI scribe report, coding
+      intensity analyses, Bain/Bessemer scorecard, validation-burden writing):
+      who pays for higher coding (audit, clinician sees codes, cost to patients
+      and payers), actual use vs. licensed seats, where saved time went, time
+      spent checking/supervising and by whom (net time), baseline before
+      go-live, burnout surveyed before/after, cost of leaving and alternatives
+      (incl. EHR built-in), payoff and re-check dates, plus a rule-based
+      "What your answers flag" list. Replay: `tests/replay/record-roi.js`.
 - [ ] **ROI: real runs, then unpause.** Run it with a short-lived, spend-capped
       key and read real output before taking "roi" off `PAUSED_IN_CODE`.
 - [ ] **ROI: measured overhead rates.** The report says savings are gross until
@@ -157,8 +164,11 @@ system name/vendor/version questions, governance-area grading switched off
       percentage per category (cost-of-quality idea, Nov 4).
 - [ ] **ROI rating rules → statistician / domain review list.** The rules
       (e.g. outside peer-reviewed evidence caps at "moderate" before local data;
-      a missing cost caps financial at "weak"; untracked harm caps equity at
-      "moderate") are Commons positions, not a standard.
+      no baseline caps local measurement at "moderate"; a missing cost caps
+      financial at "weak"; unaudited coding gains, low or untracked use, or a
+      cost that leaves out checking cap financial at "moderate"; untracked harm
+      caps equity at "moderate"; a before/after burnout survey lifts
+      non-monetary to "moderate") are Commons positions, not a standard.
 - [x] **Consultation (Governance Assessment) retired (Nov 13, 2026).** Scrapped
       instead of reviewed: a big intake feeding 10 AI essays, mostly covered
       better now by the VPG, QC Setup and Transition tools. `/consultation`
