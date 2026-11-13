@@ -7,7 +7,7 @@
 // REPORTS_PAUSED in Vercel stays as the emergency switch: "1" or "all" pauses every
 // report tool; a comma list ("roi,transition") pauses just those; "0" or unset adds none.
 const TOOLS = ["vpg", "roi", "transition"];
-const PAUSED_IN_CODE = ["vpg"];
+const PAUSED_IN_CODE = [];
 
 function pausedTools() {
   const env = String(process.env.REPORTS_PAUSED || "").trim().toLowerCase();
