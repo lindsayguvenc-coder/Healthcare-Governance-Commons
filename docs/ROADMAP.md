@@ -219,8 +219,10 @@ system name/vendor/version questions, governance-area grading switched off
       and the 10% "near" margin.
 - [ ] **More rule packs**, one at a time, each with a clinician's sign-off:
       imaging triage, deterioration, readmission.
-- [ ] **VPG: unpause or not.** Rule-based, no AI. Open statistician items
-      (simulation figures, Westgard defaults) are labeled in the report.
+- [x] **VPG unpaused (Nov 13, 2026).** Rule-based, no AI. Open statistician
+      items (simulation figures, Westgard defaults, interval method) are
+      labeled in the report as Commons positions. Every report tool is now on;
+      `REPORTS_PAUSED` in Vercel is still the emergency switch.
 - [ ] **Literature pass on metrics** for anything newer worth adding.
 - [ ] **Face lift, last.** One consistent look across all report PDFs, once
       the content has settled.
