@@ -232,6 +232,20 @@ system name/vendor/version questions, governance-area grading switched off
 - [x] **Transition tools review (Nov 4).** Shared disclaimer, grey "not
       assessable" score, lived experience shown, "Can't tell from this" instead
       of invented detail, charter as a draft to mark up, AI text escaped.
+- [x] **Transition tools second pass (Nov 13).** Current-debate additions,
+      Lindsay's picks:
+      - Disagreement Unpacker: lens 9, who carries the cost (clinicians as
+        "liability sinks"; ties to the Disagreement as Data "freeze" section).
+      - Container Health Check: properties 7 "Can say no" (written power to
+        reject, change, retire; budget; board committee) and 8 "Sees what's
+        really in use" (inventory incl. staff-adopted AI, gathered without
+        punishment); failure mode 6, rubber stamp.
+      - Charter Starter: required section "When Clinicians and AI Disagree":
+        record both, overriding isn't punished, risk shared, and mismatches
+        captured, reviewed on a schedule and fed back as learning, with an
+        owner. Tool text notes the CHAI playbooks map to the Joint
+        Commission's RUAIH certification (launched June 2026).
+      Real runs still to do (needs a short-lived key).
 - [ ] **Rebuild governance-area grading** against `src/data/nodes.json`.
 - [x] **Section 6 readiness verdict (Nov 13).** Now printed, and computed from
       the deployment conditions listed under it, so the two can't disagree. The
