@@ -311,6 +311,25 @@ html{scroll-padding-top:56px}
   .tool-card:nth-child(3) { animation-delay: 0.15s; }
   .tool-card:nth-child(4) { animation-delay: 0.2s; }
 
+
+  .tools-grid { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 760px) { .tools-grid { grid-template-columns: 1fr; } }
+  .tool-card { display: flex; flex-direction: column; }
+  .tool-card .tool-meta { margin-top: auto; padding-top: 20px; }
+  .tool-card.c-red::before    { background: linear-gradient(90deg, var(--accent3), transparent); }
+  .tool-card.c-orange::before { background: linear-gradient(90deg, var(--accent6), transparent); }
+  .tool-card:hover.c-red    { border-color: var(--accent3); }
+  .tool-card:hover.c-orange { border-color: var(--accent6); }
+  .tool-card.c-red .tool-num, .tool-card.c-red .tool-tag, .tool-card.c-red .tool-title em { color: var(--accent3); }
+  .tool-card.c-orange .tool-num, .tool-card.c-orange .tool-tag, .tool-card.c-orange .tool-title em { color: var(--accent6); }
+  .tool-card.c-red:hover .tool-arrow { color: var(--accent3); }
+  .tool-card.c-orange:hover .tool-arrow { color: var(--accent6); }
+  .tool-card.c-amber .tool-title em { color: var(--accent4); }
+  .tool-card.c-planned { border-style: dashed; background: transparent; cursor: default; }
+  .tool-card.c-planned .tool-num, .tool-card.c-planned .tool-tag, .tool-card.c-planned .tool-title em { color: var(--muted); }
+  .tool-card.c-planned .tool-title { color: var(--muted); }
+  .grid-heading { grid-column: 1 / -1; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); padding: 40px 0 14px; border-bottom: 1px solid var(--border); margin-bottom: 2px; }
+
   /* ── MOBILE RESPONSIVE ── */
   @media (max-width: 600px) {
     body { padding: 28px 16px; }
@@ -362,94 +381,84 @@ html{scroll-padding-top:56px}
 
   <div class="tools-grid">
 
-    <!-- Disagreement Unpacker -->
     <a href="/transition#disagreement-unpacker" class="tool-card c-amber">
       <div class="tool-num">01</div>
       <div class="tool-tag">AI-Powered · Good Containers</div>
       <div class="tool-title">The <em>Disagreement Unpacker</em></div>
-      <p class="tool-desc">Disagreement can be information about the system, not just a problem to resolve. Describe a real disagreement and the tool walks through eight lenses: facts, assumptions, values, lived experience, incentives, risks, time horizons, and definitions. If your description doesn't cover something, it says so.</p>
+      <p class="tool-desc">Disagreement can be information about the system, not just a problem to resolve. Describe a real disagreement and the tool walks through nine lenses: facts, assumptions, values, lived experience, incentives, risks, time horizons, definitions, and who carries the cost if it goes wrong. If your description doesn't cover something, it says so.</p>
       <div class="tool-meta">
         <span class="tool-status status-live">Live</span>
         <span class="tool-arrow">↗</span>
       </div>
     </a>
 
-    <!-- Container Health Check -->
     <a href="/transition#container-health-check" class="tool-card c-blue">
       <div class="tool-num">02</div>
       <div class="tool-tag">AI-Powered · Good Containers</div>
       <div class="tool-title">Container <em>Health Check</em></div>
-      <p class="tool-desc">Describe your governance container and the tool reads it against six properties, including who can stop a tool. It gives no score: it shows what you said, what's missing, and what to ask your group.</p>
+      <p class="tool-desc">Describe your governance container and the tool reads it against eight properties, including who can stop a tool, whether the group can say no, and whether it sees what AI is really in use. It gives no score: it shows what you said, what's missing, and what to ask your group.</p>
       <div class="tool-meta">
         <span class="tool-status status-live">Live</span>
         <span class="tool-arrow">↗</span>
       </div>
     </a>
 
-    <!-- Charter Starter -->
     <a href="/transition#charter-builder" class="tool-card c-green">
       <div class="tool-num">03</div>
       <div class="tool-tag">AI-Powered · Good Containers</div>
       <div class="tool-title">The <em>Charter Starter</em></div>
-      <p class="tool-desc">Answer five questions and get a first draft charter to argue with: six principles as rules, metrics, and failsafes, plus who can stop a tool. A conversation starter, not a template.</p>
+      <p class="tool-desc">Answer five questions and get a first draft charter to argue with: six principles as rules, metrics, and failsafes, plus who can stop a tool and what happens when a clinician and the AI disagree. A conversation starter, not a template.</p>
       <div class="tool-meta">
         <span class="tool-status status-live">Live</span>
         <span class="tool-arrow">↗</span>
       </div>
     </a>
 
-
-
-    <!-- ROI Assessment -->
-    <a href="/roi-assessment" class="tool-card" style="border-color: var(--accent3); grid-column: 1 / -1;">
-      <div class="tool-num" style="color: var(--accent3);">04</div>
-      <div class="tool-tag" style="color: var(--accent3);">Rule-Rated · Six Value Areas · AI-Written Explanation</div>
-      <div class="tool-title">ROI <em style="color: var(--accent3);">Assessment</em></div>
+    <a href="/roi-assessment" class="tool-card c-red">
+      <div class="tool-num">04</div>
+      <div class="tool-tag">Rule-Rated · Six Value Areas · AI-Written Explanation</div>
+      <div class="tool-title">ROI <em>Assessment</em></div>
       <p class="tool-desc">Value from clinical AI is claimed broadly and measured rarely. This tool rates how strong the evidence is across six areas — clinical outcomes, operational impact, financial return (net of the cost of checking the tool), equity and harm, community value, and the non-monetary currencies governance rarely tracks — and sorts what you know into measured, assumed and unknown. Ratings come from fixed rules; AI writes the explanation. Built for governance committees deciding whether to continue or sunset, procurement teams evaluating adoption, and physician champions who need to build the case. Recommendations come only when your AI strategy is documented and in use.</p>
       <div class="tool-meta">
         <span class="tool-status status-live">Live</span>
-        <span class="tool-arrow" style="color: var(--accent3);">↗</span>
+        <span class="tool-arrow">↗</span>
       </div>
     </a>
 
-    <!-- Validation Protocol Generator -->
-    <a href="/validation-protocol" class="tool-card" style="border-color: var(--accent6); grid-column: 1 / -1;">
-      <div class="tool-num" style="color: var(--accent6);">05</div>
-      <div class="tool-tag" style="color: var(--accent6);">Rule-Based · Adaptive Elicitation · PDF Output</div>
-      <div class="tool-title">Validation Protocol <em style="color: var(--accent6);">Generator</em></div>
+    <a href="/validation-protocol" class="tool-card c-orange">
+      <div class="tool-num">05</div>
+      <div class="tool-tag">Rule-Based · Adaptive Elicitation · PDF Output</div>
+      <div class="tool-title">Validation Protocol <em>Generator</em></div>
       <p class="tool-desc">Keep your model card and validation study handy. A structured 6-section adaptive elicitation maps your organization, patient population, validation approach, contingency design, monitoring infrastructure, and challenge program to a complete, institution-specific validation protocol. Full quantitative bias assessment included. Built on the Commons governance architecture.</p>
       <div class="tool-meta">
         <span class="tool-status status-live">Live</span>
-        <span class="tool-arrow" style="color: var(--accent6);">↗</span>
+        <span class="tool-arrow">↗</span>
       </div>
     </a>
-    <!-- Local Validation Kit -->
-    <a href="/local-validation/" class="tool-card" style="border-color: var(--accent5); grid-column: 1 / -1;">
-      <div class="tool-num" style="color: var(--accent5);">06</div>
-      <div class="tool-tag" style="color: var(--accent5);">Runs in Your Browser · Rules First · Short Review Queue</div>
-      <div class="tool-title">Local Validation <em style="color: var(--accent5);">Kit</em></div>
+
+    <a href="/local-validation/" class="tool-card c-green">
+      <div class="tool-num">06</div>
+      <div class="tool-tag">Runs in Your Browser · Rules First · Short Review Queue</div>
+      <div class="tool-title">Local Validation <em>Kit</em></div>
       <p class="tool-desc">Test a clinical AI model on your own past patients. Rules label most encounters automatically; a person reviews only the cases the rules can't decide, plus a blind sample that checks the rules. Out come the four counts, intervals and per-group numbers the Validation Protocol needs. Your file never leaves your browser. First rule pack: sepsis (CDC Adult Sepsis Event). Paused until a clinician signs off the rules and a statistician checks the math.</p>
       <div class="tool-meta">
         <span class="tool-status status-coming">Paused · In review</span>
-        <span class="tool-arrow" style="color: var(--accent5);">↗</span>
+        <span class="tool-arrow">↗</span>
       </div>
     </a>
 
-    <!-- Agent QC Setup -->
-    <a href="/qc-setup" class="tool-card" style="border-color: var(--accent); grid-column: 1 / -1;">
-      <div class="tool-num" style="color: var(--accent);">07</div>
-      <div class="tool-tag" style="color: var(--accent);">Guided Setup · Lab QC for AI Agents · Prototype</div>
-      <div class="tool-title">Agent QC <em style="color: var(--accent);">Setup</em></div>
+    <a href="/qc-setup" class="tool-card c-purple">
+      <div class="tool-num">07</div>
+      <div class="tool-tag">Guided Setup · Lab QC for AI Agents · Prototype</div>
+      <div class="tool-title">Agent QC <em>Setup</em></div>
       <p class="tool-desc">The nine kinds of quality control a laboratory runs, mapped to a clinical AI agent. Every set point has a starting value and a plain statement of what the value means in clinical operations, so a team that changes nothing still has a defensible plan. Includes the former Metric Picker's statistics, lanes set per control, and a QC plan to confirm at validation. Fills in the values the Validation Protocol Generator leaves "set at validation."</p>
       <div class="tool-meta">
         <span class="tool-status status-coming">Prototype</span>
-        <span class="tool-arrow" style="color: var(--accent);">↗</span>
+        <span class="tool-arrow">↗</span>
       </div>
     </a>
 
-
-    <!-- Peer Challenge Registry -->
-    <a href="/challenge-registry" class="tool-card c-blue" style="grid-column: 1 / -1;">
+    <a href="/challenge-registry" class="tool-card c-blue">
       <div class="tool-num">08</div>
       <div class="tool-tag">Directory · Methodology, Not Data</div>
       <div class="tool-title">Peer Challenge <em>Registry</em></div>
@@ -459,6 +468,97 @@ html{scroll-padding-top:56px}
         <span class="tool-arrow">↗</span>
       </div>
     </a>
+
+    <a href="https://lindsayguvenc-coder.github.io/lab-rules-map/vendor-contracts/" class="tool-card c-amber" target="_blank" rel="noopener">
+      <div class="tool-num">09</div>
+      <div class="tool-tag">Reference · 57 Sourced Clauses · Lives Outside the Commons</div>
+      <div class="tool-title">Feed It to the Beast: <em>Procurement</em></div>
+      <p class="tool-desc">Enterprise AI procurement the way labs already survive(ish) it. Contract clauses for buying clinical AI, each traced to what binding law already requires of vendors in labs, blood supply, pharma, aviation, banking and other regulated fields: audit rights, disaggregated performance data, notice before updates, the right to suspend. Checked clause by clause against its sources.</p>
+      <div class="tool-meta">
+        <span class="tool-status status-live">Live · Opens another site</span>
+        <span class="tool-arrow">↗</span>
+      </div>
+    </a>
+
+    <a href="/" class="tool-card c-red">
+      <div class="tool-num">10</div>
+      <div class="tool-tag">AI-Powered · On Every Node Page · Name Coming</div>
+      <div class="tool-title">The Facetious <em>Collaborator</em></div>
+      <p class="tool-desc">The questions that don't get asked in the room. Open any node on the governance map, pick a role (clinician, patient, compliance, vendor, AI engineering, ethics and more), and get the three to five most uncomfortable questions that role would ask about it. You know your own questions; this is the other side of the table.</p>
+      <div class="tool-meta">
+        <span class="tool-status status-live">Live</span>
+        <span class="tool-arrow">↗</span>
+      </div>
+    </a>
+
+    <div class="grid-heading">Coming, from the gap list. Not built yet; nothing to open.</div>
+
+    <div class="tool-card c-planned" aria-disabled="true">
+      <div class="tool-num">11</div>
+      <div class="tool-tag">Monitoring · Lab QC for Live Models</div>
+      <div class="tool-title">Healthcare <em>QC Monitor</em></div>
+      <p class="tool-desc">Agent QC Setup, carried through: turn the QC plan into scheduled checks, apply the limits, and put anything that trips in front of a person. The general version is being built and tested first; the healthcare one comes here after.</p>
+      <div class="tool-meta">
+        <span class="tool-status status-coming">In the works</span>
+        
+      </div>
+    </div>
+
+    <div class="tool-card c-planned" aria-disabled="true">
+      <div class="tool-num">12</div>
+      <div class="tool-tag">Front Door · Ownership · Risk Tiers</div>
+      <div class="tool-title">AI Inventory and <em>Risk Tiering</em></div>
+      <p class="tool-desc">What AI is in use, including tools staff brought in themselves, who owns each one, how risky it is, and which reviews it needs. Also the starting list for identifying tools that use protected characteristics (Section 1557).</p>
+      <div class="tool-meta">
+        <span class="tool-status status-coming">Planned</span>
+        
+      </div>
+    </div>
+
+    <div class="tool-card c-planned" aria-disabled="true">
+      <div class="tool-num">13</div>
+      <div class="tool-tag">Near Misses · Overrides · Learning</div>
+      <div class="tool-title">Safety Event and <em>Override Log</em></div>
+      <p class="tool-desc">Report AI near misses and unsafe outputs, and review overrides, in a form that can go to a Patient Safety Organization. Borrows from swarms.wiki: what was attempted is kept separate from what was confirmed, and how sure you are is rated separately from how bad it was.</p>
+      <div class="tool-meta">
+        <span class="tool-status status-coming">Planned</span>
+        
+      </div>
+    </div>
+
+    <div class="tool-card c-planned" aria-disabled="true">
+      <div class="tool-num">14</div>
+      <div class="tool-tag">Same Data as the Kit</div>
+      <div class="tool-title">Threshold <em>Re-check</em></div>
+      <p class="tool-desc">From your own scores and labels, see sensitivity, positive predictive value and alert volume at each threshold, so the cutoff fits your patients. Opens paused, with a stamped sample, until it's reviewed like the kit.</p>
+      <div class="tool-meta">
+        <span class="tool-status status-coming">Planned</span>
+        
+      </div>
+    </div>
+
+    <div class="tool-card c-planned" aria-disabled="true">
+      <div class="tool-num">15</div>
+      <div class="tool-tag">Patients · Contestation</div>
+      <div class="tool-title">Patient Notice and <em>Challenge Pathway</em></div>
+      <p class="tool-desc">How patients are told AI is part of their care, and how a patient questions an AI-influenced decision and gets a person to look again.</p>
+      <div class="tool-meta">
+        <span class="tool-status status-coming">On hold</span>
+        
+      </div>
+    </div>
+
+    <div class="tool-card c-planned" aria-disabled="true">
+      <div class="tool-num">16</div>
+      <div class="tool-tag">Training · One Page per Role</div>
+      <div class="tool-title">Role <em>Training Sheets</em></div>
+      <p class="tool-desc">For each tool and each role: what it does, its limits, when to override, and who to tell.</p>
+      <div class="tool-meta">
+        <span class="tool-status status-coming">Maybe</span>
+        
+      </div>
+    </div>
+
   </div>
 
   <footer>
