@@ -54,6 +54,41 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
 - [ ] **Claim labels as data.** Sourced / Field consensus / Commons position /
       Needs source as a field on each claim, so the checks can enforce them.
 
+## Missing tools: gap assessment (Nov 13, 2026)
+Checked against the seven elements of the Joint Commission + CHAI guidance
+(Responsible Use of AI in Healthcare, Sept 17, 2025; voluntary, expected to
+shape a certification program) and the Commons nodes. Covered today: policies
+and governance structure (Charter Starter, Container Health Check,
+Disagreement Unpacker), risk and bias assessment (VPG, kit per-group results),
+pre-deployment validation (VPG, kit when it reopens), value (ROI).
+
+Gaps, in priority order:
+- [ ] **Monitoring setup for predictive models** (element 4; Watcher,
+      Threshold Review, Equity nodes). Agent QC Setup covers agents only, and
+      the VPG writes a monitoring plan but nothing helps run it. Lab-QC rules
+      on alert rates, PPV and subgroup gaps, with what to do on a breach.
+      Builds on the kit's math and Agent QC Setup.
+- [ ] **AI inventory and risk tiering** (element 1; Accountability,
+      Authority). The front door: what AI is in use, who owns it, how risky,
+      which reviews it needs. Also the starting list for Section 1557's duty to
+      identify tools that use protected inputs.
+- [ ] **Safety event and override log** (element 5; Override, Stop, Cold
+      Trigger, Learning Loop). A near-miss / unsafe-output report and an
+      override review sheet, shaped so reports can go to a PSO.
+- [ ] **Threshold re-check** (Threshold Review). From local scores and
+      labels, show sensitivity, PPV and alert volume at each threshold. Small
+      once the kit is reviewed; same data.
+- [ ] **Patient notice and challenge pathway** (element 2; Contestation,
+      Explainability). Plain-language disclosure drafts, when consent applies,
+      how a patient questions an AI-influenced decision. State rules differ;
+      examples only, not legal advice.
+- [ ] **Role-specific training sheet** (element 7). One page per tool per
+      role: what it does, its limits, when to override, who to tell. Could
+      draw on the VPG answers and the Urban Thesaurus.
+- [ ] **Vendor data-use terms** (element 3; Vendor Risk). The VPG has
+      contract questions; a standalone checklist for data-use agreements
+      (permitted uses, re-identification ban, audit rights) may be enough.
+
 ## Tools: rebuild once-over (added Oct 28, 2026)
 - [ ] **Once-over of every tool.** All tools were first passes: Validation
       Protocol Generator, ROI Assessment, Peer Challenge Registry, Facetious
