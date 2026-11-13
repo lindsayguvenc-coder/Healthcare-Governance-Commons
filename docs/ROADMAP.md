@@ -188,6 +188,27 @@ system name/vendor/version questions, governance-area grading switched off
       Replay: `tests/replay/record-vpg-second.js` (17 checks, real engines and PDFs).
       Plus an "At a Glance" page after the cover: verdict, key facts, what must
       close before go-live, the first open items. All repeated from the sections.
+- [x] **Local Validation Kit v1 (Nov 13, 2026)** at `/local-validation/`. Gets
+      hospitals the four counts the VPG needs from their own patients. Rules
+      label most encounters; a person reviews only the can't-tell cases plus a
+      blind audit sample that measures the rules; optional second reviewer for
+      Cohen's kappa. Runs entirely in the browser: the page's security policy
+      blocks all network requests (`connect-src 'none'`). Counts (numbers only)
+      hand off to the VPG in the same browser, and the VPG records where they
+      came from. First rule pack: sepsis after the CDC Adult Sepsis Event
+      (`public/local-validation/sepsis-ase.js`). Ships with SQL and FHIR
+      starting points and 800 made-up encounters
+      (`scripts/make-sample-sepsis.py`). Replay: `tests/replay/record-lvk.js`.
+- [ ] **Clinician sign-off on the sepsis rule pack** before anyone relies on its
+      labels. Includes the "too close to call" band (within 10% of a cutoff),
+      the antimicrobial-day handling, and the baselines in the SQL notes.
+- [ ] **Kit: audit sample size.** Default 5% (at least 20) is too small to show
+      the rules are above 90% even when they're right about 95% of the time (the
+      test run needed about 158). The page now says how many would; decide
+      whether to size the audit by the precision wanted instead of a percent.
+      Add to the statistician list with the kit's Wilson intervals and kappa.
+- [ ] **More rule packs**, one at a time, each with a clinician's sign-off:
+      imaging triage, deterioration, readmission.
 - [ ] **VPG: unpause or not.** Rule-based, no AI. Open statistician items
       (simulation figures, Westgard defaults) are labeled in the report.
 - [ ] **Literature pass on metrics** for anything newer worth adding.

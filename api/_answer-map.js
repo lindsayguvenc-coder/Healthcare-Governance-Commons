@@ -111,6 +111,8 @@ function mapAnswers(raw = {}, documentMeta = []) {
     if (tn + fp > 0) set("Q16", Math.round((tn / (tn + fp)) * 1000) / 10);
     set("Q_cohort_size", `${tp + fn + tn + fp} cases (${tp + fn} positive, ${tn + fp} negative)`);
   }
+  // Where the counts came from (the Local Validation Kit fills this in, Nov 13, 2026)
+  if (typeof a.q_counts_source === "string" && a.q_counts_source.trim()) set("Q_cohort_description", a.q_counts_source.trim());
   set("Q_floor_sens", a.q_floor_sens);
   set("Q_floor_spec", a.q_floor_spec);
   set("Q_false_alarms", a.q_false_alarms);
