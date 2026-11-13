@@ -102,6 +102,11 @@ let next = null;
     q_community_trust: "No — not assessed", q_community_impact: "Not yet assessed",
     q_staff_trust: "Mixed — divided response", q_patient_trust: "Unknown — not assessed",
     q_evidence_overall: "Strong — robust data across multiple dimensions",
+    q_recheck: "Re-check date set, no payoff date", q_baseline: "No", q_adoption: "About half",
+    q_time_went: ["More patient visits"], q_check_hours: "Not tracked", q_check_who: ["The clinicians using it"],
+    q_coding_source: "Yes — a main part", q_coding_audit: "Spot checks", q_coding_review: "No — codes go out without clinician review",
+    q_coding_patient: "No", q_exit_cost: "High — locked in (long contract, data, retraining)", q_alternatives: "No",
+    q_burnout_measured: "Yes — before and after",
   };
   const load = async (answers) => {
     await page.goto(`${base}/roi-assessment/index.html`);
@@ -140,11 +145,17 @@ let next = null;
   await page.evaluate(() => renderSection(2));
   await scrollTo("#qblock-q_alert_rate");
   await caption("Clinical & Ops: the duplicate subgroup question is gone, and 'how it was measured' is split from 'what it showed'. New: alert rate, override rate.");
+  await scrollTo("#qblock-q_baseline");
+  await caption("New from the current debate: baseline before go-live, how many paid seats are actually used, where the saved time went, and how much time goes to checking it, and by whom.", 4600);
   await scrollTo("#qblock-q_scribe_time");
   await caption("Scribe-only questions: was time saved measured here or is it the vendor's number, are notes checked for errors, how is recording consent handled.");
   await page.evaluate(() => renderSection(3));
   await scrollTo("#qblock-q_assurance_cost");
   await caption("Financial: new question, does the cost include the ongoing cost of checking the tool? That's the human-assurance overhead.");
+  await scrollTo("#qblock-q_coding_source");
+  await caption("Coding: is higher billing part of the value case? If yes: is it audited, do clinicians see the codes, and what does it cost patients and payers?", 4600);
+  await scrollTo("#qblock-q_exit_cost");
+  await caption("And: what leaving would cost, and whether it was compared with alternatives, including your EHR vendor's built-in option.");
 
   // 4. Full report: thinking block first, documented strategy
   await load(SCRIBE);
@@ -153,10 +164,15 @@ let next = null;
   await caption("Report. The AI reply starts with a thinking block, which used to make every run fail with 'No content returned'. Now it reads fine.");
   await scrollTo(".how-rated");
   await caption("Ratings come from fixed rules on your answers. Each one shows why. AI-written parts are labeled.");
+  await scrollTo(".flags-section");
+  results.flags = await page.locator(".flags-section li").count();
+  await caption("New: 'What your answers flag', set by rules. Codes billed without clinician review, unaudited coding, cost to patients, no baseline, lock-in, informal consent...", 5200);
   await scrollTo(".dimension-card:nth-child(1)");
-  await caption("Clinical: measured locally, so strong evidence, and the result questioned the value. Strength of evidence, not size of value.", 4200);
+  await caption("Clinical: measured locally, but with no baseline from before go-live, so moderate, not strong. And the result questioned the value.", 4400);
   await scrollTo(".dimension-card:nth-child(3)");
-  await caption("Financial: a partial analysis, and the cost leaves out checking the tool, so any return is gross, not net. Net vs. gross note, no invented percentage.", 4400);
+  await caption("Financial: partial analysis, coding gains not regularly audited, checking cost left out. Gross, not net. No invented percentage.", 4600);
+  await scrollTo(".dimension-card:nth-child(6)");
+  await caption("Non-monetary: burnout was surveyed before and after, so it can rise above 'impression only'.");
   results.selfCheck = await page.locator("text=Check the overall evidence rating").count();
   await scrollTo(".gap-map");
   await caption("Evidence map, also by rules: measured, assumed (estimates, vendor numbers, impressions), unknown.");

@@ -147,18 +147,36 @@ system name/vendor/version questions, governance-area grading switched off
       left out the AI. Added: shared disclaimer, scribe/agent/admin use types with
       scribe and agent questions, alert and override rate, the cost of checking
       the tool (net vs. gross), grey "too little to assess", a check when the
-      self-rated overall evidence is higher than the answers support. Replay:
-      `tests/replay/record-roi.js`.
-- [ ] **ROI: real runs, then unpause.** Run it with a short-lived, spend-capped
-      key and read real output before taking "roi" off `PAUSED_IN_CODE`.
+      self-rated overall evidence is higher than the answers support. Second
+      pass (same day, from the 2025-26 ROI debate: PHTI scribe report, coding
+      intensity analyses, Bain/Bessemer scorecard, validation-burden writing):
+      who pays for higher coding (audit, clinician sees codes, cost to patients
+      and payers), actual use vs. licensed seats, where saved time went, time
+      spent checking/supervising and by whom (net time), baseline before
+      go-live, burnout surveyed before/after, cost of leaving and alternatives
+      (incl. EHR built-in), payoff and re-check dates, plus a rule-based
+      "What your answers flag" list. Replay: `tests/replay/record-roi.js`.
+- [x] **ROI: real runs, then unpause (Nov 13).** Five made-up organizations
+      through the real relay and model (`tests/replay/real-roi.js`): scribe,
+      sepsis model, pre-adoption CT triage, prior-auth agent, thin intake. All
+      complete (1,000-1,900 output tokens of 3,500, no thinking), no invented
+      facts, no re-grading, recommendations only where allowed. Fixed after:
+      "unknown" was being written up as "no baseline"; about 1 in 4 replies for
+      one case dropped a closing bracket, so the page now repairs brackets,
+      lifts misplaced fields, and retries once. Then 10 more real runs, 10 of
+      10 clean. "roi" is off
+      `PAUSED_IN_CODE`, so merging the review PR turns ROI reports on.
 - [ ] **ROI: measured overhead rates.** The report says savings are gross until
       the cost of checking the tool is subtracted, but applies no number. Once
       there are measured examples per system type, add an estimated overhead
       percentage per category (cost-of-quality idea, Nov 4).
 - [ ] **ROI rating rules → statistician / domain review list.** The rules
       (e.g. outside peer-reviewed evidence caps at "moderate" before local data;
-      a missing cost caps financial at "weak"; untracked harm caps equity at
-      "moderate") are Commons positions, not a standard.
+      no baseline caps local measurement at "moderate"; a missing cost caps
+      financial at "weak"; unaudited coding gains, low or untracked use, or a
+      cost that leaves out checking cap financial at "moderate"; untracked harm
+      caps equity at "moderate"; a before/after burnout survey lifts
+      non-monetary to "moderate") are Commons positions, not a standard.
 - [x] **Consultation (Governance Assessment) retired (Nov 13, 2026).** Scrapped
       instead of reviewed: a big intake feeding 10 AI essays, mostly covered
       better now by the VPG, QC Setup and Transition tools. `/consultation`
@@ -220,8 +238,10 @@ system name/vendor/version questions, governance-area grading switched off
       kappa on a 20% second-review sample, and the 10% "near" margin.
 - [ ] **More rule packs**, one at a time, each with a clinician's sign-off:
       imaging triage, deterioration, readmission.
-- [ ] **VPG: unpause or not.** Rule-based, no AI. Open statistician items
-      (simulation figures, Westgard defaults) are labeled in the report.
+- [x] **VPG unpaused (Nov 13, 2026).** Rule-based, no AI. Open statistician
+      items (simulation figures, Westgard defaults, interval method) are
+      labeled in the report as Commons positions. Every report tool is now on;
+      `REPORTS_PAUSED` in Vercel is still the emergency switch.
 - [ ] **Literature pass on metrics** for anything newer worth adding.
 - [ ] **Face lift, last.** One consistent look across all report PDFs, once
       the content has settled.

@@ -782,6 +782,14 @@ function hasStrategy() {
 function recsAllowed() { return a().q_strategy === 'Yes — documented and in active use'; }
 function isScribe() { return (a().q_use_type || '').startsWith('Ambient scribe'); }
 function isAgent() { return (a().q_use_type || '').startsWith('Agentic workflow'); }
+function countsCoding() {
+  const c = a().q_coding_source || '';
+  return c.startsWith('Yes');
+}
+function codingRelevant() {
+  const cats = a().q_financial_categories || [];
+  return isScribe() || cats.includes('Improved revenue capture or billing accuracy');
+}
 
 // ── SECTIONS ──────────────────────────────────────────────────────────────────
 
@@ -973,6 +981,12 @@ function sectionStrategy() {
         showIf: () => a().q_exit_threshold === 'Yes — formally defined',
         placeholder: 'e.g. if clinical performance drops below X%, if equity gap exceeds Y%, if staff burden increases beyond Z...',
       },
+      {
+        id: 'q_recheck', required: false,
+        text: 'When should it pay off, and when will you re-check?',
+        type: 'select',
+        options: ['Payoff date and re-check date both set', 'Re-check date set, no payoff date', 'Neither set', 'Unknown'],
+      },
     ],
   };
 }
@@ -1056,6 +1070,44 @@ function sectionClinicalOps() {
           'Not applicable — system does not generate alerts',
           'Unknown',
         ],
+      },
+      {
+        id: 'q_baseline', required: false,
+        text: isOngoing()
+          ? 'Was a baseline measured before go-live (the same measures, before the tool)?'
+          : 'Will you measure a baseline before go-live (the same measures you will use after)?',
+        type: 'select',
+        options: isOngoing()
+          ? ['Yes — for the main measures', 'For some measures', 'No', 'Unknown']
+          : ['Yes — planned', 'Not planned', 'Unknown'],
+      },
+      {
+        id: 'q_adoption', required: false,
+        text: 'What share of licensed users actually use it regularly?',
+        type: 'select',
+        showIf: () => isOngoing(),
+        options: ['Most (75% or more)', 'About half', 'A minority (under 25%)', 'Not tracked', 'Unknown'],
+      },
+      {
+        id: 'q_time_went', required: false,
+        text: 'Where did the time it saves actually go?',
+        type: 'multi',
+        showIf: () => isOngoing(),
+        options: ['More patient visits', 'More time with each patient', 'Less after-hours work', 'Other work filled it', 'Nowhere visible / not tracked', 'It doesn\'t save time', 'Unknown'],
+      },
+      {
+        id: 'q_check_hours', required: false,
+        text: 'How much staff time goes to checking, correcting, or supervising its output?',
+        type: 'select',
+        options: isOngoing()
+          ? ['Measured — less than the time it saves', 'Measured — eats most or all of the time it saves', 'Estimated, not measured', 'Not tracked', 'Unknown']
+          : ['Estimated before purchase', 'Not estimated', 'Unknown'],
+      },
+      {
+        id: 'q_check_who', required: false,
+        text: 'Who does that checking?',
+        type: 'multi',
+        options: ['The clinicians using it', 'A separate reviewer or QA team', 'IT / informatics', 'Nobody in particular', 'Unknown'],
       },
       {
         id: 'q_alert_rate', required: false,
@@ -1155,6 +1207,35 @@ function sectionFinancial() {
         ],
       },
       {
+        id: 'q_coding_source', required: false,
+        text: 'Is higher coding or billing part of the value case?',
+        type: 'select',
+        showIf: () => codingRelevant(),
+        note: 'Higher coding is revenue to you and cost to patients and payers. It is value only if it reflects care that was actually given and missed before, not just more intense coding.',
+        options: ['Yes — a main part', 'Yes — a small part', 'No', 'Unknown'],
+      },
+      {
+        id: 'q_coding_audit', required: false,
+        text: 'Do coders audit the higher-level codes against the care actually given?',
+        type: 'select',
+        showIf: () => codingRelevant() && countsCoding(),
+        options: ['Yes — regular coder audit', 'Spot checks', 'No', 'Unknown'],
+      },
+      {
+        id: 'q_coding_review', required: false,
+        text: 'Do clinicians see the codes before the claim goes out?',
+        type: 'select',
+        showIf: () => codingRelevant() && countsCoding(),
+        options: ['Yes — always', 'Sometimes', 'No — codes go out without clinician review', 'Unknown'],
+      },
+      {
+        id: 'q_coding_patient', required: false,
+        text: 'Has anyone looked at what the higher coding costs patients (out-of-pocket, high-deductible plans) and payers?',
+        type: 'select',
+        showIf: () => codingRelevant() && countsCoding(),
+        options: ['Yes', 'No', 'Unknown'],
+      },
+      {
         id: 'q_financial_analysis', required: true,
         text: 'Has a formal financial analysis been conducted?',
         type: 'select',
@@ -1177,6 +1258,18 @@ function sectionFinancial() {
           'Not assessed',
           'Not applicable',
         ],
+      },
+      {
+        id: 'q_exit_cost', required: false,
+        text: 'If you stopped using it, what would leaving cost?',
+        type: 'select',
+        options: ['Low — easy to switch off', 'Moderate — contract or workflow to unwind', 'High — locked in (long contract, data, retraining)', 'Unknown'],
+      },
+      {
+        id: 'q_alternatives', required: false,
+        text: 'Has it been compared with alternatives, including a built-in option from your EHR vendor?',
+        type: 'select',
+        options: ['Yes', 'No', 'Not applicable', 'Unknown'],
       },
       {
         id: 'q_financial_regulatory', required: false,
@@ -1300,6 +1393,12 @@ function sectionEquity() {
           'Unknown — not assessed',
           'Not yet deployed to clinical staff',
         ],
+      },
+      {
+        id: 'q_burnout_measured', required: false,
+        text: 'Has burnout or well-being been measured with a survey, before and after?',
+        type: 'select',
+        options: ['Yes — before and after', 'After only', 'No', 'Not applicable', 'Unknown'],
       },
       {
         id: 'q_patient_trust', required: false,
@@ -1631,7 +1730,11 @@ function rateClinical(x) {
     const res = x.q_clinical_result;
     const tail = res === 'Value questioned' ? ' The result put the value in question.'
       : res === 'Value confirmed' ? ' The result confirmed value.' : '';
-    if (s === 'Formally measured with local data') return ['strong', 'Measured formally with local data.' + tail];
+    if (s === 'Formally measured with local data') {
+      const b = x.q_baseline || '';
+      if (!b.startsWith('Yes')) return ['moderate', 'Measured formally with local data, but ' + (b === 'For some measures' ? 'only some measures had a before-number.' : 'with no baseline from before go-live to compare against.') + tail];
+      return ['strong', 'Measured formally with local data, against a baseline from before go-live.' + tail];
+    }
     if (s === 'Informally assessed') return ['weak', 'Assessed informally only.' + tail];
     return ['insufficient', 'Deployed, but clinical value has not been measured here.'];
   }
@@ -1645,13 +1748,22 @@ function rateOperational(x) {
   let r, why;
   if (s === 'Not applicable') return ['not-applicable', 'Marked not applicable.'];
   if (unk(s)) { r = 'not-assessed'; why = 'Whether operational impact was assessed is unknown.'; }
-  else if (s.startsWith('Yes — formal')) { r = 'strong'; why = 'Assessed in a formal study or analysis.'; }
+  else if (s.startsWith('Yes — formal')) {
+    const b = x.q_baseline || '';
+    if (isOngoing() && !b.startsWith('Yes')) { r = 'moderate'; why = 'Assessed formally, but without a full baseline from before go-live.'; }
+    else { r = 'strong'; why = 'Assessed in a formal study or analysis.'; }
+  }
   else if (s.startsWith('Yes — informal')) { r = 'weak'; why = 'Informal feedback only.'; }
   else { r = 'insufficient'; why = 'Not yet assessed.'; }
   if (isScribe() && x.q_scribe_time === 'Measured locally' && (r === 'weak' || r === 'insufficient' || r === 'not-assessed')) {
     r = 'moderate'; why += ' Documentation time saved was measured locally.';
   }
   if (isScribe() && x.q_scribe_time === 'Vendor estimate only') why += ' Time saved is the vendor\'s estimate.';
+  const ch = x.q_check_hours || '';
+  if (ch.startsWith('Measured — eats')) why += ' Checking its output eats most or all of the time it saves.';
+  else if (ch.startsWith('Measured — less')) why += ' Checking time was measured and is less than the time saved.';
+  else if (isOngoing() && unk(ch)) why += ' Whether time spent checking its output is measured is unknown, so time saved is gross until it is.';
+  else if (isOngoing()) why += ' Time spent checking its output isn\'t measured, so time saved is gross, not net.';
   return [r, why];
 }
 
@@ -1666,6 +1778,20 @@ function rateFinancial(x) {
   if (unk(x.q_cost) || x.q_cost === 'Not disclosed by vendor') {
     if (r !== 'not-assessed') r = cap(r, 'weak');
     why += x.q_cost === 'Not disclosed by vendor' ? ' The vendor won\'t disclose cost, so no return can be worked out.' : ' The cost isn\'t known, so no return can be worked out.';
+  }
+  const ad = x.q_adoption || '';
+  if (ad.startsWith('A minority') || ad === 'Not tracked') {
+    if (r === 'strong') r = 'moderate';
+    why += ad === 'Not tracked' ? ' Actual use isn\'t tracked, so cost per active user is unknown.' : ' Most licensed users aren\'t using it, so cost per active user is far higher than cost per seat.';
+  }
+  if (countsCoding()) {
+    const au = x.q_coding_audit || '';
+    if (au !== 'Yes — regular coder audit') {
+      if (r === 'strong') r = 'moderate';
+      why += ' Part of the return is higher coding, and it isn\'t regularly audited, so it\'s unclear whether that is more accurate coding or just more intense coding.';
+    } else {
+      why += ' Higher coding is part of the return, and coders audit it.';
+    }
   }
   const ac = x.q_assurance_cost;
   if (ac !== 'Yes — estimated and included') {
@@ -1692,6 +1818,7 @@ function rateEquity(x) {
   } else if (h.startsWith('Yes — informal')) {
     why += ' Harm is watched informally only.';
   }
+  if (countsCoding() && x.q_coding_patient !== 'Yes') why += ' Nobody has looked at what higher coding costs patients.';
   return [r, why];
 }
 
@@ -1717,7 +1844,10 @@ function rateCommunity(x) {
 function rateNonmonetary(x) {
   const s = x.q_staff_trust || '';
   if (s.startsWith('Not yet deployed')) return ['not-assessed', 'Not yet deployed to clinical staff.'];
+  const b = x.q_burnout_measured || '';
+  if (b === 'Yes — before and after') return ['moderate', 'Burnout or well-being was surveyed before and after. Trust and buy-in beyond that are impressions.'];
   if (unk(s)) return ['not-assessed', 'Clinician trust is unknown.'];
+  if (b === 'After only') return ['weak', 'Surveyed after go-live only, with nothing to compare against. Trust is the assessor\'s impression.'];
   return ['weak', 'Based on the assessor\'s impression, not a survey.'];
 }
 
@@ -1765,6 +1895,39 @@ function evidenceMap(x) {
     else if (v.startsWith('Tracked')) put('assumed', label + ' (tracked, not reviewed)');
     else put('unknown', label + ' (not tracked)');
   };
+  const ad = x.q_adoption;
+  if (isOngoing()) {
+    if (unk(ad) || ad === 'Not tracked') put('unknown', 'Actual use (share of licensed users)');
+    else put('measured', 'Actual use (share of licensed users)');
+  }
+  const b = x.q_baseline || '';
+  if (b.startsWith('Yes — for')) put('measured', 'Baseline before go-live');
+  else if (b === 'For some measures') put('assumed', 'Baseline before go-live (some measures)');
+  else if (isOngoing()) put('unknown', 'Baseline before go-live');
+  const ch = x.q_check_hours || '';
+  if (ch.startsWith('Measured')) put('measured', 'Time spent checking its output');
+  else if (ch.startsWith('Estimated')) put('assumed', 'Time spent checking its output (estimate)');
+  else put('unknown', 'Time spent checking its output');
+  const tw = x.q_time_went || [];
+  if (isOngoing()) {
+    if (!tw.length || tw.includes('Unknown') || tw.includes('Nowhere visible / not tracked')) put('unknown', 'Where the saved time went');
+    else put('assumed', 'Where the saved time went (reported)');
+  }
+  if (countsCoding()) {
+    const au = x.q_coding_audit || '';
+    if (au === 'Yes — regular coder audit') put('measured', 'Coding accuracy (coder audit)');
+    else if (au === 'Spot checks') put('assumed', 'Coding accuracy (spot checks)');
+    else put('unknown', 'Coding accuracy');
+    if (x.q_coding_patient === 'Yes') put('assumed', 'Cost of higher coding to patients and payers (looked at)');
+    else put('unknown', 'Cost of higher coding to patients and payers');
+  }
+  const bm = x.q_burnout_measured || '';
+  if (bm === 'Yes — before and after') put('measured', 'Burnout / well-being (survey, before and after)');
+  else if (bm === 'After only') put('assumed', 'Burnout / well-being (survey after only)');
+  else if (bm !== 'Not applicable') put('unknown', 'Burnout / well-being');
+  const ex = x.q_exit_cost || '';
+  if (unk(ex)) put('unknown', 'Cost of leaving');
+  else put('assumed', 'Cost of leaving (' + ex.split(' —')[0].toLowerCase() + ')');
   track(x.q_alert_rate, 'Alert rate');
   track(x.q_override_rate, 'Override rate');
   const af = x.q_alert_fatigue;
@@ -1816,6 +1979,41 @@ function evidenceMap(x) {
   return m;
 }
 
+// Flags: things the answers point to that a decision should not skip. Fixed rules.
+function flagsFor(x) {
+  const f = [];
+  const add = (s) => f.push(s);
+  if (countsCoding()) {
+    if (x.q_coding_review === 'No — codes go out without clinician review') add('Codes go out without a clinician seeing them. Whoever signs the note may not know what was billed.');
+    if (x.q_coding_audit !== 'Yes — regular coder audit') add('Higher coding counts toward the return, but it isn\'t regularly audited against the care given.');
+    if (x.q_coding_patient !== 'Yes') add('Nobody has looked at what the higher coding costs patients and payers. Revenue to you is cost to them.');
+  }
+  const ad = x.q_adoption || '';
+  if (ad.startsWith('A minority')) add('Most licensed users aren\'t using it. You are paying for seats that deliver nothing.');
+  if (ad === 'Not tracked') add('Actual use isn\'t tracked, so nobody knows how many paid seats are in use.');
+  const ch = x.q_check_hours || '';
+  if (ch.startsWith('Measured — eats')) add('Checking its output eats most or all of the time it saves. Net time saved may be close to zero.');
+  const who = x.q_check_who || [];
+  if (who.includes('Nobody in particular')) add('Nobody in particular checks its output.');
+  else if (who.length === 1 && who[0] === 'The clinicians using it') add('Only the clinicians using it check its output, so the checking time comes out of the time it was supposed to save.');
+  const tw = x.q_time_went || [];
+  if (tw.includes('It doesn\'t save time')) add('Reported to save no time.');
+  else if (tw.includes('Nowhere visible / not tracked') || tw.includes('Other work filled it')) add('The time it saves isn\'t showing up anywhere you can see. Savings that disappear into other work aren\'t savings on paper.');
+  if (tw.includes('More patient visits') && !tw.includes('Less after-hours work') && !tw.includes('More time with each patient')) add('Saved time went to more visits, not to clinicians. If burnout relief was part of the case, check it.');
+  const b = x.q_baseline || '';
+  if (isOngoing() && b === 'No') add('No baseline from before go-live, so before-and-after claims can\'t be checked.');
+  else if (isOngoing() && unk(b)) add('Nobody knows whether there was a baseline before go-live. Without one, before-and-after claims can\'t be checked.');
+  if (!isOngoing() && b === 'Not planned') add('No baseline is planned. Measure before go-live, or you will never be able to show a change.');
+  if ((x.q_recheck || '') === 'Neither set') add('No payoff date and no re-check date.');
+  if ((x.q_exit_cost || '').startsWith('High')) add('Leaving would be expensive. Lock-in weakens any later sunset decision. Weigh it now.');
+  if (x.q_alternatives === 'No') add('Not compared with alternatives, including a built-in option from your EHR vendor.');
+  if (isScribe() && (x.q_scribe_consent === 'No defined process' || x.q_scribe_consent === 'Verbal or informal')) add('Recording consent is informal or undefined. Check your state\'s recording law.');
+  if (isAgent() && (x.q_agent_actions || '').startsWith('Actions that change') && (x.q_agent_log || '') !== 'Yes — logged and reviewed') add('It changes orders, records or patient messages without approval, and its actions aren\'t reviewed.');
+  const h = x.q_harm_tracked || '';
+  if (h.startsWith('No')) add('Patient harm involving the tool isn\'t tracked.');
+  return f;
+}
+
 function strategyStatus(x) {
   const s = x.q_strategy;
   if (recsAllowed()) {
@@ -1850,7 +2048,7 @@ function computeReport() {
     org: x.q_org || null,
     pathway: isOngoing() ? 'Ongoing' : 'Pre-adoption',
     date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-    dims, map: evidenceMap(x), strategy: strategyStatus(x),
+    dims, map: evidenceMap(x), strategy: strategyStatus(x), flags: flagsFor(x),
     thin: notAssessed >= 3, notAssessed, selfCheck,
     ai: null, aiProblem: null,
   };
@@ -1922,6 +2120,12 @@ function renderReport(report) {
     <p>${escHtml(report.strategy.note)}</p>
   </div>`;
 
+  if (report.flags.length) {
+    html += `<div class="flags-section" style="margin:0 0 22px;padding:14px 18px;border:1px solid rgba(232,163,61,.55);border-left:4px solid #e8a33d;border-radius:6px">
+      <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;color:#e8a33d">What your answers flag</div>
+      <ul style="margin:0;padding-left:18px;line-height:1.6;font-size:14px">${report.flags.map(fl => `<li>${escHtml(fl)}</li>`).join('')}</ul>
+    </div>`;
+  }
   if (report.selfCheck) {
     html += `<div class="strategy-banner no-strategy">Check the overall evidence rating<p>${escHtml(report.selfCheck)}</p></div>`;
   }
@@ -2092,6 +2296,21 @@ async function generateAssessment() {
   state.report = report;
 
   try {
+    report.ai = await askAi(report);
+  } catch (err) {
+    if (err.stop) { renderError(err.message); return; }
+    // One retry: a cut-off or malformed reply usually comes back fine the second time.
+    try { report.ai = await askAi(report); }
+    catch (err2) {
+      if (err2.stop) { renderError(err2.message); return; }
+      report.aiProblem = err2.message || 'Something went wrong.';
+    }
+  }
+  renderReport(report);
+}
+
+async function askAi(report) {
+  {
     const res = await fetch('/api/synthesize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2103,28 +2322,56 @@ async function generateAssessment() {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      // Paused, refused for patient data, rate-limited: these are real stops, not AI hiccups.
-      if (res.status === 503 || data.phi || res.status === 429 || res.status === 413) {
-        renderError(data.error || `Error ${res.status}`);
-        return;
-      }
-      throw new Error(data.error || `Error ${res.status}`);
+      const e = new Error(data.error || `Error ${res.status}`);
+      // Paused, refused for patient data, rate-limited, too long: real stops, not AI hiccups. No retry.
+      e.stop = res.status === 503 || !!data.phi || res.status === 429 || res.status === 413;
+      throw e;
     }
     const text = (data.content || []).filter(b => b && b.type === 'text').map(b => b.text || '').join('');
     if (data.stop_reason === 'max_tokens') throw new Error('The write-up was cut off before it finished.');
-    report.ai = parseAi(text);
-  } catch (err) {
-    report.aiProblem = err.message || 'Something went wrong.';
+    return parseAi(text);
   }
-  renderReport(report);
+}
+
+// The model sometimes drops a closing bracket (seen in about 1 of 4 real runs of
+// one case, Nov 13). Close whatever is still open, outside strings, and try again.
+function closeBrackets(s) {
+  const stack = []; let inStr = false, esc = false;
+  for (const ch of s) {
+    if (inStr) { if (esc) esc = false; else if (ch === '\\') esc = true; else if (ch === '"') inStr = false; continue; }
+    if (ch === '"') inStr = true;
+    else if (ch === '{' || ch === '[') stack.push(ch);
+    else if (ch === '}' || ch === ']') stack.pop();
+  }
+  if (inStr) return null;
+  return s + stack.reverse().map(c => c === '{' ? '}' : ']').join('');
+}
+
+function parseJsonLoose(text) {
+  const start = text.indexOf('{');
+  if (start < 0) return null;
+  const end = text.lastIndexOf('}');
+  const candidates = [];
+  if (end > start) candidates.push(text.slice(start, end + 1));
+  // Dropped bracket in the middle: strip trailing closers, then re-close by count.
+  if (end > start) {
+    const trimmed = text.slice(start, end + 1).replace(/[\]}\s]+$/, '');
+    const fixed = closeBrackets(trimmed);
+    if (fixed) candidates.push(fixed);
+  }
+  const whole = closeBrackets(text.slice(start));
+  if (whole) candidates.push(whole);
+  for (const c of candidates) { try { return JSON.parse(c); } catch (e) { /* next */ } }
+  return null;
 }
 
 function parseAi(text) {
-  const start = text.indexOf('{'), end = text.lastIndexOf('}');
-  if (start < 0 || end <= start) throw new Error('The write-up came back unreadable.');
-  let obj;
-  try { obj = JSON.parse(text.slice(start, end + 1)); }
-  catch (e) { throw new Error('The write-up came back unreadable.'); }
+  const obj = parseJsonLoose(text);
+  if (!obj) throw new Error('The write-up came back unreadable.');
+  // When a bracket was dropped, the closing fields can land inside "dimensions".
+  const inner = obj.dimensions || {};
+  if (obj.overallNarrative === undefined && typeof inner.overallNarrative === 'string') obj.overallNarrative = inner.overallNarrative;
+  if (obj.recommendations === undefined && inner.recommendations !== undefined) obj.recommendations = inner.recommendations;
   if (!obj || typeof obj !== 'object') throw new Error('The write-up came back unreadable.');
   const clean = s => typeof s === 'string' ? s.trim() : '';
   const list = v => Array.isArray(v) ? v.map(clean).filter(Boolean).slice(0, 4) : [];
@@ -2154,7 +2401,10 @@ Whether to write "recommendations" is stated at the end of the message.
 Rules:
 - Use only what is in the answers. Do not invent numbers, studies, vendors, regulations, or details.
 - If the answers don't say, write "Can't tell from these answers." Do not fill gaps with typical cases.
+- "Unknown" or "not answered" is not the same as "no". Don't turn an unknown into a finding that something is missing.
 - Treat expected value, vendor claims, and impressions as unproven.
+- Higher coding is revenue to the organization and cost to patients and payers. Never present it as value on its own.
+- Time saved is gross until the time spent checking the tool's output is subtracted.
 - Plain English. No markdown.
 
 Return only this JSON, nothing before or after it:
@@ -2180,6 +2430,7 @@ ${line('Organization', ans.q_org)}${line('Deployment duration', ans.q_deployment
 ORGANIZATIONAL STRATEGY
 Strategy status: ${fmt(ans.q_strategy)}
 ${line('Strategic priorities', ans.q_strategy_priorities)}${line('Adoption/sunset criteria in strategy', ans.q_strategy_criteria)}${line('Criteria description', ans.q_strategy_describe)}Value definition status: ${fmt(ans.q_roi_defined)}
+${line('Payoff and re-check dates', ans.q_recheck)}
 Exit threshold defined: ${fmt(ans.q_exit_threshold)}
 ${line('Exit threshold description', ans.q_exit_describe)}
 CLINICAL & OPERATIONAL VALUE
@@ -2188,14 +2439,15 @@ How clinical value was assessed: ${fmt(ans.q_clinical_status)}
 ${line('What that assessment showed', ans.q_clinical_result)}Expected operational value: ${fmtArr(ans.q_operational_expected)}
 Operational impact assessed: ${fmt(ans.q_operational_status)}
 Alert fatigue assessed: ${fmt(ans.q_alert_fatigue)}
-Alert rate tracked: ${fmt(ans.q_alert_rate)}
+${line('Baseline before go-live', ans.q_baseline)}${line('Share of licensed users who use it', ans.q_adoption)}${line('Where the saved time went', ans.q_time_went)}${line('Staff time spent checking its output', ans.q_check_hours)}${line('Who checks its output', ans.q_check_who)}Alert rate tracked: ${fmt(ans.q_alert_rate)}
 Override rate tracked: ${fmt(ans.q_override_rate)}
 ${line('Documentation time saved (scribe)', ans.q_scribe_time)}${line('Note error review (scribe)', ans.q_scribe_quality)}${line('Recording consent (scribe)', ans.q_scribe_consent)}${line('Actions without approval (agent)', ans.q_agent_actions)}${line('Action logging (agent)', ans.q_agent_log)}
 FINANCIAL VALUE
 Approximate annual cost: ${fmt(ans.q_cost)}
 Cost includes ongoing cost of checking the tool: ${fmt(ans.q_assurance_cost)}
 Relevant financial value categories: ${fmtArr(ans.q_financial_categories)}
-Financial analysis conducted: ${fmt(ans.q_financial_analysis)}
+${line('Higher coding part of the value case', ans.q_coding_source)}${line('Coder audit of higher codes', ans.q_coding_audit)}${line('Clinicians see codes before claims go out', ans.q_coding_review)}${line('Cost of higher coding to patients/payers looked at', ans.q_coding_patient)}Financial analysis conducted: ${fmt(ans.q_financial_analysis)}
+${line('Cost of leaving', ans.q_exit_cost)}${line('Compared with alternatives', ans.q_alternatives)}
 Staff turnover dimension: ${fmt(ans.q_financial_turnover)}
 Regulatory/compliance cost implications: ${fmt(ans.q_financial_regulatory)}
 
@@ -2207,7 +2459,7 @@ Community benefit obligations: ${fmt(ans.q_community_benefit)}
 Community/patient trust assessed: ${fmt(ans.q_community_trust)}
 Community health impact assessed: ${fmt(ans.q_community_impact)}
 Clinician trust level: ${fmt(ans.q_staff_trust)}
-Patient trust level: ${fmt(ans.q_patient_trust)}
+${line('Burnout/well-being surveyed', ans.q_burnout_measured)}Patient trust level: ${fmt(ans.q_patient_trust)}
 Reputational posture: ${fmt(ans.q_reputation)}
 ${line('Non-monetary notes', ans.q_non_monetary_note)}
 EVIDENCE QUALITY & DECISION CONTEXT
@@ -2217,6 +2469,9 @@ Decision timeline: ${fmt(ans.q_timeline)}
 ${line("Champion's core question", ans.q_champion_question)}${line('Stakeholder concerns', ans.q_opponents)}${line('Additional context', ans.q_context)}
 RATINGS ALREADY SET BY RULES (do not change)
 ${report.dims.map(d => `${d.label}: ${RATING_LABEL[d.rating]}. ${d.why}`).join('\n')}
+
+FLAGS ALREADY SET BY RULES (the reader sees these separately; don't repeat them word for word)
+${report.flags.join('\n') || 'none'}
 
 EVIDENCE MAP ALREADY SET BY RULES
 Measured: ${report.map.measured.join('; ') || 'nothing'}
@@ -2235,6 +2490,7 @@ function copyReportText() {
   let text = `ROI ASSESSMENT — ${r.system}\nGenerated: ${r.date} · ROI Assessment v${TOOL_VERSION}\n`;
   text += `Working prototype · not independently reviewed · not clinical, legal or financial advice. Ratings and the evidence map come from fixed rules; parts marked [AI] were written by AI.\n\n`;
   text += `${r.strategy.note}\n\n`;
+  if (r.flags.length) text += `WHAT YOUR ANSWERS FLAG\n${r.flags.map(f => '- ' + f).join('\n')}\n\n`;
   r.dims.forEach(d => {
     text += `${d.label}: ${RATING_LABEL[d.rating]}\nWhy: ${d.why}\n`;
     const a = (ai.dimensions || {})[d.id];
