@@ -192,7 +192,7 @@ footer a{color:var(--accent)}
     <pre id="planText"></pre>
   </section>
 
-  <footer>Part of the <a href="/">Healthcare Governance Commons</a>. Includes the statistics from the <a href="/agent-qc">Agent QC Metric Picker</a>. Pairs with the <a href="/validation-protocol">Validation Protocol Generator</a>. Interval figures are 95% Wilson intervals and one-sided exact bounds, pending statistician review.</footer>
+  <footer>Part of the <a href="/">Healthcare Governance Commons</a>. Includes the statistics from the earlier Agent QC Metric Picker. Pairs with the <a href="/validation-protocol">Validation Protocol Generator</a>. Interval figures are 95% Wilson intervals and one-sided exact bounds, pending statistician review.</footer>
 </div>
 
 <template id="tpl-sigma"><details class="calcbox"><summary>Calculate: sigma, how much room the method has</summary><div class="inner"><p class="sub">Sigma is the room between the method's typical error and what is clinically acceptable, counted in units of its imprecision: (allowable error − |bias|) ÷ CV. More room means fewer, simpler rules are enough.</p><div class="calcknobs"><div class="field"><label for="sg_tea">Allowable error (%)</label><input type="number" id="sg_tea" value="10" min="0.1" step="0.1"><small>The deviation that does not change clinical management, set from intended use.</small></div><div class="field"><label for="sg_bias">Bias (%)</label><input type="number" id="sg_bias" value="2" min="0" step="0.1"><small>Average offset from the reference method, from the method comparison at validation.</small></div><div class="field"><label for="sg_cv">CV (%)</label><input type="number" id="sg_cv" value="2" min="0.01" step="0.1"><small>Imprecision across repeat runs of the same control.</small></div></div><div class="callout" id="sgOut"></div></div></details></template>
@@ -573,7 +573,7 @@ function render(){
    <section class="measure" id="m-${m.id}" aria-labelledby="h-${m.id}">
     <div class="mhead"><span class="lbl">Measure ${i+1} of 9 · <span class="chip ${CHIP[m.status][0]}" style="margin:0">${CHIP[m.status][1]}</span></span><h2 id="h-${m.id}">${m.name}</h2><p class="qq">${m.q}</p></div>
     <div class="meta"><div><b>Primary metric</b>${m.primary}</div><div><b>Lab equivalent</b>${m.lab}</div></div>
-    ${m.picker?`<p class="pickerlink">${m.picker} <a href="/agent-qc">Open the Metric Picker →</a></p>`:""}${m.lanes?`<p class="pickerlink">Lanes and required behaviors are set per control in Knob 3. <a href="#lanes">Go to lanes →</a></p>`:""}
+${m.lanes?`<p class="pickerlink">Lanes and required behaviors are set per control in Knob 3. <a href="#lanes">Go to lanes →</a></p>`:""}
     <ul class="points">${(m.metrics||[]).map(x=>metricHTML(m,x[0],x[1])).join("")}${m.grader?graderHTML():""}${m.points.filter(p=>!(m.grader&&p.id==="g2")).map(p=>`<li class="pt"><div class="ctl"><h3>${p.label}</h3>${control(m,p)}<div id="lv-${m.id}-${p.id}" style="display:grid;gap:4px">${live(m,p)}</div></div><div class="desc"><i>Descriptor</i>${p.desc}</div></li>`).join("")}</ul>
     <div data-calcslot="${m.calc||""}"></div>${m.teach?`<details class="teach"><summary>Worked example and common mistake</summary><p>${m.teach}</p></details>`:""}
    </section>`).join("");

@@ -69,7 +69,7 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       source per value (the QC plan holds the number, the VPG carries it in),
       and the subgroup trigger, where the VPG flags a group more than the tier
       warning % from aggregate and the Setup uses 10 percentage points judged
-      on intervals. Pick one. Forwarding `/agent-qc` to `/qc-setup`: deferred.
+      on intervals. Pick one. `/agent-qc` now forwards to `/qc-setup` (Nov 12); the old page's file stays in the repo for reference.
 - [ ] **Statistician: hire before the first of these.** Someone uses a tool's
       numbers to set up QC on a real system (e.g. a hospital sizing its
       baseline); a published piece cites a tool's numbers as evidence; or work

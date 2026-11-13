@@ -29,5 +29,22 @@
     "deploymentEnabled": {
       "data-archive": false
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/agent-qc",
+      "destination": "/qc-setup",
+      "permanent": true
+    },
+    {
+      "source": "/agent-qc/",
+      "destination": "/qc-setup",
+      "permanent": true
+    },
+    {
+      "source": "/agent-qc/index.html",
+      "destination": "/qc-setup",
+      "permanent": true
+    }
+  ]
 }
