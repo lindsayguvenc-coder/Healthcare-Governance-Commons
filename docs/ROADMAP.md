@@ -135,7 +135,30 @@ system name/vendor/version questions, governance-area grading switched off
       default allowable error as a Commons position.
 - [x] **Short tracks by use type.** (Done Nov 12, 2026, PR #24: Section 3 branches on use type; scribe and agent tracks with their own measures and flags.) Ambient scribes (recording consent: 11
       all-party states) and agentic workflows.
-- [ ] **Same content review for ROI.**
+- [x] **ROI content review (Nov 13, 2026).** Ratings and the measured/assumed/unknown
+      map now come from fixed rules on the answers; AI only writes summaries,
+      strengths, gaps, the overall paragraph and (strategy documented and in use,
+      priorities picked) recommendations, all labeled AI-written. Fixed: every run
+      failing on the thinking block, cut-offs (thinking off for ROI), the leaky
+      strategy gate ("in development" no longer gets recommendations), required
+      questions not enforced, missing "Unknown" options, duplicate subgroup
+      question, method mixed with result, AI-invented report date, cursor lost
+      while typing, unsourced "no ROI framework exists" claim, privacy line that
+      left out the AI. Added: shared disclaimer, scribe/agent/admin use types with
+      scribe and agent questions, alert and override rate, the cost of checking
+      the tool (net vs. gross), grey "too little to assess", a check when the
+      self-rated overall evidence is higher than the answers support. Replay:
+      `tests/replay/record-roi.js`.
+- [ ] **ROI: real runs, then unpause.** Run it with a short-lived, spend-capped
+      key and read real output before taking "roi" off `PAUSED_IN_CODE`.
+- [ ] **ROI: measured overhead rates.** The report says savings are gross until
+      the cost of checking the tool is subtracted, but applies no number. Once
+      there are measured examples per system type, add an estimated overhead
+      percentage per category (cost-of-quality idea, Nov 4).
+- [ ] **ROI rating rules → statistician / domain review list.** The rules
+      (e.g. outside peer-reviewed evidence caps at "moderate" before local data;
+      a missing cost caps financial at "weak"; untracked harm caps equity at
+      "moderate") are Commons positions, not a standard.
 - [x] **Consultation (Governance Assessment) retired (Nov 13, 2026).** Scrapped
       instead of reviewed: a big intake feeding 10 AI essays, mostly covered
       better now by the VPG, QC Setup and Transition tools. `/consultation`
@@ -143,8 +166,8 @@ system name/vendor/version questions, governance-area grading switched off
       parked under "Rescued from the Consultation tool" below.
 - [ ] **Check thinking vs. max_tokens on every other AI tool.** Sonnet 5.5's
       thinking spends the max_tokens budget. Transition charters cut off at
-      2,500 tokens on Nov 4 until thinking was turned off for them. ROI,
-      map Synthesize and the Collaborator still ask for 2,500.
+      2,500 tokens on Nov 4 until thinking was turned off for them. ROI is
+      off too (Nov 13). Map Synthesize and the Collaborator still ask for 2,500.
 - [x] **Transition tools review (Nov 4).** Shared disclaimer, grey "not
       assessable" score, lived experience shown, "Can't tell from this" instead
       of invented detail, charter as a draft to mark up, AI text escaped.

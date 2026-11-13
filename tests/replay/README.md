@@ -46,3 +46,10 @@ node record-vpg.js http://localhost:3000 ./video-vpg [path-to-chrome]
 Same setup as above. `record-vpg-metrics.js` (counts, intervals, net benefit),
 `record-vpg-tracks.js` (scribe and agent tracks), `record-vpg-fixes.js` (second-pass
 content fixes). Each takes `base outDir [chromePath]`.
+
+## ROI Assessment replay (Nov 13)
+
+Real page with scripted AI replies: a thinking block first, a cut-off reply, a hostile
+one, and one that slips in recommendations it wasn't asked for. Serve `public/` on
+port 4310, then `node record-roi.js http://localhost:4310 ./video-roi [path-to-chrome]`.
+Needs `playwright` and `ffmpeg`.

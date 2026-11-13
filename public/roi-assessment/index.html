@@ -731,6 +731,7 @@ body {
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 <script src="/phi-guard.js"></script>
+<script src="/report-disclaimer.js"></script>
 </head>
 <body>
 <div role="note" style="position:sticky;top:0;z-index:9000;font:600 12px/1.5 ui-monospace,Menlo,monospace;letter-spacing:.04em;padding:8px max(16px,env(safe-area-inset-left,0px));text-align:center;background:#fdf3d8;color:#5c4400;border-bottom:1px solid #e8d49a">WORKING PROTOTYPE · built by one person · not yet independently reviewed · think with it, but don't make decisions on its output alone</div>
@@ -777,6 +778,10 @@ function hasStrategy() {
   const s = a().q_strategy;
   return s && s.startsWith('Yes');
 }
+// Recommendations only anchor to a strategy that is documented and in use (decided Nov 13, 2026).
+function recsAllowed() { return a().q_strategy === 'Yes — documented and in active use'; }
+function isScribe() { return (a().q_use_type || '').startsWith('Ambient scribe'); }
+function isAgent() { return (a().q_use_type || '').startsWith('Agentic workflow'); }
 
 // ── SECTIONS ──────────────────────────────────────────────────────────────────
 
@@ -835,6 +840,9 @@ function sectionStart() {
           'Screening / flagging — identifies cases for human review',
           'Diagnostic support — image, pathology, or lab interpretation',
           'Retrospective audit / quality improvement',
+          'Ambient scribe / AI documentation — drafts notes from the visit',
+          'Agentic workflow — takes actions across steps or systems',
+          'Administrative / operational — scheduling, coding, prior auth, messaging',
           'Other',
         ],
       },
@@ -899,7 +907,7 @@ function sectionStrategy() {
           'No — not yet developed',
           'Unknown',
         ],
-        note: 'If no documented strategy exists, this tool will produce a complete assessment but will not generate recommendations. The report can be used as direct input to strategy development.',
+        note: 'Recommendations need a strategy that is documented and in use. If yours is still in development, or there isn\'t one, you get the full report without recommendations. It can go straight into strategy work.',
       },
       {
         id: 'q_strategy_priorities', required: false,
@@ -955,6 +963,7 @@ function sectionStrategy() {
           'Yes — formally defined',
           'Not yet defined',
           'This decision has not been formally considered',
+          'Unknown',
         ],
       },
       {
@@ -998,19 +1007,15 @@ function sectionClinicalOps() {
           : 'How would you characterize the evidence base for the expected clinical benefits?',
         type: 'select',
         options: isOngoing()
-          ? ['Formally measured with local data', 'Informally assessed', 'Not yet measured', 'Measured — value confirmed', 'Measured — value questioned']
-          : ['Strong vendor and peer-reviewed evidence', 'Moderate vendor evidence', 'Limited peer evidence only', 'Assumed but not yet validated', 'Not yet assessed'],
+          ? ['Formally measured with local data', 'Informally assessed', 'Not yet measured', 'Unknown']
+          : ['Strong vendor and peer-reviewed evidence', 'Moderate vendor evidence', 'Limited peer evidence only', 'Assumed but not yet validated', 'Not yet assessed', 'Unknown'],
       },
       {
-        id: 'q_clinical_subgroup', required: true,
-        text: 'Has clinical performance been assessed by patient subgroup (race, payer, age, comorbidity)?',
+        id: 'q_clinical_result', required: false,
+        text: 'What did that assessment show?',
         type: 'select',
-        options: [
-          'Yes — formal subgroup analysis',
-          'Yes — informal review',
-          'No — not yet assessed',
-          'Not applicable',
-        ],
+        showIf: () => isOngoing() && ['Formally measured with local data', 'Informally assessed'].includes(a().q_clinical_status),
+        options: ['Value confirmed', 'Value questioned', 'Mixed, or too early to say', 'Unknown'],
       },
       {
         id: 'q_operational_expected', required: true,
@@ -1037,6 +1042,7 @@ function sectionClinicalOps() {
           'Yes — informal feedback collected',
           'No — not yet assessed',
           'Not applicable',
+          'Unknown',
         ],
       },
       {
@@ -1048,7 +1054,56 @@ function sectionClinicalOps() {
           'Yes — informally monitored',
           'No — not assessed',
           'Not applicable — system does not generate alerts',
+          'Unknown',
         ],
+      },
+      {
+        id: 'q_alert_rate', required: false,
+        text: 'Is the alert or flag rate tracked (how often it fires, per patient or per shift)?',
+        type: 'select',
+        options: ['Yes — tracked and reviewed', 'Tracked but not reviewed', 'Not tracked', 'Not applicable — system does not alert or flag', 'Unknown'],
+      },
+      {
+        id: 'q_override_rate', required: false,
+        text: 'Is the override rate tracked (how often clinicians dismiss or overrule its output)?',
+        type: 'select',
+        options: ['Yes — tracked and reviewed', 'Tracked but not reviewed', 'Not tracked', 'Not applicable — nothing to override', 'Unknown'],
+      },
+      {
+        id: 'q_scribe_time', required: false,
+        text: 'Has documentation time saved been measured here (EHR audit logs or time-motion), or is it the vendor\'s estimate?',
+        type: 'select',
+        showIf: () => isScribe(),
+        options: ['Measured locally', 'Vendor estimate only', 'Not measured', 'Unknown'],
+      },
+      {
+        id: 'q_scribe_quality', required: false,
+        text: 'Are AI-drafted notes checked for errors (omissions, invented content) on a regular sample?',
+        type: 'select',
+        showIf: () => isScribe(),
+        options: ['Yes — routine sample review', 'Clinicians edit, but no structured review', 'No', 'Unknown'],
+      },
+      {
+        id: 'q_scribe_consent', required: false,
+        text: 'How is patient consent to recording handled?',
+        type: 'select',
+        showIf: () => isScribe(),
+        note: 'Some states, including California, require every party\'s consent to record a conversation.',
+        options: ['Documented consent process at every visit', 'Verbal or informal', 'No defined process', 'Unknown'],
+      },
+      {
+        id: 'q_agent_actions', required: false,
+        text: 'What can it do without a person approving each action?',
+        type: 'select',
+        showIf: () => isAgent(),
+        options: ['Nothing — it drafts, a person acts', 'Low-risk actions only (routing, scheduling)', 'Actions that change orders, records, or patient messages', 'Unknown'],
+      },
+      {
+        id: 'q_agent_log', required: false,
+        text: 'Is every action it takes logged where someone can review it?',
+        type: 'select',
+        showIf: () => isAgent(),
+        options: ['Yes — logged and reviewed', 'Logged but not reviewed', 'Partially logged', 'No', 'Unknown'],
       },
     ],
   };
@@ -1076,6 +1131,13 @@ function sectionFinancial() {
         ],
       },
       {
+        id: 'q_assurance_cost', required: true,
+        text: 'Does that cost include the ongoing cost of checking the tool: monitoring, validation, audits, and clinician time spent verifying its output?',
+        type: 'select',
+        note: 'Savings claims are usually gross. What the tool saves, minus what it costs to keep checking it, is the real return.',
+        options: ['Yes — estimated and included', 'Partly', 'No — not included', 'Unknown'],
+      },
+      {
         id: 'q_financial_categories', required: true,
         text: 'Which financial value categories are relevant to your assessment?',
         type: 'multi',
@@ -1101,6 +1163,7 @@ function sectionFinancial() {
           'Yes — partial analysis',
           'Informal estimates only',
           'No — not yet conducted',
+          'Unknown',
         ],
       },
       {
@@ -1180,6 +1243,7 @@ function sectionEquity() {
           'No — not yet conducted',
           'Not feasible with current data',
           'Not applicable',
+          'Unknown',
         ],
       },
       {
@@ -1191,6 +1255,7 @@ function sectionEquity() {
           'Yes — informally monitored',
           'No — not yet tracked',
           'No — and this is a known gap',
+          'Unknown',
         ],
       },
       {
@@ -1214,13 +1279,14 @@ function sectionEquity() {
           'Informally understood',
           'No — not assessed',
           'Not applicable',
+          'Unknown',
         ],
       },
       {
         id: 'q_community_impact', required: false,
         text: "Has this system's impact on the health of the communities you serve been assessed?",
         type: 'select',
-        options: ['Yes — formally', 'Yes — informally', 'Not yet assessed', 'Not applicable'],
+        options: ['Yes — formally', 'Yes — informally', 'Not yet assessed', 'Not applicable', 'Unknown'],
       },
       {
         id: 'q_staff_trust', required: true,
@@ -1288,6 +1354,7 @@ function sectionEvidence() {
           'Weak — mostly assumptions or vendor claims',
           'Insufficient — not enough data to assess',
           'Mixed — strong in some areas, concerning in others',
+          'Unknown',
         ],
       },
       {
@@ -1319,6 +1386,7 @@ function sectionEvidence() {
           'Medium (within 3 months)',
           'Long (3–6 months)',
           'No defined timeline',
+          'Unknown',
         ],
       },
       {
@@ -1388,12 +1456,12 @@ function renderIntro() {
       <div class="phase-tag">ROI Assessment Tool</div>
       <h1 class="phase-title">Is this AI system <em>earning its place?</em></h1>
       <p class="phase-desc">
-        No formal ROI framework exists for clinical AI. Value is claimed broadly and
-        measured almost nowhere.<br><br>
-        This tool synthesizes a structured assessment across six dimensions: clinical
-        outcomes, operational impact, financial returns, equity and harm, community value,
+        Value from clinical AI is claimed broadly and measured rarely.<br><br>
+        This tool rates how strong the evidence is across six areas: clinical
+        outcomes, operational impact, financial return, equity and harm, community value,
         and the non-monetary currencies that governance committees rarely track but that
-        determine whether adoption actually works.
+        decide whether adoption actually works. It sorts what you know into measured,
+        assumed and unknown, and points to where the missing data usually lives.
       </p>
       <div class="audience-cards">
         <div class="audience-card">
@@ -1413,9 +1481,9 @@ function renderIntro() {
         </div>
       </div>
       <div class="intro-note">
-        <strong>Strategy gate:</strong> If your organization does not have a documented AI strategy, this tool produces a complete assessment report but does not generate recommendations. Recommendations require a strategy to anchor against. The report can be used as direct input to strategy development.
+        <strong>Strategy gate:</strong> Recommendations need an AI strategy that is documented and in use, so they have something to anchor to. Without one (or while it's still in development), you get the full report without recommendations. It can go straight into strategy work.
       </div>
-      <div class="intro-privacy">No account required. Your inputs are not stored.</div>
+      <div class="intro-privacy">No account required. The Commons doesn't save your answers. They are sent to an AI model to write parts of the report, so leave out patient details.</div>
       <button class="start-btn" onclick="startAssessment()">Start assessment →</button>
     </div>`;
 }
@@ -1484,10 +1552,10 @@ function renderQuestion(q) {
     </div>`;
   } else if (q.type === 'textarea') {
     input = `<textarea class="q-textarea" id="q-${q.id}" placeholder="${q.placeholder || ''}"
-      oninput="setAnswer('${q.id}', this.value)">${val || ''}</textarea>`;
+      oninput="setAnswer('${q.id}', this.value, false)">${val || ''}</textarea>`;
   } else if (q.type === 'text') {
     input = `<input type="text" class="q-text" id="q-${q.id}" placeholder="${q.placeholder || ''}"
-      value="${(val || '').replace(/"/g, '&quot;')}" oninput="setAnswer('${q.id}', this.value)">`;
+      value="${(val || '').replace(/"/g, '&quot;')}" oninput="setAnswer('${q.id}', this.value, false)">`;
   }
 
   const noteHtml = q.note ? `<div class="question-note">${q.note}</div>` : '';
@@ -1516,170 +1584,407 @@ function renderGenerating() {
   document.getElementById('content').innerHTML = `
     <div class="generating-phase">
       <div class="gen-spinner"></div>
-      <div class="gen-title">Synthesizing assessment</div>
+      <div class="gen-title">Building the assessment</div>
       <div class="gen-steps">
-        <div class="gen-step">Analyzing value across 6 dimensions...</div>
-        <div class="gen-step">Mapping gaps between evidence and assumptions...</div>
-        <div class="gen-step">Checking strategy alignment...</div>
+        <div class="gen-step">Rating the evidence in six areas...</div>
+        <div class="gen-step">Sorting what's measured, assumed and unknown...</div>
+        <div class="gen-step">Writing the explanation...</div>
       </div>
     </div>`;
 }
 
+// ── RULES ─────────────────────────────────────────────────────────────────────
+// Ratings and the evidence map come from fixed rules applied to the answers, not
+// from the AI (decided Nov 13, 2026). A rating is the strength of the evidence for
+// the value claims, not the size of the claims. The AI only writes the explanation.
+
+const TOOL_VERSION = '2026-11-13';
+const RANK = { strong: 3, moderate: 2, weak: 1, insufficient: 0 };
+const RANK_NAME = ['insufficient', 'weak', 'moderate', 'strong'];
+
+function blank(v) { return v === undefined || v === null || v === '' || (Array.isArray(v) && !v.length); }
+function unk(v) { return blank(v) || /^Unknown/.test(v) || v === 'Not known'; }
+function cap(r, max) { return (r in RANK && RANK[r] > RANK[max]) ? max : r; }
+
+const DIMENSIONS = [
+  { id: 'clinical', label: 'Clinical outcomes' },
+  { id: 'operational', label: 'Operational' },
+  { id: 'financial', label: 'Financial' },
+  { id: 'equity', label: 'Equity & harm' },
+  { id: 'community', label: 'Community' },
+  { id: 'nonmonetary', label: 'Non-monetary (trust, buy-in)' },
+];
+
+const CHAMPION = {
+  clinical: 'Clinical quality, patient safety, the CMO\'s office, or EHR analytics. Ask for adverse event rates, accuracy audits, and any local validation.',
+  operational: 'Workflow analysts, nursing informatics, or department managers. Ask for time-motion studies, alert volume and override logs, and staff satisfaction data.',
+  financial: 'Finance, supply chain, or the CFO\'s office. Ask for total cost of ownership, labor impact models, avoided-cost analyses, and whether monitoring and validation time is counted.',
+  equity: 'Monitoring dashboards, patient safety reports, or analytics. Ask for performance broken out by race, payer, age and language, and for incident reports that mention the tool.',
+  community: 'Community health needs assessments, patient advisory councils, and the community benefit office.',
+  nonmonetary: 'Mostly informal. Staff surveys, unit leaders, and patient experience teams are the closest sources.',
+};
+
+function rateClinical(x) {
+  const s = x.q_clinical_status;
+  if (unk(s)) return ['not-assessed', 'How clinical value was assessed is unknown.'];
+  if (isOngoing()) {
+    const res = x.q_clinical_result;
+    const tail = res === 'Value questioned' ? ' The result put the value in question.'
+      : res === 'Value confirmed' ? ' The result confirmed value.' : '';
+    if (s === 'Formally measured with local data') return ['strong', 'Measured formally with local data.' + tail];
+    if (s === 'Informally assessed') return ['weak', 'Assessed informally only.' + tail];
+    return ['insufficient', 'Deployed, but clinical value has not been measured here.'];
+  }
+  if (s === 'Strong vendor and peer-reviewed evidence') return ['moderate', 'Published evidence exists, but nothing yet shows it holds for your patients.'];
+  if (s === 'Moderate vendor evidence' || s === 'Limited peer evidence only') return ['weak', 'Mostly vendor or limited outside evidence.'];
+  return ['insufficient', 'Expected benefits are assumed, not shown.'];
+}
+
+function rateOperational(x) {
+  const s = x.q_operational_status;
+  let r, why;
+  if (s === 'Not applicable') return ['not-applicable', 'Marked not applicable.'];
+  if (unk(s)) { r = 'not-assessed'; why = 'Whether operational impact was assessed is unknown.'; }
+  else if (s.startsWith('Yes — formal')) { r = 'strong'; why = 'Assessed in a formal study or analysis.'; }
+  else if (s.startsWith('Yes — informal')) { r = 'weak'; why = 'Informal feedback only.'; }
+  else { r = 'insufficient'; why = 'Not yet assessed.'; }
+  if (isScribe() && x.q_scribe_time === 'Measured locally' && (r === 'weak' || r === 'insufficient' || r === 'not-assessed')) {
+    r = 'moderate'; why += ' Documentation time saved was measured locally.';
+  }
+  if (isScribe() && x.q_scribe_time === 'Vendor estimate only') why += ' Time saved is the vendor\'s estimate.';
+  return [r, why];
+}
+
+function rateFinancial(x) {
+  const s = x.q_financial_analysis;
+  let r, why;
+  if (unk(s)) { r = 'not-assessed'; why = 'Whether a financial analysis was done is unknown.'; }
+  else if (s.startsWith('Yes — full')) { r = 'strong'; why = 'A full cost-benefit or ROI analysis was done.'; }
+  else if (s.startsWith('Yes — partial')) { r = 'moderate'; why = 'A partial analysis was done.'; }
+  else if (s.startsWith('Informal')) { r = 'weak'; why = 'Informal estimates only.'; }
+  else { r = 'insufficient'; why = 'No financial analysis yet.'; }
+  if (unk(x.q_cost) || x.q_cost === 'Not disclosed by vendor') {
+    if (r !== 'not-assessed') r = cap(r, 'weak');
+    why += x.q_cost === 'Not disclosed by vendor' ? ' The vendor won\'t disclose cost, so no return can be worked out.' : ' The cost isn\'t known, so no return can be worked out.';
+  }
+  const ac = x.q_assurance_cost;
+  if (ac !== 'Yes — estimated and included') {
+    if (r === 'strong') r = 'moderate';
+    why += ac === 'Partly' ? ' The cost only partly counts the cost of checking the tool.'
+      : ' The cost leaves out the cost of checking the tool, so any return is gross, not net.';
+  }
+  return [r, why];
+}
+
+function rateEquity(x) {
+  const s = x.q_equity_analysis;
+  let r, why;
+  if (s === 'Not applicable') return ['not-applicable', 'Marked not applicable.'];
+  if (unk(s)) { r = 'not-assessed'; why = 'Whether subgroup performance was checked is unknown.'; }
+  else if (s.startsWith('Yes — formal')) { r = 'strong'; why = 'Formal subgroup analysis done.'; }
+  else if (s.startsWith('Yes — informal')) { r = 'weak'; why = 'Informal subgroup review only.'; }
+  else { r = 'insufficient'; why = s.startsWith('Not feasible') ? 'Subgroup analysis isn\'t feasible with current data.' : 'No subgroup analysis yet.'; }
+  if ((x.q_equity_relevant || '').startsWith('No') && r === 'insufficient') why += ' Rated low relevance, but that hasn\'t been checked with data.';
+  const h = x.q_harm_tracked || '';
+  if (h.startsWith('No') || unk(h)) {
+    if (r !== 'not-assessed' && r !== 'insufficient') r = cap(r, 'moderate');
+    why += unk(h) ? ' Whether harm is tracked is unknown.' : ' Patient harm from the tool isn\'t tracked.';
+  } else if (h.startsWith('Yes — informal')) {
+    why += ' Harm is watched informally only.';
+  }
+  return [r, why];
+}
+
+function rateCommunity(x) {
+  const score = v => {
+    if (unk(v)) return undefined;
+    if (v === 'Not applicable') return null;
+    if (v.startsWith('Yes — formally')) return 2;
+    if (v.startsWith('Yes') || v.startsWith('Informally')) return 1;
+    return 0;
+  };
+  const a1 = score(x.q_community_trust), a2 = score(x.q_community_impact);
+  const vals = [a1, a2];
+  if (vals.every(v => v === null)) return ['not-applicable', 'Marked not applicable.'];
+  if (vals.every(v => v === undefined || v === null)) return ['not-assessed', 'Community trust and impact are unknown or not answered.'];
+  const known = vals.filter(v => typeof v === 'number');
+  if (known.length === 2 && known.every(v => v === 2)) return ['strong', 'Community trust and impact were both assessed formally.'];
+  if (known.includes(2)) return ['moderate', 'One of community trust or impact was assessed formally.'];
+  if (known.includes(1)) return ['weak', 'Understood informally or through advisory feedback only.'];
+  return ['insufficient', 'Not yet assessed.'];
+}
+
+function rateNonmonetary(x) {
+  const s = x.q_staff_trust || '';
+  if (s.startsWith('Not yet deployed')) return ['not-assessed', 'Not yet deployed to clinical staff.'];
+  if (unk(s)) return ['not-assessed', 'Clinician trust is unknown.'];
+  return ['weak', 'Based on the assessor\'s impression, not a survey.'];
+}
+
+const RATERS = { clinical: rateClinical, operational: rateOperational, financial: rateFinancial,
+  equity: rateEquity, community: rateCommunity, nonmonetary: rateNonmonetary };
+
+// Evidence map: Measured = formally measured here. Assumed = expected, estimated,
+// informal, or someone else's data. Unknown = not looked at, or nobody knows.
+function evidenceMap(x) {
+  const m = { measured: [], assumed: [], unknown: [] };
+  const put = (col, item) => m[col].push(item);
+  const s = x.q_clinical_status;
+  if (unk(s)) put('unknown', 'Clinical value');
+  else if (s === 'Formally measured with local data') put('measured', 'Clinical value (local data)');
+  else if (s === 'Not yet measured' || s === 'Not yet assessed') put('unknown', 'Clinical value (not yet assessed)');
+  else put('assumed', isOngoing() && s === 'Informally assessed' ? 'Clinical value (informal)' : 'Clinical value (outside or vendor evidence)');
+
+  const o = x.q_operational_status;
+  if (o !== 'Not applicable') {
+    if (unk(o)) put('unknown', 'Operational impact');
+    else if (o.startsWith('Yes — formal')) put('measured', 'Operational impact');
+    else if (o.startsWith('Yes — informal')) put('assumed', 'Operational impact (informal feedback)');
+    else put('unknown', 'Operational impact (not yet assessed)');
+  }
+  if (isScribe()) {
+    const t = x.q_scribe_time;
+    if (t === 'Measured locally') put('measured', 'Documentation time saved');
+    else if (t === 'Vendor estimate only') put('assumed', 'Documentation time saved (vendor estimate)');
+    else put('unknown', 'Documentation time saved');
+    const q = x.q_scribe_quality;
+    if (q === 'Yes — routine sample review') put('measured', 'Note errors (sample review)');
+    else if (q && q.startsWith('Clinicians edit')) put('assumed', 'Note errors (caught by editing, not reviewed)');
+    else put('unknown', 'Note errors');
+  }
+  if (isAgent()) {
+    const l = x.q_agent_log || '';
+    if (l === 'Yes — logged and reviewed') put('measured', 'Actions the agent took');
+    else if (l.startsWith('Logged') || l.startsWith('Partially')) put('assumed', 'Actions the agent took (logged, not reviewed)');
+    else put('unknown', 'Actions the agent took');
+  }
+  const track = (v, label) => {
+    if (blank(v) || (v || '').startsWith('Not applicable')) return;
+    if (/^Unknown/.test(v)) put('unknown', label);
+    else if (v.startsWith('Yes')) put('measured', label);
+    else if (v.startsWith('Tracked')) put('assumed', label + ' (tracked, not reviewed)');
+    else put('unknown', label + ' (not tracked)');
+  };
+  track(x.q_alert_rate, 'Alert rate');
+  track(x.q_override_rate, 'Override rate');
+  const af = x.q_alert_fatigue;
+  if (af && !af.startsWith('Not applicable')) {
+    if (af.startsWith('Yes — formally')) put('measured', 'Alert fatigue');
+    else if (af.startsWith('Yes')) put('assumed', 'Alert fatigue (informal)');
+    else put('unknown', 'Alert fatigue');
+  }
+
+  const c = x.q_cost;
+  if (unk(c)) put('unknown', 'Annual cost');
+  else if (c === 'Not disclosed by vendor') put('unknown', 'Annual cost (vendor won\'t disclose)');
+  else put('assumed', 'Annual cost (estimate)');
+  const ac = x.q_assurance_cost;
+  if (ac === 'Yes — estimated and included') put('assumed', 'Cost of checking the tool (estimated)');
+  else if (ac === 'Partly') put('assumed', 'Cost of checking the tool (partly counted)');
+  else put('unknown', 'Cost of checking the tool');
+  const f = x.q_financial_analysis || '';
+  if (f.startsWith('Yes — full')) put('measured', 'Financial return');
+  else if (f.startsWith('Yes — partial') || f.startsWith('Informal')) put('assumed', 'Financial return (partial or informal)');
+  else put('unknown', 'Financial return');
+
+  const e = x.q_equity_analysis || '';
+  if (e !== 'Not applicable') {
+    if (e.startsWith('Yes — formal')) put('measured', 'Performance by patient group');
+    else if (e.startsWith('Yes — informal')) put('assumed', 'Performance by patient group (informal)');
+    else put('unknown', 'Performance by patient group');
+  }
+  const h = x.q_harm_tracked || '';
+  if (h.startsWith('Yes — formal')) put('measured', 'Patient harm involving the tool');
+  else if (h.startsWith('Yes')) put('assumed', 'Patient harm involving the tool (informal)');
+  else put('unknown', 'Patient harm involving the tool');
+
+  const trust = (v, label) => {
+    if (blank(v) || v.startsWith('Not applicable') || v.startsWith('Not yet deployed')) return;
+    if (unk(v) || v.startsWith('Unknown')) put('unknown', label);
+    else put('assumed', label + ' (impression)');
+  };
+  trust(x.q_staff_trust, 'Clinician trust');
+  trust(x.q_patient_trust, 'Patient trust');
+  const comm = (v, label) => {
+    if (blank(v) || v === 'Not applicable') return;
+    if (unk(v) || v.startsWith('No') || v.startsWith('Not yet')) put('unknown', label);
+    else if (v.startsWith('Yes — formally')) put('measured', label);
+    else put('assumed', label + ' (informal)');
+  };
+  comm(x.q_community_trust, 'Community trust');
+  comm(x.q_community_impact, 'Community health impact');
+  return m;
+}
+
+function strategyStatus(x) {
+  const s = x.q_strategy;
+  if (recsAllowed()) {
+    if (blank(x.q_strategy_priorities)) return { recs: false,
+      note: 'Your AI strategy is documented, but no strategic priorities were picked, so there is nothing to anchor recommendations to. Go back to the Strategy section and pick them to get recommendations.' };
+    return { recs: true, note: 'Your AI strategy is documented and in use. Recommendations below are tied to the priorities you picked.' };
+  }
+  if (s === 'Yes — in development') return { recs: false,
+    note: 'Your AI strategy is still in development, so there are no recommendations: they would be anchored to goals that may still change. Use this report as input to finishing the strategy.' };
+  if (s === 'No — not yet developed') return { recs: false,
+    note: 'There is no documented AI strategy, so there are no recommendations to anchor. Use this report as direct input to strategy development and governance review.' };
+  return { recs: false,
+    note: 'It is not known whether there is a documented AI strategy, so there are no recommendations. Find out first; then this report can feed it.' };
+}
+
+function computeReport() {
+  const x = state.answers;
+  const dims = DIMENSIONS.map(d => {
+    const [rating, why] = RATERS[d.id](x);
+    return { id: d.id, label: d.label, rating, why, championGuidance: CHAMPION[d.id] };
+  });
+  const notAssessed = dims.filter(d => d.rating === 'not-assessed').length;
+  const ranked = dims.map(d => RANK[d.rating]).filter(v => v !== undefined).sort((p, q) => p - q);
+  const median = ranked.length ? ranked[Math.floor((ranked.length - 1) / 2)] : null;
+  const self = { 'Strong': 3, 'Moderate': 2, 'Weak': 1, 'Insufficient': 0 }[(x.q_evidence_overall || '').split(' —')[0]];
+  let selfCheck = null;
+  if (self !== undefined && median !== null && self > median) {
+    selfCheck = `You rated the overall evidence "${(x.q_evidence_overall || '').split(' —')[0]}". Your answers above support about "${RANK_NAME[median][0].toUpperCase() + RANK_NAME[median].slice(1)}".`;
+  }
+  return {
+    system: x.q_system || 'AI system',
+    org: x.q_org || null,
+    pathway: isOngoing() ? 'Ongoing' : 'Pre-adoption',
+    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+    dims, map: evidenceMap(x), strategy: strategyStatus(x),
+    thin: notAssessed >= 3, notAssessed, selfCheck,
+    ai: null, aiProblem: null,
+  };
+}
+
+// ── VALIDATION ───────────────────────────────────────────────────────────────
+function missingRequired(idx) {
+  const section = getSection(idx);
+  if (!section) return [];
+  return section.questions.filter(q => q.required && (!q.showIf || q.showIf()) && blank(state.answers[q.id]));
+}
+
 // ── RENDER REPORT ─────────────────────────────────────────────────────────────
+
+const RATING_LABEL = {
+  strong: 'Strong evidence', moderate: 'Moderate evidence', weak: 'Weak evidence',
+  insufficient: 'Insufficient evidence', 'not-assessed': 'Not assessed', 'not-applicable': 'N/A',
+};
+const AI_TAG = '<span style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;opacity:.65;margin-left:8px">AI-written</span>';
+
+function disclaimer() {
+  return (window.CommonsDisclaimer && CommonsDisclaimer.html)
+    ? CommonsDisclaimer.html({ tool: 'ROI Assessment', version: TOOL_VERSION, ai: 'partial' })
+    : '';
+}
 
 function renderReport(report) {
   state.phase = 'report';
   renderSidebar();
+  const ai = report.ai || {};
+  const aiDims = ai.dimensions || {};
 
-  const ratingClass = {
-    'strong': 'rating-strong',
-    'moderate': 'rating-moderate',
-    'weak': 'rating-weak',
-    'insufficient': 'rating-insufficient',
-    'not-assessed': 'rating-not-assessed',
-    'not-applicable': 'rating-not-applicable',
-  };
-  const ratingLabel = {
-    'strong': 'Strong',
-    'moderate': 'Moderate',
-    'weak': 'Weak',
-    'insufficient': 'Insufficient',
-    'not-assessed': 'Not assessed',
-    'not-applicable': 'N/A',
-  };
-
-  const meta = report.meta || {};
-  const strategy = report.strategyStatus || {};
-  const dims = report.dimensions || [];
-  const gapMap = report.gapMap || {};
-
-  // Header
   let html = `<div class="report-phase">
-    <div style="font-size:11px;letter-spacing:0.04em;opacity:0.7;margin:0 0 16px;padding:8px 10px;border:1px dashed currentColor;border-radius:4px">AI-generated from your answers · not reviewed by a person · check it before you rely on it</div>
+    ${disclaimer()}
     <div class="report-header">
       <div class="report-tag">ROI Assessment</div>
-      <div class="report-title">Value assessment — <em>${escHtml(meta.system || 'AI System')}</em></div>
+      <div class="report-title">Value assessment — <em>${escHtml(report.system)}</em></div>
       <div class="report-meta">
-        ${meta.pathway ? `<div class="report-meta-item">Pathway: <span>${meta.pathway === 'pre-adoption' ? 'Pre-adoption' : 'Ongoing'}</span></div>` : ''}
-        ${meta.org ? `<div class="report-meta-item">Organization: <span>${escHtml(meta.org)}</span></div>` : ''}
-        <div class="report-meta-item">Generated: <span>${meta.generatedDate || new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'})}</span></div>
+        <div class="report-meta-item">Pathway: <span>${report.pathway}</span></div>
+        ${report.org ? `<div class="report-meta-item">Organization: <span>${escHtml(report.org)}</span></div>` : ''}
+        <div class="report-meta-item">Generated: <span>${report.date}</span></div>
       </div>
     </div>
 
     <div class="report-actions">
       <button class="action-btn primary" onclick="window.print()">Print / Save as PDF</button>
-      <button class="action-btn" onclick="copyReportText()">Copy report text</button>
+      <button class="action-btn" id="copy-btn" onclick="copyReportText()">Copy report text</button>
       <button class="action-btn" onclick="startOver()">Start new assessment</button>
-    </div>`;
+    </div>
+    <p class="how-rated" style="font-size:13px;line-height:1.6;opacity:.8;margin:0 0 18px">
+      Ratings and the evidence map come from fixed rules applied to your answers. A rating is how strong the evidence is, not how big the claimed value is. The summaries, strengths, gaps${report.strategy.recs ? ', overall assessment and recommendations' : ' and overall assessment'} were written by AI from your answers and are marked AI-written.
+    </p>`;
 
-  // Strategy banner
-  if (strategy.hasStrategy) {
-    html += `<div class="strategy-banner has-strategy">
-      Strategy aligned — recommendations included
-      <p>${escHtml(strategy.strategyNote || '')}</p>
+  if (report.thin) {
+    html += `<div class="strategy-banner no-strategy" style="border-color:#888">
+      Too little to assess
+      <p>${report.notAssessed} of 6 areas couldn't be rated from these answers. Treat this as a list of what to find out, not an assessment.</p>
     </div>`;
-  } else {
+  }
+  if (report.aiProblem) {
     html += `<div class="strategy-banner no-strategy">
-      Report only — no recommendations
-      <p>${escHtml(strategy.strategyNote || 'No documented AI strategy was identified. Recommendations require a strategy to anchor against.')}</p>
+      The AI write-up didn't come through
+      <p>${escHtml(report.aiProblem)} The ratings, evidence map and data sources below come from fixed rules and are complete. Try again later for the written parts.</p>
     </div>`;
   }
 
-  // Dimensions
+  html += `<div class="strategy-banner ${report.strategy.recs ? 'has-strategy' : 'no-strategy'}">
+    ${report.strategy.recs ? 'Strategy documented — recommendations included' : 'Report only — no recommendations'}
+    <p>${escHtml(report.strategy.note)}</p>
+  </div>`;
+
+  if (report.selfCheck) {
+    html += `<div class="strategy-banner no-strategy">Check the overall evidence rating<p>${escHtml(report.selfCheck)}</p></div>`;
+  }
+
   html += `<div class="dimensions-section">
-    <div class="section-label">Value assessment — six dimensions</div>
+    <div class="section-label">Value assessment — six areas</div>
     <div class="dimension-grid">`;
 
-  dims.forEach(dim => {
-    const rc = ratingClass[dim.rating] || 'rating-not-assessed';
-    const rl = ratingLabel[dim.rating] || dim.rating || '—';
-    const strengths = dim.strengths || [];
-    const gaps = dim.gaps || [];
-
+  report.dims.forEach(dim => {
+    const d = aiDims[dim.id] || {};
+    const strengths = Array.isArray(d.strengths) ? d.strengths : [];
+    const gaps = Array.isArray(d.gaps) ? d.gaps : [];
     html += `<div class="dimension-card">
       <div class="dim-top">
-        <div class="dim-label">${escHtml(dim.label || dim.id)}</div>
-        <div class="dim-rating-badge ${rc}">${rl}</div>
+        <div class="dim-label">${escHtml(dim.label)}</div>
+        <div class="dim-rating-badge rating-${dim.rating}">${RATING_LABEL[dim.rating]}</div>
       </div>
-      <div class="dim-summary">${escHtml(dim.summary || '')}</div>
-      <div class="dim-lists">`;
-
-    if (strengths.length) {
-      html += `<div class="dim-list strengths">
-        <div class="dim-list-label strengths">Strengths</div>
-        <ul>${strengths.map(s => `<li>${escHtml(s)}</li>`).join('')}</ul>
-      </div>`;
+      <div class="dim-summary"><strong>Why this rating:</strong> ${escHtml(dim.why)}</div>`;
+    if (d.summary) html += `<div class="dim-summary">${escHtml(d.summary)}${AI_TAG}</div>`;
+    if (dim.id === 'financial') {
+      html += `<div class="dim-summary" style="font-size:12px;opacity:.85">Net, not gross: what the tool saves minus the ongoing cost of checking it (monitoring, validation, audits, clinician time verifying output). The Commons doesn't have measured overhead rates by tool type yet, so no number is applied here.</div>`;
     }
-    if (gaps.length) {
-      html += `<div class="dim-list gaps">
-        <div class="dim-list-label gaps">Gaps</div>
-        <ul>${gaps.map(g => `<li>${escHtml(g)}</li>`).join('')}</ul>
-      </div>`;
+    if (strengths.length || gaps.length) {
+      html += `<div class="dim-lists">`;
+      if (strengths.length) html += `<div class="dim-list strengths"><div class="dim-list-label strengths">Strengths${AI_TAG}</div><ul>${strengths.map(s => `<li>${escHtml(s)}</li>`).join('')}</ul></div>`;
+      if (gaps.length) html += `<div class="dim-list gaps"><div class="dim-list-label gaps">Gaps${AI_TAG}</div><ul>${gaps.map(g => `<li>${escHtml(g)}</li>`).join('')}</ul></div>`;
+      html += `</div>`;
     }
-
-    html += `</div>`;
-
-    if (dim.championGuidance) {
-      html += `<div class="dim-champion">
-        <div class="dim-champion-label">Where to find this data</div>
-        ${escHtml(dim.championGuidance)}
-      </div>`;
-    }
-
-    html += `</div>`;
+    html += `<div class="dim-champion"><div class="dim-champion-label">Where to find this data</div>${escHtml(dim.championGuidance)}</div>
+    </div>`;
   });
-
   html += `</div></div>`;
 
-  // Gap map
-  if (gapMap.measured || gapMap.assumed || gapMap.unknown) {
-    const measured = gapMap.measured || [];
-    const assumed = gapMap.assumed || [];
-    const unknown = gapMap.unknown || [];
-
-    html += `<div class="gap-map">
-      <div class="gap-map-title">Evidence gap map</div>
-      <div class="gap-map-cols">
-        <div class="gap-col measured">
-          <div class="gap-col-label measured">Measured</div>
-          <ul>${measured.length ? measured.map(m => `<li>${escHtml(m)}</li>`).join('') : '<li style="font-style:italic">Nothing formally measured</li>'}</ul>
-        </div>
-        <div class="gap-col assumed">
-          <div class="gap-col-label assumed">Assumed</div>
-          <ul>${assumed.length ? assumed.map(m => `<li>${escHtml(m)}</li>`).join('') : '<li style="font-style:italic">None identified</li>'}</ul>
-        </div>
-        <div class="gap-col unknown">
-          <div class="gap-col-label unknown">Unknown</div>
-          <ul>${unknown.length ? unknown.map(m => `<li>${escHtml(m)}</li>`).join('') : '<li style="font-style:italic">None identified</li>'}</ul>
-        </div>
-      </div>
+  const col = (key, label, empty) => `<div class="gap-col ${key}">
+      <div class="gap-col-label ${key}">${label}</div>
+      <ul>${report.map[key].length ? report.map[key].map(m => `<li>${escHtml(m)}</li>`).join('') : `<li style="font-style:italic">${empty}</li>`}</ul>
     </div>`;
-  }
+  html += `<div class="gap-map">
+    <div class="gap-map-title">Evidence map</div>
+    <p style="font-size:12px;opacity:.8;margin:0 0 10px">Measured: formally measured here. Assumed: expected, estimated, informal, or someone else's data. Unknown: not looked at, or nobody knows.</p>
+    <div class="gap-map-cols">
+      ${col('measured', 'Measured', 'Nothing formally measured')}
+      ${col('assumed', 'Assumed', 'None')}
+      ${col('unknown', 'Unknown', 'None')}
+    </div>
+  </div>`;
 
-  // Overall narrative
-  if (report.overallNarrative) {
+  if (ai.overallNarrative) {
     html += `<div class="overall-narrative">
-      <div class="overall-narrative-label">Overall assessment</div>
-      <div class="overall-narrative-text">${escHtml(report.overallNarrative)}</div>
+      <div class="overall-narrative-label">Overall assessment${AI_TAG}</div>
+      <div class="overall-narrative-text">${escHtml(ai.overallNarrative)}</div>
     </div>`;
   }
 
-  // Recommendations or report-only notice
-  if (strategy.recommendationsAvailable && report.recommendations && report.recommendations.length) {
+  if (report.strategy.recs && Array.isArray(ai.recommendations) && ai.recommendations.length) {
     html += `<div class="recommendations-section">
-      <div class="rec-title">Recommendations — anchored to organizational strategy</div>
-      <ul class="rec-list">
-        ${report.recommendations.map(r => `<li>${escHtml(r)}</li>`).join('')}
-      </ul>
-    </div>`;
-  } else if (report.reportOnlyStatement) {
-    html += `<div class="report-only-notice">
-      <div class="ron-label">Report only — recommendations not generated</div>
-      <div class="ron-text">${escHtml(report.reportOnlyStatement)}</div>
+      <div class="rec-title">Recommendations — tied to your strategy${AI_TAG}</div>
+      <ul class="rec-list">${ai.recommendations.map(r => `<li>${escHtml(r)}</li>`).join('')}</ul>
     </div>`;
   }
 
-  html += `</div>`; // end report-phase
+  html += disclaimer();
+  html += `</div>`;
   document.getElementById('content').innerHTML = html;
   document.getElementById('content').scrollTop = 0;
 }
@@ -1693,7 +1998,7 @@ function renderError(msg) {
     <div class="error-phase">
       <div class="error-title">Assessment could not be generated</div>
       <div class="error-msg">${escHtml(msg || 'An unexpected error occurred.')}<br><br>
-        Check that your API key is configured and try again. Your answers have been preserved.
+        Your answers are still here.
       </div>
       <button class="nav-btn-primary" onclick="goToGenerate()">Try again</button>
       &nbsp;
@@ -1703,36 +2008,55 @@ function renderError(msg) {
 
 // ── ANSWER MANAGEMENT ─────────────────────────────────────────────────────────
 
-function setAnswer(id, value) {
+// Selects re-render the section (they can show or hide other questions). Typed text
+// does not: re-rendering on every keystroke threw the cursor out of the box.
+function setAnswer(id, value, rerender = true) {
   state.answers[id] = value;
-  // Re-render if answer controls showIf logic in current section
+  if (!rerender) return;
   const section = getSection(state.sectionIdx);
   if (!section) return;
-  const hasConditional = section.questions.some(q => q.showIf);
-  if (hasConditional) renderSection(state.sectionIdx);
+  if (section.questions.some(q => q.showIf)) renderSection(state.sectionIdx);
 }
 
 function toggleMulti(id, value, el) {
   if (!Array.isArray(state.answers[id])) state.answers[id] = [];
   const arr = state.answers[id];
   const i = arr.indexOf(value);
-  if (i === -1) {
-    arr.push(value);
-    el.classList.add('checked');
-  } else {
-    arr.splice(i, 1);
-    el.classList.remove('checked');
-  }
+  if (i === -1) { arr.push(value); el.classList.add('checked'); }
+  else { arr.splice(i, 1); el.classList.remove('checked'); }
 }
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
 
-function startAssessment() {
-  renderSection(0);
-}
+function startAssessment() { renderSection(0); }
 
 function goSection(idx) {
+  // Going forward checks the section you're leaving. "Unknown" counts as an answer.
+  if (state.phase === 'elicit' && idx > state.sectionIdx) {
+    const missing = missingRequired(state.sectionIdx);
+    if (missing.length) { showMissing(missing); return; }
+  }
   renderSection(idx);
+}
+
+function showMissing(missing) {
+  document.querySelectorAll('.question-block.missing').forEach(e => { e.classList.remove('missing'); e.style.outline = ''; });
+  missing.forEach(q => {
+    const el = document.getElementById('qblock-' + q.id);
+    if (el) { el.classList.add('missing'); el.style.outline = '2px solid #e8a33d'; el.style.outlineOffset = '6px'; }
+  });
+  let note = document.getElementById('missing-note');
+  if (!note) {
+    note = document.createElement('div');
+    note.id = 'missing-note';
+    note.setAttribute('role', 'alert');
+    note.style.cssText = 'margin:0 0 18px;padding:10px 14px;border:1px solid #e8a33d;border-radius:6px;font-size:14px';
+    const header = document.querySelector('.section-header');
+    if (header) header.after(note);
+  }
+  note.textContent = `${missing.length} required question${missing.length > 1 ? 's' : ''} still blank (outlined). "Unknown" is a fine answer.`;
+  const first = document.getElementById('qblock-' + missing[0].id);
+  if (first) first.scrollIntoView({ block: 'center' });
 }
 
 function goBack(currentIdx) {
@@ -1741,6 +2065,13 @@ function goBack(currentIdx) {
 }
 
 function goToGenerate() {
+  if (state.phase === 'elicit') {
+    const missing = missingRequired(state.sectionIdx);
+    if (missing.length) { showMissing(missing); return; }
+    for (let i = 0; i < SECTIONS_META.length; i++) {
+      if (missingRequired(i).length) { renderSection(i); showMissing(missingRequired(i)); return; }
+    }
+  }
   generateAssessment();
 }
 
@@ -1751,93 +2082,93 @@ function startOver() {
   renderIntro();
 }
 
-// ── AI GENERATION ─────────────────────────────────────────────────────────────
+// ── AI WRITE-UP ───────────────────────────────────────────────────────────────
+// The report is built from the rules first. The AI only adds the written parts; if
+// it fails or gets cut off, the rule-based report still shows.
 
 async function generateAssessment() {
   renderGenerating();
-
-  const systemPrompt = buildSystemPrompt();
-  const userPrompt = buildUserPrompt();
+  const report = computeReport();
+  state.report = report;
 
   try {
     const res = await fetch('/api/synthesize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ purpose: "report", tool: "roi",
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2500,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }],
+      body: JSON.stringify({ purpose: 'report', tool: 'roi',
+        max_tokens: 3500,
+        system: buildSystemPrompt(),
+        messages: [{ role: 'user', content: buildUserPrompt(report) }],
       }),
     });
-
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || `API error ${res.status}`);
+      // Paused, refused for patient data, rate-limited: these are real stops, not AI hiccups.
+      if (res.status === 503 || data.phi || res.status === 429 || res.status === 413) {
+        renderError(data.error || `Error ${res.status}`);
+        return;
+      }
+      throw new Error(data.error || `Error ${res.status}`);
     }
-
-    const data = await res.json();
-    const text = data?.content?.[0]?.text;
-    if (!text) throw new Error('No content returned from API');
-
-    const cleaned = text.replace(/```json\n?|```\n?/g, '').trim();
-    const report = JSON.parse(cleaned);
-    state.report = report;
-    renderReport(report);
-
+    const text = (data.content || []).filter(b => b && b.type === 'text').map(b => b.text || '').join('');
+    if (data.stop_reason === 'max_tokens') throw new Error('The write-up was cut off before it finished.');
+    report.ai = parseAi(text);
   } catch (err) {
-    renderError(err.message);
+    report.aiProblem = err.message || 'Something went wrong.';
   }
+  renderReport(report);
+}
+
+function parseAi(text) {
+  const start = text.indexOf('{'), end = text.lastIndexOf('}');
+  if (start < 0 || end <= start) throw new Error('The write-up came back unreadable.');
+  let obj;
+  try { obj = JSON.parse(text.slice(start, end + 1)); }
+  catch (e) { throw new Error('The write-up came back unreadable.'); }
+  if (!obj || typeof obj !== 'object') throw new Error('The write-up came back unreadable.');
+  const clean = s => typeof s === 'string' ? s.trim() : '';
+  const list = v => Array.isArray(v) ? v.map(clean).filter(Boolean).slice(0, 4) : [];
+  const dims = {};
+  DIMENSIONS.forEach(d => {
+    const v = (obj.dimensions || {})[d.id] || {};
+    dims[d.id] = { summary: clean(v.summary), strengths: list(v.strengths), gaps: list(v.gaps) };
+  });
+  return { dimensions: dims, overallNarrative: clean(obj.overallNarrative),
+    recommendations: recsAllowed() ? list(obj.recommendations) : null };
 }
 
 function buildSystemPrompt() {
-  return `You are a healthcare AI governance advisor synthesizing a structured return-on-investment and value assessment for a clinical AI system. Your output is a formal assessment document used by governance committees, procurement teams, and clinician champions.
+  return `You write the explanation parts of a value (ROI) assessment for a clinical AI system. Readers are governance committees, procurement teams and physician champions.
 
-You assess value across six dimensions:
-1. CLINICAL OUTCOMES — patient safety, diagnostic accuracy, adverse events avoided, reduction in unnecessary procedures and redundant testing
-2. OPERATIONAL — workflow efficiency, reduced cognitive burden, alert fatigue, throughput, staff satisfaction
-3. FINANCIAL — license and implementation costs; saved labor; avoided downstream costs; reduction in unnecessary procedures and redundant testing; avoided regulatory penalties and compliance costs; avoided staff turnover costs attributable to tool burden or tool relief (this is bidirectional — tools that reduce burden may improve retention; tools that add burden may increase turnover)
-4. EQUITY / HARM — differential performance across patient populations, documented harms, subgroup analysis completeness
-5. COMMUNITY — community health impact, community and patient trust, nonprofit community benefit obligations, relationships with the populations served
-6. NON-MONETARY CURRENCY — clinician buy-in, staff trust, patient trust in the institution, reputational capital, vendor relationships, psychological safety of the care team
+The ratings and the evidence map were already set by fixed rules from the organization's answers. They are given to you. Do not change, contradict, or re-grade them. A rating is the strength of the evidence for the value claims, not the size of the claims.
 
-CRITICAL RULE — Strategy gate:
-If the organization does NOT have a documented AI strategy (status is "No" or "Unknown"): set "recommendationsAvailable": false. Do NOT generate recommendations. Set "reportOnlyStatement" to a clear explanation that recommendations require a documented organizational AI strategy to anchor against, and that this report should be used as direct input to strategy development and governance review.
-If the organization DOES have a documented AI strategy (status starts with "Yes"): set "recommendationsAvailable": true. Generate recommendations structured explicitly against the stated strategic priorities.
+The six areas: clinical outcomes; operational; financial (what it saves minus what it costs, including the ongoing cost of checking the tool, and staff turnover in either direction); equity and harm; community; non-monetary (clinician and patient trust, buy-in, reputation).
 
-Rating discipline:
-"rating" reflects the strength of the evidence for value claims, not the strength of the claims themselves. A system with strong expected clinical benefits but no local measurement should receive "insufficient" or "weak", not "strong". Be honest.
+For each area write:
+- "summary": 1 to 2 plain sentences on what the answers show for this area.
+- "strengths": 0 to 3 short items. Only what the answers actually show. Empty if nothing.
+- "gaps": 1 to 3 short items, the most important missing evidence.
+Then "overallNarrative": one short paragraph on how solid the value case is and the single most important thing to find out next.
+Whether to write "recommendations" is stated at the end of the message.
 
-For each dimension, include "championGuidance" — a brief, specific note on who in a healthcare organization typically holds this data, so a physician champion knows where to go.
+Rules:
+- Use only what is in the answers. Do not invent numbers, studies, vendors, regulations, or details.
+- If the answers don't say, write "Can't tell from these answers." Do not fill gaps with typical cases.
+- Treat expected value, vendor claims, and impressions as unproven.
+- Plain English. No markdown.
 
-Return ONLY a valid JSON object. No markdown fences, no prose outside the JSON.
-
-Required JSON structure:
-{
-  "meta": { "system": string, "pathway": "pre-adoption"|"ongoing", "org": string|null, "generatedDate": string },
-  "strategyStatus": { "hasStrategy": boolean, "strategyNote": string, "recommendationsAvailable": boolean },
-  "dimensions": [
-    {
-      "id": "clinical"|"operational"|"financial"|"equity"|"community"|"nonmonetary",
-      "label": string,
-      "rating": "strong"|"moderate"|"weak"|"insufficient"|"not-assessed"|"not-applicable",
-      "summary": string,
-      "strengths": string[],
-      "gaps": string[],
-      "championGuidance": string
-    }
-  ],
-  "gapMap": { "measured": string[], "assumed": string[], "unknown": string[] },
-  "overallNarrative": string,
-  "recommendations": string[]|null,
-  "reportOnlyStatement": string|null
-}`;
+Return only this JSON, nothing before or after it:
+{"dimensions":{"clinical":{"summary":"","strengths":[],"gaps":[]},"operational":{...},"financial":{...},"equity":{...},"community":{...},"nonmonetary":{...}},"overallNarrative":"","recommendations":null}`;
 }
 
-function buildUserPrompt() {
+function buildUserPrompt(report) {
   const ans = state.answers;
-  const fmt = v => v || 'Not answered';
-  const fmtArr = v => Array.isArray(v) ? (v.length ? v.join(', ') : 'None selected') : (v || 'Not answered');
+  const fmt = v => blank(v) ? 'Not answered' : v;
+  const fmtArr = v => Array.isArray(v) ? (v.length ? v.join(', ') : 'None selected') : fmt(v);
+  const line = (label, v) => blank(v) ? '' : `${label}: ${Array.isArray(v) ? v.join(', ') : v}\n`;
+  const recs = report.strategy.recs
+    ? `RECOMMENDATIONS: requested. Give 3 to 5 next steps in "recommendations". Tie each to one of these strategic priorities and name it: ${fmtArr(ans.q_strategy_priorities)}. Frame them as options for the organization to decide on, not directives.`
+    : `RECOMMENDATIONS: not requested. Set "recommendations" to null. Do not give recommendations anywhere else either.`;
 
   return `ASSESSMENT CONTEXT
 System: ${fmt(ans.q_system)}
@@ -1845,28 +2176,24 @@ Pathway: ${fmt(ans.q_pathway)}
 Use type: ${fmt(ans.q_use_type)}
 Care setting: ${fmt(ans.q_setting)}
 Role of assessor: ${fmt(ans.q_role)}
-Organization: ${ans.q_org || 'Not specified'}
-${ans.q_deployment_duration ? `Deployment duration: ${ans.q_deployment_duration}` : ''}
-
+${line('Organization', ans.q_org)}${line('Deployment duration', ans.q_deployment_duration)}
 ORGANIZATIONAL STRATEGY
 Strategy status: ${fmt(ans.q_strategy)}
-${ans.q_strategy_priorities ? `Strategic priorities: ${fmtArr(ans.q_strategy_priorities)}` : ''}
-${ans.q_strategy_criteria ? `Adoption/sunset criteria in strategy: ${ans.q_strategy_criteria}` : ''}
-${ans.q_strategy_describe ? `Criteria description: ${ans.q_strategy_describe}` : ''}
-Value definition status: ${fmt(ans.q_roi_defined)}
+${line('Strategic priorities', ans.q_strategy_priorities)}${line('Adoption/sunset criteria in strategy', ans.q_strategy_criteria)}${line('Criteria description', ans.q_strategy_describe)}Value definition status: ${fmt(ans.q_roi_defined)}
 Exit threshold defined: ${fmt(ans.q_exit_threshold)}
-${ans.q_exit_describe ? `Exit threshold description: ${ans.q_exit_describe}` : ''}
-
+${line('Exit threshold description', ans.q_exit_describe)}
 CLINICAL & OPERATIONAL VALUE
 Expected clinical value: ${fmtArr(ans.q_clinical_expected)}
-Clinical evidence status: ${fmt(ans.q_clinical_status)}
-Subgroup analysis: ${fmt(ans.q_clinical_subgroup)}
-Expected operational value: ${fmtArr(ans.q_operational_expected)}
+How clinical value was assessed: ${fmt(ans.q_clinical_status)}
+${line('What that assessment showed', ans.q_clinical_result)}Expected operational value: ${fmtArr(ans.q_operational_expected)}
 Operational impact assessed: ${fmt(ans.q_operational_status)}
 Alert fatigue assessed: ${fmt(ans.q_alert_fatigue)}
-
+Alert rate tracked: ${fmt(ans.q_alert_rate)}
+Override rate tracked: ${fmt(ans.q_override_rate)}
+${line('Documentation time saved (scribe)', ans.q_scribe_time)}${line('Note error review (scribe)', ans.q_scribe_quality)}${line('Recording consent (scribe)', ans.q_scribe_consent)}${line('Actions without approval (agent)', ans.q_agent_actions)}${line('Action logging (agent)', ans.q_agent_log)}
 FINANCIAL VALUE
 Approximate annual cost: ${fmt(ans.q_cost)}
+Cost includes ongoing cost of checking the tool: ${fmt(ans.q_assurance_cost)}
 Relevant financial value categories: ${fmtArr(ans.q_financial_categories)}
 Financial analysis conducted: ${fmt(ans.q_financial_analysis)}
 Staff turnover dimension: ${fmt(ans.q_financial_turnover)}
@@ -1874,8 +2201,7 @@ Regulatory/compliance cost implications: ${fmt(ans.q_financial_regulatory)}
 
 EQUITY, COMMUNITY & NON-MONETARY VALUE
 Equity relevance: ${fmt(ans.q_equity_relevant)}
-${ans.q_equity_populations ? `Relevant populations: ${fmtArr(ans.q_equity_populations)}` : ''}
-Subgroup analysis status: ${fmt(ans.q_equity_analysis)}
+${line('Relevant populations', ans.q_equity_populations)}Subgroup analysis status: ${fmt(ans.q_equity_analysis)}
 Patient harm tracking: ${fmt(ans.q_harm_tracked)}
 Community benefit obligations: ${fmt(ans.q_community_benefit)}
 Community/patient trust assessed: ${fmt(ans.q_community_trust)}
@@ -1883,43 +2209,50 @@ Community health impact assessed: ${fmt(ans.q_community_impact)}
 Clinician trust level: ${fmt(ans.q_staff_trust)}
 Patient trust level: ${fmt(ans.q_patient_trust)}
 Reputational posture: ${fmt(ans.q_reputation)}
-${ans.q_non_monetary_note ? `Non-monetary notes: ${ans.q_non_monetary_note}` : ''}
-
+${line('Non-monetary notes', ans.q_non_monetary_note)}
 EVIDENCE QUALITY & DECISION CONTEXT
-Overall evidence quality: ${fmt(ans.q_evidence_overall)}
-${ans.q_biggest_unknown ? `Biggest unknown: ${ans.q_biggest_unknown}` : ''}
-Decision-maker: ${fmt(ans.q_decision_maker)}
+Assessor's overall evidence rating: ${fmt(ans.q_evidence_overall)}
+${line('Biggest unknown', ans.q_biggest_unknown)}Decision-maker: ${fmt(ans.q_decision_maker)}
 Decision timeline: ${fmt(ans.q_timeline)}
-${ans.q_champion_question ? `Champion's core question: ${ans.q_champion_question}` : ''}
-${ans.q_opponents ? `Stakeholder concerns: ${ans.q_opponents}` : ''}
-${ans.q_context ? `Additional context: ${ans.q_context}` : ''}
+${line("Champion's core question", ans.q_champion_question)}${line('Stakeholder concerns', ans.q_opponents)}${line('Additional context', ans.q_context)}
+RATINGS ALREADY SET BY RULES (do not change)
+${report.dims.map(d => `${d.label}: ${RATING_LABEL[d.rating]}. ${d.why}`).join('\n')}
 
-Generate a comprehensive, honest ROI assessment. Do not overstate value where evidence is weak or absent. For dimensions where data is missing, say so directly — the gap map and honest assessment of what is not known is as valuable as confirmation of what is.`;
+EVIDENCE MAP ALREADY SET BY RULES
+Measured: ${report.map.measured.join('; ') || 'nothing'}
+Assumed: ${report.map.assumed.join('; ') || 'nothing'}
+Unknown: ${report.map.unknown.join('; ') || 'nothing'}
+
+${recs}`;
 }
 
 // ── REPORT UTILITIES ──────────────────────────────────────────────────────────
 
 function copyReportText() {
-  if (!state.report) return;
   const r = state.report;
-  let text = `ROI ASSESSMENT — ${r.meta?.system || 'AI System'}\n`;
-  text += `Generated: ${r.meta?.generatedDate || ''}\n\n`;
-  (r.dimensions || []).forEach(d => {
-    text += `${d.label} (${d.rating})\n${d.summary}\n`;
-    if (d.gaps?.length) text += `Gaps: ${d.gaps.join('; ')}\n`;
+  if (!r) return;
+  const ai = r.ai || {};
+  let text = `ROI ASSESSMENT — ${r.system}\nGenerated: ${r.date} · ROI Assessment v${TOOL_VERSION}\n`;
+  text += `Working prototype · not independently reviewed · not clinical, legal or financial advice. Ratings and the evidence map come from fixed rules; parts marked [AI] were written by AI.\n\n`;
+  text += `${r.strategy.note}\n\n`;
+  r.dims.forEach(d => {
+    text += `${d.label}: ${RATING_LABEL[d.rating]}\nWhy: ${d.why}\n`;
+    const a = (ai.dimensions || {})[d.id];
+    if (a && a.summary) text += `[AI] ${a.summary}\n`;
+    if (a && a.gaps && a.gaps.length) text += `[AI] Gaps: ${a.gaps.join('; ')}\n`;
     text += '\n';
   });
-  if (r.overallNarrative) text += `OVERALL ASSESSMENT\n${r.overallNarrative}\n\n`;
-  if (r.recommendations?.length) text += `RECOMMENDATIONS\n${r.recommendations.map((r,i) => `${i+1}. ${r}`).join('\n')}\n`;
-  if (r.reportOnlyStatement) text += `NOTE\n${r.reportOnlyStatement}\n`;
+  text += `EVIDENCE MAP\nMeasured: ${r.map.measured.join('; ') || 'nothing'}\nAssumed: ${r.map.assumed.join('; ') || 'nothing'}\nUnknown: ${r.map.unknown.join('; ') || 'nothing'}\n\n`;
+  if (ai.overallNarrative) text += `[AI] OVERALL\n${ai.overallNarrative}\n\n`;
+  if (r.strategy.recs && ai.recommendations && ai.recommendations.length) text += `[AI] RECOMMENDATIONS\n${ai.recommendations.map((x, i) => `${i + 1}. ${x}`).join('\n')}\n`;
   navigator.clipboard.writeText(text).then(() => {
-    const btn = document.querySelector('.action-btn:not(.primary)');
+    const btn = document.getElementById('copy-btn');
     if (btn) { btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy report text'; }, 2000); }
   }).catch(() => {});
 }
 
 function escHtml(str) {
-  if (!str) return '';
+  if (str === undefined || str === null) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 

@@ -27,7 +27,7 @@ const MAX_OUTPUT_TOKENS = 3500;
 // Sonnet 5.5 thinks before answering by default, and that thinking spends the same
 // max_tokens budget: Transition charters cut off at 50-360 words in live runs (Nov 4).
 // These tools turn it off. It also keeps them well inside the function time limit.
-const NO_THINKING_TOOLS = ["transition"];
+const NO_THINKING_TOOLS = ["transition", "roi"];
 const PUBLIC_MAX_BODY_CHARS = 60000;
 const PRIVATE_MAX_BODY_CHARS = 4400000;
 const PUBLIC_REQUESTS_PER_HOUR = 30;
