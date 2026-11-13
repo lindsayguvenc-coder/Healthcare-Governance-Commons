@@ -53,3 +53,11 @@ Real page with scripted AI replies: a thinking block first, a cut-off reply, a h
 one, and one that slips in recommendations it wasn't asked for. Serve `public/` on
 port 4310, then `node record-roi.js http://localhost:4310 ./video-roi [path-to-chrome]`.
 Needs `playwright` and `ffmpeg`.
+
+## VPG second pass (Nov 13)
+
+Same setup as the VPG replays above. `record-vpg-second.js base outDir [chromePath]`
+shows the new questions, then makes two real PDFs (new questions answered, and left
+blank) and checks 17 things in them: autonomy raising the tier, FDA/PCCP, vendor
+disclosure filling the bias table, Section 1557 and AB 3030 flags, contract terms,
+the readiness verdict, and references drawn from `src/data/regulatory.json`.

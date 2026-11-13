@@ -172,9 +172,22 @@ system name/vendor/version questions, governance-area grading switched off
       assessable" score, lived experience shown, "Can't tell from this" instead
       of invented detail, charter as a draft to mark up, AI text escaped.
 - [ ] **Rebuild governance-area grading** against `src/data/nodes.json`.
-- [ ] **Section 6 readiness verdict.** Computed but never printed, and it can
-      disagree with the overall rating. Decide: print it, merge it with the
-      rating, or remove it. (Carried from Oct 29.)
+- [x] **Section 6 readiness verdict (Nov 13).** Now printed, and computed from
+      the deployment conditions listed under it, so the two can't disagree. The
+      old version counted paused governance nodes.
+- [x] **VPG second content pass, decisions built (Nov 13).** New questions:
+      autonomy level (sets HIGH_AUTONOMY / DIRECT_CLINICAL_DECISION, which the
+      tier engine already used but nothing set), FDA status (incl. PCCP and
+      non-device CDS), what the vendor disclosed about training patients (fills
+      the bias table), protected-class inputs (Section 1557 §92.210), AI-written
+      messages to patients (California AB 3030), known limits. Monitoring:
+      outcome measure, four contract terms (performance data, update notice,
+      data use and retention, suspend without penalty), retirement plan. Gap
+      flags for each. Regulatory references now come from
+      `src/data/regulatory.json`, chosen by the answers, verified entries only.
+      Replay: `tests/replay/record-vpg-second.js` (17 checks, real engines and PDFs).
+- [ ] **VPG: unpause or not.** Rule-based, no AI. Open statistician items
+      (simulation figures, Westgard defaults) are labeled in the report.
 - [ ] **Literature pass on metrics** for anything newer worth adding.
 - [ ] **Face lift, last.** One consistent look across all report PDFs, once
       the content has settled.

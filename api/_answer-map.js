@@ -152,6 +152,23 @@ function mapAnswers(raw = {}, documentMeta = []) {
   if (lr.recorded.length) set("Q_local_recording", lr.recorded);
   if (lr.inconsistent.length) set("Q_recording_inconsistencies", lr.inconsistent);
 
+  // Second content pass (Nov 13, 2026): questions for slots the report already had
+  if (defined(a.q_autonomy)) set("Q_autonomy", a.q_autonomy);
+  if (defined(a.q_fda)) set("Q_fda", a.q_fda);
+  if (typeof a.q_limits === "string" && a.q_limits.trim()) set("Q_contraindications", a.q_limits.trim());
+  // Vendor-disclosed training demographics -> bias engine axis ids. "Not asked yet" or no
+  // answer leaves it unset, so the engine says it hasn't been recorded.
+  const VENDOR_AXES = {
+    "Race / ethnicity": "race_ethnicity", "Sex / gender": "sex_gender", "Age": "age",
+    "Socioeconomic status / insurance": "socioeconomic", "Language": "language",
+    "Geographic region": "geography", "Comorbidities": "comorbidity", "Disability status": "disability",
+    "BMI / body habitus": "bmi", "Social determinants of health": "social_determinants",
+  };
+  const vd = Array.isArray(a.q_vendor_demo) ? a.q_vendor_demo : [];
+  const vdAxes = vd.map((x) => VENDOR_AXES[x]).filter(Boolean);
+  if (vdAxes.length) set("Q_vendor_demographics", vdAxes);
+  else if (vd.some((x) => x.startsWith("None"))) set("Q_vendor_demographics", "not_disclosed");
+
   // Documents uploaded alongside the questionnaire
   if (documentMeta.some((d) => d && d.type === "model_card")) set("Q_modelcard", "yes");
   if (a.q1_modelcard) {
