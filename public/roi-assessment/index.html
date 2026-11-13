@@ -1762,6 +1762,7 @@ function rateOperational(x) {
   const ch = x.q_check_hours || '';
   if (ch.startsWith('Measured — eats')) why += ' Checking its output eats most or all of the time it saves.';
   else if (ch.startsWith('Measured — less')) why += ' Checking time was measured and is less than the time saved.';
+  else if (isOngoing() && unk(ch)) why += ' Whether time spent checking its output is measured is unknown, so time saved is gross until it is.';
   else if (isOngoing()) why += ' Time spent checking its output isn\'t measured, so time saved is gross, not net.';
   return [r, why];
 }
@@ -2000,7 +2001,8 @@ function flagsFor(x) {
   else if (tw.includes('Nowhere visible / not tracked') || tw.includes('Other work filled it')) add('The time it saves isn\'t showing up anywhere you can see. Savings that disappear into other work aren\'t savings on paper.');
   if (tw.includes('More patient visits') && !tw.includes('Less after-hours work') && !tw.includes('More time with each patient')) add('Saved time went to more visits, not to clinicians. If burnout relief was part of the case, check it.');
   const b = x.q_baseline || '';
-  if (isOngoing() && (b === 'No' || unk(b))) add('No baseline from before go-live, so before-and-after claims can\'t be checked.');
+  if (isOngoing() && b === 'No') add('No baseline from before go-live, so before-and-after claims can\'t be checked.');
+  else if (isOngoing() && unk(b)) add('Nobody knows whether there was a baseline before go-live. Without one, before-and-after claims can\'t be checked.');
   if (!isOngoing() && b === 'Not planned') add('No baseline is planned. Measure before go-live, or you will never be able to show a change.');
   if ((x.q_recheck || '') === 'Neither set') add('No payoff date and no re-check date.');
   if ((x.q_exit_cost || '').startsWith('High')) add('Leaving would be expensive. Lock-in weakens any later sunset decision. Weigh it now.');
@@ -2294,6 +2296,21 @@ async function generateAssessment() {
   state.report = report;
 
   try {
+    report.ai = await askAi(report);
+  } catch (err) {
+    if (err.stop) { renderError(err.message); return; }
+    // One retry: a cut-off or malformed reply usually comes back fine the second time.
+    try { report.ai = await askAi(report); }
+    catch (err2) {
+      if (err2.stop) { renderError(err2.message); return; }
+      report.aiProblem = err2.message || 'Something went wrong.';
+    }
+  }
+  renderReport(report);
+}
+
+async function askAi(report) {
+  {
     const res = await fetch('/api/synthesize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2305,28 +2322,56 @@ async function generateAssessment() {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      // Paused, refused for patient data, rate-limited: these are real stops, not AI hiccups.
-      if (res.status === 503 || data.phi || res.status === 429 || res.status === 413) {
-        renderError(data.error || `Error ${res.status}`);
-        return;
-      }
-      throw new Error(data.error || `Error ${res.status}`);
+      const e = new Error(data.error || `Error ${res.status}`);
+      // Paused, refused for patient data, rate-limited, too long: real stops, not AI hiccups. No retry.
+      e.stop = res.status === 503 || !!data.phi || res.status === 429 || res.status === 413;
+      throw e;
     }
     const text = (data.content || []).filter(b => b && b.type === 'text').map(b => b.text || '').join('');
     if (data.stop_reason === 'max_tokens') throw new Error('The write-up was cut off before it finished.');
-    report.ai = parseAi(text);
-  } catch (err) {
-    report.aiProblem = err.message || 'Something went wrong.';
+    return parseAi(text);
   }
-  renderReport(report);
+}
+
+// The model sometimes drops a closing bracket (seen in about 1 of 4 real runs of
+// one case, Nov 13). Close whatever is still open, outside strings, and try again.
+function closeBrackets(s) {
+  const stack = []; let inStr = false, esc = false;
+  for (const ch of s) {
+    if (inStr) { if (esc) esc = false; else if (ch === '\\') esc = true; else if (ch === '"') inStr = false; continue; }
+    if (ch === '"') inStr = true;
+    else if (ch === '{' || ch === '[') stack.push(ch);
+    else if (ch === '}' || ch === ']') stack.pop();
+  }
+  if (inStr) return null;
+  return s + stack.reverse().map(c => c === '{' ? '}' : ']').join('');
+}
+
+function parseJsonLoose(text) {
+  const start = text.indexOf('{');
+  if (start < 0) return null;
+  const end = text.lastIndexOf('}');
+  const candidates = [];
+  if (end > start) candidates.push(text.slice(start, end + 1));
+  // Dropped bracket in the middle: strip trailing closers, then re-close by count.
+  if (end > start) {
+    const trimmed = text.slice(start, end + 1).replace(/[\]}\s]+$/, '');
+    const fixed = closeBrackets(trimmed);
+    if (fixed) candidates.push(fixed);
+  }
+  const whole = closeBrackets(text.slice(start));
+  if (whole) candidates.push(whole);
+  for (const c of candidates) { try { return JSON.parse(c); } catch (e) { /* next */ } }
+  return null;
 }
 
 function parseAi(text) {
-  const start = text.indexOf('{'), end = text.lastIndexOf('}');
-  if (start < 0 || end <= start) throw new Error('The write-up came back unreadable.');
-  let obj;
-  try { obj = JSON.parse(text.slice(start, end + 1)); }
-  catch (e) { throw new Error('The write-up came back unreadable.'); }
+  const obj = parseJsonLoose(text);
+  if (!obj) throw new Error('The write-up came back unreadable.');
+  // When a bracket was dropped, the closing fields can land inside "dimensions".
+  const inner = obj.dimensions || {};
+  if (obj.overallNarrative === undefined && typeof inner.overallNarrative === 'string') obj.overallNarrative = inner.overallNarrative;
+  if (obj.recommendations === undefined && inner.recommendations !== undefined) obj.recommendations = inner.recommendations;
   if (!obj || typeof obj !== 'object') throw new Error('The write-up came back unreadable.');
   const clean = s => typeof s === 'string' ? s.trim() : '';
   const list = v => Array.isArray(v) ? v.map(clean).filter(Boolean).slice(0, 4) : [];
@@ -2356,6 +2401,7 @@ Whether to write "recommendations" is stated at the end of the message.
 Rules:
 - Use only what is in the answers. Do not invent numbers, studies, vendors, regulations, or details.
 - If the answers don't say, write "Can't tell from these answers." Do not fill gaps with typical cases.
+- "Unknown" or "not answered" is not the same as "no". Don't turn an unknown into a finding that something is missing.
 - Treat expected value, vendor claims, and impressions as unproven.
 - Higher coding is revenue to the organization and cost to patients and payers. Never present it as value on its own.
 - Time saved is gross until the time spent checking the tool's output is subtracted.

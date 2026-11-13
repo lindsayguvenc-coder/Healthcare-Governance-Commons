@@ -69,3 +69,9 @@ Same server as the VPG replays (port 3000, after `npm run build`).
 sample, works the whole queue as reviewer A and a 20% sample as reviewer B, checks the
 results, downloads the labels, hands the counts to the VPG and makes a real PDF. It also
 checks that the page makes no network requests while working and that fetch is blocked.
+## ROI real runs (Nov 13)
+
+`real-roi.js` runs five made-up organizations through the real page, the real relay
+and the real model, and saves each report's JSON and a full-page screenshot. Needs
+`ANTHROPIC_API_KEY` (short-lived, spend-capped; delete it after) and `playwright`.
+`ANTHROPIC_API_KEY=... node real-roi.js ../.. ./real-roi [path-to-chrome]`
