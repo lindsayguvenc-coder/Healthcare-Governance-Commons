@@ -403,7 +403,7 @@ html{scroll-padding-top:56px}
     <div class="tool-header">
       <div class="tool-tag">AI-Powered · Disagreement as Data</div>
       <div class="tool-title">The <em>Disagreement Unpacker</em></div>
-      <p class="tool-desc">Disagreement can be information about the system, not just a problem to resolve. Describe a real disagreement, and the AI will walk through eight unpacking questions and map what the conflict contains. If your description doesn't cover something, it will say so.</p>
+      <p class="tool-desc">Disagreement can be information about the system, not just a problem to resolve. Describe a real disagreement, and the AI will walk through nine unpacking questions and map what the conflict contains, including who carries the cost if it goes wrong. If your description doesn't cover something, it will say so.</p>
     </div>
 
     <div class="input-group">
@@ -450,7 +450,7 @@ html{scroll-padding-top:56px}
     <div class="tool-header">
       <div class="tool-tag">AI-Powered · Good Container Design</div>
       <div class="tool-title">Container <em>Health Check</em></div>
-      <p class="tool-desc">Describe your governance container — your team, working group, governance committee, or collaborative. The AI reads it against six Good Container properties and shows what you said, what's missing, and what to ask your group. It doesn't score you: one description can't support a score.</p>
+      <p class="tool-desc">Describe your governance container — your team, working group, governance committee, or collaborative. The AI reads it against eight Good Container properties and shows what you said, what's missing, and what to ask your group. It doesn't score you: one description can't support a score.</p>
     </div>
 
     <div class="input-group">
@@ -497,7 +497,7 @@ html{scroll-padding-top:56px}
     <div class="tool-header">
       <div class="tool-tag">AI-Powered · Charter Principles</div>
       <div class="tool-title">The <em>Charter Starter</em></div>
-      <p class="tool-desc">Answer five questions about your context and the AI generates a draft governance charter — all six principles translated into rules, metrics, and failsafes for your domain, plus who can stop a tool. Copy it and mark it up with your group. For baseline controls beyond a charter, see the free <a href="https://chai.org/workgroup/cross-cutting/ai-governance" style="color:inherit">CHAI governance playbooks</a>.</p>
+      <p class="tool-desc">Answer five questions about your context and the AI generates a draft governance charter — all six principles translated into rules, metrics, and failsafes for your domain, plus who can stop a tool and what happens when a clinician and the AI disagree. Copy it and mark it up with your group. For baseline controls beyond a charter, see the free <a href="https://chai.org/workgroup/cross-cutting/ai-governance" style="color:inherit">CHAI governance playbooks</a> (May 2026), which map to the Joint Commission's voluntary Responsible Use of AI certification (launched June 2026).</p>
     </div>
 
     <div class="input-group">
@@ -531,6 +531,7 @@ html{scroll-padding-top:56px}
           <option value="groupthink">Groupthink</option>
           <option value="mission drift">Mission drift</option>
           <option value="weaponization">Weaponization</option>
+          <option value="rubber stamp">Rubber stamp</option>
         </select>
       </div>
       <div class="input-group" style="margin-bottom:0">
@@ -584,6 +585,8 @@ html{scroll-padding-top:56px}
           <li><strong>Cross-domain intimacy</strong> — not panels, but sustained collaboration across disciplines over months</li>
           <li><strong>Narrative incubation</strong> — generates the story of change, not just the mechanics</li>
           <li><strong>Stop authority</strong> — a named person can pause a tool now, without waiting for a meeting</li>
+          <li><strong>Can say no</strong> — written power to reject, change and retire a tool, a budget, and a board committee it answers to. A group that can review but not refuse is paperwork.</li>
+          <li><strong>Sees what's really in use</strong> — an inventory of the AI actually in use, including tools staff brought in themselves, gathered without punishing people for saying what they use</li>
         </ul>
         <h3>Failure modes</h3>
         <ul>
@@ -592,6 +595,7 @@ html{scroll-padding-top:56px}
           <li>Groupthink — the container starts producing consensus instead of insight</li>
           <li>Mission drift — original charter erodes as the group scales</li>
           <li>Weaponization — the container's tools are turned against its original purpose</li>
+          <li>Rubber stamp — the group reviews everything and stops nothing, often because too few, too stretched people do the reviewing</li>
         </ul>
         <h3>The goal</h3>
         <p>A container doesn't need to be perfect. It needs to catch problems early and correct them quickly.</p>
@@ -643,6 +647,7 @@ html{scroll-padding-top:56px}
           <li><strong>Risks</strong> — what each side fears could go wrong</li>
           <li><strong>Time horizons</strong> — how far ahead each side is looking</li>
           <li><strong>Definitions</strong> — the same word meaning different things to each side</li>
+          <li><strong>Who carries the cost</strong> — who holds the blame, money or harm if the decision goes wrong, and whether that is the person deciding. When the cost lands on one person and the group shares none of it, the safe move for that person is not to decide.</li>
         </ul>
         <p>Use the <strong>Disagreement Unpacker tool above</strong> to walk through these questions with AI support on any real disagreement.</p>
       </div>
@@ -696,7 +701,7 @@ html{scroll-padding-top:56px}
       </div>
       <div class="charter-card a4">
         <div class="charter-label">Disagreement as data</div>
-        <div class="charter-rule">Every disagreement gets unpacked: facts, assumptions, values, lived experience, incentives, risks, time horizons, definitions.</div>
+        <div class="charter-rule">Every disagreement gets unpacked: facts, assumptions, values, lived experience, incentives, risks, time horizons, definitions, who carries the cost.</div>
         <div class="charter-detail">Failsafe: If recurring 3+ cycles → forced escalation and redesign.</div>
       </div>
       <div class="charter-card a5">
@@ -734,7 +739,7 @@ function toggleConcept(card) {
 }
 
 // ── SHARED ─────────────────────────────────────────────────────────────────
-const TOOL_VERSION = "2026-11-04"; // the date these tools' logic last changed
+const TOOL_VERSION = "2026-11-13"; // the date these tools' logic last changed
 
 // AI text and anything echoed from the visitor goes through this before it reaches the page.
 function esc(value) {
@@ -791,7 +796,7 @@ async function runUnpacker() {
 
   const systemPrompt = `You are a skilled facilitator trained in the "Disagreement as Data" methodology. Your role is to help teams transform conflict into insight by unpacking the structural information hidden inside disagreements.
 
-When given a disagreement, you analyze it through eight lenses:
+When given a disagreement, you analyze it through nine lenses:
 1. Facts — what each party believes is true that could be checked
 2. Hidden assumptions — what each party believes about how things work, unstated
 3. Values in tension — what each party is trying to protect or maximize
@@ -800,6 +805,7 @@ When given a disagreement, you analyze it through eight lenses:
 6. Risks each party is guarding against
 7. Time horizons in conflict
 8. Definitions — key words the parties may be using differently
+9. Who carries the cost — who would hold the blame, money or harm if each side's choice goes wrong, and whether that is the same person who decides. Note when cost lands on one individual (often a frontline clinician) rather than the group.
 
 You respond ONLY in JSON format with this exact structure:
 {
@@ -812,6 +818,7 @@ You respond ONLY in JSON format with this exact structure:
   "risks": {"party_a": "...", "party_b": "..."},
   "horizons": {"party_a": "...", "party_b": "..."},
   "definitions": {"party_a": "...", "party_b": "..."},
+  "cost": {"party_a": "...", "party_b": "..."},
   "synthesis": "2-3 sentences describing what a solution honoring both sets of concerns might look like",
   "what_we_learned": "1-2 sentences on what this disagreement reveals about the underlying system or problem",
   "facilitator_move": "One specific facilitation prompt or action to take next in the room"
@@ -821,7 +828,7 @@ Be specific, grounded, and practically useful. Do not produce generic responses.
 
 Only say what the description supports. You know nothing about these people beyond what is written here. If it doesn't tell you something for a field or a party, do not invent it: start that field with "Can't tell from this:" and name what you would need to know. This matters most for lived experience, which should never be made up. If only one side is described, say so instead of building the other side from imagination. Keep the synthesis as tentative as the description is thin.`;
 
-  const userPrompt = `Disagreement: ${input}\n\nContext/domain: ${context}\nStakes level: ${stakes}\n\nUnpack this disagreement using the eight-lens framework. Return only valid JSON.`;
+  const userPrompt = `Disagreement: ${input}\n\nContext/domain: ${context}\nStakes level: ${stakes}\n\nUnpack this disagreement using the nine-lens framework. Return only valid JSON.`;
 
   try {
     const reply = await askAI(systemPrompt, userPrompt);
@@ -841,6 +848,7 @@ Only say what the description supports. You know nothing about these people beyo
       ${pair('Risks being guarded against', 'Position A fears', 'Position B fears', result.risks)}
       ${pair('Time horizons in conflict', 'Position A is looking at', 'Position B is looking at', result.horizons)}
       ${pair('Definitions that may differ', 'Position A means', 'Position B means', result.definitions)}
+      ${pair('Who carries the cost', 'If Position A is wrong', 'If Position B is wrong', result.cost)}
       <div class="output-section"><div class="synthesis-card"><div class="synthesis-label">Synthesis — what a solution that honors both looks like</div><div class="synthesis-text">${esc(result.synthesis)}</div></div></div>
       <div class="output-section"><div class="output-section-label">What this disagreement reveals</div><div class="output-content">${esc(result.what_we_learned)}</div></div>
       <div class="output-section"><div class="output-section-label">Next facilitator move</div><div class="output-content" style="border-color: var(--accent); color: var(--accent);">${esc(result.facilitator_move)}</div></div>
@@ -871,24 +879,27 @@ async function runContainerCheck() {
   loading.style.display = 'block';
   outputContent.innerHTML = '';
 
-  const systemPrompt = `You are a governance container reader. You read one person's description of a governance container against six Good Container properties. You do not score or grade it, because one description can't support a verdict. You show what it says, what it leaves out, and what the group should ask itself.
+  const systemPrompt = `You are a governance container reader. You read one person's description of a governance container against eight Good Container properties. You do not score or grade it, because one description can't support a verdict. You show what it says, what it leaves out, and what the group should ask itself.
 
 IMPORTANT: Respond in plain English only. Do not use any non-English characters, symbols, or words under any circumstances.
 
-The six properties to assess:
+The eight properties to assess:
 1. Legitimacy without capture — credible and independent, not owned by any single interest
 2. Psychological safety for radical honesty — participants can say uncomfortable truths without punishment
 3. Time insulated from urgency — protected from short-term pressure and quarterly thinking
 4. Cross-domain intimacy — sustained collaboration across disciplines, not just panels or meetings
 5. Narrative incubation — able to generate the story of change, not just the mechanics
 6. Stop authority — a named person or role can pause a tool or decision now, without waiting for a meeting, and someone covers when they are out
+7. Can say no — written authority to reject, change and retire a tool (not just recommend), a budget for its own work, and a named board committee it reports to
+8. Sees what's really in use — an inventory of the AI actually in use, including tools staff adopted on their own, and a way to learn about them that doesn't punish people for saying so
 
-The five failure modes to flag:
+The six failure modes to flag:
 1. Ego capture — charismatic personalities absorbing decision authority
 2. Power drift — external interests gradually reshaping the container's purpose
 3. Groupthink — producing consensus instead of genuine insight
 4. Mission drift — original charter eroding as the group scales or ages
 5. Weaponization — the container's tools being turned against its original purpose
+6. Rubber stamp — reviews everything and stops nothing, often because reviewers are too few or too stretched
 
 Respond ONLY in this exact JSON format:
 {
@@ -899,7 +910,9 @@ Respond ONLY in this exact JSON format:
     "time": { "said": "...", "missing": "...", "ask": "..." },
     "intimacy": { "said": "...", "missing": "...", "ask": "..." },
     "narrative": { "said": "...", "missing": "...", "ask": "..." },
-    "stop": { "said": "...", "missing": "...", "ask": "..." }
+    "stop": { "said": "...", "missing": "...", "ask": "..." },
+    "say_no": { "said": "...", "missing": "...", "ask": "..." },
+    "in_use": { "said": "...", "missing": "...", "ask": "..." }
   },
   "active_failure_modes": ["list only failure modes the description gives evidence for"]
 }
@@ -924,7 +937,9 @@ Base everything on what the user wrote. Don't assume what you don't know. Never 
       time: 'Time insulation — protected from short-term pressure and quarterly thinking',
       intimacy: 'Cross-domain intimacy — sustained collaboration across disciplines, not just panels',
       narrative: 'Narrative incubation — generates the story of change, not just the mechanics',
-      stop: 'Stop authority — a named person can pause a tool now, without waiting for a meeting'
+      stop: 'Stop authority — a named person can pause a tool now, without waiting for a meeting',
+      say_no: 'Can say no — written power to reject, change and retire a tool, a budget, and a board committee it answers to',
+      in_use: 'Sees what\'s really in use — an inventory, including tools staff brought in themselves'
     };
 
     const failureDescriptors = {
@@ -933,6 +948,7 @@ Base everything on what the user wrote. Don't assume what you don't know. Never 
       'groupthink': 'Groupthink — the group is producing consensus instead of genuine insight',
       'mission drift': 'Mission drift — the original charter is eroding as the group scales or ages',
       'weaponization': 'Weaponization — the container\'s tools are being turned against its original purpose',
+      'rubber stamp': 'Rubber stamp — the group reviews everything and stops nothing',
     };
 
     const propertyRows = Object.entries(result.properties).map(([key, val]) => `
@@ -958,7 +974,7 @@ Base everything on what the user wrote. Don't assume what you don't know. Never 
 
     outputContent.innerHTML = `
       <div class="output-section"><div class="output-section-label a2">What this description covers</div><div class="output-content">${esc(result.overall)}</div></div>
-      <div class="output-section"><div class="output-section-label a2">Six properties</div>${propertyRows}</div>
+      <div class="output-section"><div class="output-section-label a2">Eight properties</div>${propertyRows}</div>
       <div class="output-section"><div class="output-section-label a2">Failure modes to look at</div>${failureFlags}</div>
       ${ONE_PERSON}
       ${CommonsDisclaimer.html(disclaimerOpts("Container Health Check"))}
@@ -995,7 +1011,7 @@ async function runCharterBuilder() {
 The six charter principles to translate:
 1. Dignity before efficiency — no policy optimizes output by concentrating harm in a subgroup. Failsafe: automatic pause and redesign if harm concentrates above a threshold.
 2. Psychological safety — disagreement and uncertainty are protected behaviors; retaliation is disqualifying. Failsafe: an independent ombud and immediate review of any retaliation claim.
-3. Disagreement as data — every disagreement gets unpacked (facts, assumptions, values, lived experience, incentives, risks, time horizons, definitions) before it is resolved. Failsafe: a disagreement that recurs for three or more cycles is escalated and the design is revisited.
+3. Disagreement as data — every disagreement gets unpacked (facts, assumptions, values, lived experience, incentives, risks, time horizons, definitions, who carries the cost) before it is resolved. Failsafe: a disagreement that recurs for three or more cycles is escalated and the design is revisited.
 4. Radical honesty — all decisions declare uncertainty; assumptions need an owner, a confidence range, and an expiry date. Failsafe: decisions expire if their assumptions are not refreshed.
 5. Equity and representation — no decision without the presence of materially affected populations. Failsafe: a vote is invalid if representation gaps exist.
 6. Dual-horizon discipline — every proposal must address both immediate stabilization and systemic correction. Failsafe: a proposal is rejected if one is achieved by sacrificing the other.
@@ -1005,9 +1021,11 @@ Write a draft charter as flowing prose with clear sections. For each principle:
 - Give one concrete metric or indicator
 - Adapt the failsafe given above to their context; don't replace it with a different one
 
-Keep the whole draft under 1,000 words so it finishes cleanly. Format as a readable document, not a JSON object. Put each principle's name on its own line as a plain heading, with no markdown symbols such as # or *. This is a starting draft the group will edit before adopting anything, not a finished charter. Be specific to their domain and context — don't be generic. Address their highest-stakes decision and their most feared failure mode directly.
+Keep the whole draft under 1,200 words so it finishes cleanly. Format as a readable document, not a JSON object. Put each principle's name on its own line as a plain heading, with no markdown symbols such as # or *. This is a starting draft the group will edit before adopting anything, not a finished charter. Be specific to their domain and context — don't be generic. Address their highest-stakes decision and their most feared failure mode directly.
 
 Always include a section titled Stop Authority: name the role that can pause a tool or decision immediately without a meeting, the role that covers when that person is out, what happens after a pause, and who must be told and by when (leave the time limit for the group to set).
+
+Always include a section titled When Clinicians and AI Disagree: the AI's recommendation is recorded next to what the clinician decided; overriding the AI is never punished in itself; the clinician is not left holding the risk alone, and the group says how responsibility is shared with the organization and the vendor; and mismatches between the AI and the clinician are collected, reviewed on a set schedule, and fed back as learning (to monitoring, to the vendor, and to the group's own rules), with a named role that owns that review.
 
 Always include a section titled Ownership and Autonomy: each AI system has a named owner role responsible for monitoring it, and the group states what can run without a person and what needs human review. This includes AI agents that carry out multi-step work.
 
