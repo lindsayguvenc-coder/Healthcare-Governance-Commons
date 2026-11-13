@@ -51,7 +51,10 @@ code{font-family:var(--mono);font-size:.84em}
 .warn{color:var(--warn)} .bad{color:var(--bad)} .ok{color:var(--ok)}
 details summary{cursor:pointer;font-weight:600}
 pre{background:var(--tint);padding:10px;border-radius:6px;overflow:auto;font-size:.8rem}
-body.kit-paused .wrap > :not(header):not(#paused){display:none}
+body.kit-paused .wrap > :not(header):not(#paused):not(#howto){display:none}
+body:not(.kit-paused) #howto{display:none}
+#howto figure{margin:14px 0 0} #howto img,#howto video{width:100%;height:auto;border:1px solid var(--tint);border-radius:6px;display:block}
+#howto figcaption{font-size:.9rem;margin-top:6px}
 #paused{border-left:4px solid var(--warn)}
 </style>
 <script>
@@ -71,6 +74,23 @@ document.addEventListener('DOMContentLoaded', function(){ if (document.documentE
   <div class="card" id="paused" role="status">
     <strong>Paused for review.</strong> <span class="paused-msg">The kit isn't open for use yet. Before any hospital relies on it, the sepsis rules need sign-off from a clinician and the math needs a check by a statistician. It will open here once both are done. The <a href="/validation-protocol/">Validation Protocol Generator</a> still works with counts you already have.</span>
   </div>
+
+  <!--howto-->
+  <section class="card" id="howto">
+    <h2 style="margin-top:0">See how it works</h2>
+    <p class="small">A sample run on 800 made-up encounters. Every number below comes from fake data. None of it says how well the rules or any model perform. It shows what the kit does, not results. Tap a picture to see it full size.</p>
+    <figure><a href="howto/1-rules.jpg" target="_blank" rel="noopener"><img src="howto/1-rules.jpg" alt="Step 1: the sepsis rule pack written out in plain English, with its draft status" loading="lazy" width="1200" height="746"></a>
+      <figcaption><b>1. The rules, in plain English.</b> A rule pack is plain data. The page writes it out as a list a clinician can read and sign off on. Until they do, the page says it's a draft.</figcaption></figure>
+    <figure><a href="howto/2-workqueue.jpg" target="_blank" rel="noopener"><img src="howto/2-workqueue.jpg" alt="Step 4: the review workqueue showing one encounter's values and three answer buttons" loading="lazy" width="1200" height="746"></a>
+      <figcaption><b>2. A short review queue.</b> Rules label most cases. A person reviews only the ones they can't decide, plus a blind sample that checks the rules. One case per screen, keys 1, 2 or 3. The rule's answer stays hidden so it can't steer the reviewer.</figcaption></figure>
+    <figure><a href="howto/3-results.jpg" target="_blank" rel="noopener"><img src="howto/3-results.jpg" alt="Step 5: four counts, sensitivity and specificity with confidence intervals, and a table by age group" loading="lazy" width="1200" height="746"></a>
+      <figcaption><b>3. Results with honest error bars.</b> The four counts, with 95% confidence intervals. How often the rules matched the reviewer. Agreement between two reviewers. Results for each patient group, with a warning when a group is too small to say much.</figcaption></figure>
+    <figure><a href="howto/4-protocol.jpg" target="_blank" rel="noopener"><img src="howto/4-protocol.jpg" alt="The Validation Protocol's At a Glance page showing local sensitivity and specificity from the kit's counts" loading="lazy" width="1200" height="746"></a>
+      <figcaption><b>4. Into the Validation Protocol.</b> Only the counts go across, and only within the same browser. They show up on the protocol's At a Glance page with their source recorded.</figcaption></figure>
+    <figure><video src="howto/sample-run.mp4" poster="howto/poster.jpg" controls muted playsinline preload="none" width="1200" height="800"></video>
+      <figcaption><b>The whole run in 30 seconds</b> (sped up; pause it to read).</figcaption></figure>
+  </section>
+  <!--/howto-->
 
   <div class="card safe" role="note">
     <strong>Your file never leaves this browser.</strong> The page reads it on your computer and sends nothing anywhere. That's enforced, not just promised: the page's security policy blocks all network requests. Still, use a study ID, not an MRN, and leave out names and dates. The kit doesn't need them.
