@@ -63,31 +63,37 @@ Disagreement Unpacker), risk and bias assessment (VPG, kit per-group results),
 pre-deployment validation (VPG, kit when it reopens), value (ROI).
 
 Gaps, in priority order:
-- [ ] **Monitoring setup for predictive models** (element 4; Watcher,
-      Threshold Review, Equity nodes). Agent QC Setup covers agents only, and
-      the VPG writes a monitoring plan but nothing helps run it. Lab-QC rules
-      on alert rates, PPV and subgroup gaps, with what to do on a breach.
-      Builds on the kit's math and Agent QC Setup.
+- [ ] **Monitoring: bring the healthcare version home** (element 4; Watcher,
+      Threshold Review, Equity nodes). Lindsay: already made. The Commons has
+      step 1 (Agent QC Setup, marked Prototype); the general version became her
+      own Agent QC Monitor (tool maker, runner, dashboard). Make the
+      healthcare-specific monitor available here once those steps prove out.
 - [ ] **AI inventory and risk tiering** (element 1; Accountability,
       Authority). The front door: what AI is in use, who owns it, how risky,
       which reviews it needs. Also the starting list for Section 1557's duty to
       identify tools that use protected inputs.
 - [ ] **Safety event and override log** (element 5; Override, Stop, Cold
-      Trigger, Learning Loop). A near-miss / unsafe-output report and an
-      override review sheet, shaped so reports can go to a PSO.
+      Trigger, Learning Loop). Lindsay found something someone else made to
+      borrow concepts from (in past chats; still to locate). Her notes from
+      Oct: healthcare already classifies events well, near-miss included; and
+      reviewers should watch for business or personal complaints recast as
+      incidents to get traction.
 - [ ] **Threshold re-check** (Threshold Review). From local scores and
       labels, show sensitivity, PPV and alert volume at each threshold. Small
-      once the kit is reviewed; same data.
+      once the kit is reviewed; same data. Same treatment as the kit: paused
+      until reviewed, with a stamped "see how it works" sample.
 - [ ] **Patient notice and challenge pathway** (element 2; Contestation,
-      Explainability). Plain-language disclosure drafts, when consent applies,
+      Explainability). On hold: Lindsay has views on consent to settle first. Plain-language disclosure drafts, when consent applies,
       how a patient questions an AI-influenced decision. State rules differ;
       examples only, not legal advice.
-- [ ] **Role-specific training sheet** (element 7). One page per tool per
+- [ ] **Role-specific training sheet** (element 7). Only if it's helpful. One page per tool per
       role: what it does, its limits, when to override, who to tell. Could
       draw on the VPG answers and the Urban Thesaurus.
-- [ ] **Vendor data-use terms** (element 3; Vendor Risk). The VPG has
-      contract questions; a standalone checklist for data-use agreements
-      (permitted uses, re-identification ban, audit rights) may be enough.
+- [ ] **Vendor contract terms already exist** (element 3; Vendor Risk):
+      "Feed It to the Beast: Procurement" (57 sourced clauses) at
+      lab-rules-map/vendor-contracts. The Commons links it only from node
+      toolboxes, under an older name ("Buy AI Like Reagents"). Give it a Tools
+      page card and fix the name.
 
 ## Tools: rebuild once-over (added Oct 28, 2026)
 - [ ] **Once-over of every tool.** All tools were first passes: Validation
