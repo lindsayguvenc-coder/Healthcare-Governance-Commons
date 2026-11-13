@@ -87,7 +87,8 @@ export default async function handler(req, res) {
     const cleanedBase64 = cleanedBuffer.toString("base64");
 
     console.log(
-      `Metadata stripped from PDF. Filename: ${filename || "unknown"}. ` +
+      // Never log the filename: it can carry a patient's name.
+      `Metadata stripped from PDF. ` +
       `Original size: ${buffer.length} bytes. Cleaned size: ${cleanedBuffer.length} bytes.`
     );
 

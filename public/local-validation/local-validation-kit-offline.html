@@ -505,6 +505,8 @@ function csvCell(v) {
   return '"' + s.replace(/"/g, '""') + '"';
 }
 function csvLine(cells) { return cells.map(csvCell).join(','); }
+// Outputs from an unsigned pack say so in the file name, so a forwarded file still does.
+const draftTag = () => (PACK.signoff && PACK.signoff.name) ? '' : '-DRAFT-pack-not-signed-off';
 function download(name, text, type) {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([text], { type: type || 'text/plain' }));
@@ -766,7 +768,7 @@ function showFix(aud) {
 }
 $('dl-disagree').onclick = () => {
   const aud = [...st.audit].filter((id) => ['yes', 'no'].includes(st.human.A[id]));
-  download('rule-disagreements.csv', 'encounter_id,rules_said,reviewer_said,why\n' + disagreements(aud).map((id) => csvLine([id, st.auto[id].label, st.human.A[id], (st.auto[id].why || []).join('; ')])).join('\n') + '\n', 'text/csv');
+  download(`rule-disagreements${draftTag()}.csv`, 'encounter_id,rules_said,reviewer_said,why\n' + disagreements(aud).map((id) => csvLine([id, st.auto[id].label, st.human.A[id], (st.auto[id].why || []).join('; ')])).join('\n') + '\n', 'text/csv');
 };
 // Clean re-audit: retire this audit, re-run the (possibly fixed) rules, draw new cases.
 $('fresh-audit').onclick = () => {
@@ -776,8 +778,8 @@ $('fresh-audit').onclick = () => {
   $('load-msg').textContent += ` Fresh audit: ${st.audit.size} new cases; ${st.usedAudit.size} earlier audit cases retired.`;
   $('start').click();
 };
-$('dl-counts').onclick = () => download('validation-counts.json', JSON.stringify(countsPayload(), null, 1), 'application/json');
-$('dl-labels').onclick = () => download('validation-labels.csv', 'encounter_id,label,source\n' + st.rows.map((r) => { const t = truthOf(r.encounter_id); return csvLine([r.encounter_id, t.label, t.source]); }).join('\n') + '\n', 'text/csv');
+$('dl-counts').onclick = () => download(`validation-counts${draftTag()}.json`, JSON.stringify(countsPayload(), null, 1), 'application/json');
+$('dl-labels').onclick = () => download(`validation-labels${draftTag()}.csv`, 'encounter_id,label,source\n' + st.rows.map((r) => { const t = truthOf(r.encounter_id); return csvLine([r.encounter_id, t.label, t.source]); }).join('\n') + '\n', 'text/csv');
 // Hand the counts (numbers only) to the Validation Protocol in this browser.
 // Offline copy: no hand-off (different origin). Show the numbers to type in instead.
 if (window.LVK_OFFLINE) {
