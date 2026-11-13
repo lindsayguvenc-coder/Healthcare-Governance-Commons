@@ -1,8 +1,5 @@
 {
   "private": true,
   "type": "commonjs",
-  "description": "Replay recorders. Install deps with: npm i ioredis-mock@8 playwright jspdf@2.5.1",
-  "dependencies": {
-    "playwright": "^1.65.0"
-  }
+  "description": "Replay recorders. Install deps with: npm i ioredis-mock@8 playwright jspdf@2.5.1"
 }
