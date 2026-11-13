@@ -53,3 +53,10 @@ Real page with scripted AI replies: a thinking block first, a cut-off reply, a h
 one, and one that slips in recommendations it wasn't asked for. Serve `public/` on
 port 4310, then `node record-roi.js http://localhost:4310 ./video-roi [path-to-chrome]`.
 Needs `playwright` and `ffmpeg`.
+
+## ROI real runs (Nov 13)
+
+`real-roi.js` runs five made-up organizations through the real page, the real relay
+and the real model, and saves each report's JSON and a full-page screenshot. Needs
+`ANTHROPIC_API_KEY` (short-lived, spend-capped; delete it after) and `playwright`.
+`ANTHROPIC_API_KEY=... node real-roi.js ../.. ./real-roi [path-to-chrome]`

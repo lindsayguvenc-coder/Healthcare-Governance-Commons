@@ -156,8 +156,16 @@ system name/vendor/version questions, governance-area grading switched off
       go-live, burnout surveyed before/after, cost of leaving and alternatives
       (incl. EHR built-in), payoff and re-check dates, plus a rule-based
       "What your answers flag" list. Replay: `tests/replay/record-roi.js`.
-- [ ] **ROI: real runs, then unpause.** Run it with a short-lived, spend-capped
-      key and read real output before taking "roi" off `PAUSED_IN_CODE`.
+- [x] **ROI: real runs, then unpause (Nov 13).** Five made-up organizations
+      through the real relay and model (`tests/replay/real-roi.js`): scribe,
+      sepsis model, pre-adoption CT triage, prior-auth agent, thin intake. All
+      complete (1,000-1,900 output tokens of 3,500, no thinking), no invented
+      facts, no re-grading, recommendations only where allowed. Fixed after:
+      "unknown" was being written up as "no baseline"; about 1 in 4 replies for
+      one case dropped a closing bracket, so the page now repairs brackets,
+      lifts misplaced fields, and retries once. Then 10 more real runs, 10 of
+      10 clean. "roi" is off
+      `PAUSED_IN_CODE`, so merging the review PR turns ROI reports on.
 - [ ] **ROI: measured overhead rates.** The report says savings are gross until
       the cost of checking the tool is subtracted, but applies no number. Once
       there are measured examples per system type, add an estimated overhead
