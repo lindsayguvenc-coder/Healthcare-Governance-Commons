@@ -17,6 +17,8 @@ const SITE = "https://healthcare-governance-commons.vercel.app";
 
 let html = read("index.html");
 const inline = (file) => `<script>\n// ${file} (inlined for the offline copy)\n${read(file).replace(/<\/script/gi, "<\\/script")}\n</script>`;
+// The "See how it works" images live on the website; the offline copy can't load them.
+html = html.replace(/\n  <!--howto-->[\s\S]*?<!--\/howto-->/, "");
 html = html.replace('<script src="offline-hash.js"></script>', "<script>window.LVK_OFFLINE = true;</script>");
 for (const f of ["engine.js", "sepsis-ase.js", "sample-sepsis.js"]) {
   const tag = `<script src="${f}"></script>`;

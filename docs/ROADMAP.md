@@ -240,6 +240,11 @@ system name/vendor/version questions, governance-area grading switched off
       `?review=1` (for reviewers). Unpause = remove the gate in
       `public/local-validation/index.html`, restore the Tools card and VPG note,
       rebuild the offline copy. Opens only after both reviews below.
+- [x] **Kit: "See how it works" on the paused page (Nov 13, 2026).** Four
+      screenshots and a 30-second replay from the made-up sample, every one
+      stamped "made-up data · not validated" top and bottom so a crop still
+      says it. Built by `scripts/make-kit-howto.py` from a `record-lvk.js` run.
+      Shown only while paused; not in the offline copy.
 - [ ] **Clinician sign-off on the sepsis rule pack** before anyone relies on its
       labels. Includes the "too close to call" band (within 10% of a cutoff),
       the antimicrobial-day handling, and the baselines in the SQL notes.
