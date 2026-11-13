@@ -136,7 +136,7 @@ footer a{color:var(--accent)}
   <header>
     <div class="eyebrow"><a href="/tools">← Commons tools</a> · Agent QC</div>
     <h1>Agent QC Setup</h1>
-    <p class="lede">Laboratories keep a test trustworthy with nine kinds of quality control. This setup maps each one to an AI agent, clinical or not, and gives every set point a starting value, so a team that changes nothing still has a defensible plan. Each value is adjusted at validation. Explanations sit underneath each measure, closed until you want them.</p>
+    <p class="lede">Laboratories keep a test trustworthy with nine kinds of quality control. This setup maps each one to a clinical AI agent and gives every set point a starting value, so a team that changes nothing still has a defensible plan. Each value is adjusted at validation. Explanations sit underneath each measure, closed until you want them.</p>
     <div class="bar noprint">
       <button type="button" class="primary" id="goPlan">See my QC plan</button>
       <button type="button" id="reset">Reset to starting values</button>
@@ -158,8 +158,8 @@ footer a{color:var(--accent)}
 
   <section class="lanes" id="dials" aria-labelledby="dialsH">
     <div class="mhead"><span class="lbl">Start here</span><h2 id="dialsH">The agent and its stakes</h2>
-    <p class="qq" style="margin:0;color:var(--muted)">Four questions set how much of the setup applies and its starting values. How much applies follows consequence, closeness and exposure, not the field: a low-stakes agent can still need close monitoring.</p></div>
-    <div class="bar noprint"><span class="lbl">Example</span><button type="button" data-ex="triage">Nurse-line triage agent</button><button type="button" data-ex="note">Discharge-summary drafter</button><button type="button" data-ex="grocery">Grocery-sorting agent</button><span class="start" id="exNote"></span></div>
+    <p class="qq" style="margin:0;color:var(--muted)">Three questions set how much of the setup applies and its starting values. How much applies follows consequence, closeness and exposure: a low-stakes agent can still need close monitoring.</p></div>
+    <div class="bar noprint"><span class="lbl">Example</span><button type="button" data-ex="triage">Nurse-line triage agent</button><button type="button" data-ex="note">Discharge-summary drafter</button><span class="start" id="exNote"></span></div>
     <ul class="points" id="dialList"></ul>
     <p class="sub" id="dialSummary"></p>
   </section>
@@ -300,8 +300,7 @@ const SUB_NAME="Subgroup performance"; // lives in measure 5, not here
 const listFor=(kind,t)=>((LIB[kind]||{})[t]||[]).filter(e=>e[0]!==SUB_NAME);
 const GRADER={graded:LIB.accuracy.graded[1], text:LIB.accuracy.text[2], image:LIB.accuracy.image[2]};
 const EXQ={triage:{type:"cat",d:{domain:"clinical",cons:"high",close:"close",exp:"often"},note:"Nurse-line triage agent: high consequence, a range of acceptable answers, a hosted model. Each run picks one disposition from a fixed scale."},
- note:{type:"graded",d:{domain:"clinical",cons:"high",close:"close",exp:"often"},note:"Discharge-summary drafter: a validated judge grades each summary 1 to 5."},
- grocery:{type:"cat",d:{domain:"general",cons:"low",close:"exact",exp:"often"},note:"Grocery-sorting agent: low consequence but exact answers, on a hosted model that updates. Light governance, close monitoring."}};
+ note:{type:"graded",d:{domain:"clinical",cons:"high",close:"close",exp:"often"},note:"Discharge-summary drafter: a validated judge grades each summary 1 to 5."}};
 const otype=()=>S["k1.type"]||"cat";
 function metricHTML(m,kind,label){
   const list=listFor(kind,otype()); if(!list.length) return "";
@@ -570,7 +569,7 @@ const CHIP={opt:["opt","Optional at this level"],here:["here","Set here"],picker
 // ---------- state ----------
 const KEY="qcSetup.v1"; let S={};
 try{S=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){S={}}
-const D=()=>({domain:S["d.domain"]||"clinical",cons:S["d.cons"]||"high",close:S["d.close"]||"close",exp:S["d.exp"]||"often"});
+const D=()=>({domain:"clinical",cons:S["d.cons"]||"high",close:S["d.close"]||"close",exp:S["d.exp"]||"often"});
 const fn=(x)=>typeof x==="function"?x(D()):x;
 const st=p=>fn(p.start), dsc=p=>fn(p.desc), opts=p=>fn(p.options);
 const needM=m=>m.need?fn(m.need):true, needP=p=>p.need?fn(p.need):true;
@@ -634,7 +633,6 @@ document.getElementById("copy").onclick=async()=>{try{await navigator.clipboard.
 
 // ---------- the branch point: domain and three dials ----------
 const DIALS=[
- {k:"domain",q:"What kind of work does it do?",opts:[["clinical","Clinical","Patient care or clinical operations"],["general","General","Anything else"]],desc:"Changes the words, examples and who signs. It does not change how much of the setup applies."},
  {k:"cons",q:"If an output is wrong and nobody catches it, what happens?",opts:[["high","Harm","Someone could be harmed, or money or legal standing lost"],["mod","Cost","Time or rework, and it gets caught downstream"],["low","Little","Easy to notice and undo"]],desc:"Sets the governance: which measures apply, who signs, how far back to look, how hard the response is. If a person checks every output before it is used, one level lower is usually right."},
  {k:"close",q:"How exact does the output need to be?",opts:[["exact","Exact","One right answer; small changes matter"],["close","Close","A range of answers is acceptable"],["loose","Loose","Any reasonable answer is fine"]],desc:"Sets the monitoring: agreement required across repeat runs, whether drift sensors run, lane width. Judge it against how much the agent varies; for numbers, the sigma calculator does this exactly."},
  {k:"exp",q:"How often can something change underneath it?",opts:[["often","Often","A hosted model that can update, or inputs that change"],["some","Sometimes","Planned, regular changes"],["rare","Rarely","A pinned model and fixed inputs"]],desc:"Sets how often controls run and whether a version gate is required."}
@@ -647,11 +645,10 @@ function renderDials(){
 }
 function dialsPlan(){
   const d=D(), lab=k=>{const x=DIALS.find(y=>y.k===k);return x.opts.find(o=>o[0]===d[k])[1];};
-  return ["STAKES",`   Kind of work: ${lab("domain")}. Consequence: ${lab("cons")}. Closeness: ${lab("close")}. Exposure to change: ${lab("exp")}.`,""].join("\n");
+  return ["STAKES",`   Consequence: ${lab("cons")}. Closeness: ${lab("close")}. Exposure to change: ${lab("exp")}.`,""].join("\n");
 }
 document.addEventListener("change",e=>{const n=e.target.name||"";if(!n.startsWith("d_"))return;
   const k=n.slice(2); S["d."+k]=e.target.value; save();
-  if(k==="domain" && lanesUntouched()) loadLanes(e.target.value);
   document.getElementById("exNote").textContent=""; render();});
 
 // ---------- knob 3: lanes ----------
@@ -664,22 +661,14 @@ const CTRLS0=[
  {ex:1,case:"Healthy adult, fever 101°F for one day, drinking fluids",exp:"See within 24 hours",hi:"Urgent care or office today",lo:"See within 3 days",slow:"Reject",fast:"Warn",beh:"",behC:"None",src:"No public anchor: align to your nurse line's own protocol."},
  {ex:1,case:"Asks for a refill of a long-standing blood pressure medicine",exp:"See within 3 days",hi:"See within 24 hours",lo:"Home care advice",slow:"Reject",fast:"Warn",beh:"Confirm the callback number",behC:"Warn",src:"No public anchor: align to your nurse line's own protocol."}
 ];
-const GSCALE0=["Produce","Dairy and refrigerated","Frozen","Bakery","Pantry","Snacks","Beverages","Free-From","Household"];
-const GAPPROVER0="Whoever owns the decision the output feeds";
-const GCTRLS0=[
- {ex:1,case:"Del Monte cut fruit cup",exp:"Pantry",also:["Snacks"],out:"Reject",beh:"",behC:"None",src:"From the grocery practice runs: these are shelf-stable, so the brand name changes the product."},
- {ex:1,case:"Oat milk, refrigerated carton",exp:"Dairy and refrigerated",also:[],out:"Reject",beh:"",behC:"None",src:"A refrigerated item in a room-temperature aisle is a never-event."},
- {ex:1,case:"Peanut butter",exp:"Pantry",also:[],out:"Reject",beh:"",behC:"None",src:"Peanut butter in the Free-From aisle is a never-event."},
- {ex:1,case:"\u201cMilk,\u201d with no kind given",exp:"Dairy and refrigerated",also:["Pantry"],out:"Warn",beh:"Ask which kind",behC:"Warn",src:"Ambiguous on purpose: shows a required behavior outside clinical work."}
-];
-const LANE_DEF={clinical:()=>({ordered:true,scale:SCALE0.slice(),approver:APPROVER0,ctrls:JSON.parse(JSON.stringify(CTRLS0))}),general:()=>({ordered:false,scale:GSCALE0.slice(),approver:GAPPROVER0,ctrls:JSON.parse(JSON.stringify(GCTRLS0))})};
+const LANE_DEF={clinical:()=>({ordered:true,scale:SCALE0.slice(),approver:APPROVER0,ctrls:JSON.parse(JSON.stringify(CTRLS0))})};
 let L;
 try{L=JSON.parse(localStorage.getItem("qcSetup.lanes.v3")||"null")}catch(e){L=null}
 if(!L) L=LANE_DEF.clinical();
 if(L.ordered===undefined) L.ordered=true;
-const defScale=()=>(L.ordered?SCALE0:GSCALE0), defApprover=()=>(L.ordered?APPROVER0:GAPPROVER0);
-function lanesUntouched(){const sc=L.scale.join("\n");return L.ctrls.length>0&&L.ctrls.every(c=>c.ex)&&(sc===SCALE0.join("\n")||sc===GSCALE0.join("\n"))&&(L.approver===APPROVER0||L.approver===GAPPROVER0);}
-function loadLanes(domain){L=LANE_DEF[domain==="general"?"general":"clinical"]();saveL();renderLanes();}
+const defScale=()=>SCALE0, defApprover=()=>APPROVER0;
+function lanesUntouched(){return L.ctrls.length>0&&L.ctrls.every(c=>c.ex)&&L.scale.join("\n")===SCALE0.join("\n")&&L.approver===APPROVER0;}
+function loadLanes(){L=LANE_DEF.clinical();saveL();renderLanes();}
 function saveL(){try{localStorage.setItem("qcSetup.lanes.v3",JSON.stringify(L));document.getElementById("saved").textContent="Saved in this browser";}catch(e){}}
 const ix=a=>L.scale.indexOf(a);
 function fit(c){ // keep each control's answers on the current scale
@@ -794,7 +783,7 @@ document.addEventListener("change",e=>{
   if(e.target.name==="otype"){S["k1.type"]=e.target.value;["accuracy","precision","drift"].forEach(k=>delete S["k1."+k]);save();$("exNote").textContent="";render();return;}
   const k=e.target.dataset&&e.target.dataset.metric; if(k){S["k1."+k]=+e.target.value;save();render();}
 });
-document.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{const x=EXQ[b.dataset.ex];S["k1.type"]=x.type;Object.entries(x.d).forEach(([k,v])=>S["d."+k]=v);if(x.d.domain==="general"?L.ordered!==false||lanesUntouched():L.ordered!==true||lanesUntouched())loadLanes(x.d.domain);["accuracy","precision","drift"].forEach(k=>delete S["k1."+k]);save();render();$("exNote").textContent=x.note;});
+document.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{const x=EXQ[b.dataset.ex];S["k1.type"]=x.type;Object.entries(x.d).forEach(([k,v])=>S["d."+k]=v);if(lanesUntouched())loadLanes();["accuracy","precision","drift"].forEach(k=>delete S["k1."+k]);save();render();$("exNote").textContent=x.note;});
 function syncType(){document.querySelectorAll('input[name=otype]').forEach(r=>r.checked=r.value===otype());}
 function knob1Plan(){
   const t=otype(), out=["KNOB 1. METRICS",`   Output type: ${TYPE_NAME[t]}${"k1.type" in S?"":" *"}`];

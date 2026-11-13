@@ -1,4 +1,4 @@
-// Records a captioned replay of the branch point (domain and three dials) in the Agent QC Setup (Nov 12, 2026).
+// Records a captioned replay of the three dials (consequence, closeness, exposure) in the Agent QC Setup (Nov 12, 2026).
 // Usage (server must be running, see server.js):
 //   node server.js ../.. 3000 &
 //   node record-qc-dials.js http://localhost:3000 ./video-dials [chromePath]
@@ -21,26 +21,22 @@ const base = process.argv[2], out = path.resolve(process.argv[3]), exe = process
   const top = async sel => { await page.evaluate(s => document.querySelector(s).scrollIntoView({ block: "start" }), sel); await page.waitForTimeout(300); };
   await page.goto(`${base}/qc-setup/`); await page.waitForTimeout(1200);
   await top("#dials");
-  await caption("New first step: what kind of work, and three dials: consequence, closeness, exposure to change.", 4200);
+  await caption("New first step: three dials: consequence, closeness, exposure to change.", 3800);
   await page.locator("#dialSummary").scrollIntoViewIfNeeded();
   await caption("The triage example: harm possible, so all nine measures apply.", 3200);
-  await top("#dials"); await page.locator('[data-ex="grocery"]').click(); await page.waitForTimeout(600);
   await top("#dials");
-  await caption("Grocery-sorting agent: general work, little consequence, exact answers, a hosted model that updates.", 4200);
+  await page.locator('input[name=d_cons][value=low]').check(); await page.waitForTimeout(500);
+  await page.locator('input[name=d_close][value=exact]').check(); await page.waitForTimeout(500);
+  await top("#dials");
+  await caption("A low-stakes clinical tool (say, a scheduling helper): little consequence, but exact answers.", 4200);
   await page.locator("#dialSummary").scrollIntoViewIfNeeded();
   await caption("Six measures apply. Subgroups, escalation and external assessment are optional, shown closed.", 4000);
   await top("#map");
   await caption("The map marks the optional ones.", 2800);
   await top("#m-stab");
-  await caption("Close monitoring stays: daily controls (exposure) and 95% agreement across repeats (exactness).", 4000);
+  await caption("Monitoring stays close: daily controls (exposure) and 95% agreement across repeats (exactness).", 4000);
   await top("#m-ca");
-  await caption("Light governance: warn and log, the owner releases, fewer set points.", 3800);
-  await top("#lanes");
-  await caption("Lanes for answers with no order: the grocery aisles.", 3200);
-  await top("#ctrls");
-  await caption("Each control: expected answer, also-acceptable answers, and what any other answer does.", 4000);
-  await page.locator('.ctrl[data-i="3"]').scrollIntoViewIfNeeded();
-  await caption("A required behavior outside clinical work: ambiguous 'milk' must ask which kind.", 3800);
+  await caption("Governance gets light: warn and log, the owner releases, fewer set points.", 3800);
   await top("#plan");
   await caption("The plan opens with the stakes, and lists what was optional and not set.", 4000);
   await caption(errors.length ? `Page errors: ${errors.join(" | ")}` : "Done. No page errors.", 2500);
