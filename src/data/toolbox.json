@@ -10,11 +10,6 @@
    "url": "/roi-assessment",
    "kind": "Commons tool"
   },
-  "consult": {
-   "name": "Governance Assessment",
-   "url": "/consultation",
-   "kind": "Commons tool"
-  },
   "unpacker": {
    "name": "Disagreement Unpacker",
    "url": "/transition#disagreement-unpacker",
@@ -91,8 +86,7 @@
    "seismometer"
   ],
   "h1": [
-   "vpg",
-   "consult"
+   "vpg"
   ],
   "h3": [
    "maude",
@@ -108,7 +102,6 @@
   ],
   "escalation": [
    "charter",
-   "consult",
    "unpacker"
   ],
   "adjudicate": [
@@ -121,7 +114,6 @@
   ],
   "authority": [
    "charter",
-   "consult",
    "mechanisms"
   ],
   "stop": [
@@ -129,8 +121,7 @@
    "mechanisms"
   ],
   "override": [
-   "vpg",
-   "consult"
+   "vpg"
   ],
   "validation": [
    "vpg",
@@ -146,8 +137,7 @@
   ],
   "vendor-risk": [
    "reagents",
-   "lab-rules",
-   "consult"
+   "lab-rules"
   ],
   "explainability": [
    "chai-card",
@@ -163,8 +153,7 @@
   ],
   "accountability": [
    "charter",
-   "health-check",
-   "consult"
+   "health-check"
   ],
   "forming": [
    "cw",

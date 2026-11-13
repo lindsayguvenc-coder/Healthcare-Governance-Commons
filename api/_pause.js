@@ -6,8 +6,8 @@
 // (decided Oct 29, 2026), so merging that PR is what turns its reports back on.
 // REPORTS_PAUSED in Vercel stays as the emergency switch: "1" or "all" pauses every
 // report tool; a comma list ("roi,transition") pauses just those; "0" or unset adds none.
-const TOOLS = ["vpg", "roi", "consultation", "transition"];
-const PAUSED_IN_CODE = ["vpg", "roi", "consultation"];
+const TOOLS = ["vpg", "roi", "transition"];
+const PAUSED_IN_CODE = ["vpg", "roi"];
 
 function pausedTools() {
   const env = String(process.env.REPORTS_PAUSED || "").trim().toLowerCase();
