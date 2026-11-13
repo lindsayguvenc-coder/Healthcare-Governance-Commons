@@ -16,9 +16,12 @@ const repo = path.resolve(__dirname, "../..");
 
 // Rules, in Node, to play a believable reviewer: agrees with the rules on audit cases
 // about 95% of the time, and decides hard cases from the data.
-global.window = {};
-require(path.join(repo, "public/local-validation/sepsis-ase.js"));
-const PACK = global.window.RULE_PACKS.sepsis_ase;
+// Load the page's own engine and pack into a fake window, the way the browser does.
+const vm = require("vm");
+const kitWin = {};
+const kitCtx = vm.createContext({ window: kitWin, globalThis: kitWin });
+for (const f of ["engine.js", "sepsis-ase.js"]) vm.runInContext(fs.readFileSync(path.join(repo, "public/local-validation", f), "utf8"), kitCtx);
+const LVK = kitWin.LVK, PACK = kitWin.RULE_PACKS.sepsis_ase;
 const csv = fs.readFileSync(path.join(repo, "public/local-validation/sample-sepsis.csv"), "utf8").trim().split("\n");
 const head = csv[0].split(",");
 const ROWS = Object.fromEntries(csv.slice(1).map((l) => { const v = l.split(","); const r = Object.fromEntries(head.map((k, i) => [k, v[i]])); return [r.encounter_id, r]; }));
@@ -26,7 +29,7 @@ let seed = 7;
 const rand = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
 function reviewerAnswer(id) {
   const r = ROWS[id];
-  const o = PACK.label(r);
+  const o = LVK.labelRow(PACK, r);
   if (o.label !== "unsure") return rand() < 0.95 ? o.label : (o.label === "yes" ? "no" : "yes");
   const lac = Number(r.lactate_max);
   if (r.qad_count === "") return rand() < 0.3 ? "unsure" : (lac >= 2 ? "yes" : "no");
@@ -64,7 +67,26 @@ function reviewerAnswer(id) {
   await caption("Your file never leaves the browser. The page's security policy blocks every network request, so this is enforced, not just promised.", 4600);
   results.fetchBlocked = await page.evaluate(() => fetch("/api/status").then(() => false, () => true));
   await to("#pack");
-  await caption("Rule pack 1: sepsis, after the CDC Adult Sepsis Event. Marked draft until a clinician signs it off.", 4200);
+  await caption("Step 1: the rule pack. Packs are plain data, and the page writes the rules out in plain English: that list is what a clinician signs off on.", 5200);
+  results.rulesShown = await page.locator("#rules-gate li, #rules-crit li").count();
+  results.draftShown = (await page.textContent("#pack-status")).startsWith("Draft");
+  // Load a custom pack from a file: the template
+  const dlT = page.waitForEvent("download");
+  await page.click("#dl-pack-template");
+  const tplFile = path.join(out, "template.json");
+  await (await dlT).saveAs(tplFile);
+  await page.setInputFiles("#pack-file", tplFile);
+  await page.waitForTimeout(200);
+  results.customPackLoaded = (await page.textContent("#pack-msg")).startsWith("Loaded your pack");
+  results.customRules = await page.locator("#rules-gate li, #rules-crit li").allTextContents();
+  await caption("Any outcome fits the same shape: 'these must hold, then any one of these'. Here a hospital loads its own pack from a file. It stays in the browser.", 5200);
+  const badPack = path.join(out, "badpack.json");
+  fs.writeFileSync(badPack, JSON.stringify({ id: "x", name: "x", labels: { yes: "a", no: "b" }, columns: [{ name: "encounter_id" }], gate: [{ col: "nope", is: true }], criteria: [] }));
+  await page.setInputFiles("#pack-file", badPack);
+  await page.waitForTimeout(150);
+  results.badPackMsg = await page.textContent("#pack-msg");
+  await page.selectOption("#pack-pick", "sepsis_ase");
+  await page.waitForTimeout(150);
   await page.click("details summary");
   await caption("Step 2: one row per encounter. The analyst's query does the date math; the SQL and FHIR files are starting points.", 4600);
 
@@ -78,6 +100,8 @@ function reviewerAnswer(id) {
   results.sortStats = await page.locator("#sort-stats .stat b").allTextContents();
   await caption(`Made-up data, 800 encounters. The rules decided ${results.sortStats[0]} yes and ${results.sortStats[1]} no; ${results.sortStats[2]} are too close to call, plus ${results.sortStats[3]} for a blind audit.`, 5600);
   await caption((await page.textContent("#work-line")), 4600);
+  results.auditLine = await page.textContent("#audit-line");
+  await caption("The audit is sized by the precision you want, not a flat percent: enough cases to show the rules are at least 90% accurate.", 5000);
 
   await page.click("#start");
   await page.waitForTimeout(200);
@@ -120,6 +144,7 @@ function reviewerAnswer(id) {
   results.counts = await page.locator("#counts .stat b").allTextContents();
   results.perf = await page.textContent("#perf");
   results.ruleAcc = await page.textContent("#rule-acc");
+  results.moreAuditOffered = !(await page.locator("#more-audit").isHidden());
   results.kappa = await page.textContent("#kappa");
   await caption("Results: the four counts, sensitivity and specificity with intervals, how often the rules matched the reviewer, and reviewer agreement.", 6000);
   await to("#group-table");

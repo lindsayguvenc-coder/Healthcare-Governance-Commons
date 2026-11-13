@@ -3302,7 +3302,7 @@ renderUpload();
     q7_cases: 'Yes — accessible and ready',
     q_counts: 'The four counts (true and false positives and negatives)',
     q_tp: c.tp, q_fn: c.fn, q_tn: c.tn, q_fp: c.fp,
-    q_counts_source: `Local Validation Kit, rule pack ${c.pack} (${c.packVersion}), model positive at score >= ${c.threshold}, made ${c.made}. ` +
+    q_counts_source: `Local Validation Kit, rule pack ${c.pack} (${c.packVersion}${c.packSignedOff ? ', signed off' : ', draft: not yet signed off by a clinician'}), model positive at score >= ${c.threshold}, made ${c.made}. ` +
       `${c.excluded} encounters left out (can't tell or unreviewed). Blind audit of the rules: ${c.ruleAudit.agreed} of ${c.ruleAudit.answered} matched the reviewer.`,
   });
   const n = document.createElement('div');

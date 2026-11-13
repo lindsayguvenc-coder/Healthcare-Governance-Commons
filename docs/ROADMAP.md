@@ -195,18 +195,28 @@ system name/vendor/version questions, governance-area grading switched off
       Cohen's kappa. Runs entirely in the browser: the page's security policy
       blocks all network requests (`connect-src 'none'`). Counts (numbers only)
       hand off to the VPG in the same browser, and the VPG records where they
-      came from. First rule pack: sepsis after the CDC Adult Sepsis Event
-      (`public/local-validation/sepsis-ase.js`). Ships with SQL and FHIR
+      came from. Rule packs are plain data run by one engine
+      (`public/local-validation/engine.js`): columns, a gate (all must hold),
+      criteria (any one is enough), three-valued so a blank never decides a
+      case, and "near" margins that send close calls to a person. The page
+      writes each pack's rules out in plain English for clinician sign-off,
+      shows its sign-off status, and lets a hospital load its own pack from a
+      file (validated, stays in the browser). First pack: sepsis after the CDC
+      Adult Sepsis Event (`public/local-validation/sepsis-ase.js`). Ships with SQL and FHIR
       starting points and 800 made-up encounters
       (`scripts/make-sample-sepsis.py`). Replay: `tests/replay/record-lvk.js`.
 - [ ] **Clinician sign-off on the sepsis rule pack** before anyone relies on its
       labels. Includes the "too close to call" band (within 10% of a cutoff),
       the antimicrobial-day handling, and the baselines in the SQL notes.
-- [ ] **Kit: audit sample size.** Default 5% (at least 20) is too small to show
-      the rules are above 90% even when they're right about 95% of the time (the
-      test run needed about 158). The page now says how many would; decide
-      whether to size the audit by the precision wanted instead of a percent.
-      Add to the statistician list with the kit's Wilson intervals and kappa.
+- [x] **Kit: audit sized by precision (Nov 13).** The user sets "show the rules
+      are at least X% accurate" (default 90%) and an assumed accuracy (95%);
+      the audit is the smallest sample whose Wilson interval would clear X
+      (127 cases at the defaults). If it falls short, the page offers exactly
+      the extra cases needed, or says the data can't confirm it.
+- [ ] **Statistician: the kit's math.** Wilson intervals, the audit-size
+      search, adding audit cases after a first look (sequential testing
+      inflates error a little), Cohen's kappa on a 20% second-review sample,
+      and the 10% "near" margin.
 - [ ] **More rule packs**, one at a time, each with a clinician's sign-off:
       imaging triage, deterioration, readmission.
 - [ ] **VPG: unpause or not.** Rule-based, no AI. Open statistician items
