@@ -1478,7 +1478,8 @@ function getSectionValidation() {
       { id: 'q7_cases', text: 'Do you have access to retrospective cases with verified ground truth outcomes for local validation?', type: 'select',
         showIf: () => !isRetroAudit,
         options: ['Yes — accessible and ready','Yes — but access requires additional approvals',
-          'Yes — but ground truth verification needed','Limited — small number available','No','Unsure'] },
+          'Yes — but ground truth verification needed','Limited — small number available','No','Unsure'],
+        note: 'No cases yet, or no ground truth? The Local Validation Kit (/local-validation/) gets you the counts from your own data: rules label most cases, and a person reviews only the hard ones. It runs in your browser and uploads nothing.' },
       { id: 'q7_irb', text: 'Would use of these cases require IRB review or waiver determination?', type: 'select',
         showIf: () => !isRetroAudit && a.q7_cases && !a.q7_cases.startsWith('No'),
         options: ['Yes — already submitted','Yes — not yet submitted','No — QI designation covers it','Unsure'],
@@ -3289,6 +3290,27 @@ function readFileAsText(file) {
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 renderUpload();
+
+// Counts handed over by the Local Validation Kit (Nov 13, 2026): numbers only, same
+// browser. Read once, then removed.
+(function prefillFromKit() {
+  if (new URLSearchParams(location.search).get('counts') !== 'local') return;
+  let c = null;
+  try { c = JSON.parse(localStorage.getItem('commons.lvk.counts') || 'null'); localStorage.removeItem('commons.lvk.counts'); } catch (e) { return; }
+  if (!c || !['tp','fn','tn','fp'].every(k => Number.isFinite(c[k]))) return;
+  Object.assign(state.answers, {
+    q7_cases: 'Yes — accessible and ready',
+    q_counts: 'The four counts (true and false positives and negatives)',
+    q_tp: c.tp, q_fn: c.fn, q_tn: c.tn, q_fp: c.fp,
+    q_counts_source: `Local Validation Kit, rule pack ${c.pack} (${c.packVersion}${c.packSignedOff ? ', signed off' : ', draft: not yet signed off by a clinician'}), model positive at score >= ${c.threshold}, made ${c.made}. ` +
+      `${c.excluded} encounters left out (can't tell or unreviewed). Blind audit of the rules: ${c.ruleAudit.agreed} of ${c.ruleAudit.answered} matched the reviewer.`,
+  });
+  const n = document.createElement('div');
+  n.setAttribute('role', 'status');
+  n.style.cssText = 'margin:12px auto;max-width:900px;padding:10px 14px;border:1px solid #2d7a57;border-left:4px solid #2d7a57;border-radius:6px;font:14px/1.5 system-ui,sans-serif';
+  n.textContent = `Counts from the Local Validation Kit are filled in: ${c.tp} true positives, ${c.fn} missed, ${c.tn} true negatives, ${c.fp} false alarms. Answer the rest of the questions as usual.`;
+  document.body.insertBefore(n, document.body.children[1] || null);
+})();
 </script>
 <script src="/report-pause.js" data-tool="vpg"></script>
 </body>

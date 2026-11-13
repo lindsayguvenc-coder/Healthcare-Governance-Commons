@@ -61,3 +61,11 @@ shows the new questions, then makes two real PDFs (new questions answered, and l
 blank) and checks 17 things in them: autonomy raising the tier, FDA/PCCP, vendor
 disclosure filling the bias table, Section 1557 and AB 3030 flags, contract terms,
 the readiness verdict, and references drawn from `src/data/regulatory.json`.
+
+## Local Validation Kit replay (Nov 13)
+
+Same server as the VPG replays (port 3000, after `npm run build`).
+`node record-lvk.js http://localhost:3000 ./video-lvk [chromePath]` loads the made-up
+sample, works the whole queue as reviewer A and a 20% sample as reviewer B, checks the
+results, downloads the labels, hands the counts to the VPG and makes a real PDF. It also
+checks that the page makes no network requests while working and that fetch is blocked.
