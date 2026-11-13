@@ -711,6 +711,7 @@ html{scroll-padding-top:56px}
 <!-- HERO -->
 <div class="hero">
   <div class="hero-eyebrow">Peer Challenge Registry</div>
+  <div class="seed-note" style="margin:0 0 18px;font-size:12px"><strong>Preview · paused.</strong> This is what the registry would look like. No one can register yet, and every entry on this page is a made-up demo: not real organizations, not real results.</div>
   <h1 class="hero-title">No formal proficiency testing<br>exists for <em>clinical AI.</em></h1>
   <p class="hero-statement">
     Until one does, this registry connects organizations building their own challenge programs — so the work doesn't stay trapped in individual institutions.
@@ -769,7 +770,7 @@ html{scroll-padding-top:56px}
 
     <div class="result-count" id="result-count"></div>
     <div id="seed-note" class="seed-note">
-      The entries below are <strong>illustrative examples</strong> — fabricated to show what the registry will look like when organizations register. They are not real organizations or real data. This note disappears when real entries exist.
+      <strong>Demo entries.</strong> Every entry below is made up to show what the registry would look like. The organizations, the AI systems and the lessons are invented. None of it is a finding about any real product or hospital.
     </div>
     <div class="registry-list" id="registry-list"></div>
 
@@ -786,7 +787,7 @@ html{scroll-padding-top:56px}
         You control whether to respond.
       </div>
       <button class="cta-btn" id="cta-register" onclick="openSubmitModal()">Register your organization →</button>
-      <p class="cta-card-body" id="cta-paused" hidden>Registration is paused while the Commons is a one-person prototype. Nothing you could submit here would reach anyone yet, so the form is closed rather than pretending.</p>
+      <p class="cta-card-body" id="cta-paused" hidden>Registration is paused while the Commons is a one-person prototype. You can look at the form to see what it would ask; nothing in it can be submitted. It opens only once someone is accountable for securing contact details.</p>
     </div>
 
     <div class="sidebar-card">
@@ -1017,74 +1018,59 @@ html{scroll-padding-top:56px}
 // Structure matches what the submission form produces.
 
 const SEED_ENTRIES = [
+  // Made-up demos. No real organization or product names: invented
+  // experiences must never be pinned on a real vendor or hospital.
   {
-    id: 'seed-001',
-    org: null,
-    anon: true,
-    anonDesc: 'Academic Medical Center, Urban, West Coast',
-    system: 'Epic Sepsis Prediction Model',
+    id: 'demo-001', org: null, anon: true,
+    anonDesc: 'Demo: academic medical center, urban, West Coast',
+    system: 'Sepsis early-warning model (vendor product)',
     useType: 'Risk stratification — identifies patients for intervention or escalation',
     setting: 'Inpatient — general medical/surgical',
-    contact: 'facilitated',
-    hasMethodology: true,
+    contact: 'facilitated', hasMethodology: true,
     methodology: {
-      challengeSet: 'Sourced 200 retrospective cases from 18-month lookback period outside vendor validation window. Ground truth verified by two independent hospitalists blinded to model output.',
-      blindRun: 'Model scores extracted without clinical team knowledge. Informaticist ran comparison against ground truth. Results reviewed at governance committee before any clinical staff saw output.',
-      comparison: 'Compared sensitivity and specificity against vendor-reported values. Defined >5% deviation as action-level trigger requiring governance review.',
-      lessons: 'Ground truth verification took 3x longer than estimated. Build that time into project planning. Also: small case numbers made confidence intervals wide — plan for larger cohort.'
+      challengeSet: 'Retrospective cases from a period outside the vendor validation window. Ground truth checked by two clinicians blinded to the model output.',
+      blindRun: 'Model scores pulled without the clinical team knowing. An informaticist compared them to ground truth, and the committee saw results before clinical staff.',
+      comparison: 'Compared local sensitivity and specificity with the vendor-reported values, with a set deviation that triggers governance review.',
+      lessons: 'Ground-truth review took far longer than planned, so build the time in. Small case numbers made the intervals wide: plan a larger cohort.'
     },
-    date: '2025-11',
     seed: true,
   },
   {
-    id: 'seed-002',
-    org: 'Valley Health System',
-    anon: false,
-    system: 'Aidoc Head CT — intracranial hemorrhage detection',
+    id: 'demo-002', org: 'Example Community Hospital (demo)', anon: false,
+    system: 'Head CT bleed triage (vendor product)',
     useType: 'Triage / prioritization — direct impact on care sequencing',
     setting: 'Emergency department',
-    contact: 'direct',
-    hasMethodology: true,
+    contact: 'direct', hasMethodology: true,
     methodology: {
-      challengeSet: 'Used publicly available CQ500 dataset for supplemental challenge. Supplemented with 80 local cases, ground truth verified by neuroradiology attending.',
-      blindRun: 'Radiology informatics ran blind evaluation over 2-week period. ED workflow not altered. Results compared after case closure.',
-      comparison: 'Sensitivity primary endpoint — false negatives in ED triage are higher risk than false positives for this use. Set 95% sensitivity floor as hard stop.',
-      lessons: "Vendor's reported sensitivity was on academic center data — our community ED population had lower prevalence which affected PPV substantially. Would have caught this earlier with local cohort planning."
+      challengeSet: 'A public research dataset plus local cases, with ground truth from a neuroradiologist.',
+      blindRun: 'Radiology informatics ran a blind evaluation over two weeks without changing the ED workflow. Results compared after case closure.',
+      comparison: 'Sensitivity was the primary endpoint, because a missed bleed in triage costs more than a false alarm. A sensitivity floor was set as a hard stop.',
+      lessons: "The vendor's numbers came from a population with a different prevalence than ours, which changed the positive predictive value. Check prevalence first."
     },
-    date: '2025-10',
     seed: true,
   },
   {
-    id: 'seed-003',
-    org: null,
-    anon: true,
-    anonDesc: 'Community Hospital, Rural, Midwest',
-    system: 'Viz.ai LVO — large vessel occlusion detection',
+    id: 'demo-003', org: null, anon: true,
+    anonDesc: 'Demo: community hospital, rural, Midwest',
+    system: 'Stroke large-vessel alert (vendor product)',
     useType: 'Triage / prioritization — direct impact on care sequencing',
     setting: 'Emergency department',
-    contact: 'none',
-    hasMethodology: false,
-    methodology: null,
-    date: '2025-12',
+    contact: 'none', hasMethodology: false, methodology: null,
     seed: true,
   },
   {
-    id: 'seed-004',
-    org: null,
-    anon: true,
-    anonDesc: 'Safety Net Hospital, Urban, Southeast',
-    system: 'Epic Deterioration Index',
+    id: 'demo-004', org: null, anon: true,
+    anonDesc: 'Demo: safety-net hospital, urban, Southeast',
+    system: 'Inpatient deterioration score (vendor product)',
     useType: 'Risk stratification — identifies patients for intervention or escalation',
     setting: 'Inpatient — ICU / critical care',
-    contact: 'facilitated',
-    hasMethodology: true,
+    contact: 'facilitated', hasMethodology: true,
     methodology: {
-      challengeSet: 'Sourced 150 cases from prior fiscal year. Significant SDOH burden in our population — specifically flagged this in our challenge design as a known underrepresentation risk in vendor training data.',
-      blindRun: 'Ran model retrospectively against cases nursing team had already escalated (or not escalated). Compared model recommendation to actual escalation outcome.',
-      comparison: 'Primary concern was false negatives in high-SDOH patients. Stratified analysis by payer mix as SDOH proxy. Found 8% sensitivity gap in Medicaid cohort vs commercial — this drove our governance decision to require additional clinical review for this subgroup.',
-      lessons: 'Subgroup analysis was the most valuable part. Aggregate numbers looked acceptable. Disaggregating by payer was what surfaced the real problem.'
+      challengeSet: 'Cases from the prior year, designed around a population the vendor data likely underrepresented.',
+      blindRun: 'Ran the model retrospectively against cases nursing had or had not escalated, and compared.',
+      comparison: 'Stratified by payer as a rough proxy for social risk, looking for a sensitivity gap between groups.',
+      lessons: 'The overall numbers looked fine. Breaking results out by group was what showed the problem.'
     },
-    date: '2026-01',
     seed: true,
   },
 ];
@@ -1106,7 +1092,7 @@ async function init() {
   if (SUBMISSIONS_PAUSED) {
     const btn = document.getElementById('cta-register');
     const note = document.getElementById('cta-paused');
-    if (btn) btn.hidden = true;
+    if (btn) btn.textContent = 'Preview the sign-up form →';
     if (note) note.hidden = false;
   }
   // Load any real submissions from Redis API
@@ -1195,7 +1181,7 @@ function renderEntry(entry) {
     : `<span class="entry-org">${entry.org || 'Organization'}</span>`;
 
   const seedBadge = entry.seed
-    ? `<span class="badge badge-seed">Illustrative example</span>` : '';
+    ? `<span class="badge badge-seed">Demo · made up</span>` : '';
 
   const methodologyBadge = entry.hasMethodology
     ? `<span class="badge badge-methodology">Methodology</span>` : '';
@@ -1211,10 +1197,9 @@ function renderEntry(entry) {
       </div>
     </div>` : '';
 
-  const contactBtn = (!SUBMISSIONS_PAUSED && entry.contact !== 'none') ? `
-    <button class="entry-contact-btn" onclick="openContactModal('${entry.id}')">
-      Request introduction →
-    </button>` : '';
+  const contactBtn = entry.contact === 'none' ? '' : SUBMISSIONS_PAUSED
+    ? `<button class="entry-contact-btn" disabled title="Paused: introductions aren't open yet" style="opacity:.45;cursor:not-allowed">Request introduction (paused)</button>`
+    : `<button class="entry-contact-btn" onclick="openContactModal('${entry.id}')">Request introduction →</button>`;
 
   const dateStr = entry.date
     ? new Date(entry.date + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
@@ -1237,7 +1222,7 @@ function renderEntry(entry) {
       </div>
       ${methodologyHTML}
       <div class="entry-footer">
-        <div class="entry-date">${dateStr ? `Registered ${dateStr}` : ''}</div>
+        <div class="entry-date">${entry.seed ? 'Demo entry' : (dateStr ? `Registered ${dateStr}` : '')}</div>
         ${contactBtn}
       </div>
     </div>`;
@@ -1246,8 +1231,13 @@ function renderEntry(entry) {
 // ── SUBMIT MODAL ──────────────────────────────────────────────────────────
 
 function openSubmitModal() {
-  if (SUBMISSIONS_PAUSED) return;
-  document.getElementById('submit-modal').classList.add('open');
+  const m = document.getElementById('submit-modal');
+  if (SUBMISSIONS_PAUSED) {
+    m.querySelectorAll('input, select, textarea').forEach((el) => { el.disabled = true; });
+    const b = document.getElementById('submit-btn');
+    b.disabled = true; b.textContent = 'Paused: nothing can be submitted';
+  }
+  m.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 
@@ -1259,6 +1249,7 @@ document.getElementById('f-anon').addEventListener('change', function() {
 });
 
 async function handleSubmit() {
+  if (SUBMISSIONS_PAUSED) return;
   const btn = document.getElementById('submit-btn');
   const system = document.getElementById('f-system').value.trim();
   const useType = document.getElementById('f-usetype').value;
@@ -1376,6 +1367,7 @@ function openContactModal(entryId) {
 }
 
 async function handleContactRequest() {
+  if (SUBMISSIONS_PAUSED) return;
   const name = document.getElementById('contact-name')?.value.trim();
   const org = document.getElementById('contact-org')?.value.trim();
   const email = document.getElementById('contact-email')?.value.trim();

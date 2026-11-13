@@ -251,6 +251,44 @@ system name/vendor/version questions, governance-area grading switched off
       tool page now says answers go to an AI model and to leave out patient
       details. Kit downloads from an unsigned pack say DRAFT in the file name.
       Privacy notice covers the kit.
+- [x] **Tools cleanup (Nov 13, 2026).**
+      - Governance Architecture: Westgard rules corrected (1-2s is one result
+        past 2 SD and only a warning; 2-2s and R-4s described properly),
+        example windows and cadences labeled as examples, unsupported
+        "required for accreditation" claim removed. Off the Tools page; it's
+        Episode 07's interactive figure.
+      - Peer Challenge Registry: now a paused preview. Demo entries rewritten
+        with invented organizations and generic system types (the old ones
+        named real products and a real health system with made-up results).
+        Sign-up form viewable but disabled; introductions shown as paused.
+      - Document upload removed from the VPG, with its `phi-check` and
+        `strip-metadata` endpoints. Uploaded files never fed the protocol.
+- **Removed (Nov 13, 2026), kept here so they're tracked:**
+      - `public/agent-qc/index.html`: the old Agent QC Metric Picker, kept
+        "for reference" after `/qc-setup` replaced it. `/agent-qc` still
+        forwards.
+      - `public/checklist.html`: an index of three checklists that were never
+        on the site; its doc-library entry went with it.
+      - `api/phi-check.js`, `api/strip-metadata.js`: upload-only endpoints.
+- [ ] **Checklist recovery ×3** (not for the site; needed as source
+      material). All three are in Lindsay's Drive, March 2026 originals in
+      one folder and Aug 31 copies in another:
+      - Healthcare AI Governance Checklist (`governance_checklist.html`, also
+        a .docx)
+      - Bias & Demographic Fairness Checklist
+        (`bias_demographics_checklist.html`)
+      - Healthcare Data Quality & Provenance Checklist
+        (`healthcare_data_checklist_v2.html`; a shorter `-1` copy exists too)
+      - plus the index that tied them together
+        (`governance_commons_checklists.html`, several numbered copies).
+      Next: pick the canonical copy of each, check them against today's
+      Commons, decide where they live.
+- [ ] **Episode 07 PDF has the same errors as the old Architecture page**
+      (the 1-2s and R4s wording, "required for accreditation", fixed hours).
+      It's Lindsay's published piece: her call whether to post a correction.
+- [ ] **Rename the Facetious Collaborator** (Lindsay loves it; needs a new
+      name). It lives on every node page, not the Tools page. Consider a
+      Tools-page card so people can find it.
 - [ ] **Clinician sign-off on the sepsis rule pack** before anyone relies on its
       labels. Includes the "too close to call" band (within 10% of a cutoff),
       the antimicrobial-day handling, and the baselines in the SQL notes.

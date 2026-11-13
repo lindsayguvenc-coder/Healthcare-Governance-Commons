@@ -333,17 +333,6 @@ const DOC_LIBRARY = [
     abstract: "Cross-domain reference index of governance mechanisms across aviation, nuclear, laboratory medicine, financial services, pharmaceutical, and software engineering — indexed by mechanism type, loop location, and observed outcome. Each entry documents where the mechanism held, where it failed, and the honest complexity. Identifies five cross-domain structural patterns: separation from enforcement, distributed liability, explicit stop conditions, loop-level specificity, and transparency gaps. The most directly applicable cross-domain reference in the Commons library for practitioners designing clinical AI governance infrastructure.",
   },
 
-// ── HEALTHCARE DATA CHECKLIST ─────────────────────────────────────────────
-// Already in commons as a file — registering here for Doc Repository visibility
-
-  {
-    id: "hc-data-checklist",
-    title: "Healthcare AI Governance Checklist: Deployment Readiness",
-    type: "practitioner", source: "Lindsay LaMere / Healthcare Governance Commons", year: "2025",
-    url: "/checklist.html",
-    nodes: ["validation", "stop", "h2", "authority"],
-    abstract: "Structured deployment readiness checklist for clinical AI tools. Covers validation requirements, authority assignment, stop mechanism definition, monitoring infrastructure, and escalation pathway design. Adapted from CLIA/CAP quality control frameworks and high-reliability organization principles. Designed for use at H1 Deploy handoff — the governance contract activation point.",
-  },
 ];
 
 // Practitioner notes and key insights come from the same data file.
