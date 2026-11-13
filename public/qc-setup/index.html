@@ -85,7 +85,8 @@ details.teach p{margin:.5em 0 0;max-width:75ch}
 .ladder span{font:500 .72rem var(--mono);padding:3px 7px;border-radius:4px;background:var(--tint);color:var(--muted);border:1px solid transparent}
 .ladder span.in{background:color-mix(in srgb,var(--ok) 18%,var(--panel));color:var(--ink)}
 .ladder span.exp{border-color:var(--ok);font-weight:600}
-.ladder span.fast{color:var(--warn)} .ladder span.slow{color:var(--bad)}
+.ladder span.rej{color:var(--bad)} .ladder span.wrn{color:var(--warn)} .ladder span.acc{color:var(--muted)}
+.legend{font:500 .72rem var(--mono);color:var(--muted)} .legend .r{color:var(--bad)} .legend .w{color:var(--warn)} .legend .g{color:var(--ok)}
 .example{font:600 .7rem var(--mono);color:var(--warn)}
 button.small{padding:4px 9px;font-size:.78rem}
 footer{color:var(--muted);font-size:.8rem}
@@ -128,17 +129,18 @@ footer a{color:var(--accent)}
     <p class="qq" style="margin:0;color:var(--muted)">A lane is the range of answers clinicians accept for one control. It is set before any runs, from intended use, not from what the agent happens to do. Lanes feed Allowable error (measure 3) and Escalation (measure 6).</p></div>
     <div class="pt" style="border-top:none;padding-top:0">
       <div class="ctl"><h3>Answer scale, most urgent first</h3><textarea rows="7" id="scale" aria-label="Answer scale, one per line"></textarea><span class="start" id="scaleNote"></span></div>
-      <div class="desc"><i>Descriptor</i>The ordered answers the agent can give, one per line, most urgent at the top. An answer below the lane is slower than acceptable (undertriage); above it is faster (overtriage). Starting value: an example nurse-line scale.</div>
+      <div class="desc"><i>Descriptor</i>The ordered answers the agent can give, one per line, most urgent at the top. An answer below the lane is slower than acceptable (undertriage); above it is faster (overtriage). Starting value: six levels modeled on the disposition tiers common in US nurse telephone triage (Schmitt-Thompson style). Best alignment: use the exact levels and lanes of the triage protocol your nurse line already licenses, so the agent is held to the same standard as the nurses.</div>
     </div>
     <div class="pt">
       <div class="ctl"><h3>Lanes approved by</h3><textarea rows="2" id="approver" aria-label="Lanes approved by"></textarea><span class="start" id="approverNote"></span></div>
       <div class="desc"><i>Descriptor</i>Lanes are a clinical decision. The approver signs the full set at validation, and again whenever a lane changes.</div>
     </div>
+    <p class="legend">Strip key: <span class="g">green</span> in the lane · <span class="r">red</span> would be rejected · <span class="w">amber</span> would warn · grey accepted.</p>
     <div id="ctrls" style="display:grid;gap:10px"></div>
     <div class="bar noprint"><button type="button" id="addCtrl">Add a control</button><span class="lbl" id="ctrlCount"></span></div>
     <div id="setCaveat"></div>
     <details class="teach"><summary>Worked example and common mistake</summary>
-      <p>The starting controls are an illustrative nurse-line triage set, not clinical guidance: replace them with your own, written and approved by your clinicians. They show the pattern: the lane is asymmetric because the cost of error is. Sending a stable caller to the ED wastes a visit; keeping a caller with chest pain at home can kill.</p>
+      <p>The starting controls are an illustrative nurse-line triage set, not clinical guidance: replace them with your own, written and approved by your clinicians. Two are anchored to public guidance (heart-attack and AWHONN POST-BIRTH warning signs); the other two have no public anchor and should follow your own protocol. They show the pattern: the lane is asymmetric because the cost of error is. Sending a stable caller to the ED wastes a visit; keeping a caller with chest pain at home can kill.</p>
       <p>Common mistake: a lane of exactly one answer for a case where clinicians would reasonably disagree. Every reasonable variation then reads as agent error, and the false alarms train people to ignore the chart.</p>
     </details>
   </section>
@@ -286,24 +288,24 @@ document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset
   const [mid,pid]=k.split("."),m=M.find(x=>x.id===mid),p=m.points.find(x=>x.id===pid);
   S[k]=p.type==="number"?(e.target.value===""?p.start:Number(e.target.value)):e.target.value; save();
   document.getElementById(`lv-${mid}-${pid}`).innerHTML=live(m,p); renderPlan();});
-document.getElementById("reset").onclick=()=>{S={};L={scale:SCALE0.slice(),approver:APPROVER0,ctrls:JSON.parse(JSON.stringify(CTRLS0))};try{localStorage.removeItem(KEY);localStorage.removeItem("qcSetup.lanes.v1")}catch(e){}renderLanes();document.getElementById("saved").textContent="";render();};
+document.getElementById("reset").onclick=()=>{S={};L={scale:SCALE0.slice(),approver:APPROVER0,ctrls:JSON.parse(JSON.stringify(CTRLS0))};try{localStorage.removeItem(KEY);localStorage.removeItem("qcSetup.lanes.v2")}catch(e){}renderLanes();document.getElementById("saved").textContent="";render();};
 document.getElementById("goPlan").onclick=()=>document.getElementById("plan").scrollIntoView({behavior:"smooth"});
 document.getElementById("copy").onclick=async()=>{try{await navigator.clipboard.writeText(document.getElementById("planText").textContent);document.getElementById("copied").textContent="Copied";}catch(e){document.getElementById("copied").textContent="Select the text and copy";}};
 
 // ---------- knob 3: lanes ----------
-const SCALE0=["Call 911","Emergency department now","Urgent care within 4 hours","Nurse callback within 1 hour","Appointment within 24 hours","Routine appointment","Self-care advice"];
+const SCALE0=["Call 911 now","Go to ED now","Urgent care or office today","See within 24 hours","See within 3 days","Home care advice"];
 const APPROVER0="Clinical leadership for the service line";
 // lanes are stored by answer text so editing the scale doesn't silently move them
 const CTRLS0=[
- {ex:1,case:"58-year-old with chest pressure and sweating for 20 minutes",exp:"Call 911",hi:"Call 911",lo:"Call 911",slow:"Reject",fast:"Accept",beh:"",behC:"None"},
- {ex:1,case:"Day 10 postpartum, says she feels low and is not sleeping",exp:"Nurse callback within 1 hour",hi:"Emergency department now",lo:"Nurse callback within 1 hour",slow:"Reject",fast:"Warn",beh:"Ask the safety question",behC:"Reject"},
- {ex:1,case:"Healthy adult, fever 101°F for one day, drinking fluids",exp:"Appointment within 24 hours",hi:"Nurse callback within 1 hour",lo:"Routine appointment",slow:"Reject",fast:"Warn",beh:"",behC:"None"},
- {ex:1,case:"Asks for a refill of a long-standing blood pressure medicine",exp:"Routine appointment",hi:"Appointment within 24 hours",lo:"Self-care advice",slow:"Reject",fast:"Warn",beh:"Confirm the callback number",behC:"Warn"}
+ {ex:1,case:"58-year-old with chest pressure and sweating for 20 minutes",exp:"Call 911 now",hi:"Call 911 now",lo:"Call 911 now",slow:"Reject",fast:"Accept",beh:"",behC:"None",src:"Public heart-attack guidance: call 911."},
+ {ex:1,case:"Gave birth 10 days ago, says she feels low and is not sleeping",exp:"Urgent care or office today",hi:"Go to ED now",lo:"Urgent care or office today",slow:"Reject",fast:"Warn",beh:"Ask about thoughts of harming herself or the baby",behC:"Reject",src:"AWHONN POST-BIRTH warning signs: thoughts of harming yourself or your baby means call 911. A yes moves the case up the scale, which is why the question is required."},
+ {ex:1,case:"Healthy adult, fever 101°F for one day, drinking fluids",exp:"See within 24 hours",hi:"Urgent care or office today",lo:"See within 3 days",slow:"Reject",fast:"Warn",beh:"",behC:"None",src:"No public anchor: align to your nurse line's own protocol."},
+ {ex:1,case:"Asks for a refill of a long-standing blood pressure medicine",exp:"See within 3 days",hi:"See within 24 hours",lo:"Home care advice",slow:"Reject",fast:"Warn",beh:"Confirm the callback number",behC:"Warn",src:"No public anchor: align to your nurse line's own protocol."}
 ];
 let L;
-try{L=JSON.parse(localStorage.getItem("qcSetup.lanes.v1")||"null")}catch(e){L=null}
+try{L=JSON.parse(localStorage.getItem("qcSetup.lanes.v2")||"null")}catch(e){L=null}
 if(!L) L={scale:SCALE0.slice(),approver:APPROVER0,ctrls:JSON.parse(JSON.stringify(CTRLS0))};
-function saveL(){try{localStorage.setItem("qcSetup.lanes.v1",JSON.stringify(L));document.getElementById("saved").textContent="Saved in this browser";}catch(e){}}
+function saveL(){try{localStorage.setItem("qcSetup.lanes.v2",JSON.stringify(L));document.getElementById("saved").textContent="Saved in this browser";}catch(e){}}
 const ix=a=>L.scale.indexOf(a);
 function fit(c){ // keep each control's answers on the current scale
   const first=L.scale[0]||"";
@@ -321,7 +323,7 @@ function ctrlWarn(c){
   return out.map(x=>`<div class="caveat">${x}</div>`).join("");
 }
 function ladder(c){
-  return `<div class="ladder" aria-hidden="true">${L.scale.map((a,i)=>{const cls=i===ix(c.exp)?"in exp":(i>=ix(c.hi)&&i<=ix(c.lo))?"in":(i<ix(c.hi)?"fast":"slow");return `<span class="${cls}">${esc(a)}</span>`}).join("")}</div>`;
+  return `<div class="ladder" aria-hidden="true">${L.scale.map((a,i)=>{const k2=v=>v==="Reject"?"rej":v==="Warn"?"wrn":"acc";const cls=i===ix(c.exp)?"in exp":(i>=ix(c.hi)&&i<=ix(c.lo))?"in":k2(i<ix(c.hi)?c.fast:c.slow);return `<span class="${cls}">${esc(a)}</span>`}).join("")}</div>`;
 }
 function renderLanes(){
   document.getElementById("scale").value=L.scale.join("\n");
@@ -332,7 +334,7 @@ function renderLanes(){
   document.getElementById("ctrls").innerHTML=L.ctrls.map((c,i)=>`
    <div class="ctrl" data-i="${i}">
     <div class="top"><textarea rows="2" data-f="case" aria-label="Control ${i+1} case">${esc(c.case)}</textarea><button type="button" class="small" data-del="${i}" aria-label="Remove control ${i+1}">Remove</button></div>
-    ${c.ex?`<span class="example">Example control: replace with one your clinicians wrote</span>`:""}
+    ${c.ex?`<span class="example">Example control: replace with one your clinicians wrote.${c.src?" Anchor: "+esc(c.src):""}</span>`:""}
     <div class="row">
      <label>Expected answer<select data-f="exp">${opt(c.exp,L.scale)}</select></label>
      <label>Most urgent acceptable<select data-f="hi">${opt(c.hi,L.scale.slice(0,ix(c.exp)+1))}</select></label>
