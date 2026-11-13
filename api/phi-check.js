@@ -254,7 +254,7 @@ export default async function handler(req, res) {
 
     // Log to console for Vercel function logs — never log the actual text
     console.log(
-      `PHI scan completed. Source: ${source || "unknown"}. Status: ${
+      `PHI scan completed. Source: ${String(source || "unknown").replace(/[^a-z0-9_-]/gi, "").slice(0, 40)}. Status: ${
         result.summary.status
       }. Findings: ${result.findings.length}`
     );

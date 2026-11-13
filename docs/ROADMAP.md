@@ -245,6 +245,12 @@ system name/vendor/version questions, governance-area grading switched off
       stamped "made-up data · not validated" top and bottom so a crop still
       says it. Built by `scripts/make-kit-howto.py` from a `record-lvk.js` run.
       Shown only while paused; not in the offline copy.
+- [x] **Privacy and labeling sweep (Nov 13, 2026).** Rate-limit counter keyed
+      on a scrambled IP, never the raw address. Server logs no longer record PDF
+      filenames (they can carry a patient's name) or free-text labels. Every AI
+      tool page now says answers go to an AI model and to leave out patient
+      details. Kit downloads from an unsigned pack say DRAFT in the file name.
+      Privacy notice covers the kit.
 - [ ] **Clinician sign-off on the sepsis rule pack** before anyone relies on its
       labels. Includes the "too close to call" band (within 10% of a cutoff),
       the antimicrobial-day handling, and the baselines in the SQL notes.

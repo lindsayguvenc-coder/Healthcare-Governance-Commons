@@ -68,7 +68,9 @@ async function underRateLimit(req) {
   if (!client) return true;
   try {
     const hour = Math.floor(Date.now() / 3600000);
-    const key = `ratelimit:ai:${clientIp(req)}:${hour}`;
+    // Key on a scrambled form of the address, so the raw IP is never stored.
+    const ipHash = require("crypto").createHash("sha256").update("commons-rl:" + clientIp(req)).digest("hex").slice(0, 32);
+    const key = `ratelimit:ai:${ipHash}:${hour}`;
     const count = await client.incr(key);
     if (count === 1) await client.expire(key, 3700);
     return count <= PUBLIC_REQUESTS_PER_HOUR;
