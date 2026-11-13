@@ -245,7 +245,13 @@ system name/vendor/version questions, governance-area grading switched off
         captured, reviewed on a schedule and fed back as learning, with an
         owner. Tool text notes the CHAI playbooks map to the Joint
         Commission's RUAIH certification (launched June 2026).
-      Real runs still to do (needs a short-lived key).
+      Real runs done (Nov 13, `tests/replay/real-transition.js`): all ended
+      cleanly. The cost lens named the nurse written up alone vs. the director
+      who decides; the container read flagged rubber stamp and asked whether
+      radiology's hidden pilot made the next department feel safe to speak up;
+      the charter wrote the disagreement section with capture, schedule and an
+      owner. First charter ran 1,544 words, so the prompt now budgets about 90
+      words per section: reruns 1,044 and 1,342 words, ~900 tokens of headroom.
 - [ ] **Rebuild governance-area grading** against `src/data/nodes.json`.
 - [x] **Section 6 readiness verdict (Nov 13).** Now printed, and computed from
       the deployment conditions listed under it, so the two can't disagree. The
