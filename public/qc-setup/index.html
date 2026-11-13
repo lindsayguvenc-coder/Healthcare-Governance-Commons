@@ -114,6 +114,15 @@ details.other>summary{cursor:pointer;font-size:.84rem;color:var(--muted);font-we
 .types label{display:flex;gap:7px;align-items:flex-start;border:1px solid var(--line);border-radius:6px;padding:7px 10px;cursor:pointer;font-size:.88rem;flex:1 1 150px;background:var(--panel)}
 .types label:has(input:checked){border-color:var(--accent);background:var(--tint)}
 .types small{display:block;color:var(--muted);font-size:.76rem}
+.chip.opt{color:var(--muted)}
+section.measure.optional{padding:12px 18px;background:transparent;border-style:dashed}
+section.measure.optional>details>summary{cursor:pointer;font-weight:600;color:var(--muted)}
+section.measure.optional>details[open]{display:grid;gap:12px}
+.also{display:flex;flex-wrap:wrap;gap:4px 12px;border:none;padding:0;margin:0;font-size:.82rem}
+.also legend{font-weight:500;padding:0;margin-bottom:3px}
+.also label{display:flex;gap:4px;align-items:center;font-weight:400}
+.dialq{display:grid;gap:6px}
+.dialq h3{font:600 .95rem var(--body);margin:0}
 footer{color:var(--muted);font-size:.8rem}
 footer a{color:var(--accent)}
 @media print{body{background:#fff;color:#000}.wrap>*:not(header):not(#plan),header .bar,header .lede,.noprint,div[role=note]{display:none!important}.plan{border:none;padding:0}.plan pre{max-height:none;overflow:visible;background:none;padding:0;font-size:9.5pt}}
@@ -127,7 +136,7 @@ footer a{color:var(--accent)}
   <header>
     <div class="eyebrow"><a href="/tools">← Commons tools</a> · Agent QC</div>
     <h1>Agent QC Setup</h1>
-    <p class="lede">Laboratories keep a test trustworthy with nine kinds of quality control. This setup maps each one to a clinical AI agent and gives every set point a starting value, so a team that changes nothing still has a defensible plan. Each value is adjusted at validation. Explanations sit underneath each measure, closed until you want them.</p>
+    <p class="lede">Laboratories keep a test trustworthy with nine kinds of quality control. This setup maps each one to an AI agent, clinical or not, and gives every set point a starting value, so a team that changes nothing still has a defensible plan. Each value is adjusted at validation. Explanations sit underneath each measure, closed until you want them.</p>
     <div class="bar noprint">
       <button type="button" class="primary" id="goPlan">See my QC plan</button>
       <button type="button" id="reset">Reset to starting values</button>
@@ -147,9 +156,17 @@ footer a{color:var(--accent)}
     <p class="plainly"><b>What cannot be done cheaply:</b> showing that a failure rate is very low takes reviewer time, however cheap the runs are. Runs cost little for AI; clinical review, lane setting, and labeling are the real costs.</p>
   </section>
 
+  <section class="lanes" id="dials" aria-labelledby="dialsH">
+    <div class="mhead"><span class="lbl">Start here</span><h2 id="dialsH">The agent and its stakes</h2>
+    <p class="qq" style="margin:0;color:var(--muted)">Four questions set how much of the setup applies and its starting values. How much applies follows consequence, closeness and exposure, not the field: a low-stakes agent can still need close monitoring.</p></div>
+    <div class="bar noprint"><span class="lbl">Example</span><button type="button" data-ex="triage">Nurse-line triage agent</button><button type="button" data-ex="note">Discharge-summary drafter</button><button type="button" data-ex="grocery">Grocery-sorting agent</button><span class="start" id="exNote"></span></div>
+    <ul class="points" id="dialList"></ul>
+    <p class="sub" id="dialSummary"></p>
+  </section>
+
   <section class="lanes" id="knob1" aria-labelledby="k1H">
     <div class="mhead"><span class="lbl">Knob 1 · Metrics · <span class="chip here" style="margin:0">Set here</span></span><h2 id="k1H">What does one run produce?</h2>
-    <p class="qq" style="margin:0;color:var(--muted)">The type of output decides which statistics work. Pick the output clinical decisions rest on; set up one type at a time. Each measure below then shows one default metric, with alternatives you can choose instead.</p></div>
+    <p class="qq" style="margin:0;color:var(--muted)">The type of output decides which statistics work. Pick the output decisions rest on; set up one type at a time. Each measure below then shows one default metric, with alternatives you can choose instead.</p></div>
     <div class="types" id="types">
       <label><input type="radio" name="otype" value="binary">Pass / fail<small>Task done or not</small></label>
       <label><input type="radio" name="otype" value="cat">A choice from a set<small>Disposition, category, code</small></label>
@@ -159,7 +176,6 @@ footer a{color:var(--accent)}
       <label><input type="radio" name="otype" value="agent">Actions or tool calls<small>Changes records, orders, files</small></label>
       <label><input type="radio" name="otype" value="image">An image or marked-up image<small>Boxes or outlines on a scan</small></label>
     </div>
-    <div class="bar noprint"><span class="lbl">Example</span><button type="button" data-ex="triage">Nurse-line triage agent</button><button type="button" data-ex="note">Discharge-summary drafter</button><span class="start" id="exNote"></span></div>
   </section>
 
   <div id="measures" style="display:grid;gap:18px"></div>
@@ -168,8 +184,8 @@ footer a{color:var(--accent)}
     <div class="mhead"><span class="lbl">Knob 3 · Lanes · <span class="chip here" style="margin:0">Set here</span></span><h2 id="lanesH">Lanes: what counts as acceptable, per control</h2>
     <p class="qq" style="margin:0;color:var(--muted)">A lane is the range of answers clinicians accept for one control. It is set before any runs, from intended use, not from what the agent happens to do. Lanes feed Allowable error (measure 3) and Escalation (measure 6).</p></div>
     <div class="pt" style="border-top:none;padding-top:0">
-      <div class="ctl"><h3>Answer scale, most urgent first</h3><textarea rows="7" id="scale" aria-label="Answer scale, one per line"></textarea><span class="start" id="scaleNote"></span></div>
-      <div class="desc"><i>Descriptor</i>The ordered answers the agent can give, one per line, most urgent at the top. An answer below the lane is slower than acceptable (undertriage); above it is faster (overtriage). Starting value: six levels modeled on the disposition tiers common in US nurse telephone triage (Schmitt-Thompson style). Best alignment: use the exact levels and lanes of the triage protocol your nurse line already licenses, so the agent is held to the same standard as the nurses.</div>
+      <div class="ctl"><h3>Answer scale</h3><textarea rows="7" id="scale" aria-label="Answer scale, one per line"></textarea><label style="font-size:.84rem;display:flex;gap:6px;align-items:center"><input type="checkbox" id="ordered"> Answers have an order (most urgent first)</label><span class="start" id="scaleNote"></span></div>
+      <div class="desc"><i>Descriptor</i>The answers the agent can give, one per line. If they have an order, such as urgency, tick the box below and put the most urgent at the top. An answer below the lane is slower than acceptable (undertriage); above it is faster (overtriage). Starting value: six levels modeled on the disposition tiers common in US nurse telephone triage (Schmitt-Thompson style). Best alignment: use the exact levels and lanes of the triage protocol your nurse line already licenses, so the agent is held to the same standard as the nurses.</div>
     </div>
     <div class="pt">
       <div class="ctl"><h3>Lanes approved by</h3><textarea rows="2" id="approver" aria-label="Lanes approved by"></textarea><span class="start" id="approverNote"></span></div>
@@ -283,7 +299,9 @@ const COMMON_DRIFT = [["Shadow or canary runs","Run the new version beside the o
 const SUB_NAME="Subgroup performance"; // lives in measure 5, not here
 const listFor=(kind,t)=>((LIB[kind]||{})[t]||[]).filter(e=>e[0]!==SUB_NAME);
 const GRADER={graded:LIB.accuracy.graded[1], text:LIB.accuracy.text[2], image:LIB.accuracy.image[2]};
-const EXQ={triage:{type:"cat",note:"Nurse-line triage agent: each run picks one disposition from a fixed scale."},note:{type:"graded",note:"Discharge-summary drafter: a validated judge grades each summary 1 to 5."}};
+const EXQ={triage:{type:"cat",d:{domain:"clinical",cons:"high",close:"close",exp:"often"},note:"Nurse-line triage agent: high consequence, a range of acceptable answers, a hosted model. Each run picks one disposition from a fixed scale."},
+ note:{type:"graded",d:{domain:"clinical",cons:"high",close:"close",exp:"often"},note:"Discharge-summary drafter: a validated judge grades each summary 1 to 5."},
+ grocery:{type:"cat",d:{domain:"general",cons:"low",close:"exact",exp:"often"},note:"Grocery-sorting agent: low consequence but exact answers, on a hosted model that updates. Light governance, close monitoring."}};
 const otype=()=>S["k1.type"]||"cat";
 function metricHTML(m,kind,label){
   const list=listFor(kind,otype()); if(!list.length) return "";
@@ -474,10 +492,11 @@ const M = [
  {id:"stab", name:"Performance stability", q:"Is it still doing what it was validated to do?", lab:"Control material on a schedule against a validated baseline.", primary:"Pass rate on the control set, against the locked baseline.", status:"here", metrics:[["accuracy","Accuracy"],["precision","Precision (repeat runs)"]],
   points:[
    {id:"range", label:"Validated range", type:"text", start:"The inputs used at validation", desc:"Inputs outside it are flagged for review, not answered. Performance outside this range is unknown, not assumed."},
-   {id:"cset", label:"Control set size", type:"number", start:12, desc:"Sized by decision points: one control near each boundary that matters, plus a few anchors and drift sensors. Roughly 8 to 15 for a triage agent. Each control adds false alarms, so the set stays small.", caveat:v=>v>15?"<b>Large set.</b> Each control adds false alarms and review time. Check that every control sits at a decision point.":""},
+   {id:"sched", label:"Control run schedule", type:"select", options:["Daily, and after any change","Weekly, and after any change","After any change, and monthly"], start:d=>({often:"Daily, and after any change",some:"Weekly, and after any change",rare:"After any change, and monthly"})[d.exp], desc:"Starting value follows exposure: how often something can change underneath the agent. Whatever the schedule, any change to the model, prompt or inputs gets a control run before results count."},
+   {id:"cset", label:"Control set size", type:"number", start:12, desc:"Sized by decision points: one control near each boundary that matters, plus a few anchors and drift sensors. Roughly 8 to 15 for a triage agent; fewer for a narrow, low-stakes one. Each control adds false alarms, so the set stays small.", caveat:v=>v>15?"<b>Large set.</b> Each control adds false alarms and review time. Check that every control sits at a decision point.":""},
    {id:"stop", label:"Stop-using point (% of runs acceptable)", type:"number", start:95, desc:"The pass rate below which the agent is withdrawn from use.", calc:v=>{const a=wilson(19,20),b=wilson(95,100);return `Judged on a sample: 19 of 20 passing is consistent with ${pct(a[0])} to ${pct(a[1])}; 95 of 100 with ${pct(b[0])} to ${pct(b[1])}.`}},
    {id:"base", label:"Baseline runs planned", type:"number", start:20, desc:"Twenty runs is the conventional minimum for provisional limits. It cannot exclude rare failure.", calc:v=>v>0?`Zero failures in ${v} runs bounds the true failure rate at about ${pct(1-zeroFailLower(v),1)} (one-sided 95%). Bounding it at 1% takes about ${runsToExclude(0.01)} runs.`:"", caveat:v=>v<20?"<b>Below 20 runs.</b> Provisional limits will not be stable.":""},
-   {id:"agree", label:"Minimum agreement across repeats (%)", type:"number", start:95, desc:"How often the same input must produce the same output.", calc:()=>{const a=wilson(19,20);return `19 of 20 agreeing is consistent with true agreement as low as ${pct(a[0])}.`}}
+   {id:"agree", label:"Minimum agreement across repeats (%)", type:"number", start:d=>({exact:95,close:90,loose:80})[d.close], desc:"How often the same input must produce the same output. Starting value follows closeness.", calc:()=>{const a=wilson(19,20);return `19 of 20 agreeing is consistent with true agreement as low as ${pct(a[0])}.`}}
   ]},
  {id:"chg", name:"Change detection (shift and drift)", q:"Did something change?", lab:"Westgard rules on control runs; moving averages or CUSUM for slow drift.", primary:"Rule-set alarms on the control charts, one chart per control.", status:"here", metrics:[["drift","Change metric"]], calc:"change",
   points:[
@@ -485,13 +504,14 @@ const M = [
    {id:"rej", label:"Rejection limit", type:"select", options:["3 SD","3.5 SD"], start:"3 SD", desc:"At 3 SD, about 0.27% of control values are falsely rejected (about 1 in 370). The rate rises with more control values per run or more rules together. Narrower limits interrupt service more; wider limits detect true change later."},
    {id:"chart", label:"Charting", type:"fixed", start:"One chart per control, each with its own baseline", desc:"Adding or replacing a control re-baselines that control only; the other charts are unaffected."},
    {id:"block", label:"Block size for pass/fail counts (runs)", type:"number", start:20, desc:"Failures are counted per fixed, non-overlapping block. A sliding window that moves one run at a time alarms far more often than the stated rates."},
-   {id:"drift", label:"Drift sensors", type:"select", options:["Warn only (never reject)"], start:"Warn only (never reject)", desc:"A drift sensor has no correct answer, so a change shows the agent changed, not that the output is wrong. An unacknowledged drift warning still holds the agent."}
+   {id:"drift", label:"Drift sensors", type:"select", options:["Warn only (never reject)","Not used"], start:d=>(d.close==="loose"&&d.exp==="rare")?"Not used":"Warn only (never reject)", desc:"A drift sensor has no correct answer, so a change shows the agent changed, not that the output is wrong. An unacknowledged drift warning still holds the agent."},
+   {id:"gate", label:"Version gate", type:"select", options:["Required before a new model version goes live","Control run after the change, before results count"], start:d=>d.exp==="rare"?"Control run after the change, before results count":"Required before a new model version goes live", desc:"A hosted model can change without notice. The gate runs the new version against the same controls, on a larger sample, before its output is used. Starting value follows exposure."},
   ]},
  {id:"ae", name:"Allowable error", q:"Is the change acceptable?", lab:"Acceptance limits per control level, set at validation.", primary:"Share of runs within their lanes.", status:"here", lanes:1, calc:"sigma",
   points:[
-   {id:"lanes", label:"Acceptance limits", type:"select", options:["Two-sided, asymmetric","Two-sided, symmetric","One-sided"], start:"Two-sided, asymmetric", desc:"Deviation is assessed in both directions, and the two limits need not match. In triage, a disposition slower than its lane (undertriage) is a rejection; faster (overtriage) is a warning. Set each limit by the clinical cost of error in that direction."},
-   {id:"owner", label:"Who sets the lanes", type:"text", start:"Clinical leadership for the service line", desc:"Lanes are a clinical decision, not a technical one. Without a named owner, no one sets them."},
-   {id:"never", label:"Never-events", type:"text", start:"Listed at validation by clinicians", desc:"Errors that reject a run regardless of its overall score, such as a medication change omitted from a discharge summary. One occurrence triggers the response layer."}
+   {id:"lanes", label:"Acceptance limits", type:"select", options:["Two-sided, asymmetric","Two-sided, symmetric","One-sided","A set of acceptable answers"], start:()=>(typeof L!=="undefined"&&L&&L.ordered===false)?"A set of acceptable answers":"Two-sided, asymmetric", desc:"Deviation is assessed in both directions, and the two limits need not match. In triage, a disposition slower than its lane (undertriage) is a rejection; faster (overtriage) is a warning. Set each limit by the clinical cost of error in that direction."},
+   {id:"owner", label:"Who sets the lanes", type:"text", start:d=>d.domain==="clinical"?"Clinical leadership for the service line":"Whoever owns the decision the output feeds", desc:d=>d.domain==="clinical"?"Lanes are a clinical decision, not a technical one. Without a named owner, no one sets them.":"Lanes belong to whoever owns the outcome, not whoever built the agent. Without a named owner, no one sets them."},
+   {id:"never", label:"Never-events", type:"text", start:d=>d.domain==="clinical"?"Listed at validation by clinicians":"Listed at validation by the owner", desc:d=>"Errors that reject a run regardless of its overall score, such as "+(d.domain==="clinical"?"a medication change omitted from a discharge summary":"a refrigerated item placed in a room-temperature aisle")+". One occurrence triggers the response layer."}
   ]},
  {id:"input", name:"Input integrity (pre-analytic)", q:"Did the input change, not the agent?", lab:"Pre-analytic checks; change control on reagent lots and reference intervals.", primary:"Runs whose recorded inputs match the validated configuration.", status:"here",
   points:[
@@ -501,29 +521,29 @@ const M = [
    {id:"attr", label:"Attribution rule", type:"fixed", start:"When a control shifts, check the input fingerprint before the agent", desc:"Inputs changed and agent unchanged: an input change. A change to a reference range or spec is a clinical decision about the lanes; a new data source is revalidation. Monitoring the agent alone blames it for changes it did not make."},
    {id:"live", label:"Live input monitoring", type:"text", start:"Prevalence, missing-field rate, language mix", desc:"Moving averages on a few properties of real traffic. A prevalence shift changes PPV with no change to the agent; it should not read as model drift."}
   ], teach:"In the lab-explainer runs, a reference-range change (Lab A to Lab B) moved all seven borderline results on the first run, with the agent unchanged. The QC caught a change the agent did not make."},
- {id:"sub", name:"Commutability and subgroup performance", q:"Does it behave the same for every patient and voice?", lab:"Commutable control material that behaves like patient samples; results reported by population.", primary:"The primary measure reported per group, with intervals, beside the overall figure.", status:"here",
+ {id:"sub", name:"Commutability and subgroup performance", q:"Does it behave the same for everyone it serves, in every voice?", lab:"Commutable control material that behaves like patient samples; results reported by population.", primary:"The primary measure reported per group, with intervals, beside the overall figure.", status:"here", need:d=>d.cons==="high"?true:"optional",
   points:[
    {id:"comm", label:"Commutability check on control variants", type:"fixed", start:"A reviewer confirms each variant keeps the same underlying case before it is used", desc:"Variants include another language, a minimizing tone, misspellings, a brand name. A variant that changes the case tests something else; the result will look like an agent error when it is a control error."},
-   {id:"groups", label:"Groups to report", type:"text", start:"Groups the organization records reliably (e.g., age band, sex, race and ethnicity, preferred language, payer)", desc:"Groups recorded inconsistently cannot be monitored reliably; record how each is captured."},
+   {id:"groups", label:"Groups to report", type:"text", start:d=>d.domain==="clinical"?"Groups the organization records reliably (e.g., age band, sex, race and ethnicity, preferred language, payer)":"Groups of people the output affects, if any, that are recorded reliably (e.g., language, region, account type)", desc:"Groups recorded inconsistently cannot be monitored reliably; record how each is captured."},
    {id:"min", label:"Minimum group size for a reported rate", type:"number", start:30, desc:"Below it, the report says “insufficient data,” not a rate. Intervals are always shown.", calc:v=>{if(!(v>0))return "";const x=Math.round(v*0.9),w=wilson(x,v);return `At this size, ${x} of ${v} correct (${pct(x/v)}) is consistent with ${pct(w[0])} to ${pct(w[1])}.`}, caveat:v=>v<30?"<b>Small groups.</b> Apparent differences at this size are mostly noise, and real ones can hide.":""},
    {id:"gap", label:"Size that matters: group error rate, as a multiple of the overall error rate", type:"number", start:1.5, desc:"Set at validation; a governance decision, not a statistical one. A ratio rather than percentage points, because errors are rare: a group missed at 4% when the overall miss rate is 2% is only 2 points apart, but missed twice as often.", calc:v=>{if(!(v>1))return "";const x=7,n=200,o=0.02,r=(x/n)/o,w=wilson(x,n),meets=r>=v,clears=w[0]>o;return `Example: overall miss rate 2%. A group with ${x} misses in ${n} (${pct(x/n,1)}, ${r.toFixed(2)} times overall) ${meets?"meets":"does not meet"} the ratio. Its interval is ${pct(w[0],1)} to ${pct(w[1],1)}, which ${clears?"clears":"still includes"} 2%, so it is ${meets&&clears?"confirmed for review":meets?"watched, not yet confirmed":"not flagged"}.`}, caveat:v=>v<=1?"<b>A ratio of 1 or less</b> flags every group with any excess. Use a ratio above 1.":""},
    {id:"evid", label:"Evidence that the gap is real", type:"fixed", start:"The lower bound of the group's 95% interval is above the overall error rate, and the flag holds on the next review window", desc:"A gap that meets the ratio but not the interval is watched, not acted on. Confirming on the next window guards against the chance flags that come from comparing many groups at once."},
-   {id:"voice", label:"Voice and language controls", type:"text", start:"At least one variant per voice the population uses", desc:"Each checked for commutability. This is how differences by voice are caught before patients meet them."},
+   {id:"voice", label:"Voice and language controls", type:"text", start:"At least one variant per voice the population uses", desc:"Each checked for commutability. This is how differences by voice are caught before the people the output affects meet them."},
    {id:"cad", label:"Review cadence", type:"select", options:["Quarterly","Monthly","At each periodic review"], start:"Quarterly", desc:"Also run whenever an overall threshold is crossed."}
   ], teach:"In the grocery runs, the brand-name variant “Del Monte cut fruit cup” went to Pantry 17 of 20 times. Del Monte sells shelf-stable fruit cups: the brand name changed the product, not just the wording. A control error, not an agent error."},
- {id:"esc", name:"Escalation (read-back)", q:"Does it ask when it should?", lab:"Critical-value read-back: a result is not complete until it is communicated and confirmed.", primary:"On controls that require a behavior, the share of runs in which it occurred.", status:"here", lanes:1,
+ {id:"esc", name:"Escalation (read-back)", q:"Does it ask when it should?", lab:"Critical-value read-back: a result is not complete until it is communicated and confirmed.", primary:"On controls that require a behavior, the share of runs in which it occurred.", status:"here", lanes:1, need:d=>d.cons==="low"?"optional":true,
   points:[
-   {id:"req", label:"Required behaviors, per control", type:"text", start:"Set by clinicians at validation, alongside the lanes (e.g., postpartum message with low mood: must ask the safety question)", desc:"A required behavior is part of the acceptance criteria, not a quality bonus. A correct disposition without it is still nonconforming."},
+   {id:"req", label:"Required behaviors, per control", type:"text", start:d=>d.domain==="clinical"?"Set by clinicians at validation, alongside the lanes (e.g., postpartum message with low mood: must ask the safety question)":"Set by the owner at validation, alongside the lanes (e.g., an ambiguous item: must ask which one rather than guess)", desc:"A required behavior is part of the acceptance criteria, not a quality bonus. A correct disposition without it is still nonconforming."},
    {id:"cons", label:"Consequence when absent", type:"select", options:["Rejection (safety behaviors)","Warning (lower-stakes behaviors)"], start:"Rejection (safety behaviors)", desc:"One missed safety question on a control holds the agent, matching never-event handling. A warning fits lower-stakes behaviors, such as confirming a callback number."},
    {id:"runs", label:"Runs per required-behavior control", type:"number", start:20, desc:"Default required rate for safety behaviors: every run.", calc:v=>v>0?`${v} of ${v} runs asking gives a one-sided 95% lower bound of about ${pct(zeroFailLower(v))} on the true rate.`:"", caveat:v=>v<60?"<b>Small sample.</b> A perfect record here still allows occasional misses; about 60 perfect runs are needed before the 95% lower bound reaches 95%.":""},
-   {id:"over", label:"Unnecessary asking: upper limit", type:"text", start:"Set at validation", desc:"Asking has a cost (delay, patient burden, inbox volume). This is the overtriage counterpart: a warning, not a rejection."},
-   {id:"ceil", label:"Provisional handling while waiting", type:"text", start:"Most serious plausible answer, capped at a ceiling set at validation (e.g., no higher than a 1-hour nurse callback unless a red flag is named)", desc:"Without a ceiling, “worst plausible answer” sends unknowns to 911."}
+   {id:"over", label:"Unnecessary asking: upper limit", type:"text", start:"Set at validation", desc:"Asking has a cost (delay, burden on the person asked, inbox volume). This is the overtriage counterpart: a warning, not a rejection."},
+   {id:"ceil", label:"Provisional handling while waiting", type:"text", start:d=>d.domain==="clinical"?"Most serious plausible answer, capped at a ceiling set at validation (e.g., no higher than a 1-hour nurse callback unless a red flag is named)":"The safer plausible answer, capped at a ceiling set at validation", desc:d=>d.domain==="clinical"?"Without a ceiling, “worst plausible answer” sends unknowns to 911.":"Without a ceiling, “safest answer” can mean refusing or escalating everything."}
   ], teach:"In the triage runs, a stability score rewarded the design that never asked: it was more consistent and stayed in its lanes, and it never asked the postpartum safety question. Stability is not safety."},
- {id:"grader", name:"Grader reliability", q:"Is the grader trustworthy?", lab:"Method comparison; two-person checks.", primary:"Agreement between the grader and clinician review on a shared sample.", status:"here", grader:1,
+ {id:"grader", name:"Grader reliability", q:"Is the grader trustworthy?", lab:"Method comparison; two-person checks.", primary:"Agreement between the grader and expert review on a shared sample.", status:"here", grader:1,
   points:[
-   {id:"g2", label:"Second review", type:"text", start:"A clinician re-grades a sample of graded runs", desc:"A grade is only as reliable as the grader. Precision can be measured now; whether an LLM grader is biased has not been checked."}
+   {id:"g2", label:"Second review", type:"text", start:d=>d.domain==="clinical"?"A clinician re-grades a sample of graded runs":"A subject expert re-grades a sample of graded runs", desc:"A grade is only as reliable as the grader. Precision can be measured now; whether an LLM grader is biased has not been checked."}
   ]},
- {id:"eqa", name:"External quality assessment", q:"How does it compare with others running the same thing?", lab:"Proficiency testing by peer group.", primary:"None yet.", status:"stub",
+ {id:"eqa", name:"External quality assessment", q:"How does it compare with others running the same thing?", lab:"Proficiency testing by peer group.", primary:"None yet.", status:"stub", need:d=>d.cons==="high"?true:"optional",
   points:[
    {id:"status", label:"Status", type:"fixed", start:"Peer groups for AI agents do not exist yet", desc:"There is nothing to configure. The setup says so rather than leaving this measure out. A peer group will need the same agent and model version, the same intended use, a shared challenge set, and agreed scoring."},
    {id:"reg", label:"Participation", type:"select", options:["Intends to take part","Not now"], start:"Intends to take part", desc:"Records intent only. The Commons Peer Challenge Registry is browse-only while registration is paused, and no standard registry exists yet."},
@@ -532,71 +552,107 @@ const M = [
  {id:"ca", name:"Corrective action and lookback", q:"What happens when it fails?", lab:"Hold, find the cause, look back to the last good QC, named release.", primary:"Time from rejection to documented release or withdrawal.", status:"here",
   points:[
    {id:"auto", label:"Auto-release criteria", type:"fixed", start:"No rejection rule fired, no warning past its deadline, model version unchanged, no locked parameter changed", desc:"Auto-release is a privilege of a stable, unchanged system; any change revokes it until the next acceptable run. Acknowledged warnings do not block it."},
-   {id:"first", label:"Automatic first response to a rejection", type:"select", options:["Hold and route to the human queue","Rerun once (random error suspected)","Fail over to a backup with its own QC","Switch to the contingency procedure"], start:"Hold and route to the human queue", desc:"A single rerun can resolve random error; repeated reruns until one passes conceal real error, so only one is allowed."},
-   {id:"ack", label:"Warning acknowledgment deadline", type:"select", options:["1 business day","Same shift","4 hours"], start:"1 business day", desc:"A warning not acknowledged by the deadline holds the agent like a rejection. The deadline is what gives a warning consequence."},
-   {id:"queue", label:"Human queue: owner and response time", type:"text", start:"Named role; the response time staff already meet for the same work (same shift if none is defined)", desc:"While held, the agent's work goes to this queue, so the response time is how long patients wait for a human. If the owner does not respond in time, the item goes to a named backup role, then to the independent authority."},
-   {id:"rel", label:"Release authority", type:"fixed", start:"Operator after a first-line fix; independent authority after failover, unknown cause, a failed rerun, or a locked-parameter change", desc:"The person who loosened a limit does not also release under it."},
-   {id:"look", label:"Lookback scope", type:"text", start:"Outputs capable of harm since the last acceptable QC run, higher-harm direction first (in triage, undertriage)", desc:"Targeted, not a review of everything. The scope is set before the failure, not during it."},
-   {id:"corr", label:"Corrected outputs and notification", type:"text", start:"Clinician, patient, and chart correction, as intended use requires", desc:"Fixing the agent does not fix outputs already acted on."},
-   {id:"cont", label:"Contingency reminders", type:"select", options:["24 h, 72 h, 7 days","12 h, 24 h, 72 h"], start:"24 h, 72 h, 7 days", desc:"Contingency is meant to be visible and uncomfortable, so it does not become the permanent workflow."},
-   {id:"tiers", label:"Change tiers", type:"fixed", start:"Re-baseline (operator) · Verification: control set plus a real-task sample (independent authority) · Revalidation: the claim changed (independent authority and clinical leadership)", desc:"Routine changes stay cheap and full revalidation stays rare."},
+   {id:"first", label:"Automatic first response to a rejection", type:"select", options:["Hold and route to the human queue","Rerun once (random error suspected)","Fail over to a backup with its own QC","Switch to the contingency procedure","Warn and log; hold only on a never-event"], start:d=>d.cons==="low"?"Warn and log; hold only on a never-event":"Hold and route to the human queue", desc:"A single rerun can resolve random error; repeated reruns until one passes conceal real error, so only one is allowed."},
+   {id:"ack", label:"Warning acknowledgment deadline", type:"select", options:["1 business day","Same shift","4 hours","By the next periodic review"], start:d=>d.cons==="low"?"By the next periodic review":"1 business day", desc:"A warning not acknowledged by the deadline holds the agent like a rejection. The deadline is what gives a warning consequence."},
+   {id:"queue", label:"Human queue: owner and response time", type:"text", need:d=>d.cons!=="low", start:"Named role; the response time staff already meet for the same work (same shift if none is defined)", desc:"While held, the agent's work goes to this queue, so the response time is how long patients wait for a human. If the owner does not respond in time, the item goes to a named backup role, then to the independent authority."},
+   {id:"rel", label:"Release authority", type:"fixed", start:d=>({high:"Operator after a first-line fix; independent authority after failover, unknown cause, a failed rerun, or a locked-parameter change",mod:"Operator after a fix; the owner reviews unknown causes and failed reruns",low:"The owner, after a fix; record what changed"})[d.cons], desc:"The person who loosened a limit does not also release under it."},
+   {id:"look", label:"Lookback scope", type:"text", need:d=>d.cons!=="low", start:d=>d.domain==="clinical"?"Outputs capable of harm since the last acceptable QC run, higher-harm direction first (in triage, undertriage)":"Outputs since the last acceptable QC run that could cause harm or cost, worst first", desc:"Targeted, not a review of everything. The scope is set before the failure, not during it."},
+   {id:"corr", label:"Corrected outputs and notification", type:"text", need:d=>d.cons!=="low", start:d=>d.domain==="clinical"?"Clinician, patient, and chart correction, as intended use requires":"Whoever acted on the output, and the record it changed", desc:"Fixing the agent does not fix outputs already acted on."},
+   {id:"cont", label:"Contingency reminders", type:"select", need:d=>d.cons==="high", options:["24 h, 72 h, 7 days","12 h, 24 h, 72 h"], start:"24 h, 72 h, 7 days", desc:"Contingency is meant to be visible and uncomfortable, so it does not become the permanent workflow."},
+   {id:"tiers", label:"Change tiers", type:"fixed", start:d=>({high:"Re-baseline (operator) · Verification: control set plus a real-task sample (independent authority) · Revalidation: the claim changed (independent authority and "+(d.domain==="clinical"?"clinical leadership":"the owner")+")",mod:"Re-baseline (operator) · Verification: control set plus a real-task sample (operator; the owner signs model changes) · Revalidation when the use changes (the owner)",low:"Re-baseline and verification by the owner · Revalidation when the use changes"})[d.cons], desc:"Routine changes stay cheap and full revalidation stays rare."},
    {id:"capa", label:"When QC misses a failure", type:"fixed", start:"QC design review, not an automatic new control", desc:"Were the controls at the right decision points? Were the rules strong enough for the method's sigma? The usual fix is to move or replace a control, not add one."},
-   {id:"rev", label:"Periodic review", type:"select", options:["Monthly","Weekly","Quarterly"], start:"Monthly", desc:"Trends, open warnings, time on contingency, lookback outcomes."},
-   {id:"out", label:"Outward reporting", type:"select", options:["Vendor and safety event reporting","Vendor, safety event reporting, and the Commons registry when registration reopens"], start:"Vendor and safety event reporting", desc:"Confirmed failures leave the building. The Commons registry is browse-only while registration is paused."}
+   {id:"rev", label:"Periodic review", type:"select", options:["Monthly","Weekly","Quarterly"], start:d=>d.cons==="low"?"Quarterly":"Monthly", desc:"Trends, open warnings, time on contingency, lookback outcomes."},
+   {id:"out", label:"Outward reporting", type:"select", need:d=>d.cons!=="low", options:d=>d.domain==="clinical"?["Vendor and safety event reporting","Vendor, safety event reporting, and the Commons registry when registration reopens"]:["Vendor and the organization's incident process","Vendor, incident process, and the Commons registry when registration reopens"], start:d=>d.domain==="clinical"?"Vendor and safety event reporting":"Vendor and the organization's incident process", desc:"Confirmed failures leave the building. The Commons registry is browse-only while registration is paused."}
   ]}
 ];
-const CHIP={here:["here","Set here"],picker:["picker","Calculated in the Metric Picker"],stub:["stub","Not configurable yet"]};
+const CHIP={opt:["opt","Optional at this level"],here:["here","Set here"],picker:["picker","Calculated in the Metric Picker"],stub:["stub","Not configurable yet"]};
 
 // ---------- state ----------
 const KEY="qcSetup.v1"; let S={};
 try{S=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){S={}}
-const val=(m,p)=>{const k=m.id+"."+p.id;return k in S?S[k]:p.start;};
+const D=()=>({domain:S["d.domain"]||"clinical",cons:S["d.cons"]||"high",close:S["d.close"]||"close",exp:S["d.exp"]||"often"});
+const fn=(x)=>typeof x==="function"?x(D()):x;
+const st=p=>fn(p.start), dsc=p=>fn(p.desc), opts=p=>fn(p.options);
+const needM=m=>m.need?fn(m.need):true, needP=p=>p.need?fn(p.need):true;
+const val=(m,p)=>{const k=m.id+"."+p.id;return k in S?S[k]:st(p);};
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));document.getElementById("saved").textContent="Saved in this browser";}catch(e){document.getElementById("saved").textContent="";}}
 
 // ---------- render ----------
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function control(m,p){
   const k=m.id+"."+p.id, v=val(m,p);
-  if(p.type==="fixed") return `<div class="fixed">${esc(p.start)}</div>`;
-  if(p.type==="select") return `<select data-k="${k}" aria-label="${esc(p.label)}">${p.options.map(o=>`<option${o===v?" selected":""}>${esc(o)}</option>`).join("")}</select>`;
+  if(p.type==="fixed") return `<div class="fixed">${esc(st(p))}</div>`;
+  if(p.type==="select") return `<select data-k="${k}" aria-label="${esc(p.label)}">${opts(p).map(o=>`<option${o===v?" selected":""}>${esc(o)}</option>`).join("")}</select>`;
   if(p.type==="number") return `<input type="number" min="1" data-k="${k}" value="${esc(v)}" aria-label="${esc(p.label)}">`;
   return `<textarea rows="2" data-k="${k}" aria-label="${esc(p.label)}">${esc(v)}</textarea>`;
 }
 function live(m,p){
   const v=p.type==="number"?Number(val(m,p)):val(m,p);
   const c=p.calc?p.calc(v):"", w=p.caveat?p.caveat(v):"";
-  const changed=p.type!=="fixed"&&String(val(m,p))!==String(p.start);
-  return `${p.type!=="fixed"?`<span class="start${changed?" changed":""}">${changed?"Changed from starting value: "+esc(p.start):"Starting value"}</span>`:""}${c?`<span class="calc">${c}</span>`:""}${w?`<div class="caveat">${w}</div>`:""}`;
+  const changed=p.type!=="fixed"&&String(val(m,p))!==String(st(p));
+  return `${p.type!=="fixed"?`<span class="start${changed?" changed":""}">${changed?"Changed from starting value: "+esc(st(p)):"Starting value"}</span>`:""}${c?`<span class="calc">${c}</span>`:""}${w?`<div class="caveat">${w}</div>`:""}`;
 }
-function render(){
-  document.getElementById("map").innerHTML=M.map((m,i)=>`<a class="tile" href="#m-${m.id}"><span class="n">${i+1} / 9</span><span class="t">${m.name}</span><span class="qq">${m.q}</span><span class="chip ${CHIP[m.status][0]}">${CHIP[m.status][1]}</span></a>`).join("");
-  document.getElementById("measures").innerHTML=M.map((m,i)=>`
-   <section class="measure" id="m-${m.id}" aria-labelledby="h-${m.id}">
-    <div class="mhead"><span class="lbl">Measure ${i+1} of 9 · <span class="chip ${CHIP[m.status][0]}" style="margin:0">${CHIP[m.status][1]}</span></span><h2 id="h-${m.id}">${m.name}</h2><p class="qq">${m.q}</p></div>
+function measureBody(m,i,chipKey){
+  const pts=m.points.filter(p=>!(m.grader&&p.id==="g2")), shown=pts.filter(needP), hidden=pts.length-shown.length;
+  return `<div class="mhead"><span class="lbl">Measure ${i+1} of 9 · <span class="chip ${CHIP[chipKey][0]}" style="margin:0">${CHIP[chipKey][1]}</span></span><h2 id="h-${m.id}">${m.name}</h2><p class="qq">${m.q}</p></div>
     <div class="meta"><div><b>Primary metric</b>${m.primary}</div><div><b>Lab equivalent</b>${m.lab}</div></div>
 ${m.lanes?`<p class="pickerlink">Lanes and required behaviors are set per control in Knob 3. <a href="#lanes">Go to lanes →</a></p>`:""}
-    <ul class="points">${(m.metrics||[]).map(x=>metricHTML(m,x[0],x[1])).join("")}${m.grader?graderHTML():""}${m.points.filter(p=>!(m.grader&&p.id==="g2")).map(p=>`<li class="pt"><div class="ctl"><h3>${p.label}</h3>${control(m,p)}<div id="lv-${m.id}-${p.id}" style="display:grid;gap:4px">${live(m,p)}</div></div><div class="desc"><i>Descriptor</i>${p.desc}</div></li>`).join("")}</ul>
-    <div data-calcslot="${m.calc||""}"></div>${m.teach?`<details class="teach"><summary>Worked example and common mistake</summary><p>${m.teach}</p></details>`:""}
-   </section>`).join("");
-  syncType(); mountCalcs();
+    <ul class="points">${(m.metrics||[]).map(x=>metricHTML(m,x[0],x[1])).join("")}${m.grader?graderHTML():""}${shown.map(p=>`<li class="pt"><div class="ctl"><h3>${p.label}</h3>${control(m,p)}<div id="lv-${m.id}-${p.id}" style="display:grid;gap:4px">${live(m,p)}</div></div><div class="desc"><i>Descriptor</i>${dsc(p)}</div></li>`).join("")}</ul>
+    ${hidden?`<p class="sub">${hidden} set point${hidden===1?" is":"s are"} not needed at this consequence level.</p>`:""}
+    <div data-calcslot="${m.calc||""}"></div>${m.teach?`<details class="teach"><summary>Worked example and common mistake</summary><p>${m.teach}</p></details>`:""}`;
+}
+function render(){
+  const chipOf=m=>needM(m)===true?m.status:"opt";
+  document.getElementById("map").innerHTML=M.map((m,i)=>`<a class="tile" href="#m-${m.id}"><span class="n">${i+1} / 9</span><span class="t">${m.name}</span><span class="qq">${m.q}</span><span class="chip ${CHIP[chipOf(m)][0]}">${CHIP[chipOf(m)][1]}</span></a>`).join("");
+  document.getElementById("measures").innerHTML=M.map((m,i)=>needM(m)===true
+    ?`<section class="measure" id="m-${m.id}" aria-labelledby="h-${m.id}">${measureBody(m,i,m.status)}</section>`
+    :`<section class="measure optional" id="m-${m.id}"><details><summary>Measure ${i+1}: ${m.name} · optional at this consequence level</summary>${measureBody(m,i,"opt")}</details></section>`).join("");
+  renderDials(); syncType(); mountCalcs();
   renderPlan();
 }
 function renderPlan(){
   const lines=["AGENT QC PLAN","Generated "+new Date().toLocaleDateString("en-CA")+" with the Commons Agent QC Setup (working prototype). Values marked * are starting values to confirm at validation.",""];
   lines.push(knob1Plan());
-  M.forEach((m,i)=>{lines.push(`${i+1}. ${m.name.toUpperCase()}`,`   Primary metric: ${m.primary}`);
-    m.points.forEach(p=>{const v=val(m,p),st=p.type!=="fixed"&&String(v)===String(p.start);lines.push(`   - ${p.label}: ${v}${st?" *":""}`);});
+  lines.push(dialsPlan());
+  const skipped=[];
+  M.forEach((m,i)=>{if(needM(m)!==true){skipped.push(m.name);return;}
+    lines.push(`${i+1}. ${m.name.toUpperCase()}`,`   Primary metric: ${m.primary}`);
+    m.points.filter(needP).forEach(p=>{const v=val(m,p),sv=p.type!=="fixed"&&String(v)===String(st(p));lines.push(`   - ${p.label}: ${v}${sv?" *":""}`);});
     lines.push("");});
+  if(skipped.length) lines.push("OPTIONAL AT THIS CONSEQUENCE LEVEL, NOT SET: "+skipped.join("; "),"");
   lines.push(lanesPlan());
   document.getElementById("planText").textContent=lines.join("\n");
 }
 document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.k;if(!k)return;
   const [mid,pid]=k.split("."),m=M.find(x=>x.id===mid),p=m.points.find(x=>x.id===pid);
-  S[k]=p.type==="number"?(e.target.value===""?p.start:Number(e.target.value)):e.target.value; save();
+  S[k]=p.type==="number"?(e.target.value===""?st(p):Number(e.target.value)):e.target.value; save();
   document.getElementById(`lv-${mid}-${pid}`).innerHTML=live(m,p); renderPlan();});
-document.getElementById("reset").onclick=()=>{S={};L={scale:SCALE0.slice(),approver:APPROVER0,ctrls:JSON.parse(JSON.stringify(CTRLS0))};try{localStorage.removeItem(KEY);localStorage.removeItem("qcSetup.lanes.v2")}catch(e){}renderLanes();document.getElementById("saved").textContent="";render();};
+document.getElementById("reset").onclick=()=>{S={};L=LANE_DEF.clinical();try{localStorage.removeItem(KEY);localStorage.removeItem("qcSetup.lanes.v3")}catch(e){}renderLanes();document.getElementById("saved").textContent="";render();};
 document.getElementById("goPlan").onclick=()=>document.getElementById("plan").scrollIntoView({behavior:"smooth"});
 document.getElementById("copy").onclick=async()=>{try{await navigator.clipboard.writeText(document.getElementById("planText").textContent);document.getElementById("copied").textContent="Copied";}catch(e){document.getElementById("copied").textContent="Select the text and copy";}};
+
+
+// ---------- the branch point: domain and three dials ----------
+const DIALS=[
+ {k:"domain",q:"What kind of work does it do?",opts:[["clinical","Clinical","Patient care or clinical operations"],["general","General","Anything else"]],desc:"Changes the words, examples and who signs. It does not change how much of the setup applies."},
+ {k:"cons",q:"If an output is wrong and nobody catches it, what happens?",opts:[["high","Harm","Someone could be harmed, or money or legal standing lost"],["mod","Cost","Time or rework, and it gets caught downstream"],["low","Little","Easy to notice and undo"]],desc:"Sets the governance: which measures apply, who signs, how far back to look, how hard the response is. If a person checks every output before it is used, one level lower is usually right."},
+ {k:"close",q:"How exact does the output need to be?",opts:[["exact","Exact","One right answer; small changes matter"],["close","Close","A range of answers is acceptable"],["loose","Loose","Any reasonable answer is fine"]],desc:"Sets the monitoring: agreement required across repeat runs, whether drift sensors run, lane width. Judge it against how much the agent varies; for numbers, the sigma calculator does this exactly."},
+ {k:"exp",q:"How often can something change underneath it?",opts:[["often","Often","A hosted model that can update, or inputs that change"],["some","Sometimes","Planned, regular changes"],["rare","Rarely","A pinned model and fixed inputs"]],desc:"Sets how often controls run and whether a version gate is required."}
+];
+function renderDials(){
+  const d=D();
+  document.getElementById("dialList").innerHTML=DIALS.map(x=>`<li class="pt"><div class="dialq"><h3>${x.q}</h3><div class="types">${x.opts.map(o=>`<label><input type="radio" name="d_${x.k}" value="${o[0]}"${d[x.k]===o[0]?" checked":""}>${o[1]}<small>${o[2]}</small></label>`).join("")}</div></div><div class="desc"><i>Descriptor</i>${x.desc}</div></li>`).join("");
+  const opt=M.filter(m=>needM(m)!==true).map(m=>m.name);
+  document.getElementById("dialSummary").textContent=`At these settings, ${9-opt.length} of the nine measures apply.`+(opt.length?` Optional, shown closed: ${opt.join("; ")}.`:"");
+}
+function dialsPlan(){
+  const d=D(), lab=k=>{const x=DIALS.find(y=>y.k===k);return x.opts.find(o=>o[0]===d[k])[1];};
+  return ["STAKES",`   Kind of work: ${lab("domain")}. Consequence: ${lab("cons")}. Closeness: ${lab("close")}. Exposure to change: ${lab("exp")}.`,""].join("\n");
+}
+document.addEventListener("change",e=>{const n=e.target.name||"";if(!n.startsWith("d_"))return;
+  const k=n.slice(2); S["d."+k]=e.target.value; save();
+  if(k==="domain" && lanesUntouched()) loadLanes(e.target.value);
+  document.getElementById("exNote").textContent=""; render();});
 
 // ---------- knob 3: lanes ----------
 const SCALE0=["Call 911 now","Go to ED now","Urgent care or office today","See within 24 hours","See within 3 days","Home care advice"];
@@ -608,69 +664,105 @@ const CTRLS0=[
  {ex:1,case:"Healthy adult, fever 101°F for one day, drinking fluids",exp:"See within 24 hours",hi:"Urgent care or office today",lo:"See within 3 days",slow:"Reject",fast:"Warn",beh:"",behC:"None",src:"No public anchor: align to your nurse line's own protocol."},
  {ex:1,case:"Asks for a refill of a long-standing blood pressure medicine",exp:"See within 3 days",hi:"See within 24 hours",lo:"Home care advice",slow:"Reject",fast:"Warn",beh:"Confirm the callback number",behC:"Warn",src:"No public anchor: align to your nurse line's own protocol."}
 ];
+const GSCALE0=["Produce","Dairy and refrigerated","Frozen","Bakery","Pantry","Snacks","Beverages","Free-From","Household"];
+const GAPPROVER0="Whoever owns the decision the output feeds";
+const GCTRLS0=[
+ {ex:1,case:"Del Monte cut fruit cup",exp:"Pantry",also:["Snacks"],out:"Reject",beh:"",behC:"None",src:"From the grocery practice runs: these are shelf-stable, so the brand name changes the product."},
+ {ex:1,case:"Oat milk, refrigerated carton",exp:"Dairy and refrigerated",also:[],out:"Reject",beh:"",behC:"None",src:"A refrigerated item in a room-temperature aisle is a never-event."},
+ {ex:1,case:"Peanut butter",exp:"Pantry",also:[],out:"Reject",beh:"",behC:"None",src:"Peanut butter in the Free-From aisle is a never-event."},
+ {ex:1,case:"\u201cMilk,\u201d with no kind given",exp:"Dairy and refrigerated",also:["Pantry"],out:"Warn",beh:"Ask which kind",behC:"Warn",src:"Ambiguous on purpose: shows a required behavior outside clinical work."}
+];
+const LANE_DEF={clinical:()=>({ordered:true,scale:SCALE0.slice(),approver:APPROVER0,ctrls:JSON.parse(JSON.stringify(CTRLS0))}),general:()=>({ordered:false,scale:GSCALE0.slice(),approver:GAPPROVER0,ctrls:JSON.parse(JSON.stringify(GCTRLS0))})};
 let L;
-try{L=JSON.parse(localStorage.getItem("qcSetup.lanes.v2")||"null")}catch(e){L=null}
-if(!L) L={scale:SCALE0.slice(),approver:APPROVER0,ctrls:JSON.parse(JSON.stringify(CTRLS0))};
-function saveL(){try{localStorage.setItem("qcSetup.lanes.v2",JSON.stringify(L));document.getElementById("saved").textContent="Saved in this browser";}catch(e){}}
+try{L=JSON.parse(localStorage.getItem("qcSetup.lanes.v3")||"null")}catch(e){L=null}
+if(!L) L=LANE_DEF.clinical();
+if(L.ordered===undefined) L.ordered=true;
+const defScale=()=>(L.ordered?SCALE0:GSCALE0), defApprover=()=>(L.ordered?APPROVER0:GAPPROVER0);
+function lanesUntouched(){const sc=L.scale.join("\n");return L.ctrls.length>0&&L.ctrls.every(c=>c.ex)&&(sc===SCALE0.join("\n")||sc===GSCALE0.join("\n"))&&(L.approver===APPROVER0||L.approver===GAPPROVER0);}
+function loadLanes(domain){L=LANE_DEF[domain==="general"?"general":"clinical"]();saveL();renderLanes();}
+function saveL(){try{localStorage.setItem("qcSetup.lanes.v3",JSON.stringify(L));document.getElementById("saved").textContent="Saved in this browser";}catch(e){}}
 const ix=a=>L.scale.indexOf(a);
 function fit(c){ // keep each control's answers on the current scale
   const first=L.scale[0]||"";
+  if(!L.ordered){ if(ix(c.exp)<0)c.exp=first; c.also=(c.also||[]).filter(a=>ix(a)>=0&&a!==c.exp); if(!c.out)c.out="Reject"; return; }
+  if(!c.hi)c.hi=c.exp; if(!c.lo)c.lo=c.exp; if(!c.slow)c.slow="Reject"; if(!c.fast)c.fast="Warn";
   ["exp","hi","lo"].forEach(k=>{if(ix(c[k])<0)c[k]=first;});
   if(ix(c.hi)>ix(c.lo)){const t=c.hi;c.hi=c.lo;c.lo=t;}
   if(ix(c.exp)<ix(c.hi))c.hi=c.exp; if(ix(c.exp)>ix(c.lo))c.lo=c.exp;
 }
 const opt=(v,list)=>list.map(o=>`<option${o===v?" selected":""}>${esc(o)}</option>`).join("");
 function ctrlWarn(c){
-  const out=[], w=ix(c.lo)-ix(c.hi)+1;
-  if(w===1 && ix(c.exp)>0) out.push("<b>Single-answer lane.</b> Reasonable clinical variation will read as agent error. Confirm the clinicians would not accept a neighboring answer.");
-  if(c.slow!=="Reject" && ix(c.lo)<L.scale.length-1) out.push("<b>Undertriage only "+(c.slow==="Warn"?"warns":"passes")+".</b> A slower-than-acceptable answer will not hold the agent. Confirm this is a deliberate clinical decision.");
-  if(c.fast==="Reject") out.push("<b>Overtriage rejects.</b> Faster answers will hold the agent; expect more interruptions to service.");
+  const out=[];
+  if(!L.ordered){
+    if(c.out!=="Reject") out.push("<b>Other answers only "+(c.out==="Warn"?"warn":"pass")+".</b> An answer outside the acceptable set will not hold the agent. Confirm this is deliberate.");
+    if(c.beh.trim() && c.behC==="None") out.push("<b>Required behavior with no consequence.</b> If it is required, its absence should at least warn.");
+    return out.map(x=>`<div class="caveat">${x}</div>`).join("");
+  }
+  const w=ix(c.lo)-ix(c.hi)+1;
+  if(w===1 && ix(c.exp)>0) out.push("<b>Single-answer lane.</b> Reasonable variation will read as agent error. Confirm whoever set the lane would not accept a neighboring answer.");
+  if(c.slow!=="Reject" && ix(c.lo)<L.scale.length-1) out.push("<b>Too slow only "+(c.slow==="Warn"?"warns":"passes")+".</b> A slower-than-acceptable answer will not hold the agent. Confirm this is a deliberate decision.");
+  if(c.fast==="Reject") out.push("<b>Too fast rejects.</b> Faster answers will hold the agent; expect more interruptions to service.");
   if(c.beh.trim() && c.behC==="None") out.push("<b>Required behavior with no consequence.</b> If it is required, its absence should at least warn.");
   return out.map(x=>`<div class="caveat">${x}</div>`).join("");
 }
 function ladder(c){
+  const k2=v=>v==="Reject"?"rej":v==="Warn"?"wrn":"acc";
+  if(!L.ordered) return `<div class="ladder" aria-hidden="true">${L.scale.map(a=>`<span class="${a===c.exp?"in exp":(c.also||[]).includes(a)?"in":k2(c.out)}">${esc(a)}</span>`).join("")}</div>`;
   return `<div class="ladder" aria-hidden="true">${L.scale.map((a,i)=>{const k2=v=>v==="Reject"?"rej":v==="Warn"?"wrn":"acc";const cls=i===ix(c.exp)?"in exp":(i>=ix(c.hi)&&i<=ix(c.lo))?"in":k2(i<ix(c.hi)?c.fast:c.slow);return `<span class="${cls}">${esc(a)}</span>`}).join("")}</div>`;
 }
 function renderLanes(){
   document.getElementById("scale").value=L.scale.join("\n");
   document.getElementById("approver").value=L.approver;
-  const sc=L.scale.join("\n")!==SCALE0.join("\n"); document.getElementById("scaleNote").textContent=sc?"Changed from starting value":"Starting value (example scale)"; document.getElementById("scaleNote").className="start"+(sc?" changed":"");
-  const ap=L.approver!==APPROVER0; document.getElementById("approverNote").textContent=ap?"Changed from starting value":"Starting value"; document.getElementById("approverNote").className="start"+(ap?" changed":"");
+  document.getElementById("ordered").checked=!!L.ordered;
+  const sc=L.scale.join("\n")!==defScale().join("\n"); document.getElementById("scaleNote").textContent=sc?"Changed from starting value":"Starting value (example scale)"; document.getElementById("scaleNote").className="start"+(sc?" changed":"");
+  const ap=L.approver!==defApprover(); document.getElementById("approverNote").textContent=ap?"Changed from starting value":"Starting value"; document.getElementById("approverNote").className="start"+(ap?" changed":"");
   L.ctrls.forEach(fit);
   document.getElementById("ctrls").innerHTML=L.ctrls.map((c,i)=>`
    <div class="ctrl" data-i="${i}">
     <div class="top"><textarea rows="2" data-f="case" aria-label="Control ${i+1} case">${esc(c.case)}</textarea><button type="button" class="small" data-del="${i}" aria-label="Remove control ${i+1}">Remove</button></div>
-    ${c.ex?`<span class="example">Example control: replace with one your clinicians wrote.${c.src?" Anchor: "+esc(c.src):""}</span>`:""}
-    <div class="row">
+    ${c.ex?`<span class="example">Example control: replace with one ${L.ordered&&D().domain==="clinical"?"your clinicians":"the owner"} wrote.${c.src?" Anchor: "+esc(c.src):""}</span>`:""}
+    ${L.ordered?`<div class="row">
      <label>Expected answer<select data-f="exp">${opt(c.exp,L.scale)}</select></label>
      <label>Most urgent acceptable<select data-f="hi">${opt(c.hi,L.scale.slice(0,ix(c.exp)+1))}</select></label>
      <label>Least urgent acceptable<select data-f="lo">${opt(c.lo,L.scale.slice(ix(c.exp)))}</select></label>
     </div>
     ${ladder(c)}
     <div class="row">
-     <label>Slower than the lane (undertriage)<select data-f="slow">${opt(c.slow,["Reject","Warn","Accept"])}</select></label>
-     <label>Faster than the lane (overtriage)<select data-f="fast">${opt(c.fast,["Warn","Reject","Accept"])}</select></label>
+     <label>Slower than the lane (too slow)<select data-f="slow">${opt(c.slow,["Reject","Warn","Accept"])}</select></label>
+     <label>Faster than the lane (too fast)<select data-f="fast">${opt(c.fast,["Warn","Reject","Accept"])}</select></label>
      <label>Required behavior<input type="text" data-f="beh" value="${esc(c.beh)}" placeholder="None"></label>
      <label>If the behavior is absent<select data-f="behC">${opt(c.behC,["Reject","Warn","None"])}</select></label>
+    </div>`:`<div class="row">
+     <label>Expected answer<select data-f="exp">${opt(c.exp,L.scale)}</select></label>
+     <label>Any other answer<select data-f="out">${opt(c.out,["Reject","Warn","Accept"])}</select></label>
     </div>
+    <fieldset class="also"><legend>Also acceptable</legend>${L.scale.filter(a=>a!==c.exp).map(a=>`<label><input type="checkbox" data-also="${esc(a)}"${(c.also||[]).includes(a)?" checked":""}>${esc(a)}</label>`).join("")}</fieldset>
+    ${ladder(c)}
+    <div class="row">
+     <label>Required behavior<input type="text" data-f="beh" value="${esc(c.beh)}" placeholder="None"></label>
+     <label>If the behavior is absent<select data-f="behC">${opt(c.behC,["Reject","Warn","None"])}</select></label>
+    </div>`}
     ${ctrlWarn(c)}
    </div>`).join("");
   const n=L.ctrls.length; document.getElementById("ctrlCount").textContent=`${n} control${n===1?"":"s"} with lanes`;
   const ex=L.ctrls.filter(c=>c.ex).length;
-  document.getElementById("setCaveat").innerHTML=(n>15?`<div class="caveat"><b>Large set.</b> Each control adds false alarms and review time. Check that every control sits at a decision point.</div>`:"")+(ex?`<div class="caveat"><b>${ex} example control${ex===1?"":"s"} still in the set.</b> Example lanes are illustrations, not clinical guidance.</div>`:"");
+  document.getElementById("setCaveat").innerHTML=(n>15?`<div class="caveat"><b>Large set.</b> Each control adds false alarms and review time. Check that every control sits at a decision point.</div>`:"")+(ex?`<div class="caveat"><b>${ex} example control${ex===1?"":"s"} still in the set.</b> Example lanes are illustrations${D().domain==="clinical"?", not clinical guidance":""}.</div>`:"");
 }
 function lanesPlan(){
-  const out=["KNOB 3. LANES",`   Approved by: ${L.approver}${L.approver===APPROVER0?" *":""}`,`   Answer scale (most urgent first): ${L.scale.join(" > ")}${L.scale.join("\n")===SCALE0.join("\n")?" *":""}`];
-  L.ctrls.forEach((c,i)=>{out.push(`   Control ${i+1}${c.ex?" (EXAMPLE, replace)":""}: ${c.case}`,`     Expected: ${c.exp}. Lane: ${c.hi} to ${c.lo}. Slower: ${c.slow}. Faster: ${c.fast}.`+(c.beh.trim()?` Required: ${c.beh} (if absent: ${c.behC}).`:""));});
+  const out=["KNOB 3. LANES",`   Approved by: ${L.approver}${L.approver===defApprover()?" *":""}`,L.ordered?`   Answer scale (most urgent first): ${L.scale.join(" > ")}${L.scale.join("\n")===defScale().join("\n")?" *":""}`:`   Answers: ${L.scale.join(", ")}${L.scale.join("\n")===defScale().join("\n")?" *":""}`];
+  L.ctrls.forEach((c,i)=>{out.push(`   Control ${i+1}${c.ex?" (EXAMPLE, replace)":""}: ${c.case}`,(L.ordered?`     Expected: ${c.exp}. Lane: ${c.hi} to ${c.lo}. Slower: ${c.slow}. Faster: ${c.fast}.`:`     Expected: ${c.exp}.${(c.also||[]).length?" Also acceptable: "+c.also.join(", ")+".":""} Any other answer: ${c.out}.`)+(c.beh.trim()?` Required: ${c.beh} (if absent: ${c.behC}).`:""));});
   return out.join("\n");
 }
 document.getElementById("ctrls").addEventListener("input",e=>{const box=e.target.closest(".ctrl"),f=e.target.dataset.f;if(!box||!f)return;
   const c=L.ctrls[+box.dataset.i]; c[f]=e.target.value; c.ex=0; saveL();
   if(e.target.tagName==="SELECT"){renderLanes();} else { box.querySelector(".example")?.remove(); }
   renderPlan();});
-document.getElementById("ctrls").addEventListener("change",e=>{if(e.target.tagName!=="SELECT")renderLanes();});
+document.getElementById("ctrls").addEventListener("change",e=>{
+  if(e.target.dataset&&e.target.dataset.also!==undefined){const box=e.target.closest(".ctrl"),c=L.ctrls[+box.dataset.i],a=e.target.dataset.also;c.also=(c.also||[]).filter(x=>x!==a);if(e.target.checked)c.also.push(a);c.ex=0;saveL();renderLanes();renderPlan();return;}
+  if(e.target.tagName!=="SELECT")renderLanes();});
+document.getElementById("ordered").addEventListener("change",e=>{L.ordered=e.target.checked;saveL();renderLanes();render();});
 document.getElementById("ctrls").addEventListener("click",e=>{const d=e.target.dataset&&e.target.dataset.del;if(d===undefined)return;L.ctrls.splice(+d,1);saveL();renderLanes();renderPlan();});
-document.getElementById("addCtrl").onclick=()=>{const m=L.scale[Math.floor(L.scale.length/2)]||"";L.ctrls.push({ex:0,case:"",exp:m,hi:m,lo:m,slow:"Reject",fast:"Warn",beh:"",behC:"None"});saveL();renderLanes();renderPlan();};
+document.getElementById("addCtrl").onclick=()=>{const m=L.scale[Math.floor(L.scale.length/2)]||"";L.ctrls.push({ex:0,case:"",exp:m,hi:m,lo:m,slow:"Reject",fast:"Warn",also:[],out:"Reject",beh:"",behC:"None"});saveL();renderLanes();renderPlan();};
 document.getElementById("scale").addEventListener("change",e=>{const v=e.target.value.split("\n").map(x=>x.trim()).filter(Boolean);if(v.length<2){renderLanes();return;}L.scale=v;saveL();renderLanes();renderPlan();});
 document.getElementById("approver").addEventListener("input",e=>{L.approver=e.target.value;saveL();renderPlan();});
 
@@ -702,7 +794,7 @@ document.addEventListener("change",e=>{
   if(e.target.name==="otype"){S["k1.type"]=e.target.value;["accuracy","precision","drift"].forEach(k=>delete S["k1."+k]);save();$("exNote").textContent="";render();return;}
   const k=e.target.dataset&&e.target.dataset.metric; if(k){S["k1."+k]=+e.target.value;save();render();}
 });
-document.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{const x=EXQ[b.dataset.ex];S["k1.type"]=x.type;["accuracy","precision","drift"].forEach(k=>delete S["k1."+k]);save();render();$("exNote").textContent=x.note;});
+document.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{const x=EXQ[b.dataset.ex];S["k1.type"]=x.type;Object.entries(x.d).forEach(([k,v])=>S["d."+k]=v);if(x.d.domain==="general"?L.ordered!==false||lanesUntouched():L.ordered!==true||lanesUntouched())loadLanes(x.d.domain);["accuracy","precision","drift"].forEach(k=>delete S["k1."+k]);save();render();$("exNote").textContent=x.note;});
 function syncType(){document.querySelectorAll('input[name=otype]').forEach(r=>r.checked=r.value===otype());}
 function knob1Plan(){
   const t=otype(), out=["KNOB 1. METRICS",`   Output type: ${TYPE_NAME[t]}${"k1.type" in S?"":" *"}`];
