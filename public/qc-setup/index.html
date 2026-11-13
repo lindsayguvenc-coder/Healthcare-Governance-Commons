@@ -195,53 +195,11 @@ footer a{color:var(--accent)}
   <footer>Part of the <a href="/">Healthcare Governance Commons</a>. Folds in the earlier <a href="/agent-qc">Agent QC Metric Picker</a> (knobs 1 and 2). Pairs with the <a href="/validation-protocol">Validation Protocol Generator</a>. Interval figures are 95% Wilson intervals and one-sided exact bounds, pending statistician review.</footer>
 </div>
 
-<template id="tpl-sigma"><details class="calcbox"><summary>Calculate: sigma, how much room the method has</summary><div class="inner">    <p class="sub">The sigma metric says how much room your method has before results go out of bounds. More room means simpler rules are enough. Westgard picks rules this way.</p>
-    <div class="calcknobs">
-      <div class="field"><label for="sg_tea">Allowable error (%)</label><input type="number" id="sg_tea" value="10" min="0.1" step="0.1"><small>From intended use (set under Allowable error)</small></div>
-      <div class="field"><label for="sg_bias">Bias (%)</label><input type="number" id="sg_bias" value="2" min="0" step="0.1"><small>From your method comparison</small></div>
-      <div class="field"><label for="sg_cv">CV (%)</label><input type="number" id="sg_cv" value="2" min="0.01" step="0.1"><small>From your repeat runs</small></div>
-    </div>
-    <div class="callout" id="sgOut"></div></div></details></template>
+<template id="tpl-sigma"><details class="calcbox"><summary>Calculate: sigma, how much room the method has</summary><div class="inner"><p class="sub">Sigma is the room between the method's typical error and what is clinically acceptable, counted in units of its imprecision: (allowable error − |bias|) ÷ CV. More room means fewer, simpler rules are enough.</p><div class="calcknobs"><div class="field"><label for="sg_tea">Allowable error (%)</label><input type="number" id="sg_tea" value="10" min="0.1" step="0.1"><small>The deviation that does not change clinical management, set from intended use.</small></div><div class="field"><label for="sg_bias">Bias (%)</label><input type="number" id="sg_bias" value="2" min="0" step="0.1"><small>Average offset from the reference method, from the method comparison at validation.</small></div><div class="field"><label for="sg_cv">CV (%)</label><input type="number" id="sg_cv" value="2" min="0.01" step="0.1"><small>Imprecision across repeat runs of the same control.</small></div></div><div class="callout" id="sgOut"></div></div></details></template>
 <template id="tpl-change"><details class="calcbox"><summary>Calculate: what your rules catch and what they cost</summary><div class="inner"><p class="sub" id="calcWhy"></p><div id="calcMain" class="inner"></div><details class="other"><summary>Other calculators (for other output types)</summary><div class="inner" id="calcOther"></div></details></div></details></template>
-<template id="tpl-lj"><div class="inner"><h4>Levey-Jennings rules, for numbers</h4>    <p class="sub">For any output you chart with a mean and SD: a numeric result, output tokens, an average grade. Set each rule to off, warn or reject. Detection and whole-set numbers come from simulating 40,000 runs on one fixed set of random draws, so every setting is compared on the same data. False rejections for each rule alone are exact.</p>
-    <div class="callout"><p><b>These numbers assume</b> roughly normal results, independent runs, one control result per run, and fixed sampling settings (temperature and the like) so repeats are true repeats.</p><p>They also assume the true mean and SD are known. Limits set from a 20-run baseline have an SD that's off by up to about 30%, which raises real false rejections. Use more baseline runs, or treat these numbers as a best case. The rule settings (1-2s and 4-1s as warnings, R-4s off) are choices, not standards.</p><p>Agent data often breaks this. Counts like steps can be nearly constant, and some outputs split into two groups (clean runs vs. runs with a retry). If yours is counts or pass/fail, use count limits instead. If it's a number, look at a histogram of your baseline first: one hump means these numbers roughly hold, two humps or a spike means they don't.</p></div>
-    <div class="calcknobs">
-      <div class="field"><label for="k_shift">Systematic error to catch (SD)</label><input type="number" id="k_shift" value="1.5" min="0.5" max="5" step="0.5"><small>A shift in the mean, e.g. after a model swap</small></div>
-      <div class="field"><label for="k_sdx">Random error to catch (× SD)</label><input type="number" id="k_sdx" value="2" min="1.25" max="4" step="0.25"><small>The spread grows, e.g. a less stable model</small></div>
-      <div class="field"><label for="k_prev">Runs with a real error (%)</label><input type="number" id="k_prev" value="2" min="0.1" max="50" step="0.1"><small>How often something is truly wrong. Sets how much a rejection means.</small></div>
-    </div>
-    <div class="tiles" id="ljTiles"></div>
-    <div class="callout" id="ljCallout"></div>
-    <div class="tablebox"><table>
-      <thead><tr><th>Rule</th><th>Setting</th><th class="n">False rejections per run, alone (exact)</th><th class="n">Shift caught within 10 runs, alone</th><th class="n">Random error caught within 10 runs, alone</th><th class="n">Remove it: shift caught</th><th class="n">Remove it: random caught</th><th class="n">Remove it: false rejections</th></tr></thead>
-      <tbody id="ljRows"></tbody>
-    </table></div>
-    <p class="sub" style="margin:0">"Remove it" shows how the whole set changes without that rule. A rule whose removal barely moves detection is mostly catching what the others already catch.</p></div></template>
-<template id="tpl-cnt"><div class="inner"><h4>Count limits, for pass/fail and rates</h4>    <p class="sub">For anything counted: failed runs, process errors, never-events. Chart the number of failures in each block of runs against limits from the binomial distribution. Blocks don't overlap: a rolling window that slides one run at a time fires far more often than these rates.</p>
-    <div class="calcknobs">
-      <div class="field"><label for="b_p0">Baseline failure rate (%)</label><input type="number" id="b_p0" value="3" min="0" max="90" step="0.1"><small>From your baseline. If you saw zero, use the rate you ruled out; that keeps false alarms low but loosens the limits and weakens detection.</small></div>
-      <div class="field"><label for="b_n">Block size (runs)</label><input type="number" id="b_n" value="20" min="5" max="200" step="1"></div>
-      <div class="field"><label for="b_aw">Warn false-alarm target (%)</label><input type="number" id="b_aw" value="5" min="0.1" max="20" step="0.1"></div>
-      <div class="field"><label for="b_ar">Reject false-alarm target (%)</label><input type="number" id="b_ar" value="0.3" min="0.01" max="10" step="0.01"></div>
-      <div class="field"><label for="b_mult">Failure rate to catch (× baseline)</label><input type="number" id="b_mult" value="3" min="1.5" max="20" step="0.5"></div>
-    </div>
-    <div class="tiles" id="bTiles"></div>
-    <div class="callout" id="bCallout"></div></div></template>
-<template id="tpl-cat"><div class="inner"><h4>Category limits, for drift sensors</h4>    <p class="sub">For items with no agreed answer, kept as drift sensors (controls with no agreed answer). Count answers that differ from the baseline's usual answer in a window of runs, with binomial limits from the baseline off-rate. The same count gates a new version before it goes live, on a bigger sample.</p>
-    <div class="callout"><p><b>Warn, don't reject.</b> A drift sensor has no right answer, so a move means the agent changed, not that the output is wrong. A reject claims the output is wrong. A warn still has teeth if an unacknowledged warning holds the agent.</p><p><b>Never auto-accept a drift-sensor warning.</b> Auto-accept criteria like "same version, no rejects" would clear exactly the drift the sensor exists to catch, such as a silent provider update. A person acknowledges every one.</p><p><b>At the version gate, a signal is a decision, not a reject:</b> accept the new behavior and re-baseline, or reject the version. Re-baselining changes the approved setup, so it's a validation decision, signed by whoever your delegation gives that power to.</p></div>
-    <div class="calcknobs">
-      <div class="field"><label for="cs_p0">Baseline off-rate (%)</label><input type="number" id="cs_p0" value="2" min="0" max="50" step="0.1"><small>Share of baseline runs that gave a different answer from the usual one</small></div>
-      <div class="field"><label for="cs_n0">Baseline runs</label><input type="number" id="cs_n0" value="100" min="10" max="2000" step="1"><small>Sets how sure you can be of that rate</small></div>
-      <div class="field"><label for="cs_w">Window (runs)</label><input type="number" id="cs_w" value="10" min="5" max="100" step="1"><small>Checked after every run</small></div>
-      <div class="field"><label for="cs_aw">Warn false-alarm target per window (%)</label><input type="number" id="cs_aw" value="2" min="0.1" max="20" step="0.1"></div>
-      <div class="field"><label for="cs_s">Drift sensors</label><input type="number" id="cs_s" value="2" min="1" max="20" step="1"></div>
-      <div class="field"><label for="cs_p1">Off-rate to catch (%)</label><input type="number" id="cs_p1" value="9" min="0.1" max="100" step="0.1"><small>The shift that matters</small></div>
-      <div class="field"><label for="cs_ng">Version gate runs</label><input type="number" id="cs_ng" value="100" min="10" max="1000" step="1"></div>
-      <div class="field"><label for="cs_ag">Gate false-signal target (%)</label><input type="number" id="cs_ag" value="2" min="0.1" max="20" step="0.1"></div>
-    </div>
-    <div class="tiles" id="cTiles"></div>
-    <div class="callout" id="cCallout"></div>
-    <p class="sub" style="margin:0"><b>Where the starting numbers come from (grocery practice runs):</b> oat milk and sunflower seed butter, each 98% one answer over 100 Haiku runs. The Sonnet swap moved sunflower seed butter to a different aisle 91% of the time and split oat milk 60/40. The 9% off-rate to catch is a smaller, harder shift than either.</p></div></template>
+<template id="tpl-lj"><div class="inner"><h4>Levey-Jennings rules, for numbers and grades</h4><p class="sub">Each control's value is charted against its own baseline mean and SD. Set each rule to off, warn, or reject. The table shows what each rule costs in false rejections, what it catches, and what the set loses if it is removed.</p><div class="calcknobs"><div class="field"><label for="k_shift">Systematic error to catch (SD)</label><input type="number" id="k_shift" value="1.5" min="0.5" max="5" step="0.5"><small>A sustained shift in the mean that matters clinically, such as after a model change.</small></div><div class="field"><label for="k_sdx">Random error to catch (× SD)</label><input type="number" id="k_sdx" value="2" min="1.25" max="4" step="0.25"><small>An increase in spread that matters, such as a less stable model.</small></div><div class="field"><label for="k_prev">Runs with a real error (%)</label><input type="number" id="k_prev" value="2" min="0.1" max="50" step="0.1"><small>How often a true problem is present. Determines what share of rejections are real.</small></div></div><div class="tiles" id="ljTiles"></div><div class="callout" id="ljCallout"></div><div class="tablebox"><table><thead><tr><th>Rule</th><th>Setting</th><th class="n">False rejections per run, rule alone</th><th class="n">Shift caught within 10 runs, rule alone</th><th class="n">Spread increase caught within 10 runs, rule alone</th><th class="n">Without this rule: shift caught</th><th class="n">Without this rule: spread caught</th><th class="n">Without this rule: false rejections</th></tr></thead><tbody id="ljRows"></tbody></table></div><p class="sub">A rule whose removal barely changes detection mostly duplicates the others.</p><details class="teach"><summary>Assumptions behind these figures</summary><p>Results are roughly normal, runs are independent, there is one control value per run, and sampling settings (such as temperature) are fixed so repeats are true repeats. Detection figures come from simulating 40,000 runs on one fixed set of random draws, so every setting is compared on the same data; false rejections for a rule alone are exact.</p><p>The figures also assume the true mean and SD are known. An SD estimated from 20 baseline runs can be off by about 30%, which raises real false rejections; treat these figures as a best case or use more baseline runs. The default settings (1-2s and 4-1s as warnings, R-4s off) are choices, not standards.</p><p>Agent outputs often break the normal assumption: step counts can be nearly constant, and some outputs split into two groups (clean runs and runs with a retry). Check a histogram of the baseline first. One hump: these figures roughly hold. Two humps or a spike: use count limits instead.</p></details></div></template>
+<template id="tpl-cnt"><div class="inner"><h4>Count limits, for pass/fail results</h4><p class="sub">Failures are counted in fixed blocks of runs and compared with limits from the binomial distribution. Use for any pass/fail result: lane failures, never-events, missed required behaviors.</p><div class="calcknobs"><div class="field"><label for="b_p0">Baseline failure rate (%)</label><input type="number" id="b_p0" value="3" min="0" max="90" step="0.1"><small>From the baseline. If none were observed, use the rate that was ruled out: false alarms stay low, but detection is slower.</small></div><div class="field"><label for="b_n">Block size (runs)</label><input type="number" id="b_n" value="20" min="5" max="200" step="1"><small>Runs per count. Blocks do not overlap; a window that slides one run at a time alarms far more often than these rates.</small></div><div class="field"><label for="b_aw">Warn false-alarm target (%)</label><input type="number" id="b_aw" value="5" min="0.1" max="20" step="0.1"><small>Chance of a warning per block when nothing has changed.</small></div><div class="field"><label for="b_ar">Reject false-alarm target (%)</label><input type="number" id="b_ar" value="0.3" min="0.01" max="10" step="0.01"><small>Chance of a rejection per block when nothing has changed.</small></div><div class="field"><label for="b_mult">Failure rate to catch (× baseline)</label><input type="number" id="b_mult" value="3" min="1.5" max="20" step="0.5"><small>The increase that matters, as a multiple of the baseline rate.</small></div></div><div class="tiles" id="bTiles"></div><div class="callout" id="bCallout"></div></div></template>
+<template id="tpl-cat"><div class="inner"><h4>Category limits, for drift sensors</h4><p class="sub">For controls with no agreed answer. Counts answers that differ from the baseline's usual answer in a window of recent runs. The same count, on a larger sample, gates a new model version before it goes live.</p><p class="sub"><b>Warn, never reject, and never auto-accept.</b> A change means the agent changed, not that the answer is wrong. A person acknowledges every warning, because auto-accept rules would clear exactly the silent update the sensor exists to catch.</p><div class="calcknobs"><div class="field"><label for="cs_p0">Baseline off-rate (%)</label><input type="number" id="cs_p0" value="2" min="0" max="50" step="0.1"><small>Share of baseline runs that gave something other than the usual answer.</small></div><div class="field"><label for="cs_n0">Baseline runs</label><input type="number" id="cs_n0" value="100" min="10" max="2000" step="1"><small>How many runs that estimate rests on.</small></div><div class="field"><label for="cs_w">Window (runs)</label><input type="number" id="cs_w" value="10" min="5" max="100" step="1"><small>Recent runs counted; checked after every run.</small></div><div class="field"><label for="cs_aw">Warn false-alarm target per window (%)</label><input type="number" id="cs_aw" value="2" min="0.1" max="20" step="0.1"><small>Chance of a warning per window when nothing has changed.</small></div><div class="field"><label for="cs_s">Drift sensors</label><input type="number" id="cs_s" value="2" min="1" max="20" step="1"><small>Each sensor adds false alarms.</small></div><div class="field"><label for="cs_p1">Off-rate to catch (%)</label><input type="number" id="cs_p1" value="9" min="0.1" max="100" step="0.1"><small>The shift that matters.</small></div><div class="field"><label for="cs_ng">Version gate runs</label><input type="number" id="cs_ng" value="100" min="10" max="1000" step="1"><small>Runs of the new version before it goes live.</small></div><div class="field"><label for="cs_ag">Gate false-signal target (%)</label><input type="number" id="cs_ag" value="2" min="0.1" max="20" step="0.1"><small>Chance of a false signal at the gate when nothing has changed.</small></div></div><div class="tiles" id="cTiles"></div><div class="callout" id="cCallout"></div><details class="teach"><summary>At the version gate, and where the starting numbers come from</summary><p>A signal at the gate is a decision, not a rejection: accept the new behavior and re-baseline, or reject the version. Re-baselining changes the approved setup, so it is signed by whoever holds that authority (see Change tiers under Corrective action).</p><p>The starting numbers come from practice runs of a grocery-sorting agent: two items each gave one answer 98% of the time over 100 runs. A model swap moved one item to a different answer 91% of the time and split the other 60/40. The 9% off-rate to catch is a smaller, harder shift than either.</p><p>Agreement and mismatch measure different things. Mismatch (off from the baseline answer) is drift. Agreement (how often the current version gives its own most common answer) is precision. An item can be steady but moved, or unsteady and moved.</p></details></div></template>
 <script>
 const $=id=>document.getElementById(id);
 // ---------- statistics (checked against hand calculation) ----------
@@ -407,17 +365,16 @@ function renderLJ(){
   const se=1.96*Math.sqrt(full.pfr*(1-full.pfr)/TRIALS);
   const den=prev*full.sys1+(1-prev)*full.pfr, ppv=den>0?prev*full.sys1/den:0;
   $("ljTiles").innerHTML=[
-    ["False rejections",P(full.pfr,2),`per in-control run (± ${(se*100).toFixed(2)} from simulation)`],
-    ["Warnings",P(full.warn,1),"per in-control run"],
-    [`Shift of ${o.shift} SD`,P(full.sys1,0)+" → "+P(full.sysK,0),`caught on 1st run → within ${K}`],
-    [`Random error × ${o.sdx}`,P(full.rnd1,0)+" → "+P(full.rndK,0),`caught on 1st run → within ${K}`],
-    ["Illustration: rejections that are true",P(ppv,0),`if ${P(prev,1)} of runs carry exactly a ${o.shift} SD shift and nothing else (first-run detection)`]
+    ["False rejections",P(full.pfr,2),`per run when nothing has changed (± ${(se*100).toFixed(2)}, simulation)`],
+    ["Warnings",P(full.warn,1),"per run when nothing has changed"],
+    [`Shift of ${o.shift} SD`,P(full.sys1,0)+" → "+P(full.sysK,0),`caught on the first run → within ${K} runs`],
+    [`Spread × ${o.sdx}`,P(full.rnd1,0)+" → "+P(full.rndK,0),`caught on the first run → within ${K} runs`],
+    ["Rejections that reflect a real problem",P(ppv,0),`if ${P(prev,1)} of runs carry exactly this shift (illustration)`]
   ].map(t=>`<div class="tile"><span class="lbl">${t[0]}</span><span class="v">${t[1]}</span><span class="s">${t[2]}</span></div>`).join("");
   const rej=RULE_ORDER.filter(k=>ljMode[k]==="reject");
   const indep=f=>1-rej.reduce((a,k)=>a*(1-alone[k][f]),1);
-  $("ljCallout").innerHTML = rej.length<2 ? `<p>Turn on two or more reject rules to see how they combine.</p>` :
-    `<p><b>The rules overlap.</b> If your ${rej.length} reject rules caught errors independently, together they'd catch the shift ${P(indep("sysK"),0)} of the time within ${K} runs. They actually catch it ${P(full.sysK,0)}. For random error: ${P(indep("rndK"),0)} if independent vs. ${P(full.rndK,0)} actual. The gap is overlap: the rules read the same points and catch the same errors.</p>
-     <p><b>False rejections:</b> ${P(indep("pfr"),2)} if independent vs. ${P(full.pfr,2)} actual. At rates this small the two are close whether or not rules overlap, so the useful reading is the cost of each rule in the table below.</p>`;
+  $("ljCallout").innerHTML = rej.length<2 ? `<p>Set two or more rules to reject to see how they combine.</p>` :
+    `<p><b>The rules overlap.</b> If your ${rej.length} reject rules worked independently, they would catch the shift ${P(indep("sysK"),0)} of the time within ${K} runs; together they catch ${P(full.sysK,0)}. For a spread increase: ${P(indep("rndK"),0)} vs. ${P(full.rndK,0)}. They read the same points, so they catch the same errors. The table shows what each rule adds.</p>`;
   $("ljRows").innerHTML = RULE_ORDER.map(k=>{
     const m=ljMode[k], a=alone[k], w=without[k];
     const sel=`<select data-rule="${k}" aria-label="${k} setting">${["off","warn","reject"].map(v=>`<option value="${v}"${v===m?" selected":""}>${v}</option>`).join("")}</select>`;
@@ -432,19 +389,19 @@ function renderBinom(){
   const p0=(Number($("b_p0").value)||0)/100, n=Math.max(5,Math.round(Number($("b_n").value)||20));
   const aw=(Number($("b_aw").value)||5)/100, ar=(Number($("b_ar").value)||0.3)/100, mult=Number($("b_mult").value)||3;
   const p1=Math.min(0.99,p0*mult);
-  if(p0<=0){ $("bTiles").innerHTML=""; $("bCallout").innerHTML=`<p><b>A baseline of zero failures can't set limits.</b> Any failure would be out of control, which is the ceiling problem again. Enter the failure rate you ruled out (under Performance stability) as the baseline, or make the control harder.</p>`; return; }
+  if(p0<=0){ $("bTiles").innerHTML=""; $("bCallout").innerHTML=`<p><b>A baseline with zero failures cannot set limits:</b> any failure would be out of control. Enter the failure rate that was ruled out (under Performance stability), or use a harder control.</p>`; return; }
   const kw=limitFor(n,p0,aw), kr=limitFor(n,p0,ar);
   const fw=binomTail(n,p0,kw), fr=binomTail(n,p0,kr), dw=binomTail(n,p1,kw), dr=binomTail(n,p1,kr);
   const exp=(n*p0).toFixed(1);
   $("bTiles").innerHTML=[
-    ["Warn at",`${kw}+ fails`,`in ${n} runs · false alarm ${P(fw,1)}`],
-    ["Reject at",`${kr}+ fails`,`in ${n} runs · false alarm ${P(fr,2)}`],
-    [`Rate × ${mult} warns`,P(dw,0),`per block, at ${P(p1,1)} failures`],
-    [`Rate × ${mult} rejects`,P(dr,0),`per block, at ${P(p1,1)} failures`]
+    ["Warn at",`${kw}+ failures`,`in ${n} runs · false alarm ${P(fw,1)}`],
+    ["Reject at",`${kr}+ failures`,`in ${n} runs · false alarm ${P(fr,2)}`],
+    [`At ${mult}× the rate: warns`,P(dw,0),`of blocks (${P(p1,1)} failing)`],
+    [`At ${mult}× the rate: rejects`,P(dr,0),`of blocks (${P(p1,1)} failing)`]
   ].map(t=>`<div class="tile"><span class="lbl">${t[0]}</span><span class="v">${t[1]}</span><span class="s">${t[2]}</span></div>`).join("");
-  const notes=[`<p>At baseline you expect about ${exp} failures per ${n} runs. Limits are whole counts, so the real false-alarm rate lands at or under your target, not on it.</p>`];
-  if(kr>n) notes.push(`<p><b>The reject limit is out of reach:</b> no count in ${n} runs is rare enough. Use a bigger window or a looser target.</p>`);
-  if(dr<0.5&&kr<=n) notes.push(`<p><b>Weak detection:</b> a ${mult}× jump in failures gets rejected in under half of blocks. A bigger block catches it more reliably but later.</p>`);
+  const notes=[`<p>At baseline, about ${exp} failures are expected per ${n} runs. Limits are whole numbers, so actual false-alarm rates fall at or below the targets.</p>`];
+  if(kr>n) notes.push(`<p><b>The reject limit cannot be reached:</b> no count in ${n} runs is rare enough to meet the target. Use a larger block or a less strict target.</p>`);
+  if(dr<0.5&&kr<=n) notes.push(`<p><b>Weak detection:</b> a ${mult}× increase in failures is rejected in fewer than half of blocks. Larger blocks detect it more reliably, but later.</p>`);
   $("bCallout").innerHTML=notes.join("");
 }
 // Category drift sensors: off-baseline answers in a sliding window, plus the version gate.
@@ -476,7 +433,7 @@ function renderCat(){
   const w=Math.max(5,Math.round(Number($("cs_w").value)||10)), aw=(Number($("cs_aw").value)||2)/100;
   const S=Math.max(1,Math.round(Number($("cs_s").value)||1)), p1=Math.min(1,(Number($("cs_p1").value)||0)/100);
   const ng=Math.max(10,Math.round(Number($("cs_ng").value)||100)), ag=(Number($("cs_ag").value)||2)/100;
-  if(p0<=0){ $("cTiles").innerHTML=""; $("cCallout").innerHTML=`<p><b>An item that never wavered at baseline can't be a drift sensor.</b> It sits at the ceiling. Pick items the agent is unsure about, near its own decision point.</p>`; return; }
+  if(p0<=0){ $("cTiles").innerHTML=""; $("cCallout").innerHTML=`<p><b>An item that never varied at baseline cannot be a drift sensor.</b> Choose items near the agent's own decision point, where it is less certain.</p>`; return; }
   const x0=Math.round(p0*n0), lo=cpBound(x0,n0,true), hi=cpBound(x0,n0,false);
   const k=limitFor(w,p0,aw), fw=binomTail(w,p0,k), fwHi=binomTail(w,hi,k), dw=binomTail(w,p1,k);
   const sl=slideFalse(p0,w,k,S,100);
@@ -484,31 +441,31 @@ function renderCat(){
   const floor=w*2<=20?20:w*2, kf=limitFor(floor,p0,aw);
   $("cTiles").innerHTML=[
     ["Warn at",`${k}+ off`,`in ${w} runs · false alarm ${P(fw,1)} per window${k>1?` · ${k===2?"1":"1–"+(k-1)} off: log only`:""}`],
-    ["In real use",P(sl.any,0),`chance of 1+ false warns per 100 runs, window sliding every run, ${S} sensor${S>1?"s":""} (about ${sl.eps.toFixed(2)} warns)`],
-    ["Baseline off-rate could be",`${P(lo,1)}–${P(hi,1)}`,`95% interval from ${x0} of ${n0}. At the top end, false alarm per window is ${P(fwHi,1)}.`],
+    ["In practice",P(sl.any,0),`chance of at least one false warning per 100 runs, checked every run, ${S} sensor${S>1?"s":""}`],
+    ["True baseline off-rate",`${P(lo,1)}–${P(hi,1)}`,`95% interval from ${x0} of ${n0}; at the top, false alarms per window reach ${P(fwHi,1)}`],
     [`${P(p1,0)} off caught`,P(dw,0),`per ${w}-run window`],
     ["Version gate",`${kg}+ off`,`in ${ng} runs · false signal ${P(fg,1)} · catches ${P(p1,0)} off ${P(dg,0)} of the time`],
-    ["Agreement floor",`under ${floor-kf+1} of ${floor}`,`most common answer in the last ${floor}, whatever it is. Catches an item that's wobbling, not just moved.`]
+    ["Agreement floor",`under ${floor-kf+1} of ${floor}`,`the most common answer in the last ${floor} runs; catches an unstable item, not only a moved one`]
   ].map(t=>`<div class="tile"><span class="lbl">${t[0]}</span><span class="v">${t[1]}</span><span class="s">${t[2]}</span></div>`).join("");
   const notes=[];
-  notes.push(`<p><b>Count false alarms the way you'll run it.</b> ${P(fw,1)} is per separate window. Checked after every run${S>1?` across ${S} sensors`:""}, that becomes ${P(sl.any,0)} chance of at least one false warn per 100 runs. That's the workload to plan for.</p>`);
-  if(hi/p0>2) notes.push(`<p><b>Limits start provisional.</b> ${x0} off in ${n0} runs is a fuzzy estimate. Keep them provisional, like a new QC lot, until you have about 300 in-control runs, and never feed flagged runs into the baseline. Every accepted change restarts this. While provisional, label warnings "provisional limits", run the previous version alongside when you can (if it's retired or replaced in place, note that and compare against the stored baseline runs), and don't accept a second change until the new baseline has 100+ runs.</p>`);
-  if(dw<0.5) notes.push(`<p><b>One window is weak against a ${P(p1,0)} off-rate</b> (${P(dw,0)}). Daily QC catches it eventually as the window slides; the version gate is where you want it caught, so gate on the bigger sample.</p>`);
-  notes.push(`<p><b>Agreement and mismatch ask different things.</b> Mismatch (off from the baseline answer) is drift. Agreement (how often the current version gives its own most common answer) is precision. An item can be steady but moved, or wobbly and moved; watch both.</p>`);
+  if(sl.any>0.2) notes.push(`<p><b>Plan for the workload:</b> ${P(fw,1)} per window becomes ${P(sl.any,0)} chance of at least one false warning per 100 runs when checked every run${S>1?` across ${S} sensors`:""}.</p>`);
+  if(hi/p0>2) notes.push(`<p><b>Limits are provisional.</b> ${x0} of ${n0} is an imprecise estimate. Treat limits as provisional, like a new QC lot, until about 300 in-control runs; never add flagged runs to the baseline; and do not accept a second change until the new baseline has 100 or more runs.</p>`);
+  if(dw<0.5) notes.push(`<p><b>One window rarely catches a ${P(p1,0)} off-rate</b> (${P(dw,0)}). Routine QC catches it eventually; the version gate, on the larger sample, is where it should be caught.</p>`);
+  if(!notes.length) notes.push(`<p>No cautions for these settings.</p>`);
   $("cCallout").innerHTML=notes.join("");
 }
 function renderSigma(){
   if(!$("sgOut")) return;
   const tea=Number($("sg_tea").value), bias=Math.abs(Number($("sg_bias").value)||0), cv=Number($("sg_cv").value);
-  if(!tea||!cv){ $("sgOut").innerHTML="<p>Enter allowable error and CV to get a sigma.</p>"; return; }
+  if(!tea||!cv){ $("sgOut").innerHTML="<p>Enter allowable error and CV to calculate sigma.</p>"; return; }
   const sg=(tea-bias)/cv;
   let tier, rules;
-  if(sg>=6){ tier="World class: one simple rule is enough."; rules={"1-2s":"off","1-3s":"reject","2-2s":"off","R-4s":"off","4-1s":"off","10x":"off"}; }
-  else if(sg>=4){ tier="Good: a short multirule."; rules={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"off","4-1s":"off","10x":"off"}; }
-  else if(sg>=3){ tier="Marginal: the full multirule, and run the control more often."; rules={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"off","4-1s":"reject","10x":"reject"}; }
-  else { tier="Too little room: no rule set will catch errors reliably. Improve the method (less bias or less spread) before relying on QC."; rules={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"off","4-1s":"reject","10x":"reject"}; }
+  if(sg>=6){ tier="One rule (1-3s) is enough."; rules={"1-2s":"off","1-3s":"reject","2-2s":"off","R-4s":"off","4-1s":"off","10x":"off"}; }
+  else if(sg>=4){ tier="A short multirule is enough."; rules={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"off","4-1s":"off","10x":"off"}; }
+  else if(sg>=3){ tier="Use the full multirule, and run controls more often."; rules={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"off","4-1s":"reject","10x":"reject"}; }
+  else { tier="No rule set will detect errors reliably. Reduce bias or imprecision before relying on QC to protect patients."; rules={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"off","4-1s":"reject","10x":"reject"}; }
   window._sgRules=rules;
-  $("sgOut").innerHTML=`<p><b>Sigma = ${sg.toFixed(1)}</b> (allowable error ${tea}% − bias ${bias}%) ÷ CV ${cv}%. ${tier}</p><p style="color:var(--muted);font-size:.84rem">These tiers simplify Westgard's sigma-based rule selection, which also sets how many controls per run and how often to run them.</p><p><button type="button" id="sgApply">Use the suggested rules</button> <span style="color:var(--muted);font-size:.82rem">They are applied in Change detection; open its calculator to see what they catch and cost.</span></p>`;
+  $("sgOut").innerHTML=`<p><b>Sigma = ${sg.toFixed(1)}</b> (allowable error ${tea}% − bias ${bias}%) ÷ CV ${cv}%. ${tier}</p><p style="color:var(--muted);font-size:.84rem">Simplified from Westgard's sigma-based rule selection, which also sets how many controls to run and how often.</p><p><button type="button" id="sgApply">Use the suggested rules</button> <span style="color:var(--muted);font-size:.82rem">They are applied in Change detection; open its calculator to see what they catch and cost.</span></p>`;
   $("sgApply").onclick=()=>{ ljMode={...window._sgRules}; renderLJ(); };
 }
 // ---------- the nine measures ----------
