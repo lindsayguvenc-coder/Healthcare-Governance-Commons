@@ -64,3 +64,8 @@ Two sets, together the starting document base for the demo:
   (NAM Code of Conduct, WHO 2021, CHAI Assurance Guide and governance
   playbooks, ISO/IEC 42001, NIST adversarial ML taxonomy, FUTURE-AI,
   DECIDE-AI, MDCG 2025-6, EO 14365), added Nov 14, 2026.
+- **Risk and incident reports:** the recurring reports that track where harm
+  is showing up (International AI Safety Report, ECRI hazards and patient
+  safety lists, Stanford AI Index, MIT AI Risk Repository, AI Incident
+  Database, PHTI). Annual reports get replaced by their next edition; the two
+  databases are living and get re-checked like drafts.
