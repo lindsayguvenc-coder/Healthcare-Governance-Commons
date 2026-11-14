@@ -84,7 +84,7 @@ let next = null;
   // Answers for a deployed ambient scribe, applied straight to the page's state.
   const SCRIBE = {
     q_pathway: "Ongoing — system is deployed, assessing value or continuation",
-    q_system: "Example Ambient Scribe", q_use_type: "Ambient scribe / AI documentation — drafts notes from the visit",
+    q_system: "Example Ambient Scribe", q_use_type: "Documentation / generative drafting — produces text a clinician reviews before use",
     q_setting: "Outpatient / ambulatory", q_role: "Governance or AI oversight committee", q_org: "Example Community Health",
     q_deployment_duration: "6–12 months",
     q_strategy: "Yes — documented and in active use",

@@ -57,7 +57,7 @@ const BASE = {
 };
 const SCENARIOS = {
   scribe: { ...BASE,
-    q_system: "Example Ambient Scribe", q_use_type: "Ambient scribe / AI documentation — drafts notes from the visit",
+    q_system: "Example Ambient Scribe", q_use_type: "Documentation / generative drafting — produces text a clinician reviews before use",
     q_org: "Example Community Health", q_deployment_duration: "6–12 months",
     q_strategy: "Yes — documented and in active use",
     q_strategy_priorities: ["Improve patient safety", "Support and retain staff", "Advance health equity"],

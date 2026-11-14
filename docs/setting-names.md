@@ -53,7 +53,7 @@ This is the list, with each tool's own question or key.
 | `stakes.closeness` | How exact the output must be | choice: exact | close | loose | set by owner | d.close |  |  |  |
 | `stakes.exposure` | How often something can change underneath | choice: often | some | rare | set by owner | d.exp | q_contract_updates, q_fda PCCP (evidence for it) |  |  |
 | `stakes.autonomy` | How much stands between output and the world | choice: informs | recommends (approved each time) | acts unless stopped | acts on its own | set by owner | d.auto (added Nov 14) | q_autonomy | q_agent_actions (agents only) |  |
-| `stakes.use_type` | What the output is used for | choice: VP list | set by owner | n/a | q2_usetype (8 options) | q_use_type, VP wording for shared items |  |
+| `stakes.use_type` | What the output is used for | choice: VP list | set by owner | n/a | q2_usetype, 11 options (Diagnostic support, Administrative / operational and Other added Nov 14) | q_use_type, same 11 options in the same order |  |
 | `harness.model` | Model and version | text | recorded every run | h.model (added Nov 14) | q1_version |  |  |
 | `harness.prompt` | Prompt | text, fingerprinted | recorded every run | h.prompt (added Nov 14) |  |  |  |
 | `harness.tools` | Tools it can call | list | set per agent | h.tools (added Nov 14) | qa_toolcalls (asks if checked, not which) |  |  |
@@ -142,4 +142,4 @@ This is the list, with each tool's own question or key.
 | `eqa.participation` | External quality assessment | choice | intends to take part | same | q25–q29 (challenge set, peers, registry) |  |  |
 | `review.cadence` | Periodic review | choice from the shared list | Quarterly | same | q19_cadence (Weekly / Monthly / Quarterly / Twice yearly / Annually / Not yet defined) |  |  |
 | `review.emergency` | Emergency review after a rejection | time | same day (harm) |  | q21_emergency |  |  |
-| `plan.revision` | Plan revision | integer | increments on every change | missing |  |  |  |
+| `plan.revision` | Plan revision | integer | increments on every change | S._rev; Export/Import plan (added Nov 14); files move between CS and MS |  |  |  |
