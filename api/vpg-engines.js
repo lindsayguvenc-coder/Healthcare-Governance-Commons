@@ -105,6 +105,14 @@ function buildWestgardTiers({ answers, logicFlags, gapFlags }) {
 
   // Gap flags for tier section
   const tierGapFlags = [];
+  // Workflow tests, Nov 14, 2026 (F7, F8). These go first: they change whether the rest matters.
+  const pctOf = (x) => Math.round(x * 1000) / 10;
+  if (!track && metrics.sensitivity !== null && floorSens !== null && pctOf(metrics.sensitivity) < floorSens)
+    tierGapFlags.push(`Measured sensitivity (${pctOf(metrics.sensitivity)}%) is already below the stop-using point (${floorSens}%). By the organization's own rule, this model should not be in use. Resolve that before monitoring it.`);
+  if (!track && metrics.specificity !== null && floorSpec !== null && pctOf(metrics.specificity) < floorSpec)
+    tierGapFlags.push(`Measured specificity (${pctOf(metrics.specificity)}%) is already below the stop-using point for specificity (${floorSpec}%). By the organization's own rule, this model should not be in use.`);
+  if (customWarn !== null && customAction !== null && customWarn >= customAction)
+    tierGapFlags.push(`The warning shift (${customWarn}%) is not smaller than the reject shift (${customAction}%). A warning is meant to come first; as set, the model would be held before it ever warns. Make the reject shift the larger one.`);
   if (trackResult) tierGapFlags.push(...trackResult.flags);
   if (!track) if (metrics.sensitivity !== null && !metrics.hasCounts) tierGapFlags.push("Validation counts not provided, so no confidence intervals. A sensitivity from 30 positive cases carries roughly ±15 points of uncertainty; one from 3,000 carries about ±1.5. Enter the four counts to see which you have.");
   if (metrics.hasCounts && metrics.positives < 30) tierGapFlags.push(`Only ${metrics.positives} positive cases in the validation set. The sensitivity interval is wide (${metrics.sensCIDisplay}); treat the baseline as provisional.`);
@@ -262,7 +270,7 @@ function buildTrackMetrics(track, a) {
     const n = num(a.qs_notes_n), fact = num(a.qs_notes_fact), omit = num(a.qs_notes_omit), floor = num(a.qs_floor);
     rows.push(rateRow("Notes with a factual error", fact, n, "notes"));
     rows.push(rateRow("Notes with an important omission", omit, n, "notes"));
-    rows.push(["Error limit (stop above)", floor !== null ? `${floor}% of notes (set by organization)` : "Not set. No default: set it from how notes are used."]);
+    rows.push(["Stop-using point (error rate above)", floor !== null ? `${floor}% of notes (set by organization)` : "Not set. No default: set it from how notes are used."]);
     rows.push(["Who judged the notes", a.qs_grader || "Not answered"]);
     rows.push(["Transcription and speakers", a.qs_transcription ? a.qs_transcription + (a.qs_transcription_values ? ` (${a.qs_transcription_values})` : "") : "Not answered"]);
     rows.push(["Languages and interpreters", a.qs_language || "Not answered"]);
@@ -273,7 +281,8 @@ function buildTrackMetrics(track, a) {
     if (n === null) flags.push("No local note review. Before go-live, review a set of drafted notes against what was said and count notes with factual errors and with important omissions. Vendor figures are not your patients or your clinicians.");
     if (n !== null && n < 100) flags.push(`Only ${n} notes reviewed. An error rate from a small set has a wide interval; treat it as provisional.`);
     if (/not checked|no written definition|Vendor-reported/i.test(a.qs_grader || "")) flags.push("The note grader is not validated. Write down what counts as a factual error and an omission, and check that two reviewers agree, before trusting the rate.");
-    if (floor === null) flags.push("No error limit set. Decide the share of notes with factual errors at which you would stop, based on how the notes are used downstream.");
+    if (floor === null) flags.push("No stop-using point set. Decide the share of notes with factual errors at which you would stop, based on how the notes are used downstream.");
+    if (floor !== null && n && fact !== null && (100 * fact / n) > floor) flags.unshift(`Measured: ${Math.round(1000 * fact / n) / 10}% of notes had a factual error, above the stop-using point (${floor}%). By the organization's own rule, it should not be in use.`);
     if (!yes(a.qs_review) || /not enforced/.test(a.qs_review || "")) flags.push("Clinician review is not enforced. Unreviewed drafts in the record are the main way scribe errors reach patients.");
     if (!/source defined/.test(a.qs_edit_rate || "")) flags.push("Edit and rejection rates are not tracked with a data source. They are the earliest sign that drafts got worse or that clinicians stopped reading them.");
     if (/Notice only|Not yet decided/.test(a.qs_consent || "") || !a.qs_consent) flags.push("Recording consent relies on notice or is undecided. In all-party consent states such as California, patient class actions (Sharp, Dec 2024; Sutter Health and MemorialCare, Apr 2026) argue notice is not enough. Get legal review. Check the current source; as of Nov 2026.");
@@ -283,7 +292,7 @@ function buildTrackMetrics(track, a) {
     const runs = num(a.qa_runs), ok = num(a.qa_success), viol = num(a.qa_policy_viol), floor = num(a.qa_floor);
     rows.push(rateRow("Task success (correct end state)", ok, runs, "runs"));
     rows.push(rateRow("Runs with a policy violation", viol, runs, "runs"));
-    rows.push(["Success floor (stop below)", floor !== null ? `${floor}% (set by organization)` : "Not set. No default: set it from what a wrong action costs."]);
+    rows.push(["Stop-using point (success below)", floor !== null ? `${floor}% (set by organization)` : "Not set. No default: set it from what a wrong action costs."]);
     rows.push(["Consistency (pass^k)", a.qa_repeat_k || a.qa_repeat || "Not answered"]);
     rows.push(["Tool calls checked", a.qa_toolcalls || "Not answered"]);
     rows.push(["Hard-to-undo actions", a.qa_irreversible || "Not answered"]);
@@ -294,7 +303,8 @@ function buildTrackMetrics(track, a) {
     if (runs === null) flags.push("No local task runs. Before go-live, run a fixed task set with known correct end states and judge the end state in the system, not the agent's report.");
     if (runs !== null && runs < 100) flags.push(`Only ${runs} task runs. A success rate from a small set has a wide interval; treat it as provisional.`);
     if (!(a.qa_repeat || "").startsWith("Yes")) flags.push("Tasks were not repeated. One pass does not show the agent passes reliably; run each task several times and report pass^k.");
-    if (floor === null) flags.push("No success floor set. Decide the success rate below which you would stop, based on what a wrong action costs.");
+    if (floor === null) flags.push("No stop-using point set. Decide the success rate below which you would stop, based on what a wrong action costs.");
+    if (floor !== null && runs && ok !== null && (100 * ok / runs) < floor) flags.unshift(`Measured: ${Math.round(1000 * ok / runs) / 10}% task success, below the stop-using point (${floor}%). By the organization's own rule, it should not be in use.`);
     if (viol !== null && viol > 0) flags.push(`${viol} run(s) broke a policy. A right end state reached the wrong way still counts as a failure for governance.`);
     if (!/^No/.test(a.qa_irreversible || "") && !/^All/.test(a.qa_approval || "")) flags.push("It can take hard-to-undo actions without a human approving each one. Require approval for those actions, at least until the success rate is established.");
     if (!/^Yes/.test(a.qa_permissions || "")) flags.push("Permissions are not scoped to its tasks. An agent can only do the damage its access allows; limit it.");
