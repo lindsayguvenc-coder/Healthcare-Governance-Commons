@@ -140,6 +140,9 @@ footer a{color:var(--accent)}
     <div class="bar noprint">
       <button type="button" class="primary" id="goPlan">See my QC plan</button>
       <button type="button" id="reset">Reset to starting values</button>
+      <button type="button" id="exportPlan">Export plan</button>
+      <button type="button" id="importPlan">Import plan</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
       <span class="lbl" id="saved"></span>
     </div>
   </header>
@@ -616,7 +619,10 @@ const fn=(x)=>typeof x==="function"?x(D()):x;
 const st=p=>fn(p.start), dsc=p=>fn(p.desc), opts=p=>fn(p.options);
 const needM=m=>m.need?fn(m.need):true, needP=p=>p.need?fn(p.need):true;
 const val=(m,p)=>{const k=m.id+"."+p.id;return k in S?S[k]:st(p);};
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S));document.getElementById("saved").textContent="Saved in this browser";}catch(e){document.getElementById("saved").textContent="";}}
+// Every change bumps the revision, so an exported file says which version of the plan it is.
+function bump(){S._rev=(Number(S._rev)||0)+1;S._changed=new Date().toISOString();}
+const SAVED_MSG="Saved in this browser only. Export to keep a versioned copy.";
+function save(){bump();try{localStorage.setItem(KEY,JSON.stringify(S));document.getElementById("saved").textContent=SAVED_MSG;}catch(e){document.getElementById("saved").textContent="";}}
 
 // ---------- render ----------
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -725,7 +731,30 @@ if(L.ordered===undefined) L.ordered=true;
 const defScale=()=>SCALE0, defApprover=()=>APPROVER0;
 function lanesUntouched(){return L.ctrls.length>0&&L.ctrls.every(c=>c.ex)&&L.scale.join("\n")===SCALE0.join("\n")&&L.approver===APPROVER0;}
 function loadLanes(){L=LANE_DEF.clinical();saveL();renderLanes();}
-function saveL(){try{localStorage.setItem("qcSetup.lanes.v3",JSON.stringify(L));document.getElementById("saved").textContent="Saved in this browser";}catch(e){}}
+function saveL(){bump();try{localStorage.setItem("qcSetup.lanes.v3",JSON.stringify(L));localStorage.setItem(KEY,JSON.stringify(S));document.getElementById("saved").textContent=SAVED_MSG;}catch(e){}}
+// Export and import: the plan as a dated, numbered file the validation team keeps with its records.
+// Same file format as the Agent QC Monitor, so a plan can move between the two.
+const PLAN_FORMATS=["agent-qc-plan","agent-qc-monitor-plan"];
+document.getElementById("exportPlan").onclick=()=>{
+  const rev=Number(S._rev)||0, day=new Date().toISOString().slice(0,10);
+  const plan={format:"agent-qc-plan",formatVersion:1,source:"Commons Agent QC Setup",revision:rev,changed:S._changed||null,exported:new Date().toISOString(),settings:S,lanes:L};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(plan,null,1)],{type:"application/json"}));
+  const a=document.createElement("a");a.href=url;a.download=`qc-plan-${day}-r${rev}.json`;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  document.getElementById("saved").textContent=`Exported revision ${rev}.`;
+};
+document.getElementById("importPlan").onclick=()=>document.getElementById("importFile").click();
+document.getElementById("importFile").onchange=async e=>{
+  const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  try{
+    const p=JSON.parse(await f.text());
+    if(!PLAN_FORMATS.includes(p.format)||typeof p.settings!=="object"||!p.lanes) throw new Error("not a plan file");
+    S=p.settings; L=p.lanes; loadRules(); syncLim();
+    localStorage.setItem(KEY,JSON.stringify(S)); localStorage.setItem("qcSetup.lanes.v3",JSON.stringify(L));
+    renderLanes(); render();
+    document.getElementById("saved").textContent=`Loaded revision ${p.revision} from ${f.name}. This replaced what was in this browser.`;
+  }catch(err){document.getElementById("saved").textContent="That file isn't an exported plan, so nothing changed.";}
+};
 const ix=a=>L.scale.indexOf(a);
 function fit(c){ // keep each control's answers on the current scale
   const first=L.scale[0]||"";

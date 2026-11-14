@@ -21,6 +21,9 @@ const USE_TYPE_MAP = [
   ["Retrospective audit", "retrospective_audit"],
   ["Documentation / generative drafting", "generative_documentation"],
   ["Agentic workflow", "agentic_workflow"],
+  // Added Nov 14, 2026 so the ROI Assessment and this list match. The engine already had these profiles.
+  ["Diagnostic support", "diagnostic_primary"],
+  ["Administrative / operational", "operational_efficiency"],
 ];
 
 // Decision window implied by the use type (the questionnaire has no direct question)

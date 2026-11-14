@@ -780,7 +780,7 @@ function hasStrategy() {
 }
 // Recommendations only anchor to a strategy that is documented and in use (decided Nov 13, 2026).
 function recsAllowed() { return a().q_strategy === 'Yes — documented and in active use'; }
-function isScribe() { return (a().q_use_type || '').startsWith('Ambient scribe'); }
+function isScribe() { return (a().q_use_type || '').startsWith('Documentation / generative drafting'); }
 function isAgent() { return (a().q_use_type || '').startsWith('Agentic workflow'); }
 function countsCoding() {
   const c = a().q_coding_source || '';
@@ -846,10 +846,10 @@ function sectionStart() {
           'Risk stratification — identifies patients for intervention or escalation',
           'Workflow routing — determines care pathway or resource allocation',
           'Screening / flagging — identifies cases for human review',
-          'Diagnostic support — image, pathology, or lab interpretation',
           'Retrospective audit — quality review of past cases, no live clinical decisions',
-          'Ambient scribe / AI documentation — drafts notes from the visit',
+          'Documentation / generative drafting — produces text a clinician reviews before use',
           'Agentic workflow — takes multi-step actions in systems on its own',
+          'Diagnostic support — image, pathology, or lab interpretation',
           'Administrative / operational — scheduling, coding, prior auth, messaging',
           'Other',
         ],
