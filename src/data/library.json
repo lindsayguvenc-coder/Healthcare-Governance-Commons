@@ -706,6 +706,193 @@
       "verified": "2026-11-14"
     },
     {
+      "id": "nam-aicc-2025",
+      "tier": "primary",
+      "title": "An Artificial Intelligence Code of Conduct for Health and Medicine: Essential Guidance for Aligned Action",
+      "type": "guideline",
+      "source": "National Academy of Medicine",
+      "year": "2025",
+      "date": "2025-05",
+      "status": "final (NAM Special Publication)",
+      "url": "https://www.nationalacademies.org/publications/29087",
+      "nodes": [
+        "accountability",
+        "equity",
+        "learning-loop",
+        "forming",
+        "commons"
+      ],
+      "abstract": "The NAM's field-wide framework for responsible health AI: ten principles (engaged, safe, effective, equitable, efficient, accessible, transparent, accountable, secure, adaptive) and six commitments (advance humanity, ensure equity, engage impacted individuals, improve workforce well-being, monitor performance, innovate and learn). Written to align developers, health systems, payers, regulators, and patients around shared expectations. Guidance, not enforcement.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "who-ethics-ai-2021",
+      "tier": "primary",
+      "title": "Ethics and Governance of Artificial Intelligence for Health",
+      "type": "guideline",
+      "source": "World Health Organization",
+      "year": "2021",
+      "date": "2021-06-28",
+      "status": "final",
+      "url": "https://www.who.int/publications/i/item/9789240029200",
+      "nodes": [
+        "accountability",
+        "equity",
+        "forming",
+        "commons"
+      ],
+      "abstract": "WHO's first global guidance on AI in health, from an expert group of 20 over two years. Six principles: protect autonomy; promote well-being, safety, and the public interest; ensure transparency, explainability, and intelligibility; foster responsibility and accountability; ensure inclusiveness and equity; promote AI that is responsive and sustainable. Plus governance recommendations for governments, developers, and providers. The 2024 LMM guidance builds on it.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "chai-assurance-guide-2024",
+      "tier": "primary",
+      "title": "CHAI Assurance Standards Guide and Assurance Reporting Checklists",
+      "type": "guideline",
+      "source": "Coalition for Health AI (CHAI)",
+      "year": "2024",
+      "date": "2024-06-26",
+      "status": "released for public comment June 2024",
+      "url": "https://chai.org/wp-content/uploads/2024/06/CHAI-Assurance-Standards-Guide-6-26-2024.pdf",
+      "nodes": [
+        "validation",
+        "vendor-risk",
+        "watcher"
+      ],
+      "abstract": "Consensus guide organized around the stages of the health AI lifecycle, built on CHAI's 2023 Blueprint for Trustworthy AI. Core principles: usefulness and efficacy, fairness and equity, safety and reliability, transparency, and security and privacy. The companion checklists turn these into criteria for independent review of an AI solution at each stage.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "chai-playbooks-2026",
+      "tier": "primary",
+      "title": "CHAI AI Governance Playbooks",
+      "type": "guideline",
+      "source": "Coalition for Health AI (CHAI)",
+      "year": "2026",
+      "date": "2026-05-27",
+      "status": "released May 27, 2026; publicly available as PDFs",
+      "url": "https://www.chai.org/workgroup/cross-cutting/ai-governance",
+      "nodes": [
+        "authority",
+        "escalation",
+        "stop",
+        "vendor-risk",
+        "learning-loop",
+        "forming"
+      ],
+      "abstract": "Series of playbooks with baseline governance controls for health systems, built with more than 100 organizations through workshops and comment rounds. Domains include AI policy, organizational structures and roles, resources, lifecycle management and use (including AI incident reporting and decommissioning criteria), vendor management, and education. Written to scale down to community health centers, and the basis for the Joint Commission's RUAIH certification.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "mdcg-2025-6",
+      "tier": "primary",
+      "title": "MDCG 2025-6 / AIB 2025-1: FAQ on Interplay between the MDR & IVDR and the Artificial Intelligence Act",
+      "type": "regulation",
+      "source": "EU Medical Device Coordination Group and AI Board",
+      "year": "2025",
+      "date": "2025-06-19",
+      "status": "final (FAQ; evolving document)",
+      "url": "https://health.ec.europa.eu/medical-devices-sector/new-regulations/guidance-mdcg-endorsed-documents-and-other-guidance_en",
+      "nodes": [
+        "validation",
+        "vendor-risk"
+      ],
+      "abstract": "First joint guidance from the EU medical device and AI boards. A medical device AI system is high-risk under the AI Act when it is the device or a safety component of one and needs notified-body assessment; the device's MDR/IVDR class decides that, not the other way round. Manufacturers may fold AI Act requirements (data governance, logging, transparency, human oversight, post-market monitoring) into existing MDR/IVDR quality and surveillance processes. Dates in it predate the Digital Omnibus delay to Aug 2028. Link is to the MDCG guidance index.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "iso-42001-2023",
+      "tier": "primary",
+      "title": "ISO/IEC 42001:2023 — Information technology — Artificial intelligence — Management system",
+      "type": "standard",
+      "source": "ISO/IEC JTC 1/SC 42",
+      "year": "2023",
+      "date": "2023-12-18",
+      "status": "published, edition 1 (paid standard)",
+      "url": "https://www.iso.org/standard/42001",
+      "nodes": [
+        "accountability",
+        "authority",
+        "learning-loop",
+        "vendor-risk"
+      ],
+      "abstract": "The international, certifiable management-system standard for organizations that develop, provide, or use AI. Sets requirements for establishing, running, and continually improving an AI management system on the Plan-Do-Check-Act model, including AI risk assessment, AI system impact assessment, and management review. Governs the organization's processes rather than any single AI system. Full text is paid.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "nist-ai-100-2-2025",
+      "tier": "primary",
+      "title": "Adversarial Machine Learning: A Taxonomy and Terminology of Attacks and Mitigations (NIST AI 100-2e2025)",
+      "type": "standard",
+      "source": "NIST",
+      "year": "2025",
+      "date": "2025-03",
+      "status": "final (NIST plans annual updates)",
+      "url": "https://doi.org/10.6028/NIST.AI.100-2e2025",
+      "nodes": [
+        "vendor-risk",
+        "watcher",
+        "h3"
+      ],
+      "abstract": "Common terms and a classification of attacks on AI systems. For predictive AI it covers evasion, poisoning, and privacy attacks; for generative AI it adds supply chain attacks, direct and indirect prompt injection, misuse, and security of AI agents. Attacks are sorted by lifecycle stage, attacker goals, capabilities, and knowledge, with known mitigations and their limits. Built on the AI RMF's security and resilience concepts.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "future-ai-2025",
+      "tier": "primary",
+      "title": "FUTURE-AI: International Consensus Guideline for Trustworthy and Deployable Artificial Intelligence in Healthcare",
+      "type": "peer-reviewed",
+      "source": "BMJ (Lekadir et al., FUTURE-AI Consortium)",
+      "year": "2025",
+      "date": "2025-02-05",
+      "status": "published (open access)",
+      "url": "https://doi.org/10.1136/bmj-2024-081554",
+      "nodes": [
+        "validation",
+        "equity",
+        "explainability",
+        "watcher"
+      ],
+      "abstract": "Consensus guideline from 117 experts in 50 countries, built by literature review and a modified Delphi process. Six principles (fairness, universality, traceability, usability, robustness, explainability) and 30 best practices spanning design, development, validation, regulation, deployment, and monitoring. Intended to evolve with the field.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "decide-ai-2022",
+      "tier": "primary",
+      "title": "Reporting Guideline for the Early-Stage Clinical Evaluation of Decision Support Systems Driven by Artificial Intelligence: DECIDE-AI",
+      "type": "peer-reviewed",
+      "source": "Nature Medicine and The BMJ (Vasey et al.)",
+      "year": "2022",
+      "date": "2022-05-18",
+      "status": "published",
+      "url": "https://doi.org/10.1038/s41591-022-01772-9",
+      "nodes": [
+        "validation",
+        "override",
+        "explainability"
+      ],
+      "abstract": "Reporting checklist for the first small live clinical evaluations of AI decision support, between in-silico testing and large trials. 17 AI-specific items and 10 generic items, with emphasis on human factors, safety, and how clinicians actually use the output. Fills the gap between TRIPOD+AI (model development) and CONSORT-AI (randomized trials).",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "eo-14365-2025",
+      "tier": "primary",
+      "title": "Executive Order 14365 — Ensuring a National Policy Framework for Artificial Intelligence",
+      "type": "regulation",
+      "source": "The White House",
+      "year": "2025",
+      "date": "2025-12-11",
+      "status": "in effect; does not itself change state laws, which stay enforceable unless a court or Congress acts",
+      "url": "https://www.govinfo.gov/content/pkg/DCPD-202501186/html/DCPD-202501186.htm",
+      "nodes": [
+        "forming",
+        "equity",
+        "contestation"
+      ],
+      "abstract": "Sets a federal policy of a minimally burdensome national AI framework. Directs DOJ to form an AI Litigation Task Force to challenge state AI laws, Commerce to list state laws it considers onerous, and the FTC to issue a policy statement on state-required bias mitigation, and ties some federal funding to state alignment. Relevant to every node that leans on state law (AB 3030, SB 1120, Colorado) as a possible point of federal challenge.",
+      "verified": "2026-11-14"
+    },
+    {
       "id": "guvenc-ecg-2025",
       "tier": "commons",
       "title": "ECG Arrhythmia Detection Governance Demo: Stop Mechanism Implementation with MIMIC-IV",
