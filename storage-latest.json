@@ -1,0 +1,21 @@
+{
+ "day": "2026-11-14",
+ "keyCount": 0,
+ "usage": {
+  "user_documents": {
+   "type": "none"
+  },
+  "public_documents": {
+   "type": "none"
+  },
+  "suggest:pending": {
+   "type": "none"
+  },
+  "suggest:decisions": {
+   "type": "none"
+  },
+  "suggest:stats": {
+   "type": "none"
+  }
+ }
+}
