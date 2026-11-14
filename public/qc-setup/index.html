@@ -188,8 +188,8 @@ footer a{color:var(--accent)}
       <div class="desc"><i>Descriptor</i>The answers the agent can give, one per line. If they have an order, such as urgency, tick the box below and put the most urgent at the top. An answer below the lane is slower than acceptable (undertriage); above it is faster (overtriage). Starting value: six levels modeled on the disposition tiers common in US nurse telephone triage (Schmitt-Thompson style). Best alignment: use the exact levels and lanes of the triage protocol your nurse line already licenses, so the agent is held to the same standard as the nurses.</div>
     </div>
     <div class="pt">
-      <div class="ctl"><h3>Lanes approved by</h3><textarea rows="2" id="approver" aria-label="Lanes approved by"></textarea><span class="start" id="approverNote"></span></div>
-      <div class="desc"><i>Descriptor</i>Lanes are a clinical decision. The approver signs the full set at validation, and again whenever a lane changes.</div>
+      <div class="ctl"><h3>Owner</h3><textarea rows="2" id="approver" aria-label="Owner"></textarea><span class="start" id="approverNote"></span></div>
+      <div class="desc"><i>Descriptor</i>Lanes are a clinical decision. The owner signs the full set at validation, and again whenever a lane changes. The same owner approves loosening changes and, unless delegated, releases.</div>
     </div>
     <p class="legend">Strip key: <span class="g">green</span> in the lane · <span class="r">red</span> would be rejected · <span class="w">amber</span> would warn · grey accepted.</p>
     <div id="ctrls" style="display:grid;gap:10px"></div>
@@ -324,9 +324,11 @@ function normTail(x){ // P(Z > x), Abramowitz-Stegun 26.2.17
   const t=1/(1+0.2316419*Math.abs(x)), d=0.3989422804014327*Math.exp(-x*x/2);
   const q=d*t*(0.319381530+t*(-0.356563782+t*(1.781477937+t*(-1.821255978+t*1.330274429))));
   return x>=0?q:1-q; }
+// The 1-2s and 1-3s limits are the Warning and Rejection limits set under Change detection.
+const LIM={w:2,r:3};
 const RULES = {
-  "1-2s":{desc:"One result beyond ±2 SD. Used here as a warning, a common modern choice.", fire:(x,i)=>Math.abs(x[i])>2},
-  "1-3s":{desc:"One result beyond ±3 SD", fire:(x,i)=>Math.abs(x[i])>3},
+  "1-2s":{desc:"One result beyond the warning limit (Change detection, above). Used here as a warning, a common modern choice.", fire:(x,i)=>LIM.w!==null&&Math.abs(x[i])>LIM.w},
+  "1-3s":{desc:"One result beyond the rejection limit (Change detection, above)", fire:(x,i)=>Math.abs(x[i])>LIM.r},
   "2-2s":{desc:"Two in a row beyond 2 SD, same side", fire:(x,i)=>i>=1&&((x[i]>2&&x[i-1]>2)||(x[i]<-2&&x[i-1]<-2))},
   "R-4s":{desc:"Nonstandard here. Westgard defines it within one run across two control levels; with one control per run it's applied across consecutive runs. Off by default.", fire:(x,i)=>i>=1&&((x[i]>2&&x[i-1]<-2)||(x[i]<-2&&x[i-1]>2))},
   "4-1s":{desc:"Four in a row beyond 1 SD, same side. Used here as a warning, a common choice.", fire:(x,i)=>{ if(i<3) return false; let up=true,dn=true; for(let k=i-3;k<=i;k++){ if(!(x[k]>1)) up=false; if(!(x[k]<-1)) dn=false; } return up||dn; }},
@@ -335,7 +337,7 @@ const RULES = {
 const RULE_ORDER=["1-2s","1-3s","2-2s","R-4s","4-1s","10x"];
 // Exact false rejection per run for each rule alone (stable in-control history).
 const Q1=normTail(1), Q2=normTail(2), Q3=normTail(3);
-const EXACT_PFR={"1-2s":2*Q2,"1-3s":2*Q3,"2-2s":2*Q2*Q2,"R-4s":2*Q2*Q2,"4-1s":2*Math.pow(Q1,4),"10x":2*Math.pow(0.5,10)};
+const EXACT_PFR={get "1-2s"(){return LIM.w===null?0:2*normTail(LIM.w)},get "1-3s"(){return 2*normTail(LIM.r)},"2-2s":2*Q2*Q2,"R-4s":2*Q2*Q2,"4-1s":2*Math.pow(Q1,4),"10x":2*Math.pow(0.5,10)};
 const H=10, K=10, TRIALS=40000;
 let ZB=null; // one fixed block of draws, reused by every rule set, so comparisons are paired
 function zblock(){ if(ZB) return ZB; const r=rng(7), n=TRIALS*(H+1+K); ZB=new Float64Array(n); for(let i=0;i<n;i++) ZB[i]=gaussFrom(r); return ZB; }
@@ -366,16 +368,17 @@ function binomTail(n,p,k){ if(k<=0) return 1; if(p<=0) return 0; if(p>=1) return
 function limitFor(n,p,alpha){ for(let k=0;k<=n+1;k++) if(binomTail(n,p,k)<=alpha) return k; return n+1; }
 
 const LJ_DEFAULT={"1-2s":"warn","1-3s":"reject","2-2s":"reject","R-4s":"off","4-1s":"warn","10x":"reject"};
-let ljMode={...LJ_DEFAULT};
+let ljMode={...LJ_DEFAULT}; // replaced from the saved plan (rules.westgard) once it loads
 const P=(x,d=1)=>(x*100).toFixed(d)+"%";
 const sgn=(x,d=1)=>{const v=x*100; if(Math.abs(v)<0.05) return `<span>0.0</span>`; return `<span class="${v<0?'neg':'pos'}">${v>0?'+':''}${v.toFixed(d)}</span>`;};
 let aloneCache={key:null,val:null};
 function renderLJ(){
   if(!$("ljTiles")) return;
+  syncLim();
   const o={shift:Number($("k_shift").value)||2, sdx:Number($("k_sdx").value)||2};
   const prev=(Number($("k_prev").value)||2)/100;
   const full=evaluate(ljMode,o);
-  const ck=o.shift+"|"+o.sdx;
+  const ck=o.shift+"|"+o.sdx+"|"+LIM.w+"|"+LIM.r;
   if(aloneCache.key!==ck){ const v={}; RULE_ORDER.forEach(k=>{ v[k]=evaluate({[k]:"reject"},o); v[k].pfr=EXACT_PFR[k]; }); aloneCache={key:ck,val:v}; }
   const alone=aloneCache.val, without={};
   RULE_ORDER.forEach(k=>{ if(ljMode[k]==="reject"){ const m={...ljMode}; m[k]="off"; without[k]=evaluate(m,o); } });
@@ -399,7 +402,7 @@ function renderLJ(){
                   : `<td class="n" colspan="3" style="text-align:left;color:var(--muted)">${m==="warn"?"Warn only. Doesn't reject.":"Off"}</td>`;
     return `<tr class="${m==="off"?"off":""}"><td><b>${k}</b><span class="d">${RULES[k].desc}</span></td><td>${sel}</td><td class="n">${P(a.pfr,2)}</td><td class="n">${P(a.sysK,0)}</td><td class="n">${P(a.rndK,0)}</td>${rem}</tr>`;
   }).join("") + `<tr class="sum"><td>Whole set</td><td></td><td class="n">${P(full.pfr,2)}</td><td class="n">${P(full.sysK,0)}</td><td class="n">${P(full.rndK,0)}</td><td colspan="3"></td></tr>`;
-  document.querySelectorAll("#ljRows select").forEach(el=>el.onchange=()=>{ ljMode[el.dataset.rule]=el.value; renderLJ(); });
+  document.querySelectorAll("#ljRows select").forEach(el=>{ if(el.dataset.rule==="1-2s"&&LIM.w===null){el.disabled=true;el.title="Warning limit is Off under Change detection";} el.onchange=()=>{ ljMode[el.dataset.rule]=el.value; S["rules.westgard"]={...ljMode}; save(); renderLJ(); renderPlan(); }; });
 }
 function renderBinom(){
   if(!$("bTiles")) return;
@@ -487,29 +490,38 @@ function renderSigma(){
 }
 // ---------- the nine measures ----------
 // status: here = set on this page; picker = calculated in the Metric Picker; stub = nothing to configure yet
+const OWNER_WHY=d=>d.domain==="clinical"?"Lanes are a clinical decision, not a technical one. Without a named owner, no one sets them.":"Lanes belong to whoever owns the outcome, not whoever built the agent. Without a named owner, no one sets them.";
 const M = [
  {id:"stab", name:"Performance stability", q:"Is it still doing what it was validated to do?", lab:"Control material on a schedule against a validated baseline.", primary:"Pass rate on the control set, against the locked baseline.", status:"here", metrics:[["accuracy","Accuracy"],["precision","Precision (repeat runs)"]],
   points:[
    {id:"range", label:"Validated range", type:"text", start:"The inputs used at validation", desc:"Inputs outside it are flagged for review, not answered. Performance outside this range is unknown, not assumed."},
    {id:"sched", label:"Control run schedule", type:"select", options:["Daily, and after any change","Weekly, and after any change","After any change, and monthly"], start:d=>({often:"Daily, and after any change",some:"Weekly, and after any change",rare:"After any change, and monthly"})[d.exp], desc:"Starting value follows exposure: how often something can change underneath the agent. Whatever the schedule, any change to the model, prompt or inputs gets a control run before results count."},
    {id:"cset", label:"Control set size", type:"number", start:12, desc:"Sized by decision points: one control near each boundary that matters, plus a few anchors and drift sensors. Roughly 8 to 15 for a triage agent; fewer for a narrow, low-stakes one. Each control adds false alarms, so the set stays small.", caveat:v=>v>15?"<b>Large set.</b> Each control adds false alarms and review time. Check that every control sits at a decision point.":""},
-   {id:"stop", label:"Stop-using point (% of runs acceptable)", type:"number", start:95, desc:"The pass rate below which the agent is withdrawn from use.", calc:v=>{const a=wilson(19,20),b=wilson(95,100);return `Judged on a sample: 19 of 20 passing is consistent with ${pct(a[0])} to ${pct(a[1])}; 95 of 100 with ${pct(b[0])} to ${pct(b[1])}.`}},
+   {id:"stop", label:"Stop-using point (% of runs acceptable)", type:"number", start:"", required:1, desc:"The pass rate below which the agent is withdrawn from use. No starting value: set it from what a wrong output costs. 95% is a common example, not a recommendation.", caveat:v=>(v===""||!(v>0))?"<b>Not set.</b> The plan is incomplete until this is set.":"", calc:v=>{const a=wilson(19,20),b=wilson(95,100);return `Judged on a sample: 19 of 20 passing is consistent with ${pct(a[0])} to ${pct(a[1])}; 95 of 100 with ${pct(b[0])} to ${pct(b[1])}.`}},
    {id:"base", label:"Baseline runs planned", type:"number", start:20, desc:"Twenty runs is the conventional minimum for provisional limits. It cannot exclude rare failure.", calc:v=>v>0?`Zero failures in ${v} runs bounds the true failure rate at about ${pct(1-zeroFailLower(v),1)} (one-sided 95%). Bounding it at 1% takes about ${runsToExclude(0.01)} runs.`:"", caveat:v=>v<20?"<b>Below 20 runs.</b> Provisional limits will not be stable.":""},
+   {id:"basepf", label:"Baseline runs for pass/fail rates", type:"number", start:100, desc:"A rate needs more runs than a mean. These runs set the failure rate the count limits are built on.", calc:v=>{if(!(v>0))return "";const x=Math.round(v*0.95),w=wilson(x,v);return `At this size, ${x} of ${v} passing (${pct(x/v)}) is consistent with ${pct(w[0])} to ${pct(w[1])}.`}},
+   {id:"est", label:"Runs before a provisional baseline is fixed", type:"number", start:300, desc:"Baselines start provisional. Each in-control run refines them until this many, then the limits are fixed. Runs that warned, rejected, or ran during a hold never feed the baseline."},
+   {id:"src", label:"Where the controls come from", type:"select", options:["Synthetic (written for QC)","Real past inputs, de-identified","Both"], start:"Synthetic (written for QC)", desc:"Synthetic controls may not behave like real work. A clean control result then cannot prove real output is unchanged, which is what the real-use sample is for."},
+   {id:"reps", label:"Repeat runs per control", type:"number", start:5, desc:"Each control runs this many times back to back. Agreement and pass^k (the share of controls that pass every repeat) are measured from them."},
+   {id:"real", label:"Real-use sample per control run", type:"number", start:5, desc:"Real outputs graded against a clinician's judgment each time the controls run. Controls catch drift on known cases; this sample catches what they don't cover."},
    {id:"agree", label:"Minimum agreement across repeats (%)", type:"number", start:d=>({exact:95,close:90,loose:80})[d.close], desc:"How often the same input must produce the same output. Starting value follows closeness.", calc:()=>{const a=wilson(19,20);return `19 of 20 agreeing is consistent with true agreement as low as ${pct(a[0])}.`}}
   ]},
  {id:"chg", name:"Change detection (shift and drift)", q:"Did something change?", lab:"Westgard rules on control runs; moving averages or CUSUM for slow drift.", primary:"Rule-set alarms on the control charts, one chart per control.", status:"here", metrics:[["drift","Change metric"]], calc:"change",
   points:[
-   {id:"warn", label:"Warning limit", type:"select", options:["2 SD","2.5 SD","Off"], start:"2 SD", desc:"At 2 SD, about 4.6% of control values warn when nothing has changed (about 1 in 22). With two control values per run, about 9% of runs warn. Each warning needs review; staff for it."},
-   {id:"rej", label:"Rejection limit", type:"select", options:["3 SD","3.5 SD"], start:"3 SD", desc:"At 3 SD, about 0.27% of control values are falsely rejected (about 1 in 370). The rate rises with more control values per run or more rules together. Narrower limits interrupt service more; wider limits detect true change later."},
+   {id:"warn", label:"Warning limit", type:"select", options:["2 SD","2.5 SD","Off"], start:"2 SD", desc:"At 2 SD, about 4.6% of control values warn when nothing has changed (about 1 in 22). With two control values per run, about 9% of runs warn. Each warning needs review; staff for it. Also sets the 1-2s rule in the rules calculator."},
+   {id:"rej", label:"Rejection limit", type:"select", options:["3 SD","3.5 SD"], start:"3 SD", desc:"At 3 SD, about 0.27% of control values are falsely rejected (about 1 in 370). The rate rises with more control values per run or more rules together. Narrower limits interrupt service more; wider limits detect true change later. Also sets the 1-3s rule in the rules calculator."},
    {id:"chart", label:"Charting", type:"fixed", start:"One chart per control, each with its own baseline", desc:"Adding or replacing a control re-baselines that control only; the other charts are unaffected."},
+   {id:"refix", label:"After a corrective action", type:"fixed", start:"Multi-run rules and count blocks start over; they never look back past a fix", desc:"Otherwise the runs from before the fix keep tripping the rules after the cause is gone."},
    {id:"block", label:"Block size for pass/fail counts (runs)", type:"number", start:20, desc:"Failures are counted per fixed, non-overlapping block. A sliding window that moves one run at a time alarms far more often than the stated rates."},
    {id:"drift", label:"Drift sensors", type:"select", options:["Warn only (never reject)","Not used"], start:d=>(d.close==="loose"&&d.exp==="rare")?"Not used":"Warn only (never reject)", desc:"A drift sensor has no correct answer, so a change shows the agent changed, not that the output is wrong. An unacknowledged drift warning still holds the agent."},
    {id:"gate", label:"Version gate", type:"select", options:["Required before a new model version goes live","Control run after the change, before results count"], start:d=>d.exp==="rare"?"Control run after the change, before results count":"Required before a new model version goes live", desc:"A hosted model can change without notice. The gate runs the new version against the same controls, on a larger sample, before its output is used. Starting value follows exposure."},
+   {id:"shift", label:"Allowable shift on a version change (% of baseline)", type:"number", start:10, desc:"How far results may move between the old and new version and still pass the gate. Over it, the new version is blocked until someone rolls back or signs an override."},
+   {id:"grade", label:"Grade rule", type:"select", need:()=>S["k1.type"]==="graded", options:["Reject at 2 grades off; warn at 4 in a row 1 grade off","Reject at 1 grade off"], start:"Reject at 2 grades off; warn at 4 in a row 1 grade off", desc:"Grades must be wider than the grader's own wobble: at least 4 grader SDs apart, from a grader precision study. A fixed one-grade rule on a 1–5 scale spans 40% of the range."},
   ]},
  {id:"ae", name:"Allowable error", q:"Is the change acceptable?", lab:"Acceptance limits per control level, set at validation.", primary:"Share of runs within their lanes.", status:"here", lanes:1, calc:"sigma",
   points:[
    {id:"lanes", label:"Acceptance limits", type:"select", options:["Two-sided, asymmetric","Two-sided, symmetric","One-sided","A set of acceptable answers"], start:()=>(typeof L!=="undefined"&&L&&L.ordered===false)?"A set of acceptable answers":"Two-sided, asymmetric", desc:"Deviation is assessed in both directions, and the two limits need not match. In triage, a disposition slower than its lane (undertriage) is a rejection; faster (overtriage) is a warning. Set each limit by the clinical cost of error in that direction."},
-   {id:"owner", label:"Who sets the lanes", type:"text", start:d=>d.domain==="clinical"?"Clinical leadership for the service line":"Whoever owns the decision the output feeds", desc:d=>d.domain==="clinical"?"Lanes are a clinical decision, not a technical one. Without a named owner, no one sets them.":"Lanes belong to whoever owns the outcome, not whoever built the agent. Without a named owner, no one sets them."},
+   {id:"owner", label:"Owner", type:"fixed", start:()=>(typeof L!=="undefined"&&L)?L.approver:"", desc:d=>"Set once, under Lanes. The owner signs the lanes, approves any loosening change, and holds release authority unless it is delegated below. "+OWNER_WHY(d)},
    {id:"never", label:"Never-events", type:"text", start:d=>d.domain==="clinical"?"Listed at validation by clinicians":"Listed at validation by the owner", desc:d=>"Errors that reject a run regardless of its overall score, such as "+(d.domain==="clinical"?"a medication change omitted from a discharge summary":"a refrigerated item placed in a room-temperature aisle")+". One occurrence triggers the response layer."}
   ]},
  {id:"input", name:"Input integrity (pre-analytic)", q:"Did the input change, not the agent?", lab:"Pre-analytic checks; change control on reagent lots and reference intervals.", primary:"Runs whose recorded inputs match the validated configuration.", status:"here",
@@ -518,6 +530,7 @@ const M = [
    {id:"notify", label:"Notification source, per input", type:"text", start:"Named for each input (e.g., laboratory informatics for reference ranges)", desc:"Who tells you when it changes. An input with no named source changes silently."},
    {id:"fp", label:"Input fingerprint", type:"select", options:["Every run","Every control run only"], start:"Every run", desc:"Each run records the versions of its inputs. A mismatch with the validated configuration is flagged before that run's results count. This is how a shift is traced to its cause in minutes instead of days."},
    {id:"attr", label:"Attribution rule", type:"fixed", start:"When a control shifts, check the input fingerprint before the agent", desc:"Inputs changed and agent unchanged: an input change. A change to a reference range or spec is a clinical decision about the lanes; a new data source is revalidation. Monitoring the agent alone blames it for changes it did not make."},
+   {id:"inj", label:"Prompt-injection controls", type:"text", start:"A few controls with planted instructions, one per attack style", desc:"Anything the agent reads can carry hidden instructions. Following one is a never-event. Controls stay fixed once added; new attack styles are added as new controls, each with its own baseline."},
    {id:"live", label:"Live input monitoring", type:"text", start:"Prevalence, missing-field rate, language mix", desc:"Moving averages on a few properties of real traffic. A prevalence shift changes PPV with no change to the agent; it should not read as model drift."}
   ], teach:"In the lab-explainer runs, a reference-range change (Lab A to Lab B) moved all seven borderline results on the first run, with the agent unchanged. The QC caught a change the agent did not make."},
  {id:"sub", name:"Commutability and subgroup performance", q:"Does it behave the same for everyone it serves, in every voice?", lab:"Commutable control material that behaves like patient samples; results reported by population.", primary:"The primary measure reported per group, with intervals, beside the overall figure.", status:"here", need:d=>d.cons==="high"?true:"optional",
@@ -528,19 +541,22 @@ const M = [
    {id:"gap", label:"Size that matters: group error rate, as a multiple of the overall error rate", type:"number", start:1.5, desc:"Set at validation; a governance decision, not a statistical one. A ratio rather than percentage points, because errors are rare: a group missed at 4% when the overall miss rate is 2% is only 2 points apart, but missed twice as often.", calc:v=>{if(!(v>1))return "";const x=7,n=200,o=0.02,r=(x/n)/o,w=wilson(x,n),meets=r>=v,clears=w[0]>o;return `Example: overall miss rate 2%. A group with ${x} misses in ${n} (${pct(x/n,1)}, ${r.toFixed(2)} times overall) ${meets?"meets":"does not meet"} the ratio. Its interval is ${pct(w[0],1)} to ${pct(w[1],1)}, which ${clears?"clears":"still includes"} 2%, so it is ${meets&&clears?"confirmed for review":meets?"watched, not yet confirmed":"not flagged"}.`}, caveat:v=>v<=1?"<b>A ratio of 1 or less</b> flags every group with any excess. Use a ratio above 1.":""},
    {id:"evid", label:"Evidence that the gap is real", type:"fixed", start:"The lower bound of the group's 95% interval is above the overall error rate, and the flag holds on the next review window", desc:"A gap that meets the ratio but not the interval is watched, not acted on. Confirming on the next window guards against the chance flags that come from comparing many groups at once."},
    {id:"voice", label:"Voice and language controls", type:"text", start:"At least one variant per voice the population uses", desc:"Each checked for commutability. This is how differences by voice are caught before the people the output affects meet them."},
-   {id:"cad", label:"Review cadence", type:"select", options:["Quarterly","Monthly","At each periodic review"], start:"Quarterly", desc:"Also run whenever an overall threshold is crossed."}
+   {id:"cad", label:"Review cadence", type:"select", options:["Monthly","Quarterly","Twice yearly","At each periodic review"], start:"Quarterly", desc:"Also run whenever an overall threshold is crossed."}
   ], teach:"In the grocery runs, the brand-name variant “Del Monte cut fruit cup” went to Pantry 17 of 20 times. Del Monte sells shelf-stable fruit cups: the brand name changed the product, not just the wording. A control error, not an agent error."},
  {id:"esc", name:"Escalation (read-back)", q:"Does it ask when it should?", lab:"Critical-value read-back: a result is not complete until it is communicated and confirmed.", primary:"On controls that require a behavior, the share of runs in which it occurred.", status:"here", lanes:1, need:d=>d.cons==="low"?"optional":true,
   points:[
    {id:"req", label:"Required behaviors, per control", type:"text", start:d=>d.domain==="clinical"?"Set by clinicians at validation, alongside the lanes (e.g., postpartum message with low mood: must ask the safety question)":"Set by the owner at validation, alongside the lanes (e.g., an ambiguous item: must ask which one rather than guess)", desc:"A required behavior is part of the acceptance criteria, not a quality bonus. A correct disposition without it is still nonconforming."},
    {id:"cons", label:"Consequence when absent", type:"select", options:["Rejection (safety behaviors)","Warning (lower-stakes behaviors)"], start:"Rejection (safety behaviors)", desc:"One missed safety question on a control holds the agent, matching never-event handling. A warning fits lower-stakes behaviors, such as confirming a callback number."},
    {id:"runs", label:"Runs per required-behavior control", type:"number", start:20, desc:"Default required rate for safety behaviors: every run.", calc:v=>v>0?`${v} of ${v} runs asking gives a one-sided 95% lower bound of about ${pct(zeroFailLower(v))} on the true rate.`:"", caveat:v=>v<60?"<b>Small sample.</b> A perfect record here still allows occasional misses; about 60 perfect runs are needed before the 95% lower bound reaches 95%.":""},
+   {id:"ovr", label:"Override tracking", type:"text", start:d=>d.domain==="clinical"?"Clinician overrides, edits and dismissals, from the EHR or the tool's own log":"Every time I correct, edit, redo or reject a real output", desc:"An override is any time a person corrects, edits, redoes or rejects a real output. A rising override rate is often the first sign of trouble, before the controls move."},
+   {id:"ovrw", label:"Override rate warning", type:"select", options:["Warn when it rises over the review period","Warn above a set rate"], start:"Warn when it rises over the review period", desc:"Charted per agent. A warning even when the controls look fine."},
    {id:"over", label:"Unnecessary asking: upper limit", type:"text", start:"Set at validation", desc:"Asking has a cost (delay, burden on the person asked, inbox volume). This is the overtriage counterpart: a warning, not a rejection."},
    {id:"ceil", label:"Provisional handling while waiting", type:"text", start:d=>d.domain==="clinical"?"Most serious plausible answer, capped at a ceiling set at validation (e.g., no higher than a 1-hour nurse callback unless a red flag is named)":"The safer plausible answer, capped at a ceiling set at validation", desc:d=>d.domain==="clinical"?"Without a ceiling, “worst plausible answer” sends unknowns to 911.":"Without a ceiling, “safest answer” can mean refusing or escalating everything."}
   ], teach:"In the triage runs, a stability score rewarded the design that never asked: it was more consistent and stayed in its lanes, and it never asked the postpartum safety question. Stability is not safety."},
  {id:"grader", name:"Grader reliability", q:"Is the grader trustworthy?", lab:"Method comparison; two-person checks.", primary:"Agreement between the grader and expert review on a shared sample.", status:"here", grader:1,
   points:[
-   {id:"g2", label:"Second review", type:"text", start:d=>d.domain==="clinical"?"A clinician re-grades a sample of graded runs":"A subject expert re-grades a sample of graded runs", desc:"A grade is only as reliable as the grader. Precision can be measured now; whether an LLM grader is biased has not been checked."}
+   {id:"g2", label:"Second review (% of graded runs)", type:"number", need:()=>!!GRADER[otype()], start:20, desc:d=>(d.domain==="clinical"?"A clinician":"A subject expert")+" re-grades this share of graded runs, without seeing the first grade. A grade is only as reliable as the grader. Precision can be measured now; whether an LLM grader is biased has not been checked."},
+   {id:"kappa", label:"Minimum reviewer agreement (Cohen's κ)", type:"number", need:()=>!!GRADER[otype()], start:0.6, desc:"Below it, the grades are not reliable enough to chart. 0.6 is the usual floor for substantial agreement; set it higher where grades decide harm."}
   ]},
  {id:"eqa", name:"External quality assessment", q:"How does it compare with others running the same thing?", lab:"Proficiency testing by peer group.", primary:"None yet.", status:"stub", need:d=>d.cons==="high"?true:"optional",
   points:[
@@ -552,15 +568,22 @@ const M = [
   points:[
    {id:"auto", label:"Auto-release criteria", type:"fixed", start:"No rejection rule fired, no warning past its deadline, model version unchanged, no locked parameter changed", desc:"Auto-release is a privilege of a stable, unchanged system; any change revokes it until the next acceptable run. Acknowledged warnings do not block it."},
    {id:"first", label:"Automatic first response to a rejection", type:"select", options:["Hold and route to the human queue","Rerun once (random error suspected)","Fail over to a backup with its own QC","Switch to the contingency procedure","Warn and log; hold only on a never-event"], start:d=>d.cons==="low"?"Warn and log; hold only on a never-event":"Hold and route to the human queue", desc:"A single rerun can resolve random error; repeated reruns until one passes conceal real error, so only one is allowed."},
+   {id:"rerun", label:"Confirmation reruns after a rejection", type:"number", start:d=>d.cons==="low"?5:1, desc:d=>"Every rerun counts; this is a confirmation sample, not retrying until one passes. "+(d.cons==="low"?"Little-stakes: rerun up to this many before holding.":"Harm or cost stakes: the agent is held first, then rerun to confirm.")},
+   {id:"fail", label:"Fallback while held", type:"select", options:["Human queue","Previous agent version, with its own QC","Rules-based fallback","None: work waits"], start:"Human queue", desc:"Where the work goes while the agent is held. A fallback needs its own QC, or a held agent is replaced by an unmonitored one."},
    {id:"ack", label:"Warning acknowledgment deadline", type:"select", options:["1 business day","Same shift","4 hours","By the next periodic review"], start:d=>d.cons==="low"?"By the next periodic review":"1 business day", desc:"A warning not acknowledged by the deadline holds the agent like a rejection. The deadline is what gives a warning consequence."},
    {id:"queue", label:"Human queue: owner and response time", type:"text", need:d=>d.cons!=="low", start:"Named role; the response time staff already meet for the same work (same shift if none is defined)", desc:"While held, the agent's work goes to this queue, so the response time is how long patients wait for a human. If the owner does not respond in time, the item goes to a named backup role, then to the independent authority."},
-   {id:"rel", label:"Release authority", type:"fixed", start:d=>({high:"Operator after a first-line fix; independent authority after failover, unknown cause, a failed rerun, or a locked-parameter change",mod:"Operator after a fix; the owner reviews unknown causes and failed reruns",low:"The owner, after a fix; record what changed"})[d.cons], desc:"The person who loosened a limit does not also release under it."},
+   {id:"relAck", label:"Who may acknowledge a warning", type:"select", options:["Operator","Owner","Independent authority"], start:d=>d.cons==="low"?"Owner":"Operator", desc:"Release authority is set per power. Solo, every row can be the owner; the rows are here for the day someone else helps."},
+   {id:"relFirst", label:"Who may release after a first-line fix", type:"select", options:["Operator","Owner","Independent authority"], start:d=>d.cons==="low"?"Owner":"Operator", desc:"A first-line fix: the cause is known, no failover happened, and no locked parameter changed. Record what changed."},
+   {id:"relHard", label:"Who may release after failover, an unknown cause, a failed rerun, or a locked-parameter change", type:"select", options:["Operator","Owner","Independent authority"], start:d=>d.cons==="high"?"Independent authority":"Owner", desc:"The person who loosened a limit does not also release under it."},
+   {id:"relOver", label:"Who may sign a version-gate override", type:"select", options:["Operator","Owner","Independent authority"], start:d=>d.cons==="high"?"Independent authority":"Owner", desc:"Accepting a version that failed the gate makes it the new baseline. It is a loosening change, so it waits for approval on a different day, unless it is an emergency."},
    {id:"look", label:"Lookback scope", type:"text", need:d=>d.cons!=="low", start:d=>d.domain==="clinical"?"Outputs capable of harm since the last acceptable QC run, higher-harm direction first (in triage, undertriage)":"Outputs since the last acceptable QC run that could cause harm or cost, worst first", desc:"Targeted, not a review of everything. The scope is set before the failure, not during it."},
    {id:"corr", label:"Corrected outputs and notification", type:"text", need:d=>d.cons!=="low", start:d=>d.domain==="clinical"?"Clinician, patient, and chart correction, as intended use requires":"Whoever acted on the output, and the record it changed", desc:"Fixing the agent does not fix outputs already acted on."},
+   {id:"gap", label:"Longest acceptable time from hold to contingency", type:"select", need:d=>d.cons!=="low", options:["Within the hour","Within 4 hours","Within 24 hours","Within 72 hours","Within one week"], start:d=>d.cons==="high"?"Within 4 hours":"Within 24 hours", desc:"How long the work may wait between a hold and the fallback taking over. The Validation Protocol Generator asks hospitals the same question."},
    {id:"cont", label:"Contingency reminders", type:"select", need:d=>d.cons==="high", options:["24 h, 72 h, 7 days","12 h, 24 h, 72 h"], start:"24 h, 72 h, 7 days", desc:"Contingency is meant to be visible and uncomfortable, so it does not become the permanent workflow."},
    {id:"tiers", label:"Change tiers", type:"fixed", start:d=>({high:"Re-baseline (operator) · Verification: control set plus a real-task sample (independent authority) · Revalidation: the claim changed (independent authority and "+(d.domain==="clinical"?"clinical leadership":"the owner")+")",mod:"Re-baseline (operator) · Verification: control set plus a real-task sample (operator; the owner signs model changes) · Revalidation when the use changes (the owner)",low:"Re-baseline and verification by the owner · Revalidation when the use changes"})[d.cons], desc:"Routine changes stay cheap and full revalidation stays rare."},
    {id:"capa", label:"When QC misses a failure", type:"fixed", start:"QC design review, not an automatic new control", desc:"Were the controls at the right decision points? Were the rules strong enough for the method's sigma? The usual fix is to move or replace a control, not add one."},
-   {id:"rev", label:"Periodic review", type:"select", options:["Monthly","Weekly","Quarterly"], start:d=>d.cons==="low"?"Quarterly":"Monthly", desc:"Trends, open warnings, time on contingency, lookback outcomes."},
+   {id:"rev", label:"Periodic review", type:"select", options:["Weekly","Monthly","Quarterly","Twice yearly","Annually"], start:d=>d.cons==="low"?"Quarterly":"Monthly", desc:"Trends, open warnings, time on contingency, lookback outcomes."},
+   {id:"cost", label:"Fully loaded cost", type:"text", start:"API spend plus staff time spent checking and correcting, per completed task, against the time the task took before", desc:"Shown at each periodic review. A month-over-month rise is a warning. The ROI Assessment calls this the cost of checking the tool."},
    {id:"out", label:"Outward reporting", type:"select", need:d=>d.cons!=="low", options:d=>d.domain==="clinical"?["Vendor and safety event reporting","Vendor, safety event reporting, and the Commons registry when registration reopens"]:["Vendor and the organization's incident process","Vendor, incident process, and the Commons registry when registration reopens"], start:d=>d.domain==="clinical"?"Vendor and safety event reporting":"Vendor and the organization's incident process", desc:"Confirmed failures leave the building. The Commons registry is browse-only while registration is paused."}
   ]}
 ];
@@ -569,7 +592,11 @@ const CHIP={opt:["opt","Optional at this level"],here:["here","Set here"],picker
 // ---------- state ----------
 const KEY="qcSetup.v1"; let S={};
 try{S=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){S={}}
-const D=()=>({domain:"clinical",cons:S["d.cons"]||"high",close:S["d.close"]||"close",exp:S["d.exp"]||"often"});
+function loadRules(){ljMode={...LJ_DEFAULT,...(S["rules.westgard"]||{})};}
+loadRules();
+// Warning and Rejection limits (Change detection) set the 1-2s and 1-3s rules.
+function syncLim(){const sd=v=>v==="Off"?null:parseFloat(v);const w=sd(S["chg.warn"]??"2 SD"),r=sd(S["chg.rej"]??"3 SD");LIM.w=w===null?99:w;LIM.r=r;if(w===null){ljMode["1-2s"]="off";LIM.w=null;}}
+const D=()=>({auto:S["d.auto"]||"informs",domain:"clinical",cons:S["d.cons"]||"high",close:S["d.close"]||"close",exp:S["d.exp"]||"often"});
 const fn=(x)=>typeof x==="function"?x(D()):x;
 const st=p=>fn(p.start), dsc=p=>fn(p.desc), opts=p=>fn(p.options);
 const needM=m=>m.need?fn(m.need):true, needP=p=>p.need?fn(p.need):true;
@@ -582,7 +609,7 @@ function control(m,p){
   const k=m.id+"."+p.id, v=val(m,p);
   if(p.type==="fixed") return `<div class="fixed">${esc(st(p))}</div>`;
   if(p.type==="select") return `<select data-k="${k}" aria-label="${esc(p.label)}">${opts(p).map(o=>`<option${o===v?" selected":""}>${esc(o)}</option>`).join("")}</select>`;
-  if(p.type==="number") return `<input type="number" min="1" data-k="${k}" value="${esc(v)}" aria-label="${esc(p.label)}">`;
+  if(p.type==="number") return `<input type="number" min="0" step="any" data-k="${k}" value="${esc(v)}" aria-label="${esc(p.label)}">`;
   return `<textarea rows="2" data-k="${k}" aria-label="${esc(p.label)}">${esc(v)}</textarea>`;
 }
 function live(m,p){
@@ -592,7 +619,7 @@ function live(m,p){
   return `${p.type!=="fixed"?`<span class="start${changed?" changed":""}">${changed?"Changed from starting value: "+esc(st(p)):"Starting value"}</span>`:""}${c?`<span class="calc">${c}</span>`:""}${w?`<div class="caveat">${w}</div>`:""}`;
 }
 function measureBody(m,i,chipKey){
-  const pts=m.points.filter(p=>!(m.grader&&p.id==="g2")), shown=pts.filter(needP), hidden=pts.length-shown.length;
+  const pts=m.points, shown=pts.filter(needP), hidden=pts.length-shown.length;
   return `<div class="mhead"><span class="lbl">Measure ${i+1} of 9 · <span class="chip ${CHIP[chipKey][0]}" style="margin:0">${CHIP[chipKey][1]}</span></span><h2 id="h-${m.id}">${m.name}</h2><p class="qq">${m.q}</p></div>
     <div class="meta"><div><b>Primary metric</b>${m.primary}</div><div><b>Lab equivalent</b>${m.lab}</div></div>
 ${m.lanes?`<p class="pickerlink">Lanes and required behaviors are set per control in Knob 3. <a href="#lanes">Go to lanes →</a></p>`:""}
@@ -613,10 +640,12 @@ function renderPlan(){
   const lines=["AGENT QC PLAN","Generated "+new Date().toLocaleDateString("en-CA")+" with the Commons Agent QC Setup (working prototype). Values marked * are starting values to confirm at validation.",""];
   lines.push(knob1Plan());
   lines.push(dialsPlan());
+  lines.push(harnessPlan());
   const skipped=[];
   M.forEach((m,i)=>{if(needM(m)!==true){skipped.push(m.name);return;}
     lines.push(`${i+1}. ${m.name.toUpperCase()}`,`   Primary metric: ${m.primary}`);
-    m.points.filter(needP).forEach(p=>{const v=val(m,p),sv=p.type!=="fixed"&&String(v)===String(st(p));lines.push(`   - ${p.label}: ${v}${sv?" *":""}`);});
+    m.points.filter(needP).forEach(p=>{const v=val(m,p),sv=p.type!=="fixed"&&String(v)===String(st(p));if(p.required&&(v===""||v==null)){lines.push(`   - ${p.label}: NOT SET (required)`);return;}lines.push(`   - ${p.label}: ${v}${sv?" *":""}`);});
+    if(m.id==="chg"){const r=RULE_ORDER.map(k=>`${k} ${ljMode[k]}`).join(", ");lines.push(`   - Westgard rules (numbers and grades): ${r}${RULE_ORDER.every(k=>ljMode[k]===LJ_DEFAULT[k])?" *":""}`);}
     lines.push("");});
   if(skipped.length) lines.push("OPTIONAL AT THIS CONSEQUENCE LEVEL, NOT SET: "+skipped.join("; "),"");
   lines.push(lanesPlan());
@@ -625,8 +654,10 @@ function renderPlan(){
 document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.k;if(!k)return;
   const [mid,pid]=k.split("."),m=M.find(x=>x.id===mid),p=m.points.find(x=>x.id===pid);
   S[k]=p.type==="number"?(e.target.value===""?st(p):Number(e.target.value)):e.target.value; save();
+  if(k==="chg.block"&&$("b_n")){$("b_n").value=S[k];renderBinom();}
+  if(k==="chg.warn"||k==="chg.rej"){syncLim();if($("ljTiles"))renderLJ();}
   document.getElementById(`lv-${mid}-${pid}`).innerHTML=live(m,p); renderPlan();});
-document.getElementById("reset").onclick=()=>{S={};L=LANE_DEF.clinical();try{localStorage.removeItem(KEY);localStorage.removeItem("qcSetup.lanes.v3")}catch(e){}renderLanes();document.getElementById("saved").textContent="";render();};
+document.getElementById("reset").onclick=()=>{S={};loadRules();L=LANE_DEF.clinical();try{localStorage.removeItem(KEY);localStorage.removeItem("qcSetup.lanes.v3")}catch(e){}renderLanes();document.getElementById("saved").textContent="";render();};
 document.getElementById("goPlan").onclick=()=>document.getElementById("plan").scrollIntoView({behavior:"smooth"});
 document.getElementById("copy").onclick=async()=>{try{await navigator.clipboard.writeText(document.getElementById("planText").textContent);document.getElementById("copied").textContent="Copied";}catch(e){document.getElementById("copied").textContent="Select the text and copy";}};
 
@@ -635,17 +666,27 @@ document.getElementById("copy").onclick=async()=>{try{await navigator.clipboard.
 const DIALS=[
  {k:"cons",q:"If an output is wrong and nobody catches it, what happens?",opts:[["high","Harm","Someone could be harmed, or money or legal standing lost"],["mod","Cost","Time or rework, and it gets caught downstream"],["low","Little","Easy to notice and undo"]],desc:"Sets the governance: which measures apply, who signs, how far back to look, how hard the response is. If a person checks every output before it is used, one level lower is usually right."},
  {k:"close",q:"How exact does the output need to be?",opts:[["exact","Exact","One right answer; small changes matter"],["close","Close","A range of answers is acceptable"],["loose","Loose","Any reasonable answer is fine"]],desc:"Sets the monitoring: agreement required across repeat runs, whether drift sensors run, lane width. Judge it against how much the agent varies; for numbers, the sigma calculator does this exactly."},
+ {k:"auto",q:"How much stands between its output and the world?",opts:[["informs","Informs","A person decides and can ignore it"],["recommends","Recommends","A person approves each one"],["acts","Acts unless stopped","It acts; a person reviews after"],["own","Acts on its own","No one reviews each action"]],desc:"The summary of the actions it is allowed, below. The Validation Protocol Generator asks the same question. It does not change the starting values yet."},
  {k:"exp",q:"How often can something change underneath it?",opts:[["often","Often","A hosted model that can update, or inputs that change"],["some","Sometimes","Planned, regular changes"],["rare","Rarely","A pinned model and fixed inputs"]],desc:"Sets how often controls run and whether a version gate is required."}
 ];
+const HARNESS=[
+ {k:"model",label:"Model and version",ph:"e.g. the model name and the version or date pinned",desc:"The version the plan was validated on. Any other version goes through the version gate."},
+ {k:"prompt",label:"Prompt",ph:"Name and version of the prompt or instructions",desc:"Part of the input fingerprint. A prompt change is a change to the agent: control run before results count."},
+ {k:"tools",label:"Tools it can call",ph:"One per line",desc:"Fewer tools is a tightening change and applies now. Adding one is a loosening change."},
+ {k:"actions",label:"Actions allowed",ph:"One per line: action, and whether it needs confirmation first (e.g. Draft a calendar event — no confirmation; Send an email — confirmation)",desc:"What it may read, write, send or change. Narrowing applies now. Widening waits for approval on a different day and needs a passing control run on the new permissions. Recorded with every run."}
+];
+function harnessHTML(){return `<li class="pt" style="display:block"><h3 style="margin:0 0 8px">The agent's harness</h3><div style="display:grid;gap:10px">${HARNESS.map(x=>`<div class="pt" style="border-top:none;padding-top:0"><div class="ctl"><label class="lbl" for="h_${x.k}">${x.label}</label><textarea rows="${x.k==="actions"?4:2}" id="h_${x.k}" data-h="${x.k}" placeholder="${esc(x.ph)}">${esc(S["h."+x.k]||"")}</textarea></div><div class="desc"><i>Descriptor</i>${x.desc}</div></div>`).join("")}</div></li>`;}
+function harnessPlan(){return ["THE AGENT'S HARNESS",...HARNESS.map(x=>`   ${x.label}: ${(S["h."+x.k]||"NOT SET").replace(/\n/g,"; ")}`),""].join("\n");}
+document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.h;if(!k)return;S["h."+k]=e.target.value;save();renderPlan();});
 function renderDials(){
   const d=D();
-  document.getElementById("dialList").innerHTML=DIALS.map(x=>`<li class="pt"><div class="dialq"><h3>${x.q}</h3><div class="types">${x.opts.map(o=>`<label><input type="radio" name="d_${x.k}" value="${o[0]}"${d[x.k]===o[0]?" checked":""}>${o[1]}<small>${o[2]}</small></label>`).join("")}</div></div><div class="desc"><i>Descriptor</i>${x.desc}</div></li>`).join("");
+  document.getElementById("dialList").innerHTML=harnessHTML()+DIALS.map(x=>`<li class="pt"><div class="dialq"><h3>${x.q}</h3><div class="types">${x.opts.map(o=>`<label><input type="radio" name="d_${x.k}" value="${o[0]}"${d[x.k]===o[0]?" checked":""}>${o[1]}<small>${o[2]}</small></label>`).join("")}</div></div><div class="desc"><i>Descriptor</i>${x.desc}</div></li>`).join("");
   const opt=M.filter(m=>needM(m)!==true).map(m=>m.name);
   document.getElementById("dialSummary").textContent=`At these settings, ${9-opt.length} of the nine measures apply.`+(opt.length?` Optional, shown closed: ${opt.join("; ")}.`:"");
 }
 function dialsPlan(){
   const d=D(), lab=k=>{const x=DIALS.find(y=>y.k===k);return x.opts.find(o=>o[0]===d[k])[1];};
-  return ["STAKES",`   Consequence: ${lab("cons")}. Closeness: ${lab("close")}. Exposure to change: ${lab("exp")}.`,""].join("\n");
+  return ["STAKES",`   Consequence: ${lab("cons")}. Closeness: ${lab("close")}. Autonomy: ${lab("auto")}. Exposure to change: ${lab("exp")}.`,""].join("\n");
 }
 document.addEventListener("change",e=>{const n=e.target.name||"";if(!n.startsWith("d_"))return;
   const k=n.slice(2); S["d."+k]=e.target.value; save();
@@ -738,7 +779,7 @@ function renderLanes(){
   document.getElementById("setCaveat").innerHTML=(n>15?`<div class="caveat"><b>Large set.</b> Each control adds false alarms and review time. Check that every control sits at a decision point.</div>`:"")+(ex?`<div class="caveat"><b>${ex} example control${ex===1?"":"s"} still in the set.</b> Example lanes are illustrations${D().domain==="clinical"?", not clinical guidance":""}.</div>`:"");
 }
 function lanesPlan(){
-  const out=["KNOB 3. LANES",`   Approved by: ${L.approver}${L.approver===defApprover()?" *":""}`,L.ordered?`   Answer scale (most urgent first): ${L.scale.join(" > ")}${L.scale.join("\n")===defScale().join("\n")?" *":""}`:`   Answers: ${L.scale.join(", ")}${L.scale.join("\n")===defScale().join("\n")?" *":""}`];
+  const out=["KNOB 3. LANES",`   Owner: ${L.approver}${L.approver===defApprover()?" *":""}`,L.ordered?`   Answer scale (most urgent first): ${L.scale.join(" > ")}${L.scale.join("\n")===defScale().join("\n")?" *":""}`:`   Answers: ${L.scale.join(", ")}${L.scale.join("\n")===defScale().join("\n")?" *":""}`];
   L.ctrls.forEach((c,i)=>{out.push(`   Control ${i+1}${c.ex?" (EXAMPLE, replace)":""}: ${c.case}`,(L.ordered?`     Expected: ${c.exp}. Lane: ${c.hi} to ${c.lo}. Slower: ${c.slow}. Faster: ${c.fast}.`:`     Expected: ${c.exp}.${(c.also||[]).length?" Also acceptable: "+c.also.join(", ")+".":""} Any other answer: ${c.out}.`)+(c.beh.trim()?` Required: ${c.beh} (if absent: ${c.behC}).`:""));});
   return out.join("\n");
 }
@@ -754,15 +795,16 @@ document.getElementById("ctrls").addEventListener("click",e=>{const d=e.target.d
 document.getElementById("addCtrl").onclick=()=>{const m=L.scale[Math.floor(L.scale.length/2)]||"";L.ctrls.push({ex:0,case:"",exp:m,hi:m,lo:m,slow:"Reject",fast:"Warn",also:[],out:"Reject",beh:"",behC:"None"});saveL();renderLanes();renderPlan();};
 document.getElementById("scale").addEventListener("change",e=>{const v=e.target.value.split("\n").map(x=>x.trim()).filter(Boolean);if(v.length<2){renderLanes();return;}L.scale=v;saveL();renderLanes();renderPlan();});
 document.getElementById("approver").addEventListener("input",e=>{L.approver=e.target.value;saveL();renderPlan();});
+document.getElementById("approver").addEventListener("change",()=>render());
 
 // ---------- knob 1 wiring: output type, metric choices, calculators ----------
 const CALC_IDS={sigma:["sg_tea","sg_bias","sg_cv"],lj:["k_shift","k_sdx","k_prev"],cnt:["b_p0","b_n","b_aw","b_ar","b_mult"],cat:["cs_p0","cs_n0","cs_w","cs_aw","cs_s","cs_p1","cs_ng","cs_ag"]};
 const RENDER={sigma:()=>renderSigma(),lj:()=>renderLJ(),cnt:()=>renderBinom(),cat:()=>renderCat()};
 function calcDefault(id){for(const t of ["tpl-sigma","tpl-lj","tpl-cnt","tpl-cat"]){const el=document.getElementById(t).content.querySelector("#"+id);if(el)return el.value;}return "";}
-const calcVal=id=>("c."+id in S)?S["c."+id]:calcDefault(id);
+const calcVal=id=>id==="b_n"?(S["chg.block"]??20):("c."+id in S)?S["c."+id]:calcDefault(id);
 function wire(kind){
   CALC_IDS[kind].forEach(id=>{const el=$(id);if(!el)return;el.value=calcVal(id);
-    let t;el.addEventListener("input",()=>{S["c."+id]=el.value;save();clearTimeout(t);t=setTimeout(()=>{RENDER[kind]();renderPlan();},kind==="lj"||kind==="cat"?250:0);});});
+    let t;el.addEventListener("input",()=>{if(id==="b_n"){S["chg.block"]=Number(el.value)||20;const b=document.querySelector('[data-k="chg.block"]');if(b)b.value=S["chg.block"];}else S["c."+id]=el.value;save();clearTimeout(t);t=setTimeout(()=>{RENDER[kind]();renderPlan();},kind==="lj"||kind==="cat"?250:0);});});
 }
 function mountCalcs(){
   document.querySelectorAll('[data-calcslot="sigma"]').forEach(slot=>{

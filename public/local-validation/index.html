@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function(){ if (document.documentE
       </div>
       <div class="bar small">
         <label>Reviewer <select id="reviewer"><option value="A">A (first)</option><option value="B">B (second, for agreement)</option></select></label>
-        <button id="q-second">Second-review sample (20%)</button>
+        <button id="q-second">Second-review sample (<span id="secondPct">20</span>%)</button>
         <button id="q-done">See results</button>
         <button id="save">Save progress</button>
         <label class="small">Load progress <input type="file" id="load-progress" accept=".json"></label>
@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function(){ if (document.documentE
     <h2 style="margin-top:12px">By patient group</h2>
     <div class="bar small"><label>Group by <select id="groupby"></select></label></div>
     <table id="group-table"><thead><tr><th>Group</th><th>Cases</th><th>With the outcome</th><th>Sensitivity</th><th>Specificity</th></tr></thead><tbody></tbody></table>
-    <p class="small muted">Small groups have wide intervals. A group with fewer than 30 sepsis cases can't show a reliable sensitivity on its own.</p>
+    <p class="small muted">Small groups have wide intervals. A group with fewer than <span class="minGroup">30</span> sepsis cases can't show a reliable sensitivity on its own.</p>
     <div class="bar" style="margin-top:12px">
       <button class="primary" id="to-vpg">Use these counts in the Validation Protocol</button>
       <button id="dl-counts">Download counts</button>
@@ -225,6 +225,10 @@ document.addEventListener('DOMContentLoaded', function(){ if (document.documentE
 <script>
 (function () {
 const LVK = window.LVK;
+// Shared settings, named as in the Agent QC settings registry (grader.second_review, grader.agreement_min, subgroup.min_size).
+const SET = { secondReview: 0.2, kappaMin: 0.6, minGroup: 30 };
+document.getElementById('secondPct').textContent = Math.round(SET.secondReview * 100);
+document.querySelectorAll('.minGroup').forEach((e) => { e.textContent = SET.minGroup; });
 const PACKS = Object.assign({}, window.RULE_PACKS);
 let PACK = PACKS.sepsis_ase;
 const $ = (id) => document.getElementById(id);
@@ -446,7 +450,7 @@ $('q-second').onclick = () => {
   const rand = rng(answered.length * 31 + 7);
   const pool = answered.slice();
   for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-  st.second = pool.slice(0, Math.max(10, Math.round(answered.length * 0.2)));
+  st.second = pool.slice(0, Math.max(10, Math.round(answered.length * SET.secondReview)));
   $('reviewer').value = 'B'; st.i = 0; show();
 };
 function alertLine(t) { $('q-count').textContent = t; }
@@ -526,8 +530,8 @@ function results() {
     const pa = both.filter((id) => st.human.A[id] === 'yes').length / n, pb = both.filter((id) => st.human.B[id] === 'yes').length / n;
     const pe = pa * pb + (1 - pa) * (1 - pb);
     const k = pe === 1 ? 1 : (ag - pe) / (1 - pe);
-    kp.textContent = `Reviewer agreement: ${pc(ag)} raw, Cohen's kappa ${k.toFixed(2)} on ${n} cases both reviewers answered.`;
-  } else kp.textContent = 'Reviewer agreement: not measured yet. Have a second reviewer do the 20% sample to get it.';
+    kp.textContent = `Reviewer agreement: ${pc(ag)} raw, Cohen's kappa ${k.toFixed(2)} on ${n} cases both reviewers answered.` + (k < SET.kappaMin ? ` That's below the minimum reviewer agreement (κ ${SET.kappaMin}), so the reviewed labels aren't reliable enough to set ground truth yet. Agree on the definition and re-review.` : '');
+  } else kp.textContent = `Reviewer agreement: not measured yet. Have a second reviewer do the ${Math.round(SET.secondReview * 100)}% sample to get it.`;
   // Per group
   const gs = $('groupby');
   if (!gs.options.length) {
@@ -543,7 +547,8 @@ function groups() {
   for (const v of vals) {
     const c = tally(st.rows.filter((r) => (r[g] || '(blank)') === v));
     const tr = document.createElement('tr');
-    [v, c.tp + c.fn + c.tn + c.fp, c.tp + c.fn, withCI(c.tp, c.tp + c.fn), withCI(c.tn, c.tn + c.fp)].forEach((x) => { const td = document.createElement('td'); td.textContent = x; tr.appendChild(td); });
+    const rate = (x, n) => n < SET.minGroup ? `insufficient data (${n} < ${SET.minGroup})` : withCI(x, n);
+    [v, c.tp + c.fn + c.tn + c.fp, c.tp + c.fn, rate(c.tp, c.tp + c.fn), rate(c.tn, c.tn + c.fp)].forEach((x) => { const td = document.createElement('td'); td.textContent = x; tr.appendChild(td); });
     body.appendChild(tr);
   }
 }

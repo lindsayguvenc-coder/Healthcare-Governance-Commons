@@ -842,14 +842,14 @@ function sectionStart() {
         type: 'select',
         options: [
           'Triage / prioritization — direct impact on care sequencing',
-          'Decision support at point of care',
-          'Risk stratification — identifies patients for intervention',
+          'Decision support at point of care — informs clinical judgment in real time',
+          'Risk stratification — identifies patients for intervention or escalation',
           'Workflow routing — determines care pathway or resource allocation',
           'Screening / flagging — identifies cases for human review',
           'Diagnostic support — image, pathology, or lab interpretation',
-          'Retrospective audit / quality improvement',
+          'Retrospective audit — quality review of past cases, no live clinical decisions',
           'Ambient scribe / AI documentation — drafts notes from the visit',
-          'Agentic workflow — takes actions across steps or systems',
+          'Agentic workflow — takes multi-step actions in systems on its own',
           'Administrative / operational — scheduling, coding, prior auth, messaging',
           'Other',
         ],
@@ -965,7 +965,7 @@ function sectionStrategy() {
       },
       {
         id: 'q_exit_threshold', required: true,
-        text: 'Has your organization defined an exit threshold — the point at which you would conclude this system should be sunset or not adopted?',
+        text: 'Has your organization defined a stop-using point — the point at which you would conclude this system should be withdrawn or not adopted?',
         type: 'select',
         options: [
           'Yes — formally defined',
@@ -976,7 +976,7 @@ function sectionStrategy() {
       },
       {
         id: 'q_exit_describe', required: false,
-        text: 'What is that threshold?',
+        text: 'What is that stop-using point?',
         type: 'textarea',
         showIf: () => a().q_exit_threshold === 'Yes — formally defined',
         placeholder: 'e.g. if clinical performance drops below X%, if equity gap exceeds Y%, if staff burden increases beyond Z...',
@@ -1186,7 +1186,7 @@ function sectionFinancial() {
         id: 'q_assurance_cost', required: true,
         text: 'Does that cost include the ongoing cost of checking the tool: monitoring, validation, audits, and clinician time spent verifying its output?',
         type: 'select',
-        note: 'Savings claims are usually gross. What the tool saves, minus what it costs to keep checking it, is the real return.',
+        note: 'Savings claims are usually gross. What the tool saves, minus what it costs to keep checking it (its fully loaded cost), is the real return.',
         options: ['Yes — estimated and included', 'Partly', 'No — not included', 'Unknown'],
       },
       {
@@ -2431,8 +2431,8 @@ ORGANIZATIONAL STRATEGY
 Strategy status: ${fmt(ans.q_strategy)}
 ${line('Strategic priorities', ans.q_strategy_priorities)}${line('Adoption/sunset criteria in strategy', ans.q_strategy_criteria)}${line('Criteria description', ans.q_strategy_describe)}Value definition status: ${fmt(ans.q_roi_defined)}
 ${line('Payoff and re-check dates', ans.q_recheck)}
-Exit threshold defined: ${fmt(ans.q_exit_threshold)}
-${line('Exit threshold description', ans.q_exit_describe)}
+Stop-using point defined: ${fmt(ans.q_exit_threshold)}
+${line('Stop-using point', ans.q_exit_describe)}
 CLINICAL & OPERATIONAL VALUE
 Expected clinical value: ${fmtArr(ans.q_clinical_expected)}
 How clinical value was assessed: ${fmt(ans.q_clinical_status)}

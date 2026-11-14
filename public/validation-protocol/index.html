@@ -1247,7 +1247,7 @@ function getSectionValidation() {
         placeholder: 'e.g. 10',
         showIf: () => hasMetrics,
         note: 'This is the trade-off your clinicians actually live with. The report uses it to compute net benefit: whether the model does better than flagging everyone or no one.' },
-      { id: 'q_floor_sens', text: 'Below what sensitivity would you stop using the model? (your floor)', type: 'number',
+      { id: 'q_floor_sens', text: 'Below what sensitivity would you stop using the model? (your stop-using point)', type: 'number',
         placeholder: 'e.g. 75 (percentage, 0–100)',
         showIf: () => hasMetrics,
         note: 'No default. The tool used to suggest one by trimming your number 3–7%, and that cut had no source. Set it from intended use and the harm of a missed case. Leave blank if not decided; the report flags it.' },
@@ -1312,7 +1312,7 @@ function getScribeTrack(a) {
         showIf: () => (a.qs_transcription || '').startsWith('Yes') || (a.qs_transcription || '').startsWith('Transcription') },
       { id: 'qs_language', text: 'Was it tested on the languages, accents and interpreter-present visits your patients actually have?', type: 'select',
         options: ['Yes — tested per group','Partly','No — English only so far','Not applicable'] },
-      { id: 'qs_floor', text: 'Above what share of notes with a factual error would you stop using it? (your limit)', type: 'number',
+      { id: 'qs_floor', text: 'Above what share of notes with a factual error would you stop using it? (your stop-using point)', type: 'number',
         placeholder: 'e.g. 5 (percentage)', note: 'No default. Set it from how notes are used downstream. Leave blank if not decided; the report flags it.' },
       { id: 'qs_review', text: 'Does a clinician review and sign every drafted note before it enters the record?', type: 'select',
         options: ['Yes — required, enforced in the workflow','Yes — expected, not enforced','No — some notes go in without review'] },
@@ -1349,7 +1349,7 @@ function getAgentTrack(a) {
         showIf: () => hasTasks && (a.qa_repeat || '').startsWith('Yes') },
       { id: 'qa_toolcalls', text: 'Were its individual tool calls checked (right tool, right inputs), not just the end state?', type: 'select',
         options: ['Yes','Partly','No'] },
-      { id: 'qa_floor', text: 'Below what success rate would you stop using it? (your floor)', type: 'number', placeholder: 'e.g. 90 (percentage)',
+      { id: 'qa_floor', text: 'Below what success rate would you stop using it? (your stop-using point)', type: 'number', placeholder: 'e.g. 90 (percentage)',
         note: 'No default. Set it from what a wrong action costs. Leave blank if not decided; the report flags it.' },
       { id: 'qa_irreversible', text: 'Can it take actions that are hard to undo (orders, messages to patients, billing, record changes)?', type: 'select',
         options: ['Yes','No — read-only or drafts only','Unsure'] },
@@ -1509,15 +1509,16 @@ function getSectionMonitoring() {
         options: ['Yes — formal minutes and action tracking','Partially — inconsistent documentation',
           'No — meetings happen but not documented',
           'No — and we recognize this limits accountability','Not yet established'] },
-      { id: 'q21_emergency', text: 'If an action-level monitoring trigger fires between scheduled meetings, how quickly should an emergency review be convened?', type: 'select',
+      { id: 'q21_emergency', text: 'If a reject-level trigger fires between scheduled meetings, how quickly should an emergency review be convened?', type: 'select',
         options: ['Same day','Within 3 days','Within 7 days','Within 14 days',
           'Not yet defined — and given our use type this should be established'] },
-      { id: 'q22_warn_threshold', text: 'At what percentage deviation from your baseline would you want a warning triggered?', type: 'select',
-        options: ['1%','2%','3%','5%','7%','10%','15%','Not yet defined'] },
-      { id: 'q23_action_threshold', text: 'At what percentage deviation would you want an action-level response triggered?', type: 'select',
+      { id: 'q22_warn_threshold', text: 'Allowable shift, warning: how big a drop from your validated baseline should trigger a warning?', type: 'select',
+        options: ['1%','2%','3%','5%','7%','10%','15%','Not yet defined'],
+        note: 'The allowable shift is how far performance may move, after a model update or over time, before it matters. Day-to-day control limits (in SD) are worked out from it in the report.' },
+      { id: 'q23_action_threshold', text: 'Allowable shift, reject: how big a drop should hold the model for corrective action?', type: 'select',
         options: ['3%','5%','7%','10%','12%','15%','20%','Not yet defined'],
-        note: 'Action threshold should exceed your warning threshold.' },
-      { id: 'q22_symmetric', text: 'Should warning and action thresholds apply equally to sensitivity and specificity?', type: 'select',
+        note: 'Must be larger than the warning shift. A model update that moves performance by more than this fails its version gate.' },
+      { id: 'q22_symmetric', text: 'Should the warning and reject shifts apply equally to sensitivity and specificity?', type: 'select',
         showIf: () => !useTrack(state.answers),
         options: ['Same threshold for both','Different thresholds — specify in notes','Unsure — apply same for now'] },
       // Added Nov 13, 2026 (second content pass)
@@ -2577,11 +2578,10 @@ function renderSubcontent(doc, sub, C, protocol, ctx) {
   if (content.thresholds) {
     const t = content.thresholds;
     const threshRows = [
-      ['Allowable error · warning', `${t.warning}% change from validated baseline (${t.source || 'Commons position, not a standard'})`],
-      ['Allowable error · action', `${t.action}% change from validated baseline`],
-      ['Allowable error · stop', `${t.stop}% change from validated baseline`],
-      t.isTrack ? null : ['Sensitivity floor (hard stop)', t.sensitivityFloor ? t.sensitivityFloor + ' (set by organization)' : 'Not set. No default: set it from intended use.'],
-      t.specificityFloor ? ['Specificity floor', t.specificityFloor + ' (set by organization)'] : null,
+      ['Allowable shift · warning', `${t.warning}% change from validated baseline (${t.source || 'Commons position, not a standard'})`],
+      ['Allowable shift · reject', `${t.action}% change from validated baseline`],
+      t.isTrack ? null : ['Stop-using point · sensitivity', t.sensitivityFloor ? t.sensitivityFloor + ' (set by organization)' : 'Not set. No default: set it from intended use.'],
+      t.specificityFloor ? ['Stop-using point · specificity', t.specificityFloor + ' (set by organization)'] : null,
     ].filter(Boolean);
     for (const [label, val] of threshRows) {
       needsPage(14);
@@ -2609,7 +2609,7 @@ function renderSubcontent(doc, sub, C, protocol, ctx) {
       doc.text(pnLines, C.mL + 8, y + 10);
       y += 28;
     }
-    const tierBg = { warning: C.amberBg, action: C.redBg, stop: [255, 220, 220] };
+    const tierBg = { warning: C.amberBg, reject: C.redBg, action: C.redBg, stop: [255, 220, 220] };
     for (const rule of content.rules) {
       const respLines = doc.splitTextToSize(rule.response || '', 190);
       const rowH = Math.max(40, respLines.length * 9 + 18);
