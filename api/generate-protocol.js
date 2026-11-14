@@ -543,8 +543,8 @@ function buildSection4(tiersResult, isFullProtocol) {
           rationale: [
             tiersResult.tierProfile?.falseNegBias && !tiersResult.track
               ? (tiersResult.tierProfile?.thresholds?.sensitivityFloor
-                ? "Missed cases are the higher-harm error for this use type, so the sensitivity floor is a hard stop."
-                : "Missed cases are the higher-harm error for this use type. Set a sensitivity floor; once set, it is a hard stop.")
+                ? "Missed cases are the higher-harm error for this use type, so the stop-using point for sensitivity is a hard stop."
+                : "Missed cases are the higher-harm error for this use type. Set a stop-using point for sensitivity; once set, it is a hard stop.")
               : null,
             tiersResult.tierProfile?.ppvLow ? "PPV below 60% — thresholds tightened to reduce false positive burden." : null,
             tiersResult.tierProfile?.urgentWindow ? "Urgent decision window — thresholds tightened for time-sensitive clinical context." : null,

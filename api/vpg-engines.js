@@ -108,8 +108,8 @@ function buildWestgardTiers({ answers, logicFlags, gapFlags }) {
   if (trackResult) tierGapFlags.push(...trackResult.flags);
   if (!track) if (metrics.sensitivity !== null && !metrics.hasCounts) tierGapFlags.push("Validation counts not provided, so no confidence intervals. A sensitivity from 30 positive cases carries roughly ±15 points of uncertainty; one from 3,000 carries about ±1.5. Enter the four counts to see which you have.");
   if (metrics.hasCounts && metrics.positives < 30) tierGapFlags.push(`Only ${metrics.positives} positive cases in the validation set. The sensitivity interval is wide (${metrics.sensCIDisplay}); treat the baseline as provisional.`);
-  if (customWarn === null) tierGapFlags.push("Warning and action thresholds not chosen locally. The allowable-error defaults are the Commons' position, not a standard.");
-  if (!track) if (metrics.sensitivity !== null && floorSens === null) tierGapFlags.push("No sensitivity floor set. The tool no longer invents one. Set the lowest sensitivity you would accept from intended use and harm; until then there is no hard stop on missed cases.");
+  if (customWarn === null) tierGapFlags.push("Warning and reject shifts not chosen locally. The allowable-error defaults are the Commons' position, not a standard.");
+  if (!track) if (metrics.sensitivity !== null && floorSens === null) tierGapFlags.push("No stop-using point set for sensitivity. The tool no longer invents one. Set the lowest sensitivity you would accept from intended use and harm; until then there is no hard stop on missed cases.");
   // AUROC caution lives in the metrics note, not the gap list (it is not something to close)
   if (metrics.calculable && metrics.netBenefit === null) tierGapFlags.push("Net benefit not computed: the trade-off question (false alarms accepted per caught case) was not answered.");
   if (metrics.netBenefit !== null && metrics.netBenefit <= metrics.netBenefitTreatAll) tierGapFlags.push("At your stated trade-off, the model does no better than treating everyone as positive. That is a reason to question the deployment, not just tune it.");
@@ -363,20 +363,19 @@ function deriveThresholds(riskClass, tierSensitivity, metrics, custom = {}) {
   // They govern how much change is tolerable (update gating, action levels).
   // Day-to-day QC limits are set in SD units of each control metric (see Westgard rules).
   const BASE = {
+    // Settings registry names: allowable.shift (warning and reject levels).
+    // No stop level here: the stop-using point is the organization's to set, with no default (Nov 14, 2026).
     high: {
       warning: 3,   // 3% degradation triggers warning review
-      action: 7,    // 7% degradation triggers corrective action
-      stop: 12,     // 12% degradation triggers stop/failover
+      action: 7,    // 7% degradation: reject (hold, corrective action)
     },
     moderate: {
       warning: 5,
       action: 12,
-      stop: 20,
     },
     low: {
       warning: 8,
       action: 18,
-      stop: 30,
     },
   };
 
@@ -388,14 +387,12 @@ function deriveThresholds(riskClass, tierSensitivity, metrics, custom = {}) {
   const thresholds = {
     warning: Math.round(base.warning * factor * 10) / 10,
     action: Math.round(base.action * factor * 10) / 10,
-    stop: Math.round(base.stop * factor * 10) / 10,
     source: "Commons position, not a standard",
   };
   // The organization's own choices (q22 / q23) replace the defaults
   if (custom.customWarn !== null && custom.customWarn !== undefined) { thresholds.warning = custom.customWarn; thresholds.source = "set by organization"; }
   if (custom.customAction !== null && custom.customAction !== undefined) {
     thresholds.action = custom.customAction; thresholds.source = "set by organization";
-    thresholds.stop = Math.max(thresholds.stop, Math.round(custom.customAction * 1.7 * 10) / 10);
   }
 
   // Absolute floors are the organization's to set. Until Nov 12, 2026 the tool derived them
@@ -429,7 +426,7 @@ function mapWestgardRules(tierProfile, metrics, priorAuditData) {
       mlTranslation: "One control result beyond ±3 SD",
       threshold: "±3 SD",
       response: "Reject the run. Execute the predetermined response (backup, contingency or hold) and notify the corrective action owner.",
-      tier: "stop",
+      tier: "reject",
       active: true,
     },
     {
@@ -437,7 +434,7 @@ function mapWestgardRules(tierProfile, metrics, priorAuditData) {
       mlTranslation: "Two consecutive control results beyond 2 SD on the same side",
       threshold: "2 consecutive beyond 2 SD, same side",
       response: "Reject. Systematic error: check what changed (model version, prompt, configuration, data pipeline).",
-      tier: "action",
+      tier: "reject",
       active: true,
     },
     {
@@ -445,15 +442,15 @@ function mapWestgardRules(tierProfile, metrics, priorAuditData) {
       mlTranslation: "Two consecutive control results more than 4 SD apart, on opposite sides",
       threshold: "Range > 4 SD between consecutive results",
       response: "Reject. Random error: inspect components (input handling, tools, sampling settings). Subgroup differences are checked separately (see stratified limits).",
-      tier: "action",
+      tier: "reject",
       active: true,
     },
     {
       westgardAnalog: "4₁ₛ (Shift rule)",
       mlTranslation: "Four consecutive control results beyond 1 SD on the same side",
       threshold: "4 consecutive beyond 1 SD, same side",
-      response: "Warning or reject per the validated rule set. Early systematic shift: investigate before it crosses 2 SD.",
-      tier: "action",
+      response: "Warning by default (reject if the validated rule set says so). Early systematic shift: investigate before it crosses 2 SD.",
+      tier: "warning",
       active: priorAuditData,
       note: priorAuditData ? null : "Phased in once a baseline of at least 20 control runs exists.",
     },
@@ -462,7 +459,7 @@ function mapWestgardRules(tierProfile, metrics, priorAuditData) {
       mlTranslation: "Ten consecutive control results on the same side of the baseline mean",
       threshold: "10 consecutive, same side of mean",
       response: "Reject. Sustained systematic drift: hold, find the cause, and classify the change (re-baseline, verification or revalidation).",
-      tier: "stop",
+      tier: "reject",
       active: priorAuditData,
       note: priorAuditData ? null : "Phased in once a baseline of at least 20 control runs exists.",
     },
@@ -471,14 +468,14 @@ function mapWestgardRules(tierProfile, metrics, priorAuditData) {
       mlTranslation: "Failed known-answer controls in the last 20 runs, against exact binomial limits from the baseline pass rate",
       threshold: "Warn at ~5% false-alarm limit; reject at ~0.3%",
       response: "Binary results have no distance from the mean, so they are judged as a count. Baseline rate starts provisional and is established with cumulative in-control runs.",
-      tier: "action",
+      tier: "reject",
       active: true,
     },
   ];
 
   if (falseNegBias) {
     rules.push({
-      westgardAnalog: "Sensitivity floor (adapted)",
+      westgardAnalog: "Stop-using point: sensitivity (adapted)",
       mlTranslation: "Sensitivity on known-positive controls drops below an absolute floor",
       threshold: thresholds.sensitivityFloor ? `Sensitivity < ${thresholds.sensitivityFloor} (set by organization)` : "No floor set. The organization must set one; the tool does not supply a default.",
       response: "Immediate stop. Missed true positives carry the higher harm for this use type. Failover to human review.",
@@ -489,7 +486,7 @@ function mapWestgardRules(tierProfile, metrics, priorAuditData) {
   }
 
   const phaseInNote = priorAuditData
-    ? "Allowable error (% degradation) is separate from these QC limits: it governs how much change is tolerable when a model or configuration changes and sets action levels for periodic evaluation."
+    ? "Allowable error (% degradation) is separate from these QC limits: it governs how much change is tolerable when a model or configuration changes and sets reject levels for periodic evaluation."
     : "Shift and drift rules (4₁ₛ, 10ₓ) need at least 20 control runs to establish a baseline. Apply the single-run, 2₂ₛ, R₄ₛ and fail-count rules first. Allowable error (% degradation) is separate: it governs tolerable change, not daily QC limits.";
 
   return { rules, phaseInNote };

@@ -194,7 +194,7 @@ let next = null;
   await caption("Strategy still in development: report only. The scripted AI slipped in a recommendation anyway, and the page drops it.");
 
   // 6. Thin intake plus an overconfident self-rating
-  const THIN = { q_pathway: SCRIBE.q_pathway, q_system: "Thin Example", q_use_type: "Decision support at point of care",
+  const THIN = { q_pathway: SCRIBE.q_pathway, q_system: "Thin Example", q_use_type: "Decision support at point of care — informs clinical judgment in real time",
     q_setting: "Emergency department", q_role: "Executive or administrative leadership", q_strategy: "Unknown",
     q_roi_defined: "Unknown", q_exit_threshold: "Unknown", q_clinical_expected: ["None identified yet"], q_clinical_status: "Unknown",
     q_operational_expected: ["None identified yet"], q_operational_status: "Unknown", q_cost: "Not known", q_assurance_cost: "Unknown",
