@@ -48,5 +48,19 @@ Library-wide `asOf` is the date of the last full sweep.
 | Apollo "AI Behind Closed Doors: Evaluating AI Systems in Deployment" | Misdescribed. The real report (Stix et al., Apr 2025) is about AI developers governing their own internal use, not deployed clinical systems. Not linked to any node. |
 | FDA Clinical Decision Support Software (2022) | Superseded by the revised final guidance of Jan 6, 2026. |
 | FDA GMLP Guiding Principles (2021) | Folded into IMDRF N88 (Jan 2025), the final international version. |
-| Dorn, "How Collective Intelligence Could Soon Reshape Medical Decision-Making" (Forbes, 2026) | Column, not a primary source. Distilled summary moved to `docs/retired/`. |
+| Dorn, "How Collective Intelligence Could Soon Reshape Medical Decision-Making" (Forbes, 2026) | Column, not a primary source. |
 | Node-level evidence lists in `nodes.json` | Duplicated the library and drifted from it. Nodes now pull from the library by tag; `keyDocs` picks the lead documents. |
+
+## Removed Nov 14, 2026: distilled summaries
+The six `*-distilled.md` files were working summaries made when full documents
+were too large for the tools then in use. Nothing on the site used them, and
+under the primary-source rule the original document is the source. Deleted;
+they remain in git history.
+
+## What the library holds
+Two sets, together the starting document base for the demo:
+- **Base set:** the regulators, rules, and studies each node rests on.
+- **Field reference set:** the frameworks the field itself cites most
+  (NAM Code of Conduct, WHO 2021, CHAI Assurance Guide and governance
+  playbooks, ISO/IEC 42001, NIST adversarial ML taxonomy, FUTURE-AI,
+  DECIDE-AI, MDCG 2025-6, EO 14365), added Nov 14, 2026.

@@ -405,6 +405,7 @@
   "useCases": {},
   "keyDocs": [
    "ihi-lli-2024",
+   "chai-playbooks-2026",
    "tjc-chai-ruaih-2025",
    "fda-mdr-803"
   ],
@@ -522,6 +523,7 @@
   "useCases": {},
   "keyDocs": [
    "tjc-chai-ruaih-2025",
+   "chai-playbooks-2026",
    "fsmb-ai-2024",
    "ama-ai-principles-2023",
    "fda-cds-2026"
@@ -1410,6 +1412,7 @@
   "useCases": {},
   "keyDocs": [
    "tjc-ruaih-cert-2026",
+   "nam-aicc-2025",
    "who-lmm-2024",
    "cw-ep08",
    "governance-mechanisms-index"
