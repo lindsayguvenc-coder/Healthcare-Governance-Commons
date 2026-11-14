@@ -547,6 +547,19 @@ function load(text, name) {
   if (missing.length) { $('load-msg').innerHTML = ''; $('load-msg').append(`Missing columns: ${missing.join(', ')}. Use the blank template in Step 2.`); $('load-msg').className = 'small bad'; return; }
   st.cols = cols;
   st.rows = grid.slice(1).map((r) => Object.fromEntries(cols.map((c, i) => [c, (r[i] || '').trim()])));
+  // Workflow tests, Nov 14, 2026 (F10): a repeated encounter id is counted once, and the load message says so.
+  const seen = new Set(), dupes = [];
+  st.rows = st.rows.filter((r) => { if (seen.has(r.encounter_id)) { dupes.push(r.encounter_id); return false; } seen.add(r.encounter_id); return true; });
+  // (F9) Values in number columns that aren't plain numbers, such as "2.0 mmol/L", can't be read by the rules.
+  const numCols = new Set();
+  const walk = (c) => { if (!c) return; (c.any || c.all || []).forEach(walk); if (c.unless) walk(c.unless); if (c.ratio) c.ratio.forEach((x) => numCols.add(x)); else if (c.op && c.col) numCols.add(c.col); };
+  (PACK.gate || []).concat(PACK.criteria || []).forEach(walk);
+  const unread = {};
+  for (const r of st.rows) for (const c of numCols) { const v = r[c]; if (v !== undefined && v !== '' && !Number.isFinite(Number(v))) (unread[c] = unread[c] || []).push(v); }
+  const warnings = [];
+  if (dupes.length) warnings.push(`${dupes.length} repeated encounter id${dupes.length === 1 ? '' : 's'} (${[...new Set(dupes)].slice(0, 3).join(', ')}${dupes.length > 3 ? ', …' : ''}): each counted once, first row kept.`);
+  for (const [c, vs] of Object.entries(unread)) warnings.push(`${vs.length} value${vs.length === 1 ? '' : 's'} in ${c} ${vs.length === 1 ? "isn't a plain number" : "aren't plain numbers"} (for example "${vs[0]}"). The rules can't read ${vs.length === 1 ? 'it' : 'them'}, so those encounters go to a person. Take units out in the query.`);
+  st.loadWarnings = warnings;
   // Reviewed labels are keyed by encounter, so they survive reloading a fixed query
   // or pack in the same session. A different file (no shared IDs) starts clean.
   const ids = new Set(grid.slice(1).map((r) => (r[cols.indexOf('encounter_id')] || '').trim()));
@@ -579,8 +592,8 @@ function load(text, name) {
   const mixed = unsureIds.concat([...st.audit]);
   for (let i = mixed.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [mixed[i], mixed[j]] = [mixed[j], mixed[i]]; }
   st.queue = mixed;
-  $('load-msg').className = 'small ok';
-  $('load-msg').textContent = `Loaded ${st.rows.length} encounters from ${name}. Nothing was uploaded.`;
+  $('load-msg').className = st.loadWarnings.length ? 'small bad' : 'small ok';
+  $('load-msg').textContent = `Loaded ${st.rows.length} encounters from ${name}. Nothing was uploaded.` + (st.loadWarnings.length ? ' Check: ' + st.loadWarnings.join(' ') : '');
   const S = $('sort-stats'); S.innerHTML = '';
   const add = (b, s) => { const d = document.createElement('div'); d.className = 'stat'; d.innerHTML = '<b></b><span></span>'; d.firstChild.textContent = b; d.lastChild.textContent = s; S.appendChild(d); };
   add(counts.yes, 'sepsis by the rules');
@@ -727,8 +740,10 @@ function results() {
     const n = both.length, ag = both.filter((id) => st.human.A[id] === st.human.B[id]).length / n;
     const pa = both.filter((id) => st.human.A[id] === 'yes').length / n, pb = both.filter((id) => st.human.B[id] === 'yes').length / n;
     const pe = pa * pb + (1 - pa) * (1 - pb);
-    const k = pe === 1 ? 1 : (ag - pe) / (1 - pe);
-    kp.textContent = `Reviewer agreement: ${pc(ag)} raw, Cohen's kappa ${k.toFixed(2)} on ${n} cases both reviewers answered.` + (k < SET.kappaMin ? ` That's below the minimum reviewer agreement (κ ${SET.kappaMin}), so the reviewed labels aren't reliable enough to set ground truth yet. Agree on the definition and re-review.` : '');
+    // (F11) With no variation (both reviewers gave one answer to everything), kappa is undefined, not 1.
+    if (pe === 1) { kp.textContent = `Reviewer agreement: ${pc(ag)} raw on ${n} cases, but kappa can't be calculated: every answer was the same, so agreement by chance can't be told apart from real agreement. Use a sample with both answers in it.`; }
+    else { const k = (ag - pe) / (1 - pe);
+    kp.textContent = `Reviewer agreement: ${pc(ag)} raw, Cohen's kappa ${k.toFixed(2)} on ${n} cases both reviewers answered.` + (k < SET.kappaMin ? ` That's below the minimum reviewer agreement (κ ${SET.kappaMin}), so the reviewed labels aren't reliable enough to set ground truth yet. Agree on the definition and re-review.` : ''); }
   } else kp.textContent = `Reviewer agreement: not measured yet. Have a second reviewer do the ${Math.round(SET.secondReview * 100)}% sample to get it.`;
   // Per group
   const gs = $('groupby');
