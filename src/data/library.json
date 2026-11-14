@@ -893,6 +893,117 @@
       "verified": "2026-11-14"
     },
     {
+      "id": "intl-ai-safety-report-2026",
+      "tier": "primary",
+      "title": "International AI Safety Report 2026",
+      "type": "report",
+      "source": "Bengio (chair) et al.; Expert Advisory Panel from 30+ countries, EU, OECD, UN",
+      "year": "2026",
+      "date": "2026-02-03",
+      "status": "final (second full edition; annual, with interim Key Updates)",
+      "url": "https://internationalaisafetyreport.org/publication/international-ai-safety-report-2026",
+      "nodes": [
+        "watcher",
+        "vendor-risk",
+        "h3",
+        "commons"
+      ],
+      "abstract": "Government-backed synthesis of the scientific evidence on what general-purpose AI can do, what risks it poses (malicious use, malfunctions, systemic risks), and how well current safeguards work. Written by 100+ independent experts; makes no policy recommendations. Notes that twelve companies published or updated frontier AI safety frameworks in 2025 but that their real-world effectiveness is uncertain given limited external review. Also on arXiv as 2602.21012.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "ecri-patient-safety-2026",
+      "tier": "primary",
+      "title": "Top 10 Patient Safety Concerns 2026",
+      "type": "report",
+      "source": "ECRI and the Institute for Safe Medication Practices (ISMP)",
+      "year": "2026",
+      "date": "2026-03-09",
+      "status": "final",
+      "url": "https://home.ecri.org/pages/top-10-patient-safety-concerns",
+      "nodes": [
+        "escalation",
+        "h3",
+        "override",
+        "learning-loop"
+      ],
+      "abstract": "Annual ranking of patient safety threats, built from event reports, literature, and member nominations and scored on severity, frequency, breadth, insidiousness, and profile. Ranks 'navigating the AI diagnostic dilemma' first for 2026; 'lack of recognition and reporting of harm events' is fifth. Each concern comes with recommended actions. Companion to ECRI's technology hazards list, which ranks AI chatbot misuse first.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "ai-index-2026",
+      "tier": "primary",
+      "title": "The AI Index 2026 Annual Report",
+      "type": "report",
+      "source": "Stanford Institute for Human-Centered AI (HAI)",
+      "year": "2026",
+      "date": "2026-04",
+      "status": "final (ninth edition; CC BY-ND 4.0)",
+      "url": "https://hai.stanford.edu/ai-index/2026-ai-index-report",
+      "nodes": [
+        "watcher",
+        "vendor-risk",
+        "validation",
+        "explainability"
+      ],
+      "abstract": "Annual data report on AI across nine chapters, the first edition with a standalone medicine chapter. Its responsible-AI chapter finds documented AI incidents rose from 233 in 2024 to 362 in 2025, developers report capability benchmarks far more consistently than safety benchmarks, average Foundation Model Transparency Index scores fell from 58 to 40, and improving one responsible-AI dimension can degrade another. The medicine chapter finds clinical adoption outpacing rigorous validation.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "mit-ai-risk-repository",
+      "tier": "primary",
+      "title": "The AI Risk Repository: A Meta-Review, Database, and Taxonomy of Risks from Artificial Intelligence",
+      "type": "standard",
+      "source": "MIT AI Risk Initiative (MIT FutureTech) with University of Queensland, Future of Life Institute, and others",
+      "year": "2024",
+      "date": "living database (first released Aug 2024; updated regularly)",
+      "status": "maintained",
+      "url": "https://airisk.mit.edu",
+      "nodes": [
+        "h3",
+        "watcher",
+        "learning-loop",
+        "vendor-risk"
+      ],
+      "abstract": "Free, downloadable database of 1,700+ AI risks extracted from 74 published risk frameworks, sorted by two taxonomies: causal (who or what caused it, intentional or not, before or after deployment) and domain (seven domains such as discrimination, privacy and security, misinformation, human-computer interaction, and AI system failures). Useful as a checklist of risk types for intake and incident classification. Paper: arXiv 2408.12622.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "ai-incident-database",
+      "tier": "primary",
+      "title": "AI Incident Database (AIID)",
+      "type": "report",
+      "source": "Responsible AI Collaborative",
+      "year": "2020",
+      "date": "living database",
+      "status": "maintained",
+      "url": "https://incidentdatabase.ai",
+      "nodes": [
+        "h3",
+        "escalation",
+        "learning-loop"
+      ],
+      "abstract": "Public index of reported AI harms, each tagged by developer, deployer, harmed party, and risk domain. Health entries include a 2026 sepsis-alert case where a nurse and physician stopped inappropriate IV fluids, an AI scribe adding a false claim to a patient record, and the Texas Attorney General's settlement with Pieces Technologies over accuracy claims for clinical AI. Entries are built from news and public reports: use it to find incidents, then verify each one at its own source.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "phti-ai-adoption-2025",
+      "tier": "primary",
+      "title": "Adoption of Artificial Intelligence in Healthcare Delivery Systems: Early Applications and Impacts",
+      "type": "report",
+      "source": "Peterson Health Technology Institute (PHTI) AI Taskforce",
+      "year": "2025",
+      "date": "2025-03",
+      "status": "final",
+      "url": "https://phti.org/wp-content/uploads/sites/3/2025/03/PHTI-Adoption-of-AI-in-Healthcare-Delivery-Systems-Early-Applications-Impacts.pdf",
+      "nodes": [
+        "validation",
+        "vendor-risk"
+      ],
+      "abstract": "Independent assessment of ambient AI scribes built with eight health systems, ten vendors, and outside experts. Finds about 60 scribe products on the market and evidence that they reduce burnout and cognitive load, but no proven financial return and only mixed, hard-to-compare evidence on efficiency, because systems measure success differently. Calls for standard metrics and flags that scribe-supported coding may raise spending.",
+      "verified": "2026-11-14"
+    },
+    {
       "id": "guvenc-ecg-2025",
       "tier": "commons",
       "title": "ECG Arrhythmia Detection Governance Demo: Stop Mechanism Implementation with MIMIC-IV",
