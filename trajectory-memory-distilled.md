@@ -1,6 +1,7 @@
 # Trajectory-Informed Memory Generation for Self-Improving Agent Systems
 
-**Source:** Fang, Isahagian, Jayaram, Kumar, Muthusamy, Oum, Thomas | IBM Research | arXiv: 2603.10600 | Technical Report, 2026  
+**Source:** Fang, Isahagian, Jayaram, Kumar, Muthusamy, Oum, Thomas | IBM Research | [arXiv:2603.10600](https://arxiv.org/abs/2603.10600) | Technical Report, Mar. 2026  
+**Checked:** Nov 14, 2026 against the source (see `docs/library-criteria.md`)  
 **Commons relevance:** AI failure mode taxonomy · Audit trails & provenance · Monitoring · Stop mechanisms · Override authority
 
 ---

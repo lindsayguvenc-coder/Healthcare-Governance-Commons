@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import ConstellationMap from "./ConstellationMap";
 import NODES from "./data/nodes.json";
+import LIBRARY from "./data/library.json";
 import NodeBody from "./NodePage";
 
 // ─── PALETTE ────────────────────────────────────────────────────────────────
@@ -104,236 +105,9 @@ const MATRIX_CELLS = {
   "validation-admin":       { d:1,c:1,x:0,v:1, status:"sparse", summary:"Admin AI validation: no standard framework." },
 };
 
-const DOC_LIBRARY = [
-  {
-    id: "fda-pccp-2024",
-    title: "Marketing Submission Recommendations for a Predetermined Change Control Plan for AI-Enabled Device Software Functions",
-    type: "regulation", source: "FDA", year: "2024",
-    url: "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/marketing-submission-recommendations-predetermined-change-control-plan-artificial-intelligence",
-    nodes: ["stop","validation","h2","watcher"],
-    abstract: "Final guidance (Dec 2024) establishing how manufacturers can pre-authorize future AI model modifications without new 510(k) submissions, provided changes implement exactly as planned. Requires post-market performance monitoring with drift detection triggers and rollback plans.",
-  },
-  {
-    id: "fda-lifecycle-2025",
-    title: "AI-Enabled Device Software Functions: Lifecycle Management and Marketing Submission Recommendations",
-    type: "regulation", source: "FDA", year: "2025",
-    url: "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/artificial-intelligence-enabled-device-software-functions-lifecycle-management-and-marketing",
-    nodes: ["validation","watcher","stop","h2"],
-    abstract: "Draft guidance (Jan 2025) providing comprehensive lifecycle management approach for AI-enabled devices. Emphasizes continuous post-market monitoring, subgroup performance analysis, and transparency requirements. Addresses training-serving skew and real-world drift as regulatory concerns.",
-  },
-  {
-    id: "fda-transparency-2024",
-    title: "Transparency for Machine Learning-Enabled Medical Devices: Guiding Principles",
-    type: "regulation", source: "FDA", year: "2024",
-    url: "https://www.fda.gov/media/178693/download",
-    nodes: ["validation","h4","watcher"],
-    abstract: "June 2024 guidance establishing transparency expectations for ML-enabled devices: users must receive clear information about device limitations, intended use, and performance characteristics. Audit trail requirements for training data lineage.",
-  },
-  {
-    id: "fda-gmlp-2021",
-    title: "Good Machine Learning Practice for Medical Device Development: Guiding Principles",
-    type: "regulation", source: "FDA / Health Canada / MHRA", year: "2021",
-    url: "https://www.fda.gov/medical-devices/software-medical-device-samd/good-machine-learning-practice-medical-device-development-guiding-principles",
-    nodes: ["validation","watcher","stop","norm"],
-    abstract: "Ten principles for ML-based medical device development, co-published by FDA, Health Canada, and UK MHRA. Covers data management, model training, clinical integration, and monitoring. Foundational document for clinical AI governance frameworks.",
-  },
-  {
-    id: "fda-cds-2022",
-    title: "Clinical Decision Support Software: Guidance for Industry and FDA Staff",
-    type: "regulation", source: "FDA", year: "2022",
-    url: "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/clinical-decision-support-software",
-    nodes: ["authority","stop","validation","h2"],
-    abstract: "Defines which clinical decision support software is excluded from FDA device regulation under 21st Century Cures Act. Key for authority matrix: tools that display information for clinician interpretation vs. tools that replace clinical judgment have different regulatory — and governance — requirements.",
-  },
-  {
-    id: "khera-jama-2023",
-    title: "Automation Bias and Assistive AI: Risk of Harm From AI-Driven Clinical Decision Support",
-    type: "peer-reviewed", source: "JAMA", year: "2023",
-    url: "https://pubmed.ncbi.nlm.nih.gov/38112824/",
-    nodes: ["override","stop","watcher"],
-    abstract: "Khera, Simon & Ross (Yale/Northwestern). Argues current FDA evaluation focuses on model performance across populations but does not capture downstream consequences when clinicians defer to AI over their own judgment. Errors from automation bias are compounded by time pressure. Direct implication: override logging and rate monitoring are patient safety infrastructure, not optional quality metrics.",
-  },
-  {
-    id: "goddard-jamia-2011",
-    title: "Automation Bias: A Systematic Review of Frequency, Effect Mediators, and Mitigators",
-    type: "peer-reviewed", source: "JAMIA", year: "2011",
-    url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC3240751/",
-    nodes: ["override","watcher"],
-    abstract: "Goddard, Roudsari & Wyatt. Foundational systematic review establishing automation bias as a measurable, predictable phenomenon in clinical decision support. Key finding: overall performance improves with CDSS use, but CDSS introduces new error types that are systematically missed. Override design must account for both under-reliance and over-reliance failure modes.",
-  },
-  {
-    id: "guvenc-ecg-2025",
-    title: "ECG Arrhythmia Detection Governance Demo: Stop Mechanism Implementation with MIMIC-IV",
-    type: "practitioner", source: "Lindsay LaMere / GitHub", year: "2025",
-    url: "https://github.com/lindsayguvenc-coder/ecg-governance-demo",
-    nodes: ["stop","validation","watcher"],
-    abstract: "Concrete implementation of a governance framework for ECG arrhythmia detection AI using MIMIC-IV data. Demonstrates Westgard-adapted stop thresholds, authority matrix for hard stop activation, and escalation protocol design. The only publicly available example of CLIA QC principles applied to AI inference monitoring in a clinical diagnostic aid context.",
-  },
-  {
-    id: "westgard-ml-adaptation",
-    title: "Westgard Multi-Rule Framework Adapted for ML Inference Monitoring: QC Principles for Clinical AI",
-    type: "practitioner", source: "Lindsay LaMere / Governance Commons", year: "2025",
-    url: null,
-    nodes: ["stop","watcher","h1"],
-    abstract: "Translation of Westgard 2-of-3s, 4-1s, and 10-x rules from laboratory QC into ML inference monitoring context. Core argument: whoever signs the corrective action owns the governance decision — authority follows existing accountability structures rather than creating new ones. Addresses the fixed vs. adaptive threshold debate by proposing population-stratified control limits as a bridge position.",
-  },
-  {
-    id: "ihi-leape-2024",
-    title: "Bringing Safety to AI: Adapting Patient Safety Principles to Artificial Intelligence in Health Care",
-    type: "guideline", source: "IHI / Lucian Leape Institute", year: "2024",
-    url: "https://www.ihi.org/resources/white-papers/bringing-safety-ai-adapting-patient-safety-principles-artificial-intelligence-health-care",
-    nodes: ["stop","authority","escalation","h1"],
-    abstract: "IHI framework applying established patient safety principles (Just Culture, high reliability, safety I/II) to clinical AI deployment. Argues that AI governance requires the same structural elements as patient safety programs: clear authority, non-punitive error reporting, stop mechanisms, and prospective hazard analysis. Most directly applicable to stop mechanism and authority tier design.",
-  },
-  {
-    id: "haip-principles-2024",
-    title: "Health AI Partnership: Principles for Responsible AI Governance in Health Systems",
-    type: "guideline", source: "HAIP", year: "2024",
-    url: "https://healthaipartnership.org",
-    nodes: ["authority","commons","h2"],
-    abstract: "Multi-stakeholder framework (academic medical centers, payers, vendors) for health AI governance. Establishes principle that governance authority must be pre-assigned before deployment, not negotiated after an incident. Recommends tiered authority structure from advisory to suspension.",
-  },
-  {
-    id: "ama-ai-policy-2023",
-    title: "Augmented Intelligence in Medicine: AMA Policy and Principles",
-    type: "guideline", source: "AMA", year: "2023",
-    url: "https://www.ama-assn.org/practice-management/digital/ama-principles-augmented-intelligence-medicine",
-    nodes: ["authority","override","validation"],
-    abstract: "AMA policy framework for physician-AI interaction. Key governance principle: AI systems must support physician decision-making authority, not replace it. Explicit on override rights and documentation requirements. Distinguishes between decision support (physician retains authority) and autonomous AI (different governance regime).",
-  },
-  {
-    id: "haug-nejm-2023",
-    title: "Artificial Intelligence and Machine Learning in Clinical Medicine, 2023",
-    type: "peer-reviewed", source: "NEJM", year: "2023",
-    url: "https://www.nejm.org/doi/10.1056/NEJMra2302038",
-    nodes: ["watcher","validation","stop"],
-    abstract: "Haug & Drazen review of clinical AI state of evidence. Addresses the gap between model performance in validation studies and real-world deployment performance. Key for monitoring node: retrospective validation accuracy does not predict post-deployment drift. Establishes the case for continuous monitoring as a governance requirement, not a nice-to-have.",
-  },
-  {
-    id: "apollo-2024",
-    title: "AI Behind Closed Doors: Evaluating AI Systems in Deployment",
-    type: "report", source: "Apollo Research", year: "2024",
-    url: "https://apolloresearch.ai",
-    nodes: ["watcher","commons","stop"],
-    abstract: "Apollo Research evaluation framework for deployed AI systems. Documents the structural gap between how AI systems behave in controlled evaluations vs. real-world deployment. Directly relevant to watcher layer design: monitoring must account for behavioral drift under distribution shift, not just performance drift on held-out test sets.",
-  },
-  // ── COMMUNITY WEAVING SERIES ──────────────────────────────────────────────
-// Add these entries to DOC_LIBRARY in GovernanceCommons.jsx
-// Paste after the last existing entry (apollo-2024)
-
-  {
-    id: "cw-ep01",
-    title: "Community Weaving Episode 01: The Loom is Missing",
-    type: "practitioner", source: "Lindsay LaMere / Healthcare Governance Commons", year: "2025",
-    url: "/community_weaving_ep01.pdf",
-    nodes: ["commons"],
-    abstract: "Opening episode of the Community Weaving series. Identifies five domains where knowledge outpaces coordination — clinical AI, pandemic preparedness, climate adaptation, democratic renewal, and economic transition. Names the structural gap underneath all of them: the missing container for collaborative governance work. Establishes the loom metaphor that anchors the series.",
-  },
-  {
-    id: "cw-ep02",
-    title: "Community Weaving Episode 02: Why the Tools We Have Fail",
-    type: "practitioner", source: "Lindsay LaMere / Healthcare Governance Commons", year: "2025",
-    url: "/community_weaving_ep02.pdf",
-    nodes: ["commons", "h2"],
-    abstract: "Diagnoses why linear tools — checklists, frameworks, maturity models — break down in high-stakes, multi-dimensional domains. Argues that the failure is structural, not implementational: these tools were designed for stable, well-mapped problems and cannot hold the complexity of domains where the map doesn't exist yet. Directly relevant to authority matrix design and threshold authority.",
-  },
-  {
-    id: "cw-ep03",
-    title: "Community Weaving Episode 03: The Loom",
-    type: "practitioner", source: "Lindsay LaMere / Healthcare Governance Commons", year: "2025",
-    url: "/community_weaving_ep03.pdf",
-    nodes: ["commons"],
-    abstract: "Defines Community Weaving as a methodology and traces its historical instances across domains and centuries. Argues that the loom — the container for collaborative, friction-positive knowledge-building — keeps getting built independently by people who never knew each other's work, because the need is structural. Foundational document for the Commons architecture.",
-  },
-  {
-    id: "cw-ep04",
-    title: "Community Weaving Episode 04: The Commons as Proof of Concept",
-    type: "practitioner", source: "Lindsay LaMere / Healthcare Governance Commons", year: "2025",
-    url: "/community_weaving_ep04.pdf",
-    nodes: ["commons", "watcher"],
-    abstract: "Documents what building the Healthcare Governance Commons actually revealed — about clinical AI governance gaps, about the infrastructure problem, and about the method itself. The Commons is simultaneously the subject of the series and an instance of the methodology it describes. Key for understanding the dual-loop architecture as a lived design decision rather than a theoretical framework.",
-  },
-  {
-    id: "cw-ep05",
-    title: "Community Weaving Episode 05: The Shared Mental Model Problem",
-    type: "practitioner", source: "Lindsay LaMere / Healthcare Governance Commons", year: "2025",
-    url: "/community_weaving_ep05.pdf",
-    nodes: ["norm", "h2"],
-    abstract: "Argues that lexicon is coordination infrastructure — that a shared definition is not the same as a shared mental model, and that the gap between them is where most governance breakdowns actually occur. Directly relevant to the normalization layer and threshold authority nodes. The taxonomy/lexicon component of the internal technical loop is the structural answer to the problem this episode names.",
-  },
-  {
-    id: "cw-ep06",
-    title: "Community Weaving Episode 06: Disagreement as Data",
-    type: "practitioner", source: "Lindsay LaMere / Healthcare Governance Commons", year: "2025",
-    url: "/community_weaving_ep06.pdf",
-    nodes: ["h2", "adjudicate"],
-    abstract: "Reframes disagreement as the most important signal a governance system produces — not a problem to resolve but information about the system. Introduces the five unpacking lenses: hidden assumptions, values in tension, lived experience, risk models, and time horizons. Foundational document for the dissent layer and dispute adjudication nodes. Companion to the Disagreement Unpacker tool.",
-  },
-  {
-    id: "cw-ep07",
-    title: "Community Weaving Episode 07: What it Actually Looks Like",
-    type: "practitioner", source: "Lindsay LaMere / Healthcare Governance Commons", year: "2025",
-    url: "/community_weaving_ep07.pdf",
-    nodes: ["watcher", "h1", "h2", "h3", "h4", "stop", "authority", "commons"],
-    abstract: "The architecture episode. Describes the full dual-loop governance framework — internal technical loop (AI model, performance monitor, taxonomy, institutional memory) and external human governance loop (clinical judgment, authority matrix, dissent layer, decision trigger layer) — with all four handoff nodes and the stop mechanism. The most directly applicable episode for practitioners building governance infrastructure. Interactive version available at /architecture.",
-  },
-  {
-    id: "cw-ep08",
-    title: "Community Weaving Episode 08: The Recursive Close",
-    type: "practitioner", source: "Lindsay LaMere / Healthcare Governance Commons", year: "2025",
-    url: "/community_weaving_ep08.pdf",
-    nodes: ["commons"],
-    abstract: "Closing episode of the series. Argues that the series itself is the method — built in public, iteratively, with friction visible. The Commons is the thing it describes: the dual-loop architecture it documents is the architecture it runs on. Frames clinical AI governance as a container problem, not a technology problem, and positions the Commons as a translation layer making existing safety science accessible to practitioners who need it now.",
-  },
-
-// ── GOVERNANCE COMMONS TOOLS ──────────────────────────────────────────────
-// The tools themselves as practitioner documents
-
-  {
-    id: "tool-disagreement-unpacker",
-    title: "The Disagreement Unpacker: AI-Powered Conflict Analysis Tool",
-    type: "practitioner", source: "Lindsay LaMere / Healthcare Governance Commons", year: "2025",
-    url: "/transition#disagreement-unpacker",
-    nodes: ["h2", "adjudicate"],
-    abstract: "Interactive AI-powered tool implementing the Disagreement as Data methodology from Community Weaving Episode 06. Takes a described disagreement and returns a structured map across eight lenses: facts, assumptions, values, lived experience, incentives, risks, time horizons, and definitions. Includes synthesis and facilitator move. Directly applicable to threshold authority disputes and dispute adjudication processes. Available at /transition.",
-  },
-  {
-    id: "tool-container-health-check",
-    title: "Container Health Check: AI-Assisted Read of a Governance Container",
-    type: "practitioner", source: "Lindsay LaMere / Healthcare Governance Commons", year: "2025",
-    url: "/transition#container-health-check",
-    nodes: ["commons", "authority"],
-    abstract: "Interactive AI-powered tool that reads one person's description of a governance container against six properties — legitimacy without capture, psychological safety for radical honesty, time insulated from urgency, cross-domain intimacy, narrative incubation, and stop authority. Gives no score: it shows what was said, what's missing, and what to ask the group, and notes failure modes only where the description shows evidence. Available at /transition.",
-  },
-  {
-    id: "tool-charter-builder",
-    title: "The Charter Starter: an AI draft to start your group's conversation",
-    type: "practitioner", source: "Lindsay LaMere / Healthcare Governance Commons", year: "2025",
-    url: "/transition#charter-builder",
-    nodes: ["commons", "authority", "h2"],
-    abstract: "Interactive AI-powered conversation starter that drafts a governance charter by translating six core principles — dignity before efficiency, psychological safety, disagreement as data, radical honesty, equity and representation, and dual-horizon discipline — into specific rules, metrics, and failsafes for the user's exact context. Takes five inputs about context, domain, stakes, failure mode concerns, and required stakeholders. Output is copyable. Available at /transition.",
-  },
-  {
-    id: "tool-architecture-explorer",
-    title: "The Governance Architecture: Interactive Dual-Loop Explorer",
-    type: "practitioner", source: "Lindsay LaMere / Healthcare Governance Commons", year: "2025",
-    url: "/architecture",
-    nodes: ["watcher", "h1", "h2", "h3", "h4", "stop", "authority", "commons"],
-    abstract: "Interactive visualization of the full dual-loop clinical AI governance architecture. Every component — eight loop nodes, four handoff nodes, stop mechanism, and failover protocol — is clickable with a detail panel showing what it does and why it exists. Companion to Community Weaving Episode 07. Designed as a reference tool for practitioners building or evaluating governance infrastructure. Available at /architecture.",
-  },
-
-// ── GOVERNANCE MECHANISMS INDEX ──────────────────────────────────────────
-
-  {
-    id: "governance-mechanisms-index",
-    title: "Governance Mechanisms Index: Cross-Domain Reference — What Held, What Failed, Where",
-    type: "practitioner", source: "Lindsay LaMere / Healthcare Governance Commons", year: "2025",
-    url: "/governance_mechanisms_index.pdf",
-    nodes: ["stop", "watcher", "h1", "adjudicate", "authority", "commons"],
-    abstract: "Cross-domain reference index of governance mechanisms across aviation, nuclear, laboratory medicine, financial services, pharmaceutical, and software engineering — indexed by mechanism type, loop location, and observed outcome. Each entry documents where the mechanism held, where it failed, and the honest complexity. Identifies five cross-domain structural patterns: separation from enforcement, distributed liability, explicit stop conditions, loop-level specificity, and transparency gaps. The most directly applicable cross-domain reference in the Commons library for practitioners designing clinical AI governance infrastructure.",
-  },
-
-];
+// The document library lives in src/data/library.json: one source for the Doc
+// Repository, node pages, and synthesis. Seeding rules: docs/library-criteria.md.
+const DOC_LIBRARY = LIBRARY.documents;
 
 // Practitioner notes and key insights come from the same data file.
 const CHAT_THREADS = Object.fromEntries(NODES.map(n => [n.id, n.notes]));
@@ -399,7 +173,7 @@ function DocRepository({ onNavigate }) {
   const typeColors = {
     regulation: C.red, preprint: C.commons, guideline: C.internal,
     "peer-reviewed": C.internal, case: C.handoff, report: C.external,
-    practitioner: C.handoff,
+    practitioner: C.handoff, standard: C.external, editorial: C.textDim,
   };
 
   const filtered = allDocs.filter(d => {
@@ -423,7 +197,7 @@ function DocRepository({ onNavigate }) {
             outline: "none",
           }}
         />
-        {["all","regulation","peer-reviewed","guideline","practitioner","report"].map(t => (
+        {["all","regulation","standard","guideline","peer-reviewed","preprint","editorial","report","practitioner"].map(t => (
           <button key={t} onClick={() => setTypeFilter(t)} style={{
             padding: "5px 10px", borderRadius: 3, cursor: "pointer", fontFamily: C.mono, fontSize: 10,
             fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase",
@@ -459,6 +233,9 @@ function DocRepository({ onNavigate }) {
                       fontFamily: C.mono, fontSize: 9, fontWeight: 700, letterSpacing: "0.08em",
                     }}>{doc.type.toUpperCase()}</span>
                     <span style={{ fontFamily: C.mono, fontSize: 10, color: C.textDim }}>{doc.source} · {doc.year}</span>
+                    {doc.tier === "commons" && (
+                      <span style={{ fontFamily: C.mono, fontSize: 9, color: C.handoff, letterSpacing: "0.06em" }}>LINDSAY'S WORK</span>
+                    )}
                   </div>
                   <div style={{ fontSize: 13, color: C.text, lineHeight: 1.4 }}>{doc.title}</div>
                 </div>
@@ -483,6 +260,11 @@ function DocRepository({ onNavigate }) {
                   <div style={{ fontSize: 12, color: C.textDim, lineHeight: 1.7, marginTop: 10, marginBottom: 8 }}>
                     {doc.abstract}
                   </div>
+                  {(doc.status || doc.verified) && (
+                    <div style={{ fontFamily: C.mono, fontSize: 10, color: C.textDimmer, marginBottom: 8 }}>
+                      {doc.status}{doc.status && doc.verified ? " · " : ""}{doc.verified ? `checked ${doc.verified}` : ""}
+                    </div>
+                  )}
                   {doc.url && (
                     <a href={doc.url} target="_blank" rel="noopener noreferrer" style={{
                       fontFamily: C.mono, fontSize: 10, color: C.internal, textDecoration: "none",
@@ -499,7 +281,7 @@ function DocRepository({ onNavigate }) {
       </div>
 
       <div style={{ marginTop: 12, fontFamily: C.mono, fontSize: 10, color: C.textDimmer }}>
-        {filtered.length} of {DOC_LIBRARY.length} documents · click any document to expand abstract and source link
+        {filtered.length} of {DOC_LIBRARY.length} documents · library as of {LIBRARY.asOf} · click any document to expand abstract and source link
       </div>
     </div>
   );

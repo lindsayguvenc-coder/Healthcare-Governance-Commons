@@ -1,6 +1,7 @@
 # The Hot Mess of AI: How Does Misalignment Scale With Model Intelligence and Task Complexity?
 
-**Source:** Hägele, Gema, Sleight, Perez, Sohl-Dickstein et al. | Published at ICLR 2026 | arXiv: 2601.23045  
+**Source:** Hägele, Gema, Sleight, Perez, Sohl-Dickstein | Published at ICLR 2026 | [arXiv:2601.23045](https://arxiv.org/abs/2601.23045)  
+**Checked:** Nov 14, 2026 against the source (see `docs/library-criteria.md`)  
 **Affiliation:** Anthropic Fellows Program, EPFL, University of Edinburgh, Constellation, Anthropic  
 **Commons relevance:** AI failure mode taxonomy · Stop/monitor threshold design · Audit scope · Override authority
 
