@@ -29,6 +29,33 @@ module.exports = async function handler(req, res) {
     }
   }
 
+  // Weekly backup (x-backup-token): read-only copy of the whole library, plus
+  // how much space each stored item takes. The token can't change anything here.
+  const backupToken = req.headers["x-backup-token"];
+  if (req.method === "GET" && req.query?.export === "1" &&
+      backupToken && process.env.BACKUP_TOKEN && backupToken === process.env.BACKUP_TOKEN) {
+    try {
+      const raw = await client.get(DOCS_KEY);
+      const publicRaw = await client.get(PUBLIC_DOCS_KEY);
+      const usage = {};
+      for (const key of [DOCS_KEY, PUBLIC_DOCS_KEY, "suggest:pending", "suggest:decisions", "suggest:stats"]) {
+        const type = await client.type(key);
+        if (type === "string") usage[key] = { type, bytes: await client.strlen(key) };
+        else if (type === "list") usage[key] = { type, items: await client.llen(key) };
+        else if (type === "hash") usage[key] = { type, fields: await client.hlen(key) };
+        else usage[key] = { type };
+      }
+      return res.status(200).json({
+        documents: raw ? JSON.parse(raw) : [],
+        public: publicRaw ? JSON.parse(publicRaw) : [],
+        keyCount: await client.dbsize(),
+        usage,
+      });
+    } catch (err) {
+      return res.status(500).json({ error: "Library export failed: " + err.message });
+    }
+  }
+
   // All other operations require password
   const password = req.headers["x-intake-password"];
   if (!password || password !== process.env.INTAKE_PASSWORD) {

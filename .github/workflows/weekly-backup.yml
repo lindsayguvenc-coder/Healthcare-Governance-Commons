@@ -1,7 +1,7 @@
 name: Weekly backup
 
-# Every Sunday night: copy published contributions, the decision log, and the
-# review stats out of Redis into dated files on the data-archive branch. Only
+# Every Sunday night: copy published contributions, the decision log, the
+# review stats, and the document library (with storage use) out of Redis into dated files on the data-archive branch. Only
 # after that commit is pushed does it clear the decision-log entries it saved,
 # so nothing is ever cleared without a backup. Published contributions are
 # copied, never cleared.
@@ -76,12 +76,27 @@ jobs:
             fs.writeFileSync(".pending-count", String(Number(d.pendingCount) || 0));
             console.log(`published: ${d.published.length} · decisions archived: ${d.decisions.length} · waiting for review: ${Number(d.pendingCount) || 0}`);
           ' "$day"
+          # The document library (Intake tab) lives only in Redis, so copy it too.
+          if ! curl -sfS -H "x-backup-token: $BACKUP_TOKEN" "$SITE/api/documents?export=1" -o "archive/$day-library.json"; then
+            echo "::error::The live site could not export the document library."
+            exit 1
+          fi
+          node -e '
+            const fs = require("fs");
+            const day = process.argv[1];
+            const d = JSON.parse(fs.readFileSync(`archive/${day}-library.json`, "utf8"));
+            if (!Array.isArray(d.documents) || !Array.isArray(d.public)) { console.error("Library export looks wrong; stopping before anything is cleared."); process.exit(1); }
+            fs.writeFileSync("library-latest.json", JSON.stringify({ documents: d.documents, public: d.public }, null, 1));
+            fs.writeFileSync("storage-latest.json", JSON.stringify({ day, keyCount: d.keyCount, usage: d.usage }, null, 1));
+            console.log(`library: ${d.documents.length} docs (${d.public.length} public) · keys in database: ${d.keyCount}`);
+            for (const [k, v] of Object.entries(d.usage || {})) console.log(`  ${k}: ${JSON.stringify(v)}`);
+          ' "$day"
           echo "DAY=$day" >> "$GITHUB_ENV"
 
       - name: Save the backup
         run: |
           set -euo pipefail
-          git add archive README.md published-latest.json stats-latest.json 2>/dev/null || git add archive published-latest.json stats-latest.json
+          git add archive README.md published-latest.json stats-latest.json library-latest.json storage-latest.json 2>/dev/null || git add archive published-latest.json stats-latest.json library-latest.json storage-latest.json
           git commit -m "Weekly backup $DAY" || echo "Nothing new to commit"
           git push origin data-archive
 
