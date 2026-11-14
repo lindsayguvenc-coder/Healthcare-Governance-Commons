@@ -378,6 +378,9 @@ let aloneCache={key:null,val:null};
 function renderLJ(){
   if(!$("ljTiles")) return;
   syncLim();
+  {let n=document.getElementById("ljNone");const none=!RULE_ORDER.some(k=>ljMode[k]==="reject");
+   if(none&&!n){n=document.createElement("div");n.id="ljNone";n.className="caveat";n.innerHTML="<b>No rule rejects.</b> Nothing on these charts can hold the agent; every signal is a warning at most.";$("ljTiles").before(n);}
+   if(!none&&n)n.remove();}
   const o={shift:Number($("k_shift").value)||2, sdx:Number($("k_sdx").value)||2};
   const prev=(Number($("k_prev").value)||2)/100;
   const full=evaluate(ljMode,o);
@@ -493,6 +496,20 @@ function renderSigma(){
 }
 // ---------- the nine measures ----------
 // status: here = set on this page; picker = calculated in the Metric Picker; stub = nothing to configure yet
+// Allowed ranges for number set points (F2, Nov 14). Outside them a value is not accepted.
+const RANGE={"stab.cset":{min:1,int:1},"stab.base":{min:1,int:1},"stab.basepf":{min:1,int:1},"stab.est":{min:1,int:1},"stab.reps":{min:1,int:1},"stab.real":{min:0,int:1},
+ "stab.stop":{min:0,max:100},"stab.agree":{min:0,max:100},"chg.block":{min:5,int:1},"chg.gaten":{min:2,int:1},"chg.shift":{min:0,max:100},
+ "sub.min":{min:1,int:1},"sub.gap":{min:1},"esc.runs":{min:1,int:1},"grader.g2":{min:0,max:100},"grader.kappa":{min:-1,max:1},
+ "ca.verify":{min:1,int:1},"ca.failn":{min:1,int:1}};
+// Allowed but worth saying out loud.
+const SOFT={"grader.g2":v=>v===0?"<b>No second review.</b> Nobody checks the grader, so grades can't be trusted for long.":"",
+ "chg.shift":v=>v===0?"<b>Zero shift allowed.</b> Every model update fails the gate, however small the change.":"",
+ "stab.real":v=>v===0?"<b>No real-use sample.</b> Controls only see the cases you wrote; nothing checks real work.":""};
+function rangeProblem(k,v){const r=RANGE[k];if(!r||v===""||v===null||v===undefined)return "";const x=Number(v);
+ if(!Number.isFinite(x))return "a number";
+ if(r.int&&!Number.isInteger(x))return "a whole number"+(r.min!==undefined?` of at least ${r.min}`:"");
+ if(r.min!==undefined&&x<r.min)return r.max!==undefined?`between ${r.min} and ${r.max}`:`at least ${r.min}`;
+ if(r.max!==undefined&&x>r.max)return `between ${r.min} and ${r.max}`;return "";}
 const OWNER_WHY=d=>d.domain==="clinical"?"Lanes are a clinical decision, not a technical one. Without a named owner, no one sets them.":"Lanes belong to whoever owns the outcome, not whoever built the agent. Without a named owner, no one sets them.";
 const M = [
  {id:"stab", name:"Performance stability", q:"Is it still doing what it was validated to do?", lab:"Control material on a schedule against a validated baseline.", primary:"Pass rate on the control set, against the locked baseline.", status:"here", metrics:[["accuracy","Accuracy"],["precision","Precision (repeat runs)"]],
@@ -621,6 +638,33 @@ const needM=m=>m.need?fn(m.need):true, needP=p=>p.need?fn(p.need):true;
 const val=(m,p)=>{const k=m.id+"."+p.id;return k in S?S[k]:st(p);};
 // Every change bumps the revision, so an exported file says which version of the plan it is.
 function bump(){S._rev=(Number(S._rev)||0)+1;S._changed=new Date().toISOString();}
+// F1 (Nov 14): an exported plan records the value of every setting in force, not only the changed ones,
+// so the file still means the same thing if a starting value changes in the code later.
+// F5 (Nov 14): what an importable plan has to look like. Returns the first problem, or "".
+function planProblem(p){
+  if(!p||typeof p!=="object"||Array.isArray(p))return "it isn't a plan file";
+  if(!["agent-qc-monitor-plan","agent-qc-plan"].includes(p.format))return "it isn't a plan file";
+  if(p.formatVersion!==1)return `it was made by a newer version of this page (format ${p.formatVersion})`;
+  const s=p.settings;if(!s||typeof s!=="object"||Array.isArray(s))return "its settings aren't readable";
+  const l=p.lanes;if(!l||typeof l!=="object"||!Array.isArray(l.scale)||l.scale.length<2||!Array.isArray(l.ctrls)||!l.scale.every(x=>typeof x==="string"))return "its lanes aren't readable";
+  if(typeof l.approver!=="string")return "its owner isn't readable";
+  for(const [k,v] of Object.entries(s)){
+    if(k.startsWith("_"))continue;
+    if(k==="rules.westgard"){if(!v||typeof v!=="object"||!Object.values(v).every(x=>["off","warn","reject"].includes(x)))return "its Westgard rules aren't readable";continue;}
+    const [mid,pid]=k.split("."),m=M.find(x=>x.id===mid),pt=m&&m.points.find(x=>x.id===pid);
+    if(pt&&pt.type==="number"){if(v!==""&&typeof v!=="number")return `${pt.label} isn't a number`;const r=rangeProblem(k,v);if(r)return `${pt.label} must be ${r}`;}
+    else if(typeof v!=="string"&&typeof v!=="number")return `${k} isn't readable`;
+  }
+  return "";
+}
+function resolvedPlan(){
+  const out={dials:{},harness:{},points:{},startingValues:[],rules:{...ljMode}};
+  if(typeof DIALS!=="undefined"){const d=D();DIALS.forEach(x=>{out.dials[x.k]=d[x.k];if(!("d."+x.k in S))out.startingValues.push("d."+x.k);});}
+  if(typeof HARNESS!=="undefined")HARNESS.forEach(x=>{out.harness[x.k]=S["h."+x.k]||"";});
+  M.forEach(m=>m.points.forEach(p=>{if(p.type==="fixed")return;const k=m.id+"."+p.id;out.points[k]=val(m,p);if(!(k in S))out.startingValues.push(k);}));
+  out.outputType=S["k1.type"]||null;
+  return out;
+}
 const SAVED_MSG="Saved in this browser only. Export to keep a versioned copy.";
 function save(){bump();try{localStorage.setItem(KEY,JSON.stringify(S));document.getElementById("saved").textContent=SAVED_MSG;}catch(e){document.getElementById("saved").textContent="";}}
 
@@ -630,12 +674,12 @@ function control(m,p){
   const k=m.id+"."+p.id, v=val(m,p);
   if(p.type==="fixed") return `<div class="fixed">${esc(st(p))}</div>`;
   if(p.type==="select") return `<select data-k="${k}" aria-label="${esc(p.label)}">${opts(p).map(o=>`<option${o===v?" selected":""}>${esc(o)}</option>`).join("")}</select>`;
-  if(p.type==="number") return `<input type="number" min="0" step="any" data-k="${k}" value="${esc(v)}" aria-label="${esc(p.label)}">`;
+  if(p.type==="number"){const r=RANGE[k]||{};return `<input type="number"${r.min!==undefined?` min="${r.min}"`:""}${r.max!==undefined?` max="${r.max}"`:""} step="${r.int?1:"any"}" data-k="${k}" value="${esc(v)}" aria-label="${esc(p.label)}">`;}
   return `<textarea rows="2" data-k="${k}" aria-label="${esc(p.label)}">${esc(v)}</textarea>`;
 }
 function live(m,p){
   const v=p.type==="number"?Number(val(m,p)):val(m,p);
-  const c=p.calc?p.calc(v):"", w=p.caveat?p.caveat(v):"";
+  const c=p.calc?p.calc(v):"", w=(p.caveat?p.caveat(v):"")+((SOFT[m.id+"."+p.id]||(()=>""))(v));
   const changed=p.type!=="fixed"&&String(val(m,p))!==String(st(p));
   return `${p.type!=="fixed"?`<span class="start${changed?" changed":""}">${changed?"Changed from starting value: "+esc(st(p)):"Starting value"}</span>`:""}${c?`<span class="calc">${c}</span>`:""}${w?`<div class="caveat">${w}</div>`:""}`;
 }
@@ -666,7 +710,7 @@ function renderPlan(){
   M.forEach((m,i)=>{if(needM(m)!==true){skipped.push(m.name);return;}
     lines.push(`${i+1}. ${m.name.toUpperCase()}`,`   Primary metric: ${m.primary}`);
     m.points.filter(needP).forEach(p=>{const v=val(m,p),sv=p.type!=="fixed"&&String(v)===String(st(p));if(p.required&&(v===""||v==null)){lines.push(`   - ${p.label}: NOT SET (required)`);return;}lines.push(`   - ${p.label}: ${v}${sv?" *":""}`);});
-    if(m.id==="chg"){const r=RULE_ORDER.map(k=>`${k} ${ljMode[k]}`).join(", ");lines.push(`   - Westgard rules (numbers and grades): ${r}${RULE_ORDER.every(k=>ljMode[k]===LJ_DEFAULT[k])?" *":""}`);}
+    if(m.id==="chg"){const r=RULE_ORDER.map(k=>`${k} ${ljMode[k]}`).join(", ");lines.push(`   - Westgard rules (numbers and grades): ${r}${RULE_ORDER.every(k=>ljMode[k]===LJ_DEFAULT[k])?" *":""}${RULE_ORDER.some(k=>ljMode[k]==="reject")?"":" (NOTHING REJECTS)"}`);}
     lines.push("");});
   if(skipped.length) lines.push("OPTIONAL AT THIS CONSEQUENCE LEVEL, NOT SET: "+skipped.join("; "),"");
   lines.push(lanesPlan());
@@ -674,7 +718,10 @@ function renderPlan(){
 }
 document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.k;if(!k)return;
   const [mid,pid]=k.split("."),m=M.find(x=>x.id===mid),p=m.points.find(x=>x.id===pid);
-  S[k]=p.type==="number"?(e.target.value===""?st(p):Number(e.target.value)):e.target.value; save();
+  const nv=p.type==="number"?(e.target.value===""?st(p):Number(e.target.value)):e.target.value;
+  const bad=p.type==="number"?rangeProblem(k,nv):"";
+  if(bad){document.getElementById(`lv-${mid}-${pid}`).innerHTML=`<div class="caveat"><b>Not accepted:</b> must be ${bad}. Still using ${esc(String(val(m,p)))}.</div>`;return;}
+  S[k]=nv; save();
   if(k==="chg.block"&&$("b_n")){$("b_n").value=S[k];renderBinom();}
   if(k==="chg.warn"||k==="chg.rej"){syncLim();if($("ljTiles"))renderLJ();}
   document.getElementById(`lv-${mid}-${pid}`).innerHTML=live(m,p); renderPlan();});
@@ -737,7 +784,7 @@ function saveL(){bump();try{localStorage.setItem("qcSetup.lanes.v3",JSON.stringi
 const PLAN_FORMATS=["agent-qc-plan","agent-qc-monitor-plan"];
 document.getElementById("exportPlan").onclick=()=>{
   const rev=Number(S._rev)||0, day=new Date().toISOString().slice(0,10);
-  const plan={format:"agent-qc-plan",formatVersion:1,source:"Commons Agent QC Setup",revision:rev,changed:S._changed||null,exported:new Date().toISOString(),settings:S,lanes:L};
+  const plan={format:"agent-qc-plan",formatVersion:1,source:"Commons Agent QC Setup",revision:rev,changed:S._changed||null,exported:new Date().toISOString(),settings:S,lanes:L,resolved:resolvedPlan()};
   const url=URL.createObjectURL(new Blob([JSON.stringify(plan,null,1)],{type:"application/json"}));
   const a=document.createElement("a");a.href=url;a.download=`qc-plan-${day}-r${rev}.json`;document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -747,13 +794,14 @@ document.getElementById("importPlan").onclick=()=>document.getElementById("impor
 document.getElementById("importFile").onchange=async e=>{
   const f=e.target.files[0]; e.target.value=""; if(!f) return;
   try{
-    const p=JSON.parse(await f.text());
+    let p;try{p=JSON.parse(await f.text());}catch(e){p=null;}
+    const why=planProblem(p);if(why){const er=new Error(why);er.plan=1;throw er;}
     if(!PLAN_FORMATS.includes(p.format)||typeof p.settings!=="object"||!p.lanes) throw new Error("not a plan file");
     S=p.settings; L=p.lanes; loadRules(); syncLim();
     localStorage.setItem(KEY,JSON.stringify(S)); localStorage.setItem("qcSetup.lanes.v3",JSON.stringify(L));
     renderLanes(); render();
     document.getElementById("saved").textContent=`Loaded revision ${p.revision} from ${f.name}. This replaced what was in this browser.`;
-  }catch(err){document.getElementById("saved").textContent="That file isn't an exported plan, so nothing changed.";}
+  }catch(err){document.getElementById("saved").textContent=err.plan?`Not loaded: ${err.message}. Nothing changed.`:"That file isn't an exported plan, so nothing changed.";}
 };
 const ix=a=>L.scale.indexOf(a);
 function fit(c){ // keep each control's answers on the current scale
@@ -837,7 +885,7 @@ document.getElementById("ctrls").addEventListener("change",e=>{
 document.getElementById("ordered").addEventListener("change",e=>{L.ordered=e.target.checked;saveL();renderLanes();render();});
 document.getElementById("ctrls").addEventListener("click",e=>{const d=e.target.dataset&&e.target.dataset.del;if(d===undefined)return;L.ctrls.splice(+d,1);saveL();renderLanes();renderPlan();});
 document.getElementById("addCtrl").onclick=()=>{const m=L.scale[Math.floor(L.scale.length/2)]||"";L.ctrls.push({ex:0,case:"",exp:m,hi:m,lo:m,slow:"Reject",fast:"Warn",also:[],out:"Reject",beh:"",behC:"None"});saveL();renderLanes();renderPlan();};
-document.getElementById("scale").addEventListener("change",e=>{const v=e.target.value.split("\n").map(x=>x.trim()).filter(Boolean);if(v.length<2){renderLanes();return;}L.scale=v;saveL();renderLanes();renderPlan();});
+document.getElementById("scale").addEventListener("change",e=>{const raw=e.target.value.split("\n").map(x=>x.trim()).filter(Boolean);const v=[...new Set(raw)];const dropped=raw.length-v.length;if(v.length<2){renderLanes();document.getElementById("scaleNote").textContent="Not accepted: the scale needs at least two different answers.";return;}L.scale=v;setTimeout(()=>{if(dropped)document.getElementById("scaleNote").textContent=`Removed ${dropped} duplicate answer${dropped===1?"":"s"}.`;},0);saveL();renderLanes();renderPlan();});
 document.getElementById("approver").addEventListener("input",e=>{L.approver=e.target.value;saveL();renderPlan();});
 document.getElementById("approver").addEventListener("change",()=>render());
 
