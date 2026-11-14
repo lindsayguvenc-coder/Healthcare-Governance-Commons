@@ -4,6 +4,8 @@
 - NIST AI 100-1, *Artificial Intelligence Risk Management Framework (AI RMF 1.0)*, January 2023. https://doi.org/10.6028/NIST.AI.100-1  
 - NIST AI 600-1, *AI RMF: Generative Artificial Intelligence Profile*, July 2024. https://doi.org/10.6028/NIST.AI.600-1  
 **Author:** National Institute of Standards and Technology, U.S. Department of Commerce  
+**Checked:** Nov 14, 2026 against the source (see `docs/library-criteria.md`)  
+**Status:** AI RMF 1.0 is still the current version. NIST says it is being revised under the July 2025 AI Action Plan; no draft had been published as of this check. Cite section numbers against 1.0.  
 **Commons relevance:** Governance architecture · Authority · Validation · Monitoring · Stop mechanisms · Accountability
 
 ---

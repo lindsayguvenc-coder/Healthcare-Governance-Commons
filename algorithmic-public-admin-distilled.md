@@ -1,6 +1,7 @@
-# Algorithmic Systems in Public Administrations: Practices, Challenges and Governance Frameworks
+# The Use of Algorithmic Systems by Public Administrations: Practices, Challenges and Governance Frameworks
 
-**Source:** Nathalie A. Smuha, Chapter 19 in *The Cambridge Handbook of the Law, Ethics and Policy of Artificial Intelligence* (Cambridge University Press, 2025), ed. Nathalie A. Smuha. DOI: 10.1017/9781009367783  
+**Source:** Nathalie A. Smuha, Chapter 19 in *The Cambridge Handbook of the Law, Ethics and Policy of Artificial Intelligence* (Cambridge University Press, 2025), ed. Nathalie A. Smuha. Chapter DOI: [10.1017/9781009367783.023](https://doi.org/10.1017/9781009367783.023) (open access, CC BY)  
+**Checked:** Nov 14, 2026 against the source (see `docs/library-criteria.md`)  
 **Author:** KU Leuven Faculty of Law and Criminology; also author of *Algorithmic Rule by Law* (Cambridge University Press, 2025)  
 **Commons relevance:** Authority · Stop mechanisms · Accountability · Monitoring · Governance failure taxonomy
 

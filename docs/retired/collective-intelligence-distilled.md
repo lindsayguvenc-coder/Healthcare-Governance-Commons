@@ -1,3 +1,5 @@
+> **Retired Nov 14, 2026.** A Forbes column, not a primary source; removed from the library under `docs/library-criteria.md`. Kept here for reference.
+
 # Collective Intelligence in Medical Decision-Making: A Commons Distillation
 
 **Source:** Spencer Dorn, "How Collective Intelligence Could Soon Reshape Medical Decision-Making," *Forbes*, March 12, 2026  

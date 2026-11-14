@@ -1,0 +1,980 @@
+{
+  "asOf": "2026-11-14",
+  "criteria": "docs/library-criteria.md",
+  "tiers": {
+    "primary": "Original document from the issuing body or the study itself",
+    "commons": "Lindsay LaMere's own work, labeled separately; not outside evidence"
+  },
+  "documents": [
+    {
+      "id": "fda-pccp-ai-2025",
+      "tier": "primary",
+      "title": "Marketing Submission Recommendations for a Predetermined Change Control Plan for Artificial Intelligence-Enabled Device Software Functions",
+      "type": "regulation",
+      "source": "FDA",
+      "year": "2025",
+      "date": "2025-08",
+      "status": "final (first issued Dec 2024; current version Aug 2025)",
+      "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/marketing-submission-recommendations-predetermined-change-control-plan-artificial",
+      "nodes": [
+        "stop",
+        "h2",
+        "threshold_review",
+        "watcher",
+        "validation"
+      ],
+      "abstract": "Final guidance on pre-authorizing specific future changes to an AI-enabled device as part of its original marketing submission. A change covered by an authorized plan can ship without a new submission only if it is carried out exactly as the plan describes; anything outside the plan goes back through the normal modification rules. Labeling must tell users the device has an authorized plan and may need updates. Relevant to the Commons as the regulator's version of pre-agreed change control: who decides what may change, how it is verified, and how users are told.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "fda-lifecycle-draft-2025",
+      "tier": "primary",
+      "title": "Artificial Intelligence-Enabled Device Software Functions: Lifecycle Management and Marketing Submission Recommendations",
+      "type": "regulation",
+      "source": "FDA",
+      "year": "2025",
+      "date": "2025-01-07",
+      "status": "draft, not for implementation (top finalization priority on CDRH's FY2027 agenda, Oct 2026)",
+      "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/artificial-intelligence-enabled-device-software-functions-lifecycle-management-and-marketing",
+      "nodes": [
+        "validation",
+        "watcher",
+        "equity",
+        "explainability",
+        "h3"
+      ],
+      "abstract": "Draft guidance laying out what FDA wants to see in submissions for AI-enabled devices across the total product lifecycle: device description, data management, performance across subgroups, user interface and labeling, and post-market performance monitoring. Still a draft as of this check; treat it as FDA's stated direction, not a requirement.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "imdrf-gmlp-n88-2025",
+      "tier": "primary",
+      "title": "Good Machine Learning Practice for Medical Device Development: Guiding Principles (IMDRF/AIML WG/N88 FINAL:2025)",
+      "type": "standard",
+      "source": "International Medical Device Regulators Forum (IMDRF)",
+      "year": "2025",
+      "date": "2025-01-29",
+      "status": "final",
+      "url": "https://www.imdrf.org/sites/default/files/2025-02/IMDRF_AIML%20WG_GMLP_N88%20Final.pdf",
+      "nodes": [
+        "validation",
+        "watcher",
+        "norm",
+        "vendor-risk"
+      ],
+      "abstract": "The international final version of the ten good machine learning practice principles first published by FDA, Health Canada, and the UK MHRA in 2021. Covers intended use, multidisciplinary expertise, software and security practice, representative data, independence of training and test sets, fit-for-purpose reference standards, human-AI team performance, clear user information, and monitoring of deployed models. Replaces the 2021 trilateral document as the reference version.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "fda-transparency-2024",
+      "tier": "primary",
+      "title": "Transparency for Machine Learning-Enabled Medical Devices: Guiding Principles",
+      "type": "regulation",
+      "source": "FDA / Health Canada / UK MHRA",
+      "year": "2024",
+      "date": "2024-06-13",
+      "status": "final (guiding principles, non-binding)",
+      "url": "https://www.fda.gov/media/179269/download",
+      "nodes": [
+        "explainability",
+        "validation",
+        "norm",
+        "vendor-risk"
+      ],
+      "abstract": "Joint principles on what information about an ML-enabled device should reach whom, why, where, when, and how. Builds on GMLP principles 7 (human-AI team performance) and 9 (clear, essential information for users). Treats explainability as one part of transparency and leans on human-centered design to decide what each audience needs.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "fda-cds-2026",
+      "tier": "primary",
+      "title": "Clinical Decision Support Software: Guidance for Industry and FDA Staff",
+      "type": "regulation",
+      "source": "FDA",
+      "year": "2026",
+      "date": "2026-01-06",
+      "status": "revised final; supersedes the 2022 version",
+      "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/clinical-decision-support-software",
+      "nodes": [
+        "authority",
+        "explainability",
+        "override",
+        "validation"
+      ],
+      "abstract": "FDA's reading of the four statutory criteria that keep clinical decision support software out of device regulation. The 2026 revision eases enforcement for some software that gives a single recommendation and drops most of the 2022 language treating time-critical tools as devices, while keeping the requirement that clinicians can independently review the basis for a recommendation. Despite being announced alongside AI policy, the guidance does not address AI directly. Still covers clinician-facing tools only.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "onc-hti5-2026",
+      "tier": "primary",
+      "title": "Health Data, Technology, and Interoperability: ONC Deregulatory Actions To Unleash Prosperity (HTI-5) Final Rule",
+      "type": "regulation",
+      "source": "ONC / HHS",
+      "year": "2026",
+      "date": "2026-10-28",
+      "status": "final; published Oct 28, 2026; effective Dec 28, 2026 (some provisions Jan 1, 2027)",
+      "url": "https://www.govinfo.gov/content/pkg/FR-2026-10-28/html/2026-21943.htm",
+      "nodes": [
+        "norm",
+        "explainability",
+        "vendor-risk",
+        "h3"
+      ],
+      "abstract": "Removes the HTI-1 requirements that certified EHRs support 'source attributes' (model-card information) for evidence-based and predictive decision support interventions, and removes the intervention risk management requirements for predictive ones. Also retires the expired legacy clinical decision support criterion. Leaves the only federal model-card requirement for certified health IT gone; ONC said it may revisit transparency for non-AI decision support in later rules.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "hhs-1557-92210",
+      "tier": "primary",
+      "title": "45 CFR 92.210 — Nondiscrimination in the Use of Patient Care Decision Support Tools (Section 1557 rule)",
+      "type": "regulation",
+      "source": "HHS Office for Civil Rights",
+      "year": "2024",
+      "date": "2024-05-06",
+      "status": "in force; §92.210(b)-(c) applicable May 1, 2025. Oct 2025 court vacatur (Tennessee v. Kennedy) covered gender-identity provisions only; HHS notice (June 2, 2026) confirms the rest remains in force",
+      "url": "https://www.ecfr.gov/current/title-45/section-92.210",
+      "nodes": [
+        "equity",
+        "accountability",
+        "vendor-risk"
+      ],
+      "abstract": "Covered entities may not discriminate through patient care decision support tools, a deliberately broad category that includes AI, clinical algorithms, and non-automated tools. They must make reasonable efforts to identify tools that use race, color, national origin, sex, age, or disability as inputs, and reasonable efforts to mitigate the resulting risk of discrimination. Applies to the user (the health system), not the developer.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "cms-ma-422101",
+      "tier": "primary",
+      "title": "42 CFR 422.101(c) — Medicare Advantage medical necessity determinations (with CMS FAQ on algorithms and AI, Feb 6, 2024)",
+      "type": "regulation",
+      "source": "CMS",
+      "year": "2024",
+      "date": "2024-02-06",
+      "status": "in force",
+      "url": "https://www.ecfr.gov/current/title-42/section-422.101",
+      "nodes": [
+        "contestation",
+        "override",
+        "accountability"
+      ],
+      "abstract": "Medicare Advantage plans must base medical necessity decisions on the individual patient's circumstances. CMS's February 2024 FAQ applied this to algorithms: plans may use AI to assist, but a determination built on a larger data set instead of the patient's own history, physician recommendation, and clinical notes does not comply, and a predicted length of stay alone cannot justify ending post-acute care. (Link is to the regulation; the FAQ is an HPMS memo.)",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "ca-ab3030",
+      "tier": "primary",
+      "title": "California AB 3030 (2024) — Health care services: artificial intelligence",
+      "type": "regulation",
+      "source": "California Legislature",
+      "year": "2024",
+      "date": "2024-09-28",
+      "status": "in force since Jan 1, 2025",
+      "url": "https://leginfo.legislature.ca.gov/faces/billNavClient.xhtml?bill_id=202320240AB3030",
+      "nodes": [
+        "forming",
+        "explainability"
+      ],
+      "abstract": "Providers that use generative AI to write patient communications about clinical information must say so prominently (placement rules differ for written, chat, audio, and video) and tell the patient how to reach a human. Communications read and reviewed by a licensed provider before sending are exempt.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "ca-sb1120",
+      "tier": "primary",
+      "title": "California SB 1120 (2024) — Physicians Make Decisions Act",
+      "type": "regulation",
+      "source": "California Legislature",
+      "year": "2024",
+      "date": "2024-09-28",
+      "status": "in force since Jan 1, 2025",
+      "url": "https://leginfo.legislature.ca.gov/faces/billNavClient.xhtml?bill_id=202320240SB1120",
+      "nodes": [
+        "override",
+        "authority",
+        "contestation"
+      ],
+      "abstract": "Health plans and disability insurers may use algorithms and AI in utilization review, but denials, delays, or modifications based on medical necessity must be decided by a licensed physician or qualified health care professional looking at the individual's clinical circumstances.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "co-sb26-189",
+      "tier": "primary",
+      "title": "Colorado SB 26-189 (2026) — repeal and replacement of the Colorado AI Act",
+      "type": "regulation",
+      "source": "Colorado General Assembly",
+      "year": "2026",
+      "date": "2026-05-14",
+      "status": "signed May 14, 2026; effective Jan 1, 2027",
+      "url": "https://leg.colorado.gov/bills/sb26-189",
+      "nodes": [
+        "equity",
+        "forming"
+      ],
+      "abstract": "Replaces the never-implemented 2024 Colorado AI Act with a narrower law on automated decision-making technology used in consequential decisions. Drops the duty of care against algorithmic discrimination, risk management programs, and impact assessments in favor of disclosure duties. HIPAA covered entities are largely exempt outside employment and financial-assistance decisions. A marker of the state-level shift away from bias duties.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "eu-ai-act-2024",
+      "tier": "primary",
+      "title": "Regulation (EU) 2024/1689 — Artificial Intelligence Act (as amended by the Digital Omnibus on AI)",
+      "type": "regulation",
+      "source": "European Union",
+      "year": "2024",
+      "date": "2024-07-12",
+      "status": "in force; Digital Omnibus agreed May 7, 2026 and approved by the Council June 29, 2026 moves high-risk obligations for AI in MDR/IVDR devices to Aug 2, 2028",
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "nodes": [
+        "validation",
+        "vendor-risk",
+        "h3"
+      ],
+      "abstract": "AI that is itself a medical device, or a safety component of one, and needs notified-body assessment is high-risk under the Act, with requirements on risk management, data governance, logging, transparency, human oversight, and post-market monitoring layered on MDR/IVDR. The Digital Omnibus kept medical devices in scope but delayed those obligations to Aug 2, 2028 and lets the Commission remove duplicated requirements by delegated act. Check the Official Journal text of the Omnibus before citing specific articles.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "nist-ai-rmf-1-0",
+      "tier": "primary",
+      "title": "Artificial Intelligence Risk Management Framework (AI RMF 1.0), NIST AI 100-1",
+      "type": "standard",
+      "source": "NIST",
+      "year": "2023",
+      "date": "2023-01-26",
+      "status": "current version; revision directed by the July 2025 AI Action Plan, no draft published as of this check",
+      "url": "https://doi.org/10.6028/NIST.AI.100-1",
+      "nodes": [
+        "accountability",
+        "learning-loop",
+        "vendor-risk",
+        "explainability",
+        "equity",
+        "contestation",
+        "watcher",
+        "h4"
+      ],
+      "abstract": "Voluntary framework organized into four functions: Govern, Map, Measure, Manage. Names trustworthiness characteristics (valid and reliable, safe, secure and resilient, accountable and transparent, explainable and interpretable, privacy-enhanced, fair with harmful bias managed). Third-party risk sits under Govern; post-deployment monitoring, appeal and override, and change management under Manage. The revision may change the text, so cite section numbers against 1.0.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "nist-ai-600-1",
+      "tier": "primary",
+      "title": "AI RMF: Generative Artificial Intelligence Profile, NIST AI 600-1",
+      "type": "standard",
+      "source": "NIST",
+      "year": "2024",
+      "date": "2024-07-26",
+      "status": "final",
+      "url": "https://doi.org/10.6028/NIST.AI.600-1",
+      "nodes": [
+        "vendor-risk",
+        "watcher",
+        "explainability"
+      ],
+      "abstract": "Companion profile applying the AI RMF to generative AI. Lists risks that generative AI creates or makes worse (for example confabulation, information integrity, harmful bias, data privacy, value chain and component integration) and maps suggested actions to the four RMF functions.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "tjc-chai-ruaih-2025",
+      "tier": "primary",
+      "title": "Guidance on the Responsible Use of AI in Healthcare (RUAIH)",
+      "type": "guideline",
+      "source": "Joint Commission / Coalition for Health AI (CHAI)",
+      "year": "2025",
+      "date": "2025-09-17",
+      "status": "final guidance (voluntary)",
+      "url": "https://www.jointcommission.org/en-us/about-us/key-initiatives/ai-data-analytics-research",
+      "nodes": [
+        "authority",
+        "watcher",
+        "equity",
+        "escalation",
+        "vendor-risk",
+        "forming",
+        "learning-loop"
+      ],
+      "abstract": "Seven elements for health systems using AI: policies and governance structures with board reporting; patient privacy and transparency, including telling patients when AI is used; data security and data-use agreements with vendors; ongoing quality monitoring, since performance can drift; voluntary, blinded reporting of AI safety events through existing channels such as Patient Safety Organizations; risk and bias assessment before and after deployment; and role-specific education and training. High level by design; the playbooks and certification below carry the detail.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "tjc-ruaih-cert-2026",
+      "tier": "primary",
+      "title": "Responsible Use of AI in Healthcare (RUAIH) Certification",
+      "type": "standard",
+      "source": "Joint Commission",
+      "year": "2026",
+      "date": "2026-06-01",
+      "status": "launched June 1, 2026 (voluntary; open to non-accredited organizations)",
+      "url": "https://www.jointcommission.org/en-us/certification/responsible-use-of-ai-in-healthcare",
+      "nodes": [
+        "commons",
+        "accountability",
+        "authority"
+      ],
+      "abstract": "Voluntary certification of an organization's AI governance, not of any AI product. Reviews five areas: governance, data management, risk and bias reduction, evaluating and validating the safety and effectiveness of tools, and transparency, education, and training. Built on the 2025 RUAIH guidance and CHAI's governance playbooks (May 2026).",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "chai-applied-model-card",
+      "tier": "primary",
+      "title": "CHAI Applied Model Card and Model Card Registry",
+      "type": "standard",
+      "source": "Coalition for Health AI (CHAI)",
+      "year": "2025",
+      "date": "2025-02-28",
+      "status": "in use (registry announced Feb 2025)",
+      "url": "https://www.chai.org/workgroup/applied-model",
+      "nodes": [
+        "norm",
+        "vendor-risk",
+        "explainability"
+      ],
+      "abstract": "Voluntary 'nutrition label' template describing an AI solution as applied to a specific health use case, plus a public registry where developers post completed cards. Originally designed partly to help EHR vendors meet HTI-1 source-attribute rules; with HTI-5 removing that requirement, it is now the main voluntary standard for this information.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "who-lmm-2024",
+      "tier": "primary",
+      "title": "Ethics and Governance of Artificial Intelligence for Health: Guidance on Large Multi-Modal Models",
+      "type": "guideline",
+      "source": "World Health Organization",
+      "year": "2024",
+      "date": "2024-01-18",
+      "status": "final",
+      "url": "https://www.who.int/publications-detail-redirect/9789240084759",
+      "nodes": [
+        "accountability",
+        "vendor-risk",
+        "forming",
+        "commons"
+      ],
+      "abstract": "More than 40 recommendations for governments, developers, and health systems on generative AI in health: five application areas (clinical care, patient-guided use, clerical tasks, education, research), the risks of false or biased output and automation bias, and governance measures including independent post-release audits and impact assessments for large-scale deployments.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "fsmb-ai-2024",
+      "tier": "primary",
+      "title": "Navigating the Responsible and Ethical Incorporation of Artificial Intelligence into Clinical Practice",
+      "type": "guideline",
+      "source": "Federation of State Medical Boards (FSMB)",
+      "year": "2024",
+      "date": "2024-04",
+      "status": "adopted by the FSMB House of Delegates, April 2024; FSMB says it is updating this guidance (Aug 2026)",
+      "url": "https://www.fsmb.org/siteassets/advocacy/policies/incorporation-of-ai-into-practice.pdf",
+      "nodes": [
+        "accountability",
+        "override",
+        "authority"
+      ],
+      "abstract": "Recommendations to state medical boards. Boards regulate the physicians who use AI, not the tools, and physicians are accountable for harm from their use of AI, with the degree depending on the tool's risk. Also calls for disclosure of AI use to patients, AI education requirements, and boards having a say when states define what counts as the practice of medicine.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "ama-ai-principles-2023",
+      "tier": "primary",
+      "title": "Principles for Augmented Intelligence Development, Deployment, and Use",
+      "type": "guideline",
+      "source": "American Medical Association",
+      "year": "2023",
+      "date": "2023-11-28",
+      "status": "current AMA policy basis",
+      "url": "https://www.ama-assn.org/system/files/ama-ai-principles.pdf",
+      "nodes": [
+        "authority",
+        "accountability",
+        "contestation",
+        "override"
+      ],
+      "abstract": "AMA principles on oversight, transparency, disclosure and documentation when AI affects patient care, generative AI policies, privacy and security, bias mitigation, and payer use of AI. On liability the AMA takes the opposite emphasis from FSMB: it will push to keep physician liability for AI-enabled tools limited. Calls for stronger oversight and audits when payers use automated systems for coverage and claims.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "ihi-lli-2024",
+      "tier": "primary",
+      "title": "Patient Safety and Artificial Intelligence: Opportunities and Challenges for Care Delivery",
+      "type": "guideline",
+      "source": "IHI Lucian Leape Institute",
+      "year": "2024",
+      "date": "2024-05-15",
+      "status": "final",
+      "url": "https://www.ihi.org/initiatives/ihi-lucian-leape-institute/patient-safety-ai",
+      "nodes": [
+        "escalation",
+        "stop",
+        "h1",
+        "watcher",
+        "learning-loop",
+        "forming"
+      ],
+      "abstract": "Expert-panel report on generative AI and patient safety across three use cases: documentation support, clinical decision support, and patient-facing chatbots. Covers risks (inaccurate recommendations, biased output, workflow strain, depersonalization), mitigation and monitoring strategies, what genAI means for the patient safety field, and recommendations for seven groups, including disclosing patient-facing AI to patients.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "ecri-hazards-2026",
+      "tier": "primary",
+      "title": "Top 10 Health Technology Hazards for 2026 (Executive Brief)",
+      "type": "report",
+      "source": "ECRI",
+      "year": "2026",
+      "date": "2026-01",
+      "status": "final",
+      "url": "https://home.ecri.org/blogs/ecri-news/examining-the-greatest-health-technology-threats-of-2026",
+      "nodes": [
+        "h3",
+        "watcher",
+        "escalation"
+      ],
+      "abstract": "ECRI's annual hazard list from an independent patient safety organization. Misuse of AI chatbots in health care is ranked first for 2026; implementations that push clinicians into unsafe workflows are also on the list. Recommends AI governance committees, clinician training, and regular audits of AI tool performance. Full report is members-only.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "fda-mdr-803",
+      "tier": "primary",
+      "title": "21 CFR Part 803 — Medical Device Reporting",
+      "type": "regulation",
+      "source": "FDA",
+      "year": "current",
+      "date": "eCFR text current as of 2026-11-14",
+      "status": "in force",
+      "url": "https://www.ecfr.gov/current/title-21/part-803",
+      "nodes": [
+        "escalation",
+        "h3",
+        "learning-loop"
+      ],
+      "abstract": "The existing federal adverse-event channel for devices, including AI that is a device. Device user facilities such as hospitals must report device-related deaths to FDA and the manufacturer, and serious injuries to the manufacturer. A reporting path that already exists for AI-enabled devices, unlike most non-device AI.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "clia-493-1256",
+      "tier": "primary",
+      "title": "42 CFR 493.1256 — Standard: Control procedures (CLIA)",
+      "type": "regulation",
+      "source": "CMS (CLIA)",
+      "year": "current",
+      "date": "eCFR text current as of 2026-11-14",
+      "status": "in force",
+      "url": "https://www.ecfr.gov/current/title-42/section-493.1256",
+      "nodes": [
+        "watcher",
+        "stop",
+        "h1",
+        "threshold_review"
+      ],
+      "abstract": "The clinical laboratory rule requiring control procedures that detect immediate errors and monitor accuracy and precision over time, with control frequency, acceptance criteria, and documented corrective action before patient results are reported. The regulatory home of the Westgard-style QC practice the Commons adapts for AI monitoring.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "haip-kdp",
+      "tier": "primary",
+      "title": "Health AI Partnership: Key Decision Points guides",
+      "type": "guideline",
+      "source": "Health AI Partnership (Duke Institute for Health Innovation and partners)",
+      "year": "2023",
+      "date": "2023-05 (maintained)",
+      "status": "maintained online",
+      "url": "https://healthaipartnership.org",
+      "nodes": [
+        "vendor-risk",
+        "validation",
+        "forming"
+      ],
+      "abstract": "Practice guides for health systems across eight key decision points in four phases of AI adoption, from identifying the problem and procurement through development, integration, lifecycle management, and decommissioning. Freely available and written for safety-net as well as academic settings.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "haip-heaal-2024",
+      "tier": "primary",
+      "title": "Development and preliminary testing of Health Equity Across the AI Lifecycle (HEAAL): A framework for healthcare delivery organizations to mitigate the risk of AI solutions worsening health inequities",
+      "type": "peer-reviewed",
+      "source": "PLOS One / Health AI Partnership",
+      "year": "2024",
+      "date": "2024",
+      "status": "published",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11081364",
+      "nodes": [
+        "equity",
+        "validation",
+        "vendor-risk"
+      ],
+      "abstract": "Framework assessing five equity domains (accountability, fairness, fitness for purpose, reliability and validity, transparency) across the eight key decision points of AI adoption, with step-by-step procedures, stakeholders, and data sources for each.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "khera-jama-2023",
+      "tier": "primary",
+      "title": "Automation Bias and Assistive AI: Risk of Harm From AI-Driven Clinical Decision Support",
+      "type": "editorial",
+      "source": "JAMA (Khera, Simon & Ross)",
+      "year": "2023",
+      "date": "2023-12-19",
+      "status": "published (editorial)",
+      "url": "https://doi.org/10.1001/jama.2023.22557",
+      "nodes": [
+        "override",
+        "watcher"
+      ],
+      "abstract": "Editorial accompanying the Jabbour et al. trial. Argues that current evaluation looks at model performance but misses what happens when clinicians defer to a wrong model, and that time pressure makes automation-bias errors worse. An argument, not new data; pair it with the trial.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "jabbour-jama-2023",
+      "tier": "primary",
+      "title": "Measuring the Impact of AI in the Diagnosis of Hospitalized Patients: A Randomized Clinical Vignette Survey Study",
+      "type": "peer-reviewed",
+      "source": "JAMA (Jabbour et al.)",
+      "year": "2023",
+      "date": "2023-12-19",
+      "status": "published",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10731487",
+      "nodes": [
+        "override",
+        "explainability",
+        "equity"
+      ],
+      "abstract": "Randomized vignette study of hospitalist clinicians across 13 states. Accurate AI improved diagnostic accuracy; systematically biased AI lowered it by 11.3 percentage points, and image-based explanations did not help clinicians catch the bias. Direct evidence that the clinician is not a reliable failsafe on their own.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "goddard-jamia-2012",
+      "tier": "primary",
+      "title": "Automation Bias: A Systematic Review of Frequency, Effect Mediators, and Mitigators",
+      "type": "peer-reviewed",
+      "source": "JAMIA (Goddard, Roudsari & Wyatt)",
+      "year": "2012",
+      "date": "2012-01 (online Jun 2011)",
+      "status": "published",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3240751",
+      "nodes": [
+        "override",
+        "watcher"
+      ],
+      "abstract": "Review of 74 studies on over-reliance on decision support. Decision support usually improves overall performance but introduces new errors that go unnoticed. Mediators include trust, experience, workload, task complexity, and time pressure; mitigators include user accountability, training, confidence information shown with advice, and presenting information rather than direct recommendations.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "haug-nejm-2023",
+      "tier": "primary",
+      "title": "Artificial Intelligence and Machine Learning in Clinical Medicine, 2023",
+      "type": "peer-reviewed",
+      "source": "NEJM (Haug & Drazen)",
+      "year": "2023",
+      "date": "2023-03-30",
+      "status": "published (review)",
+      "url": "https://www.nejm.org/doi/10.1056/NEJMra2302038",
+      "nodes": [
+        "validation"
+      ],
+      "abstract": "Opening review of NEJM's AI series: history of AI in medicine, image analysis, outbreak detection, diagnosis, and chatbots. Background reading, not evidence for any specific monitoring claim.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "finlayson-nejm-2021",
+      "tier": "primary",
+      "title": "The Clinician and Dataset Shift in Artificial Intelligence",
+      "type": "peer-reviewed",
+      "source": "NEJM (Finlayson et al.)",
+      "year": "2021",
+      "date": "2021-07-15",
+      "status": "published (correspondence)",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8665481",
+      "nodes": [
+        "stop",
+        "watcher",
+        "h3",
+        "threshold_review"
+      ],
+      "abstract": "Letter laying out how dataset shift breaks clinical AI, grouped into changes in technology, population and setting, and behavior, with recognition and mitigation strategies. Includes a real stop: Michigan Medicine's AI governance committee turned off a sepsis alert model in April 2020 after COVID-era changes in patients made its alerts spurious.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "wong-jamaim-2021",
+      "tier": "primary",
+      "title": "External Validation of a Widely Implemented Proprietary Sepsis Prediction Model in Hospitalized Patients",
+      "type": "peer-reviewed",
+      "source": "JAMA Internal Medicine (Wong et al.)",
+      "year": "2021",
+      "date": "2021-06-21",
+      "status": "published",
+      "url": "https://doi.org/10.1001/jamainternmed.2021.2626",
+      "nodes": [
+        "validation",
+        "vendor-risk",
+        "watcher"
+      ],
+      "abstract": "Independent validation of the Epic Sepsis Model on 38,455 hospitalizations at Michigan Medicine. Hospitalization-level AUC was 0.63, below the vendor's reported figures; the model missed 67% of sepsis cases while alerting on 18% of all hospitalized patients. The standard example of why local validation and vendor claims are different things.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "obermeyer-science-2019",
+      "tier": "primary",
+      "title": "Dissecting Racial Bias in an Algorithm Used to Manage the Health of Populations",
+      "type": "peer-reviewed",
+      "source": "Science (Obermeyer et al.)",
+      "year": "2019",
+      "date": "2019-10-25",
+      "status": "published",
+      "url": "https://doi.org/10.1126/science.aax2342",
+      "nodes": [
+        "equity",
+        "validation"
+      ],
+      "abstract": "A widely used commercial risk algorithm predicted health care cost as a stand-in for health need. Because less is spent on Black patients with the same need, Black patients at a given score were sicker than White patients; correcting it would raise the share of Black patients flagged for extra help from 17.7% to 46.5%. The case for checking what a model's label actually measures.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "tripod-ai-2024",
+      "tier": "primary",
+      "title": "TRIPOD+AI Statement: Updated Guidance for Reporting Clinical Prediction Models that Use Regression or Machine Learning Methods",
+      "type": "peer-reviewed",
+      "source": "BMJ (Collins et al.)",
+      "year": "2024",
+      "date": "2024-04-16",
+      "status": "published; supersedes TRIPOD 2015",
+      "url": "https://doi.org/10.1136/bmj-2023-078378",
+      "nodes": [
+        "validation",
+        "norm",
+        "explainability"
+      ],
+      "abstract": "27-item reporting checklist for studies that develop or evaluate prediction models, regression or machine learning alike, plus a 13-item abstract checklist. Useful as a minimum for what a vendor's validation evidence should disclose.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "hot-mess-2026",
+      "tier": "primary",
+      "title": "The Hot Mess of AI: How Does Misalignment Scale With Model Intelligence and Task Complexity?",
+      "type": "preprint",
+      "source": "Hägele, Gema, Sleight, Perez & Sohl-Dickstein (ICLR 2026)",
+      "year": "2026",
+      "date": "2026-01-30",
+      "status": "conference paper (ICLR 2026)",
+      "url": "https://arxiv.org/abs/2601.23045",
+      "nodes": [
+        "stop",
+        "watcher",
+        "explainability"
+      ],
+      "abstract": "Splits AI errors into consistent (bias) and inconsistent (variance) parts. Across frontier models and tasks, the longer a model reasons or acts, the more its failures are incoherent rather than consistently wrong, and larger models are sometimes more incoherent. For monitoring, it suggests failures will look more like industrial accidents than steady drift toward a wrong goal.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "frontier-audit-2026",
+      "tier": "primary",
+      "title": "Frontier AI Auditing: Toward Rigorous Third-Party Assessment of Safety and Security Practices at Leading AI Companies",
+      "type": "preprint",
+      "source": "Brundage et al. (48 authors)",
+      "year": "2026",
+      "date": "2026-02-07",
+      "status": "preprint (v4)",
+      "url": "https://arxiv.org/abs/2601.11699",
+      "nodes": [
+        "vendor-risk",
+        "accountability"
+      ],
+      "abstract": "Proposes rigorous third-party auditing of frontier AI developers' safety and security claims, with deep access to non-public information and four AI Assurance Levels. Argues audits should cover the whole organization, including internal deployment, rather than single products. Relevant by analogy to vendor assurance: what an institution can and cannot learn about a supplier from the outside.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "trajectory-memory-2026",
+      "tier": "primary",
+      "title": "Trajectory-Informed Memory Generation for Self-Improving Agent Systems",
+      "type": "preprint",
+      "source": "Fang et al. (IBM Research)",
+      "year": "2026",
+      "date": "2026-03-11",
+      "status": "technical report / preprint",
+      "url": "https://arxiv.org/abs/2603.10600",
+      "nodes": [
+        "learning-loop"
+      ],
+      "abstract": "Method for agents to learn from their own execution traces: it attributes failures to the decisions that caused them, then stores strategy, recovery, and optimization tips with their provenance for later retrieval. Not health-specific; relevant as a design pattern for dated, sourced lessons in a governance learning loop.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "smuha-2025",
+      "tier": "primary",
+      "title": "The Use of Algorithmic Systems by Public Administrations: Practices, Challenges and Governance Frameworks",
+      "type": "peer-reviewed",
+      "source": "Smuha, in The Cambridge Handbook of the Law, Ethics and Policy of AI (Cambridge University Press)",
+      "year": "2025",
+      "date": "2025-02",
+      "status": "published (open access, CC BY)",
+      "url": "https://doi.org/10.1017/9781009367783.023",
+      "nodes": [
+        "accountability",
+        "contestation",
+        "equity",
+        "vendor-risk"
+      ],
+      "abstract": "Chapter 19. Traces how public administrations came to rely on algorithmic systems, walks through deployments that ran against rule-of-law values, and reviews the legal and governance frameworks that apply. Useful outside government for the point that handing a decision to a vendor's system does not hand off the institution's accountability for it.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "guvenc-ecg-2025",
+      "tier": "commons",
+      "title": "ECG Arrhythmia Detection Governance Demo: Stop Mechanism Implementation with MIMIC-IV",
+      "type": "practitioner",
+      "source": "Lindsay LaMere / GitHub",
+      "year": "2025",
+      "date": "2025",
+      "status": "published",
+      "url": "https://github.com/lindsayguvenc-coder/ecg-governance-demo",
+      "nodes": [
+        "stop",
+        "validation",
+        "watcher"
+      ],
+      "abstract": "Concrete implementation of a governance framework for ECG arrhythmia detection AI using MIMIC-IV data. Demonstrates Westgard-adapted stop thresholds, authority matrix for hard stop activation, and escalation protocol design. A worked example of CLIA-style QC principles applied to AI inference monitoring for a clinical diagnostic aid.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "westgard-ml-adaptation",
+      "tier": "commons",
+      "title": "Westgard Multi-Rule Framework Adapted for ML Inference Monitoring: QC Principles for Clinical AI",
+      "type": "practitioner",
+      "source": "Lindsay LaMere / Governance Commons",
+      "year": "2025",
+      "date": "2025",
+      "status": "not yet published (no public link)",
+      "url": null,
+      "nodes": [
+        "stop",
+        "watcher",
+        "h1"
+      ],
+      "abstract": "Translation of Westgard 2-of-3s, 4-1s, and 10-x rules from laboratory QC into ML inference monitoring context. Core argument: whoever signs the corrective action owns the governance decision — authority follows existing accountability structures rather than creating new ones. Addresses the fixed vs. adaptive threshold debate by proposing population-stratified control limits as a bridge position.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "cw-ep01",
+      "tier": "commons",
+      "title": "Community Weaving Episode 01: The Loom is Missing",
+      "type": "practitioner",
+      "source": "Lindsay LaMere / Healthcare Governance Commons",
+      "year": "2025",
+      "date": "2025",
+      "status": "published",
+      "url": "/community_weaving_ep01.pdf",
+      "nodes": [
+        "commons"
+      ],
+      "abstract": "Opening episode of the Community Weaving series. Identifies five domains where knowledge outpaces coordination — clinical AI, pandemic preparedness, climate adaptation, democratic renewal, and economic transition. Names the structural gap underneath all of them: the missing container for collaborative governance work. Establishes the loom metaphor that anchors the series.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "cw-ep02",
+      "tier": "commons",
+      "title": "Community Weaving Episode 02: Why the Tools We Have Fail",
+      "type": "practitioner",
+      "source": "Lindsay LaMere / Healthcare Governance Commons",
+      "year": "2025",
+      "date": "2025",
+      "status": "published",
+      "url": "/community_weaving_ep02.pdf",
+      "nodes": [
+        "commons",
+        "h2"
+      ],
+      "abstract": "Diagnoses why linear tools — checklists, frameworks, maturity models — break down in high-stakes, multi-dimensional domains. Argues that the failure is structural, not implementational: these tools were designed for stable, well-mapped problems and cannot hold the complexity of domains where the map doesn't exist yet. Directly relevant to authority matrix design and threshold authority.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "cw-ep03",
+      "tier": "commons",
+      "title": "Community Weaving Episode 03: The Loom",
+      "type": "practitioner",
+      "source": "Lindsay LaMere / Healthcare Governance Commons",
+      "year": "2025",
+      "date": "2025",
+      "status": "published",
+      "url": "/community_weaving_ep03.pdf",
+      "nodes": [
+        "commons"
+      ],
+      "abstract": "Defines Community Weaving as a methodology and traces its historical instances across domains and centuries. Argues that the loom — the container for collaborative, friction-positive knowledge-building — keeps getting built independently by people who never knew each other's work, because the need is structural. Foundational document for the Commons architecture.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "cw-ep04",
+      "tier": "commons",
+      "title": "Community Weaving Episode 04: The Commons as Proof of Concept",
+      "type": "practitioner",
+      "source": "Lindsay LaMere / Healthcare Governance Commons",
+      "year": "2025",
+      "date": "2025",
+      "status": "published",
+      "url": "/community_weaving_ep04.pdf",
+      "nodes": [
+        "commons",
+        "watcher"
+      ],
+      "abstract": "Documents what building the Healthcare Governance Commons actually revealed — about clinical AI governance gaps, about the infrastructure problem, and about the method itself. The Commons is simultaneously the subject of the series and an instance of the methodology it describes. Key for understanding the dual-loop architecture as a lived design decision rather than a theoretical framework.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "cw-ep05",
+      "tier": "commons",
+      "title": "Community Weaving Episode 05: The Shared Mental Model Problem",
+      "type": "practitioner",
+      "source": "Lindsay LaMere / Healthcare Governance Commons",
+      "year": "2025",
+      "date": "2025",
+      "status": "published",
+      "url": "/community_weaving_ep05.pdf",
+      "nodes": [
+        "norm",
+        "h2"
+      ],
+      "abstract": "Argues that lexicon is coordination infrastructure — that a shared definition is not the same as a shared mental model, and that the gap between them is where most governance breakdowns actually occur. Directly relevant to the normalization layer and threshold authority nodes. The taxonomy/lexicon component of the internal technical loop is the structural answer to the problem this episode names.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "cw-ep06",
+      "tier": "commons",
+      "title": "Community Weaving Episode 06: Disagreement as Data",
+      "type": "practitioner",
+      "source": "Lindsay LaMere / Healthcare Governance Commons",
+      "year": "2025",
+      "date": "2025",
+      "status": "published",
+      "url": "/community_weaving_ep06.pdf",
+      "nodes": [
+        "h2",
+        "adjudicate"
+      ],
+      "abstract": "Reframes disagreement as the most important signal a governance system produces — not a problem to resolve but information about the system. Introduces the five unpacking lenses: hidden assumptions, values in tension, lived experience, risk models, and time horizons. Foundational document for the dissent layer and dispute adjudication nodes. Companion to the Disagreement Unpacker tool.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "cw-ep07",
+      "tier": "commons",
+      "title": "Community Weaving Episode 07: What it Actually Looks Like",
+      "type": "practitioner",
+      "source": "Lindsay LaMere / Healthcare Governance Commons",
+      "year": "2025",
+      "date": "2025",
+      "status": "published",
+      "url": "/community_weaving_ep07.pdf",
+      "nodes": [
+        "watcher",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "stop",
+        "authority",
+        "commons"
+      ],
+      "abstract": "The architecture episode. Describes the full dual-loop governance framework — internal technical loop (AI model, performance monitor, taxonomy, institutional memory) and external human governance loop (clinical judgment, authority matrix, dissent layer, decision trigger layer) — with all four handoff nodes and the stop mechanism. The most directly applicable episode for practitioners building governance infrastructure. Interactive version available at /architecture.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "cw-ep08",
+      "tier": "commons",
+      "title": "Community Weaving Episode 08: The Recursive Close",
+      "type": "practitioner",
+      "source": "Lindsay LaMere / Healthcare Governance Commons",
+      "year": "2025",
+      "date": "2025",
+      "status": "published",
+      "url": "/community_weaving_ep08.pdf",
+      "nodes": [
+        "commons"
+      ],
+      "abstract": "Closing episode of the series. Argues that the series itself is the method — built in public, iteratively, with friction visible. The Commons is the thing it describes: the dual-loop architecture it documents is the architecture it runs on. Frames clinical AI governance as a container problem, not a technology problem, and positions the Commons as a translation layer making existing safety science accessible to practitioners who need it now.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "tool-disagreement-unpacker",
+      "tier": "commons",
+      "title": "The Disagreement Unpacker: AI-Powered Conflict Analysis Tool",
+      "type": "practitioner",
+      "source": "Lindsay LaMere / Healthcare Governance Commons",
+      "year": "2025",
+      "date": "2025",
+      "status": "published",
+      "url": "/transition#disagreement-unpacker",
+      "nodes": [
+        "h2",
+        "adjudicate"
+      ],
+      "abstract": "Interactive AI-powered tool implementing the Disagreement as Data methodology from Community Weaving Episode 06. Takes a described disagreement and returns a structured map across eight lenses: facts, assumptions, values, lived experience, incentives, risks, time horizons, and definitions. Includes synthesis and facilitator move. Directly applicable to threshold authority disputes and dispute adjudication processes. Available at /transition.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "tool-container-health-check",
+      "tier": "commons",
+      "title": "Container Health Check: AI-Assisted Read of a Governance Container",
+      "type": "practitioner",
+      "source": "Lindsay LaMere / Healthcare Governance Commons",
+      "year": "2025",
+      "date": "2025",
+      "status": "published",
+      "url": "/transition#container-health-check",
+      "nodes": [
+        "commons",
+        "authority"
+      ],
+      "abstract": "Interactive AI-powered tool that reads one person's description of a governance container against six properties — legitimacy without capture, psychological safety for radical honesty, time insulated from urgency, cross-domain intimacy, narrative incubation, and stop authority. Gives no score: it shows what was said, what's missing, and what to ask the group, and notes failure modes only where the description shows evidence. Available at /transition.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "tool-charter-builder",
+      "tier": "commons",
+      "title": "The Charter Starter: an AI draft to start your group's conversation",
+      "type": "practitioner",
+      "source": "Lindsay LaMere / Healthcare Governance Commons",
+      "year": "2025",
+      "date": "2025",
+      "status": "published",
+      "url": "/transition#charter-builder",
+      "nodes": [
+        "commons",
+        "authority",
+        "h2"
+      ],
+      "abstract": "Interactive AI-powered conversation starter that drafts a governance charter by translating six core principles — dignity before efficiency, psychological safety, disagreement as data, radical honesty, equity and representation, and dual-horizon discipline — into specific rules, metrics, and failsafes for the user's exact context. Takes five inputs about context, domain, stakes, failure mode concerns, and required stakeholders. Output is copyable. Available at /transition.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "tool-architecture-explorer",
+      "tier": "commons",
+      "title": "The Governance Architecture: Interactive Dual-Loop Explorer",
+      "type": "practitioner",
+      "source": "Lindsay LaMere / Healthcare Governance Commons",
+      "year": "2025",
+      "date": "2025",
+      "status": "published",
+      "url": "/architecture",
+      "nodes": [
+        "watcher",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "stop",
+        "authority",
+        "commons"
+      ],
+      "abstract": "Interactive visualization of the full dual-loop clinical AI governance architecture. Every component — eight loop nodes, four handoff nodes, stop mechanism, and failover protocol — is clickable with a detail panel showing what it does and why it exists. Companion to Community Weaving Episode 07. Designed as a reference tool for practitioners building or evaluating governance infrastructure. Available at /architecture.",
+      "verified": "2026-11-14"
+    },
+    {
+      "id": "governance-mechanisms-index",
+      "tier": "commons",
+      "title": "Governance Mechanisms Index: Cross-Domain Reference — What Held, What Failed, Where",
+      "type": "practitioner",
+      "source": "Lindsay LaMere / Healthcare Governance Commons",
+      "year": "2025",
+      "date": "2025",
+      "status": "published",
+      "url": "/governance_mechanisms_index.pdf",
+      "nodes": [
+        "stop",
+        "watcher",
+        "h1",
+        "adjudicate",
+        "authority",
+        "commons"
+      ],
+      "abstract": "Cross-domain reference index of governance mechanisms across aviation, nuclear, laboratory medicine, financial services, pharmaceutical, and software engineering — indexed by mechanism type, loop location, and observed outcome. Each entry documents where the mechanism held, where it failed, and the honest complexity. Identifies five cross-domain structural patterns: separation from enforcement, distributed liability, explicit stop conditions, loop-level specificity, and transparency gaps. The most directly applicable cross-domain reference in the Commons library for practitioners designing clinical AI governance infrastructure.",
+      "verified": "2026-11-14"
+    }
+  ]
+}

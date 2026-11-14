@@ -1,6 +1,7 @@
 # Frontier AI Auditing: Toward Rigorous Third-Party Assessment
 
-**Source:** Brundage et al. (Jan. 2026) — [arXiv:2601.11699](https://arxiv.org/abs/2601.11699)  
+**Source:** Brundage et al. (first posted Jan. 16, 2026; v4 Feb. 7, 2026) — [arXiv:2601.11699](https://arxiv.org/abs/2601.11699)  
+**Checked:** Nov 14, 2026 against the source (see `docs/library-criteria.md`)  
 **Distilled for:** Governance Commons library  
 **Original:** 115 pages, ~50k words, 48 authors across AVERI, GovAI, MIT CSAIL, Stanford, Cambridge, METR, Apollo Research, and others
 

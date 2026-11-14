@@ -34,7 +34,6 @@ for (const n of nodes) {
   if (!STATUSES.has(n.status ?? null)) fail(`nodes.json: "${n.id}" has unknown status "${n.status}"`);
   if (typeof n.mandatory !== "boolean") fail(`nodes.json: "${n.id}" mandatory must be true or false`);
   if (!Array.isArray(n.components) || n.components.length === 0) warn(`nodes.json: "${n.id}" has no components`);
-  if (!n.evidence?.length) warn(`nodes.json: "${n.id}" has no linked evidence`);
   for (const ev of n.evidence || []) if (!ev.url) warn(`nodes.json: "${n.id}" evidence "${ev.title}" has no link`);
   // Overstatement watch: absolutes that slipped past the Oct 27 review.
   for (const f of ["contention", "gap", "insight"]) {
@@ -42,6 +41,40 @@ for (const n of nodes) {
     const hit = t.match(/\b(almost universally|universally|most institutions|no one|nobody|always|never)\b/i);
     if (hit && !/Commons position/i.test(t)) warn(`nodes.json: "${n.id}" ${f} says "${hit[0]}" with no source or Commons position label`);
   }
+}
+
+// ── Library: one source for every linked document ────────────────────────────
+// Seeding rules: docs/library-criteria.md. Nodes pull documents by tag.
+const lib = json("src/data/library.json");
+const libById = new Map();
+const TIERS = new Set(["primary", "commons"]);
+const daysSince = d => (Date.now() - Date.parse(d)) / 86400000;
+if (!(daysSince(lib.asOf) >= 0)) fail(`library.json: asOf "${lib.asOf}" is not a valid date`);
+for (const d of lib.documents || []) {
+  if (libById.has(d.id)) fail(`library.json: duplicate id "${d.id}"`);
+  libById.set(d.id, d);
+  for (const f of ["id", "tier", "title", "type", "source", "year", "status", "abstract", "verified"]) {
+    if (!d[f] || typeof d[f] !== "string") fail(`library.json: "${d.id}" is missing ${f}`);
+  }
+  if (!TIERS.has(d.tier)) fail(`library.json: "${d.id}" has unknown tier "${d.tier}"`);
+  if (!Array.isArray(d.nodes) || !d.nodes.length) warn(`library.json: "${d.id}" is not tagged to any node`);
+  for (const nid of d.nodes || []) if (!ids.has(nid)) fail(`library.json: "${d.id}" tagged to unknown node "${nid}"`);
+  if (!d.url) (d.tier === "primary" ? fail : warn)(`library.json: "${d.id}" has no link`);
+  const age = daysSince(d.verified);
+  if (!(age >= 0)) fail(`library.json: "${d.id}" verified date "${d.verified}" is not valid`);
+  else if (age > MAX_AGE_DAYS) fail(`library.json: "${d.id}" last checked ${Math.round(age)} days ago (limit ${MAX_AGE_DAYS})`);
+  else if (age > MAX_AGE_DAYS - 30) warn(`library.json: "${d.id}" re-check due within a month`);
+  else if (/draft|proposed|pending|preprint/i.test(d.status) && age > 31) warn(`library.json: "${d.id}" is ${d.status.split(/[;(]/)[0].trim()}; re-check monthly (last ${d.verified})`);
+}
+for (const n of nodes) {
+  for (const k of n.keyDocs || []) {
+    const d = libById.get(k);
+    if (!d) fail(`nodes.json: "${n.id}" keyDoc "${k}" is not in the library`);
+    else if (!d.nodes.includes(n.id)) fail(`nodes.json: "${n.id}" keyDoc "${k}" is not tagged to that node in the library`);
+  }
+  const tagged = [...libById.values()].filter(d => d.nodes.includes(n.id));
+  if (!tagged.length) warn(`nodes.json: "${n.id}" has no library documents`);
+  else if (!tagged.some(d => d.tier === "primary")) warn(`nodes.json: "${n.id}" has only Commons-tier documents, no primary source`);
 }
 
 // ── Map: every node has a place ──────────────────────────────────────────────
