@@ -7,6 +7,7 @@
 
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { createRequire } from "node:module";
 
 const root = new URL("..", import.meta.url).pathname;
 const read = p => readFileSync(join(root, p), "utf8");
@@ -153,6 +154,30 @@ for (const file of sources) {
 const fnCount = readdirSync(join(root, "api")).filter(f => f.endsWith(".js") && !f.startsWith("_")).length;
 if (fnCount > 12) fail(`api/: ${fnCount} server functions; the Vercel Hobby plan allows 12. Merge routes or move shared code into _files.`);
 else if (fnCount > 10) warn(`api/: ${fnCount} of 12 server functions used`);
+
+// ── Protocol QC rules: exact detection math matches the rules ────────────────
+// api/_rule-power.js calculates false rejection and error detection exactly.
+// Cross-check it against a seeded simulation of the same rules in plain form
+// (firesOn), so the math and the rules can't drift apart unnoticed. And every
+// reject rule in the protocol must be one the math knows how to calculate.
+{
+  const { fireProbability, firesOn, SUPPORTED } = createRequire(import.meta.url)(join(root, "api/_rule-power.js"));
+  let seed = 20261114;
+  const rnd = () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const gauss = () => { let u = 0, v = 0; while (!u) u = rnd(); while (!v) v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+  const N = 60000;
+  for (const ids of [["1-3s", "2-2s", "R-4s"], ["1-3s", "2-2s", "R-4s", "10x"]]) for (const shift of [0, 1, 2]) {
+    const exact = fireProbability(ids, shift, 10);
+    let k = 0; for (let i = 0; i < N; i++) if (firesOn(ids, Array.from({ length: 10 }, () => gauss() + shift))) k++;
+    const sim = k / N, se = Math.sqrt(exact * (1 - exact) / N);
+    if (Math.abs(sim - exact) > 4.5 * se) fail(`_rule-power.js: rules ${ids.join(",")} at ${shift} SD: exact ${exact.toFixed(4)} vs simulated ${sim.toFixed(4)}; the math and the rules disagree`);
+  }
+  const closed = 1 - Math.pow(1 - 2 * 0.0013498980316301, 10); // 1-3s alone, no error: closed form
+  if (Math.abs(fireProbability(["1-3s"], 0, 10) - closed) > 1e-5) fail("_rule-power.js: 1-3s alone doesn't match its closed form");
+  const eng = read("api/vpg-engines.js");
+  for (const m of eng.matchAll(/id: "([^"]+)",[^}]*?tier: "reject"/g))
+    if (!SUPPORTED.has(m[1]) && m[1] !== "fail-count") fail(`vpg-engines.js: reject rule "${m[1]}" has no exact detection math in api/_rule-power.js`);
+}
 
 // ── Report ───────────────────────────────────────────────────────────────────
 for (const w of warnings) console.log(`warn  ${w}`);

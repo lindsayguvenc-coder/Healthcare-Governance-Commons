@@ -90,9 +90,6 @@ const VPG_CASE = JSON.parse(read("tests/site-qc/vpg-case.json"));
 function strip(x) {
   if (Array.isArray(x)) return x.map(strip);
   if (x && typeof x === "object") return Object.fromEntries(Object.keys(x).sort().filter(k => k !== "generatedAt").map(k => [k, strip(x[k])]));
-  // The power simulation in the protocol is random, so its decimals wobble run to
-  // run; keep whole numbers, drop decimals, so only real changes show.
-  if (typeof x === "string") return x.replace(/\d+\.\d+/g, "#");
   return x;
 }
 const fingerprint = p => createHash("sha256").update(JSON.stringify(strip(p))).digest("hex").slice(0, 16);
