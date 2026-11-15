@@ -63,7 +63,9 @@ const handlers = {
   "/api/suggest": require(path.join(repo, "api/suggest.js")),
   "/api/queue": require(path.join(repo, "api/queue.js")),
   "/api/status": require(path.join(repo, "api/status.js")),
-  // Validation Protocol Generator. generate-protocol calls vpg-engines over HTTP at
+  // Validation Protocol Generator. (generate-protocol now runs the engines in-process;
+  // the note below is kept for the older replay recorders.)
+  // Before Nov 14, 2026, generate-protocol called vpg-engines over HTTP at
   // http://localhost:3000 when VERCEL_URL is unset, so run this server on port 3000 for it.
   "/api/generate-protocol": require(path.join(repo, "api/generate-protocol.js")),
   "/api/vpg-engines": require(path.join(repo, "api/vpg-engines.js")),

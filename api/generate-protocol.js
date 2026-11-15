@@ -1,6 +1,6 @@
 // api/generate-protocol.js
 // Item 14 — Validation Protocol PDF Orchestrator
-// Calls vpg-engines (consolidated) in parallel for each engine.
+// Runs the three VPG engines in-process (api/_vpg-engines-core.js).
 // Assembles the full 7-section protocol object and returns it for client-side PDF rendering.
 // The client (jsPDF) handles actual PDF generation — this route produces the structured data.
 //
@@ -8,6 +8,7 @@
 // Output: { protocol: { sections: [...], meta, gapFlags, logicFlags } }
 
 const { mapAnswers } = require("./_answer-map.js");
+const { runEngine } = require("./_vpg-engines-core.js");
 const { isPaused } = require("./_pause.js");
 // The site's regulatory map (also behind each node page). The VPG reads its references
 // from here, so the two can't drift apart (wired in Nov 13, 2026).
@@ -156,10 +157,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "No answers provided. Complete elicitation before generating protocol." });
     }
 
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
-
     // Translate questionnaire ids (q2_usetype, q19_owner, ...) into engine keys (Q2, Q28, ...)
     const answers = mapAnswers(rawAnswers, documentMeta);
     // The engines tighten tiers on HIGH_AUTONOMY / DIRECT_CLINICAL_DECISION, but until
@@ -167,14 +164,18 @@ export default async function handler(req, res) {
     const logicFlags = [...logicFlagsIn, ...autonomyFlags(rawAnswers)];
     const gapFlags = [...gapFlagsIn, ...secondPassGapFlags(rawAnswers)];
 
-    // Call all three engines in parallel
-    const [tiersResult, biasResult, nodesResult] = await Promise.all([
-      callEngine(`${baseUrl}/api/vpg-engines`, { engine: 'westgard', answers, logicFlags, gapFlags }),
-      callEngine(`${baseUrl}/api/vpg-engines`, { engine: 'bias', answers, logicFlags, gapFlags }),
-      NODE_GRADING_PAUSED
-        ? Promise.resolve({ paused: true })
-        : callEngine(`${baseUrl}/api/vpg-engines`, { engine: 'nodes', answers, logicFlags, gapFlags }),
-    ]);
+    // Run the three engines in this process (no web hop; see _vpg-engines-core.js).
+    // If any engine fails, no protocol is made: a protocol with an engine
+    // missing would look complete and isn't (decide late and out loud).
+    let tiersResult, biasResult, nodesResult;
+    try {
+      tiersResult = runEngine("westgard", { answers, logicFlags, gapFlags });
+      biasResult = runEngine("bias", { answers, logicFlags, gapFlags });
+      nodesResult = NODE_GRADING_PAUSED ? { paused: true } : runEngine("nodes", { answers, logicFlags, gapFlags });
+    } catch (err) {
+      console.error("VPG engine failed:", err);
+      return res.status(500).json({ error: "The protocol engines failed, so no protocol was made. Nothing was saved. Try again; if it keeps failing, the Commons owner has been told by the weekly site check." });
+    }
 
     // Assemble full protocol object
     const protocol = assembleProtocol({
@@ -195,25 +196,6 @@ export default async function handler(req, res) {
 }
 
 // ─── Engine caller ────────────────────────────────────────────────────────────
-
-async function callEngine(url, body) {
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error(`Engine call failed for ${url}:`, errText);
-      return { error: true, url, status: response.status };
-    }
-    return await response.json();
-  } catch (err) {
-    console.error(`Engine fetch error for ${url}:`, err.message);
-    return { error: true, url, message: err.message };
-  }
-}
 
 // ─── Protocol assembler ───────────────────────────────────────────────────────
 

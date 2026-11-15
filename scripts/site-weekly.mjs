@@ -115,14 +115,21 @@ async function protocolFrom(base, answers) {
     const need = ["summary", "meta", "sections", "allGapFlags"].filter(k => !(k in p));
     pass("F4", "Protocol has its required parts", "check", need.length === 0, `missing: ${need.join(", ")}`);
     pass("F4", "Protocol carries its as-of line", "check", JSON.stringify(p).includes("as of"), "no as-of wording found");
-    // Engine calls that fail are folded into the protocol quietly; say so loudly.
-    const engineErrors = [];
-    (function walk(x, path) {
-      if (x && typeof x === "object") {
-        if (x.error === true && (x.url || x.status || x.message)) engineErrors.push(`${path}: ${x.status || x.message || "error"} from ${x.url || "?"}`);
-        for (const k of Object.keys(x)) walk(x[k], path + "." + k);
-      }
-    })(p, "protocol");
+    // A failed engine used to be folded into the protocol quietly (Nov 14, 2026);
+    // say so loudly if it ever happens again.
+    const findEngineErrors = (root) => {
+      const out = [];
+      (function walk(x, path) {
+        if (x && typeof x === "object") {
+          if (x.error === true) out.push(`${path}: ${x.errorNote || x.status || x.message || "error"}${x.url ? " from " + x.url : ""}`);
+          for (const k of Object.keys(x)) walk(x[k], path + "." + k);
+        }
+      })(root, "protocol");
+      return out;
+    };
+    pass("F4", "Control: a planted failed-engine section is caught", "control",
+      findEngineErrors({ sections: [{ title: "Bias", error: true, errorNote: "engine failed" }] }).length === 1);
+    const engineErrors = findEngineErrors(p);
     pass("F4", "Protocol was built with all its engines answering", "check", engineErrors.length === 0, engineErrors.slice(0, 3).join("; "));
     const fpLocal = local && !local.err ? fingerprint(local.p) : null;
     // keep both protocols with the run, so a difference can be read, not guessed at
@@ -145,6 +152,21 @@ async function protocolFrom(base, answers) {
       }
     }
     if (local?.err) rec("F4", "Repo copy of the generator answers", "check", "warn", local.err);
+    // When something doesn't match the saved fingerprint, say where, against the saved protocol.
+    const goldenProto = existsSync(join(root, "tests/site-qc/vpg-golden-protocol.json")) ? JSON.parse(read("tests/site-qc/vpg-golden-protocol.json")) : null;
+    const whereDiffers = (x) => {
+      if (!goldenProto || !x) return "";
+      const out = [];
+      (function cmp(a, b, path) {
+        if (out.length >= 4) return;
+        if (JSON.stringify(a) === JSON.stringify(b)) return;
+        if (a && b && typeof a === "object" && typeof b === "object") { for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) cmp(a[k], b[k], path + "." + k); return; }
+        out.push(`${path}: saved ${JSON.stringify(b)?.slice(0, 120)} / now ${JSON.stringify(a)?.slice(0, 120)}`);
+      })(strip(x), goldenProto, "protocol");
+      return out.join(" | ");
+    };
+    if (golden && fpLive !== golden.fingerprint) console.log("F4 live vs saved: " + whereDiffers(p));
+    if (golden && fpLocal && fpLocal !== golden.fingerprint) console.log("F4 repo vs saved: " + whereDiffers(local.p));
     if (!golden) rec("F4", "No saved fingerprint yet", "check", "warn", `live is ${fpLive}; save it in ${goldenFile}`);
     else if (fpLive === golden.fingerprint) rec("F4", "Live protocol matches the saved fingerprint", "check", "ok");
     else if (fpLocal && fpLocal === fpLive) rec("F4", "Protocol changed with the code; the saved fingerprint is out of date", "check", "warn", `update ${goldenFile} to ${fpLive} after checking the change was meant`);
