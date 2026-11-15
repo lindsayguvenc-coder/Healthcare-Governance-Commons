@@ -98,7 +98,7 @@ function strip(x) {
 const fingerprint = p => createHash("sha256").update(JSON.stringify(strip(p))).digest("hex").slice(0, 16);
 async function protocolFrom(base, answers) {
   try {
-    const r = await fetch(`${base}/api/generate-protocol`, { method: "POST", headers: { "content-type": "application/json", origin: base }, body: JSON.stringify({ answers }) });
+    const r = await fetch(`${base}/api/generate-protocol`, { method: "POST", headers: { "content-type": "application/json", origin: base }, body: JSON.stringify({ answers, clientDate: VPG_CASE.clientDate }) });
     const j = await r.json().catch(() => ({}));
     return r.status === 200 && j.protocol ? { p: j.protocol } : { err: `HTTP ${r.status}${j.error ? ": " + j.error : ""}` };
   } catch (e) { return { err: String(e.message) }; }

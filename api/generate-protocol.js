@@ -178,7 +178,16 @@ export default async function handler(req, res) {
     }
 
     // Assemble full protocol object
+    // DECISION(protocol-date): the protocol is dated with the person's own calendar
+    //   date, sent by the page (clientDate, YYYY-MM-DD). The server runs on UTC, so its
+    //   own date is tomorrow for a protocol made on a California evening. If the page
+    //   sends no valid date, the server's UTC date is used and labeled "(UTC)".
+    const cd = String(req.body.clientDate || "");
+    const protocolDate = /^\d{4}-\d{2}-\d{2}$/.test(cd) && !isNaN(Date.parse(cd + "T12:00:00Z"))
+      ? new Date(cd + "T12:00:00Z").toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })
+      : new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" }) + " (UTC)";
     const protocol = assembleProtocol({
+      protocolDate,
       answers,
       logicFlags,
       gapFlags,
@@ -199,15 +208,13 @@ export default async function handler(req, res) {
 
 // ─── Protocol assembler ───────────────────────────────────────────────────────
 
-function assembleProtocol({ answers, logicFlags, gapFlags, documentMeta, tiersResult, biasResult, nodesResult }) {
+function assembleProtocol({ protocolDate, answers, logicFlags, gapFlags, documentMeta, tiersResult, biasResult, nodesResult }) {
   const isFullProtocol = !logicFlags.includes("WORKFLOW_SUMMARY_MODE");
   const useType = answers.Q2 || "unknown";
   const deploymentName = answers.Q1 || "AI system (name not given)";
   const institution = answers.Q3 || "Institution not specified";
   const generatedAt = new Date().toISOString();
-  const generatedDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric", month: "long", day: "numeric",
-  });
+  const generatedDate = protocolDate;
 
   // Collect all gap flags across sections
   const allGapFlags = [
@@ -229,7 +236,7 @@ function assembleProtocol({ answers, logicFlags, gapFlags, documentMeta, tiersRe
       buildSection4(tiersResult, isFullProtocol),
       buildSection5(nodesResult, isFullProtocol),
       buildSection6(answers, tiersResult, nodesResult, isFullProtocol),
-      buildSection7(answers, allGapFlags, overallNodeRating, isFullProtocol),
+      buildSection7(answers, allGapFlags, overallNodeRating, isFullProtocol, generatedDate),
   ];
 
   return {
@@ -738,7 +745,7 @@ function buildDeploymentConditions(answers, tiersResult, nodesResult, isFullProt
 }
 
 // Section 7: Governance Summary & Open Items
-function buildSection7(answers, allGapFlags, overallNodeRating, isFullProtocol) {
+function buildSection7(answers, allGapFlags, overallNodeRating, isFullProtocol, protocolDate) {
   return {
     sectionNumber: 7,
     title: "Governance Summary & Open Items",
@@ -747,7 +754,7 @@ function buildSection7(answers, allGapFlags, overallNodeRating, isFullProtocol) 
         title: overallNodeRating ? "Overall Governance Assessment" : "Preparation and Sign-off",
         content: {
           ...(overallNodeRating ? { rating: overallNodeRating } : {}),
-          assessmentDate: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+          assessmentDate: protocolDate,
           protocolPreparedBy: field(answers, "Q_preparer", "Not specified"),
           reviewedBy: field(answers, "Q_reviewer", "Pending review"),
           approvedBy: field(answers, "Q_approver", "Pending approval"),

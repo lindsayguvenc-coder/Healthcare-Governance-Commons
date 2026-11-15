@@ -8,14 +8,14 @@
     "q1_system": "Example Sepsis Alert",
     "q1_vendor": "Example Vendor Inc.",
     "q1_version": "4.2",
-    "q2_usetype": "Triage / prioritization — direct impact on care sequencing",
-    "q30_age": "Predominantly adult (18–65)",
+    "q2_usetype": "Triage / prioritization \u2014 direct impact on care sequencing",
+    "q30_age": "Predominantly adult (18\u201365)",
     "q31_sex_record": "Binary with unknown / not recorded option",
     "q32_race_record": "Combined race/ethnicity field",
-    "q35_payer": "Safety net — predominantly Medicaid / uninsured",
+    "q35_payer": "Safety net \u2014 predominantly Medicaid / uninsured",
     "q38_setting": "Emergency department",
-    "q3_prevalence": "5 — 15%",
-    "q7_cases": "Yes — accessible and ready",
+    "q3_prevalence": "5 \u2014 15%",
+    "q7_cases": "Yes \u2014 accessible and ready",
     "Q15": "78",
     "Q16": "84",
     "q19_cadence": "Monthly",
@@ -26,7 +26,7 @@
     "q22_warn_threshold": "5%",
     "q23_action_threshold": "10%",
     "q20_govbody": "Formal cross-functional governance committee",
-    "q41_policy": "Yes — approved",
+    "q41_policy": "Yes \u2014 approved",
     "q42_training": "Scheduled before go-live",
     "q43_disclosure": "Case by case",
     "q44_consent": "Not yet decided",
@@ -35,5 +35,6 @@
   },
   "control": {
     "q23_action_threshold": "20%"
-  }
+  },
+  "clientDate": "2026-11-14"
 }
