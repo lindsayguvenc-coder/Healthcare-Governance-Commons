@@ -1,0 +1,88 @@
+name: Site health (daily)
+
+# Batch 1 of the Site QC crosswalk: plain-code checks against the live site,
+# every morning. scripts/site-health.mjs has the checks and their seeded
+# controls (planted cases with a known answer, so a broken checker shows up).
+#
+# If anything fails it opens (or updates) one GitHub issue, which emails
+# Lindsay. It says whether the site failed or the checker did. When everything
+# passes again, it closes the issue. The run log and a CSV for the Agent Fleet
+# QC page are kept as a download on each run.
+
+on:
+  schedule:
+    - cron: "23 14 * * *"   # 14:23 UTC = 6:23 AM Pacific (7:23 in summer)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  health:
+    runs-on: ubuntu-24.04
+    env:
+      SITE: https://healthcare-governance-commons.vercel.app
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Run the checks
+        id: run
+        run: node scripts/site-health.mjs
+        continue-on-error: true
+
+      - name: Keep the log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-health-${{ github.run_id }}
+          path: qc-out/
+          retention-days: 90
+
+      - name: Open, update or close the issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title_prefix="Site health:"
+          open=$(gh issue list -R "$REPO" --state open --search "\"$title_prefix\" in:title" --json number --jq '.[0].number // empty')
+          if [ ! -f qc-out/site-health.json ]; then
+            body="The site health check didn't finish, so nothing was checked today. That's a failure of the checker, not necessarily the site. Run log: $RUN @lindsayguvenc-coder"
+            title="$title_prefix checker didn't run (Now)"
+          else
+            site=$(jq '.failedSite' qc-out/site-health.json)
+            ctl=$(jq '.failedControls' qc-out/site-health.json)
+            if [ "$site" -eq 0 ] && [ "$ctl" -eq 0 ]; then
+              if [ -n "$open" ]; then gh issue close "$open" -R "$REPO" --comment "All checks pass and every planted control was caught. Closing. $RUN"; fi
+              echo "All clear."; exit 0
+            fi
+            list=$(jq -r '.results[] | select(.ok|not) | "- " + (if .kind=="control" then "**[control]** " else "" end) + .id + " · " + .check + (if .detail != "" then " — " + .detail else "" end)' qc-out/site-health.json)
+            if [ "$ctl" -gt 0 ]; then
+              what="$ctl planted control(s) were not caught, so the checker or the protection it tests is broken. Treat this like a reject: don't trust today's all-clear lines until it's fixed."
+            else
+              what="$site check(s) failed on the live site."
+            fi
+            title="$title_prefix $((site + ctl)) failing (Now)"
+            body="$what
+
+          $list
+
+          Run log and CSV for the Agent Fleet QC page: $RUN
+
+          This issue closes itself the first morning everything passes. @lindsayguvenc-coder"
+          fi
+          if [ -n "$open" ]; then
+            gh issue edit "$open" -R "$REPO" --title "$title"
+            gh issue comment "$open" -R "$REPO" --body "$body"
+          else
+            gh issue create -R "$REPO" --title "$title" --body "$body"
+          fi
+
+      - name: Mark the run failed if anything failed
+        if: steps.run.outcome == 'failure'
+        run: exit 1
