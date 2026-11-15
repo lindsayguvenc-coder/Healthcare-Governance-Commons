@@ -42,7 +42,9 @@ function clientIp(req) {
 async function underLimit(client, req) {
   try {
     const hour = Math.floor(Date.now() / 3600000);
-    const key = `ratelimit:suggest:${clientIp(req)}:${hour}`;
+    // Scrambled, as the privacy notice says (same scheme as the AI limit in _relay.js).
+    const ipHash = require("crypto").createHash("sha256").update("commons-rl:" + clientIp(req)).digest("hex").slice(0, 32);
+    const key = `ratelimit:suggest:${ipHash}:${hour}`;
     const n = await client.incr(key);
     if (n === 1) await client.expire(key, 3700);
     return n <= PUBLIC_PER_HOUR;

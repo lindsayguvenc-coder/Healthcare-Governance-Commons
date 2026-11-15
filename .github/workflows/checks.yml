@@ -22,5 +22,7 @@ jobs:
           node-version: 20
       - name: Drift checks
         run: node scripts/check.mjs
+      - name: PR guards (disclaimers, privacy inventory, outside scripts, secrets)
+        run: node scripts/pr-guards.mjs
       - name: Build
         run: npm install --no-audit --no-fund && npm run build

@@ -1,0 +1,28 @@
+{
+  "_about": "Everything the Commons stores or loads from elsewhere, for the P2/P4 checks in scripts/pr-guards.mjs. A storage key or outside domain in the code that isn't listed here fails the PR check: add it here and say in the privacy notice what it is. 'notice' quotes or points to the privacy notice line that covers it; null means the notice doesn't mention it yet, which shows as a warning until it does.",
+  "redisKeys": [
+    { "pattern": "suggest:pending", "what": "Contributions waiting for review", "notice": "Contributions are stored for review" },
+    { "pattern": "suggest:approved:*", "what": "Published contributions, per node", "notice": "Accepted ones are published on the node page" },
+    { "pattern": "suggest:stats", "what": "Counts only: submitted, accepted, rejected, refused", "notice": "the site keeps only counts" },
+    { "pattern": "suggest:decisions", "what": "Review decision log, no content; cleared weekly after backup", "notice": null },
+    { "pattern": "ratelimit:suggest:*", "what": "Per-hour contribution count per scrambled network address, deleted after about an hour", "notice": "Usage limits" },
+    { "pattern": "ratelimit:ai:*", "what": "Per-hour AI request count per scrambled network address, deleted after about an hour", "notice": "Usage limits" },
+    { "pattern": "user_documents", "what": "Private document library (password only)", "notice": null },
+    { "pattern": "public_documents", "what": "Documents promoted to the public library", "notice": null },
+    { "pattern": "registry:pending", "what": "Peer Challenge Registry entries (submissions paused)", "notice": "Paused: registrations and introduction requests" },
+    { "pattern": "registry:requests-pending", "what": "Registry introduction requests (paused)", "notice": "Paused: registrations and introduction requests" },
+    { "pattern": "registry:entry:*", "what": "Registry entries (paused)", "notice": "Paused: registrations and introduction requests" },
+    { "pattern": "registry:contact:*", "what": "Registry contact details (paused)", "notice": "Paused: registrations and introduction requests" },
+    { "pattern": "registry:request:*", "what": "Registry introduction requests (paused)", "notice": "Paused: registrations and introduction requests" }
+  ],
+  "browserStorage": [
+    { "key": "qcSetup.lanes.v3", "what": "Agent QC Setup remembers your lanes in your own browser; never sent", "notice": null },
+    { "key": "commons.lvk.counts", "what": "Local Validation Kit remembers counts in your own browser; never sent", "notice": null }
+  ],
+  "outsideDomains": [
+    { "domain": "fonts.googleapis.com", "what": "Web fonts on some pages; Google sees the visitor's network address", "notice": null },
+    { "domain": "fonts.gstatic.com", "what": "Font files served for fonts.googleapis.com", "notice": null },
+    { "domain": "cdnjs.cloudflare.com", "what": "PDF library (jsPDF) for the Validation Protocol Generator; Cloudflare sees the visitor's network address", "notice": null },
+    { "domain": "api.anthropic.com", "what": "AI calls, from this site's server only", "notice": "AI-assisted tools send your text to Anthropic's API" }
+  ]
+}
