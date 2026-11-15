@@ -532,6 +532,10 @@ function buildControlMaterial(tierProfile) {
 // phased-in rule is only counted once it is on. Replaced a random simulation
 // with its own copy of the rules (Nov 14, 2026).
 function ruleSetPerformanceFor(rules) {
+  // DECISION(rule-power-window): rates are given over a 10-run window, kept from the
+  //   original simulation. Stated in the protocol. Not yet tied to how often this
+  //   hospital runs controls (the fail-count rule uses 20); a candidate to set from the
+  //   answers later.
   const W = 10;
   const ids = zRejectRules(rules);
   const names = rules.filter((r) => ids.includes(r.id)).map((r) => r.westgardAnalog.split(" ")[0]);
@@ -548,6 +552,7 @@ function ruleSetPerformanceFor(rules) {
       `For the reject rules on now (${names.join(", ")}), over a window of ${W} control runs:`,
       `With no error present, they fire in ${p(pfr)} of windows (false rejection).`,
       `A 1 SD shift is caught within ${W} runs ${p(ped1)} of the time; a 2 SD shift ${p(ped2)}.`,
+      "This assumes control results are independent and spread roughly normally around their baseline mean. Scores bunched near a ceiling, or runs that affect each other, can make the real rates different; check the baseline runs before leaning on these.",
       "These are calculated exactly from the rules, not simulated, so they don't change from one protocol to the next. They change only when the rules do, for example when the drift rule switches on after 20 baseline runs.",
       "These are the monitor's own sensitivity and specificity, separate from the model's. Its PPV depends on how often real errors occur: when they are rare, most rejects are false alarms.",
       "Tuning the rule set trades systematic-error detection against random-error detection. Any change to the rule set is a locked-parameter change: logged old → new, re-signed by the independent authority, and the affected controls re-baselined.",

@@ -92,6 +92,8 @@ function buildItem(body) {
   if (!KINDS.has(kind)) return { error: "Unknown contribution type." };
   if (!NODE_IDS.has(nodeId)) return { error: "Unknown node." };
 
+  // DECISION(contribution-id): a random suffix keeps contribution ids unique. It's an
+  //   id only; it never feeds a number in any report.
   const item = { id: `s-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, kind, nodeId, submittedAt: new Date().toISOString() };
 
   if (kind === "source" || kind === "tool") {

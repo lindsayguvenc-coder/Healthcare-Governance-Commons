@@ -151,6 +151,57 @@ for (const f of tracked) {
   if (hit) fail("X1", `${f}: looks like it contains ${hit}`);
 }
 
+// ── D1: decide late and out loud (docs/principles.md) ────────────────────────
+// Every DECISION(id) marker in tool code is listed in docs/decisions.md, which
+// is rebuilt from the code (node scripts/pr-guards.mjs --write-decisions) and
+// must match. Math.random in tool code needs a marker on its line or the line
+// above, so a random number can't sneak into a report unannounced.
+function decisionMarkers(src, file) {
+  const out = [], lines = src.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/\/\/\s*DECISION\(([\w-]+)\):\s*(.*)$/);
+    if (!m) continue;
+    let text = m[2].trim();
+    for (let j = i + 1; j < lines.length && /^\s*\/\/\s{2,}\S/.test(lines[j]); j++) text += " " + lines[j].replace(/^\s*\/\/\s+/, "").trim();
+    out.push({ id: m[1], file, line: i + 1, text });
+  }
+  return out;
+}
+const unmarkedRandom = src => {
+  const lines = src.split("\n"), bad = [];
+  lines.forEach((l, i) => {
+    if (!/Math\.random\s*\(/.test(l) || /^\s*\/\//.test(l)) return;
+    const near = [l, lines[i - 1] || "", lines[i - 2] || "", lines[i - 3] || ""];
+    if (!near.some(x => /DECISION\(/.test(x))) bad.push(i + 1);
+  });
+  return bad;
+};
+control("D1", "planted unmarked Math.random", unmarkedRandom("const x = Math.random();").length === 1);
+control("D1", "planted marked Math.random passes", unmarkedRandom("// DECISION(x): ok\nconst x = Math.random();").length === 0);
+control("D1", "a planted multi-line decision is read whole", (decisionMarkers("// DECISION(a): one\n//   two\nx", "f")[0] || {}).text === "one two");
+const toolFiles = walk("api", [".js"]).concat(walk("src", [".js", ".jsx"]),
+  walk("public", [".html", ".js"]).filter(f => !/public\/(vendor|fonts)\/|local-validation-kit-offline\.html$/.test(f)));
+const decisions = [];
+for (const f of toolFiles) {
+  const src = read(f);
+  for (const n of unmarkedRandom(src)) fail("D1", `${f}:${n}: Math.random without a DECISION marker (docs/principles.md)`);
+  decisions.push(...decisionMarkers(src, f));
+}
+const dupes = decisions.map(d => d.id).filter((id, i, a) => a.indexOf(id) !== i);
+for (const id of new Set(dupes)) fail("D1", `DECISION(${id}) is used more than once; give each decision its own id`);
+const ledger = "# Decisions in the tools\n\n" +
+  "Generated from the `DECISION(id):` markers in the code by `node scripts/pr-guards.mjs --write-decisions`; don't edit by hand. " +
+  "Why these exist: [principles.md](principles.md). Read this at the Monday review: is each one meant, disclosed, and as late as it can be?\n\n" +
+  "| Decision | Where | What and why |\n|---|---|---|\n" +
+  decisions.sort((a, b) => a.id.localeCompare(b.id)).map(d => `| ${d.id} | ${d.file} | ${d.text.replace(/\|/g, "\\|")} |`).join("\n") + "\n";
+if (process.argv.includes("--write-decisions")) {
+  (await import("node:fs")).writeFileSync(join(root, "docs/decisions.md"), ledger);
+  console.log(`Wrote docs/decisions.md (${decisions.length} decisions).`);
+} else {
+  let current = ""; try { current = read("docs/decisions.md"); } catch {}
+  if (current !== ledger) fail("D1", "docs/decisions.md doesn't match the DECISION markers in the code: run node scripts/pr-guards.mjs --write-decisions and commit it");
+}
+
 // ── Report ───────────────────────────────────────────────────────────────────
 const caught = controls.filter(c => c.caught).length;
 console.log(`PR guards: ${pages.length} pages, ${seen.redis.size} database keys, ${seen.browser.size} browser keys, ${seen.domains.size} outside domains, ${tracked.length} files scanned; controls caught ${caught}/${controls.length}`);
