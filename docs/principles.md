@@ -1,0 +1,49 @@
+# How the Commons tools make their numbers
+
+Set Nov 14, 2026, after the Validation Protocol Generator was found printing
+detection rates from a random simulation that used its own copy of the QC
+rules (fixed in PR #61).
+
+## Decide late and out loud
+
+Estimates and judgment calls are allowed. Some are necessary. What isn't
+allowed is a decision nobody made on purpose: a rule copied instead of read
+from its source, an unseeded random draw, a default standing in for an answer,
+a rounding that hides a difference.
+
+So every decision in a tool that feeds a report:
+
+1. **Comes as late in the chain as it can.** Work from the real inputs as far
+   as they go; estimate only where they run out.
+2. **Is named.** It's marked in the code with a `DECISION(id):` comment that
+   says what was chosen and why.
+3. **Is disclosed** in the report the person gets, wherever it changes what
+   they'd conclude. If something can't be calculated, the report says so
+   rather than guessing.
+4. **Lives in one place,** so it can be found and optimized backwards later.
+   Every marked decision is listed in [decisions.md](decisions.md), which is
+   rebuilt from the code and checked on every pull request.
+
+Speed comes after this. It's fine to block a tool and re-figure the
+efficiency; it isn't fine to cut an edge nobody can find again.
+
+## What the checks catch, and what they can't
+
+`scripts/pr-guards.mjs` (D1) fails a pull request when:
+
+- code in `api/` or a tool page uses `Math.random` without a `DECISION`
+  marker on that line or the line above it, and
+- `docs/decisions.md` doesn't match the markers in the code (a decision was
+  added, changed or removed without the ledger showing it).
+
+That catches the shapes a machine can see. Most accidental decisions don't
+have a shape: a threshold typed in once, a "temporary" default. Those are
+caught by reading the ledger at the Monday review and asking, for each new
+one, whether it was meant and whether it's as late as it can be.
+
+## Merged means merged
+
+A commit pushed to a pull request's branch after the PR merges never reaches
+main, and nothing says so. It happened twice on Nov 14, 2026 (the fixes meant
+for #58 and #59). The weekly site checks (O4) now look for it. Before saying
+a PR is ready, check it's still open and its head is the last commit pushed.

@@ -18,6 +18,7 @@ on:
 permissions:
   contents: read
   issues: write
+  pull-requests: read
 
 jobs:
   weekly:
@@ -43,6 +44,8 @@ jobs:
 
       - name: Run the checks
         id: run
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/site-weekly.mjs
         continue-on-error: true
 

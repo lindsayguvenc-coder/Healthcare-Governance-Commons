@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Validation Protocol Generator · Governance Commons</title>
+<link rel="stylesheet" href="/fonts/fonts.css">
 <style>
 html{scroll-padding-top:56px}
 @media(max-width:600px){div[role=note]{font-size:10px!important;padding:4px 12px!important}}
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300;1,9..144,600&display=swap');
 
   :root {
     --bg: #0f1117;
@@ -1904,7 +1904,7 @@ async function loadJsPDF() {
   if (window.jspdf && window.jspdf.jsPDF) return window.jspdf.jsPDF;
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    script.src = '/vendor/jspdf-2.5.1.umd.min.js';
     script.onload = () => {
       if (window.jspdf && window.jspdf.jsPDF) resolve(window.jspdf.jsPDF);
       else reject(new Error('jsPDF loaded but constructor not found'));

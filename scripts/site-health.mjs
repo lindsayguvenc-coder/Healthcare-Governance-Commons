@@ -4,7 +4,8 @@
 //   SITE=http://localhost:4300 node scripts/site-health.mjs
 //
 //   F1  every page loads, with the title the repo says it should have
-//   F6  paused tools stay paused; an unknown tool fails closed
+//   F6  paused tools stay paused; an unknown tool fails closed; the Local
+//       Validation Kit (live page and offline copy) still carries its pause
 //   P1  the patient-info screen refuses planted identifiers (server, and the
 //       browser copy agrees with the server copy)
 //   X2  private endpoints refuse calls with no token or a wrong one
@@ -102,6 +103,20 @@ for (const p of pages) {
   let paused = "unreadable";
   try { paused = JSON.parse(s.text).pausedTools.join(", ") || "none"; } catch {}
   rec("F6", `Status endpoint answers (paused now: ${paused})`, "check", s.status === 200 && paused !== "unreadable", `HTTP ${s.status}`);
+}
+
+// ── F6b: the Local Validation Kit stays paused ───────────────────────────────
+// The kit (its SQL starting point, rule packs and data templates are the parts
+// meant to go into a hospital's own systems) is paused until clinical and
+// statistical review. The pause lives in the page itself, so check both the
+// live page and the downloadable offline copy still carry it.
+{
+  const kitPaused = html => /classList\.add\('kit-paused-root'\)/.test(html) && /body\.kit-paused \.wrap > :not\(header\)/.test(html);
+  rec("F6", "Control: a kit page without the pause is caught", "control", !kitPaused("<html><body><div class=wrap>kit</div></body></html>"));
+  for (const path of ["/local-validation/", "/local-validation/local-validation-kit-offline.html"]) {
+    const r = await get(path);
+    rec("F6", `Local Validation Kit stays paused: ${path}`, "check", r.status === 200 && kitPaused(r.text), r.status === 200 ? (kitPaused(r.text) ? "" : "pause is missing") : `HTTP ${r.status}`);
+  }
 }
 
 // ── P1: patient-info screen ──────────────────────────────────────────────────

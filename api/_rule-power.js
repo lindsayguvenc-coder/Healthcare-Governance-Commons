@@ -20,6 +20,10 @@
 // tests: scripts/check.mjs cross-checks it against a seeded simulation that
 // uses firesOn() below, the same rule definitions in plain form.
 
+// DECISION(rule-power-model): control results are treated as independent normal
+//   z-scores around the baseline mean. Disclosed in the protocol next to the rates.
+// DECISION(rule-power-grid): grid step 0.002 SD over about ±9 SD; good to about 1 in
+//   10,000, checked against the closed form and a seeded simulation in check.mjs.
 const SUPPORTED = new Set(["1-3s", "2-2s", "R-4s", "10x"]);
 
 // Plain-form rules: does this sequence of z-scores fire any of the given rules?

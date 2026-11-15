@@ -8,6 +8,7 @@
 //   C2  every "as of" date is inside its check-by window
 //   X3  no high or critical known holes in the site's packages
 //   S3  the two AI contribution reviewers: agreement and override rates
+//   O4  no commits stranded on a branch after its pull request merged
 //
 // Seeded controls ride along with each check, as in site-health.mjs.
 // Writes qc-out/site-weekly.json and qc-out/site-weekly-runs.csv. Exits 1 on a
@@ -189,6 +190,33 @@ const ageDays = t => Math.floor((Date.now() - t) / 86400000);
   }
 }
 
+// ── O4: stranded commits ─────────────────────────────────────────────────────
+// A commit pushed to a pull request's branch after the PR was merged never
+// reaches main. Happened twice on Nov 14, 2026. Compare each recently merged
+// PR's branch with the commit that was merged. (Checked against the two real
+// cases, PRs #58 and #59, before their branches were cleaned up.)
+{
+  const repo = process.env.GITHUB_REPOSITORY || "lindsayguvenc-coder/Healthcare-Governance-Commons";
+  const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+  const api = async (path) => {
+    const r = await fetch(`https://api.github.com/repos/${repo}/${path}`, { headers: { accept: "application/vnd.github+json", ...(token ? { authorization: `Bearer ${token}` } : {}) } });
+    if (!r.ok) throw new Error(`GitHub ${r.status}`);
+    return r.json();
+  };
+  try {
+    const prs = (await api("pulls?state=closed&per_page=50")).filter(p => p.merged_at && Date.now() - Date.parse(p.merged_at) < 60 * 86400000);
+    let stranded = 0;
+    for (const pr of prs) {
+      let head;
+      try { head = (await api(`branches/${encodeURIComponent(pr.head.ref)}`)).commit.sha; } catch { continue; } // branch deleted: nothing stranded
+      if (head === pr.head.sha) continue;
+      const cmp = await api(`compare/${pr.base.ref}...${head}`);
+      if (cmp.ahead_by > 0) { stranded++; rec("O4", `PR #${pr.number} (${pr.head.ref}): ${cmp.ahead_by} commit(s) pushed after it merged never reached ${pr.base.ref}`, "check", "fail", "open a PR for that branch, or delete it if the commits aren't wanted"); }
+    }
+    rec("O4", `${prs.length} recently merged PRs checked for stranded commits: ${stranded} found`, "check", "ok");
+  } catch (e) { rec("O4", "Checked for stranded commits", "check", "warn", String(e.message)); }
+}
+
 // ── Report ───────────────────────────────────────────────────────────────────
 const now = new Date().toISOString();
 const failed = results.filter(r => r.level === "fail"), warned = results.filter(r => r.level === "warn");
@@ -210,6 +238,6 @@ for (const id of ids) {
   const rs = results.filter(r => r.id === id);
   console.log(`${id}: ${rs.filter(r => r.level === "fail").length} failed, ${rs.filter(r => r.level === "warn").length} warnings`);
   for (const r of rs) if (r.level !== "ok" || r.kind === "control") console.log(`  ${r.level === "fail" ? "✗" : r.level === "warn" ? "!" : "✓"} ${r.kind === "control" ? "[control] " : ""}${r.check}${r.detail ? " — " + r.detail : ""}`);
-  for (const r of rs) if (r.level === "ok" && r.kind === "check" && /found|links:|Reviewer|Packages|matches/.test(r.check)) console.log(`  · ${r.check}`);
+  for (const r of rs) if (r.level === "ok" && r.kind === "check" && /found|links:|Reviewer|Packages|matches|checked for/.test(r.check)) console.log(`  · ${r.check}`);
 }
 process.exit(failed.length ? 1 : 0);
