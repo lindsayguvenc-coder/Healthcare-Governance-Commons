@@ -137,6 +137,12 @@ async function protocolFrom(base, answers) {
       const diff = [...new Set([...Object.keys(a), ...Object.keys(b)])].filter(k => k !== "sections" && a[k] !== b[k])
         .concat([...new Set([...Object.keys(secA), ...Object.keys(secB)])].filter(k => secA[k] !== secB[k]).map(k => `section "${k}"`));
       rec("F4", `Where live and repo differ: ${diff.join(", ") || "(nowhere at the top level)"}`, "check", "warn");
+      // print a short side-by-side of the first differences, for the run log
+      const show = (o) => JSON.stringify(o).slice(0, 600);
+      for (const k of ["summary", "biasSummaryRating", "allGapFlags"]) if (a[k] !== b[k]) console.log(`F4 diff ${k}\n  live: ${show(p[k])}\n  repo: ${show(local.p[k])}`);
+      for (const t of Object.keys(secA).filter(k => secA[k] !== secB[k]).slice(0, 2)) {
+        console.log(`F4 diff section "${t}"\n  live: ${show(p.sections.find(x => x.title === t))}\n  repo: ${show(local.p.sections.find(x => x.title === t))}`);
+      }
     }
     if (local?.err) rec("F4", "Repo copy of the generator answers", "check", "warn", local.err);
     if (!golden) rec("F4", "No saved fingerprint yet", "check", "warn", `live is ${fpLive}; save it in ${goldenFile}`);
@@ -235,7 +241,25 @@ const ageDays = t => Math.floor((Date.now() - t) / 86400000);
       try { head = (await api(`branches/${encodeURIComponent(pr.head.ref)}`)).commit.sha; } catch { continue; } // branch deleted: nothing stranded
       if (head === pr.head.sha) continue;
       const cmp = await api(`compare/${pr.base.ref}...${head}`);
-      if (cmp.ahead_by > 0) { stranded++; rec("O4", `PR #${pr.number} (${pr.head.ref}): ${cmp.ahead_by} commit(s) pushed after it merged never reached ${pr.base.ref}`, "check", "fail", "open a PR for that branch, or delete it if the commits aren't wanted"); }
+      if (cmp.ahead_by === 0) continue;
+      // Commit ids can differ when the same change reached main another way (a
+      // later PR, a cherry-pick). Judge by content: are the lines those late
+      // commits added already in main?
+      const late = await api(`compare/${pr.head.sha}...${head}`);
+      let added = 0, present = 0;
+      for (const f of late.files || []) {
+        if (!f.patch || f.status === "removed") continue;
+        let mainText = "";
+        try { mainText = execSync(`git show origin/${pr.base.ref}:${JSON.stringify(f.filename)}`, { cwd: root, maxBuffer: 1 << 26, stdio: ["ignore", "pipe", "ignore"] }).toString(); } catch {}
+        for (const line of f.patch.split("\n")) {
+          if (!line.startsWith("+") || line.startsWith("+++")) continue;
+          const t = line.slice(1).trim(); if (t.length < 12) continue;
+          added++; if (mainText.includes(t)) present++;
+        }
+      }
+      const share = added ? present / added : 1;
+      if (share >= 0.9) { rec("O4", `PR #${pr.number} (${pr.head.ref}): ${late.total_commits ?? cmp.ahead_by} late commit(s), but ${Math.round(share * 100)}% of their lines are already in ${pr.base.ref}`, "check", "warn", "the branch can be deleted"); continue; }
+      stranded++; rec("O4", `PR #${pr.number} (${pr.head.ref}): commits pushed after it merged never reached ${pr.base.ref} (${Math.round((1 - share) * 100)}% of their added lines missing)`, "check", "fail", "open a PR for that branch, or delete it if the commits aren't wanted");
     }
     rec("O4", `${prs.length} recently merged PRs checked for stranded commits: ${stranded} found`, "check", "ok");
   } catch (e) { rec("O4", "Checked for stranded commits", "check", "warn", String(e.message)); }
