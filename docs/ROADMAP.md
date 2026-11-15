@@ -14,6 +14,15 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
   published contributions, the decision log, and stats are saved to the
   data-archive branch; only then are the archived log entries cleared.
 
+- **Site health** (`scripts/site-health.mjs`, daily, .github/workflows/site-health.yml):
+  batch 1 of the Site QC crosswalk (Nov 14, 2026). Every page loads with the
+  title the repo expects; paused tools stay paused and unknown tools fail
+  closed; the patient-info screen refuses planted identifiers on the live site
+  and the browser copy agrees with the server copy; private endpoints refuse
+  calls with no token or a wrong one. Each check carries planted controls, so
+  a broken checker shows up as its own failure. Failures open one GitHub issue
+  that closes itself when all is clear. Nothing it sends reaches the AI.
+
 ## To build (decided Oct 27, 2026)
 - [ ] **Weekly currency scan.** Federal Register, FDA guidance, CMS, state AI
       laws, EU AI Act against `src/data/regulatory.json`. Opens a pull request

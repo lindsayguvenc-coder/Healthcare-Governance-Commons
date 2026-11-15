@@ -30,8 +30,9 @@ Module._extensions[".js"] = function (mod, filename) {
 
 // Report tools are paused in code (api/_pause.js) until their reviews finish. The
 // replay exercises them anyway, so it swaps in a no-pause stub. Local test only.
+// Set REAL_PAUSE=1 to keep the real pause logic (site-health checks test it).
 const pauseFile = path.join(repo, "api/_pause.js");
-require.cache[pauseFile] = { id: pauseFile, filename: pauseFile, loaded: true,
+if (!process.env.REAL_PAUSE) require.cache[pauseFile] = { id: pauseFile, filename: pauseFile, loaded: true,
   exports: { TOOLS: ["vpg", "roi", "transition"], pausedTools: () => [], isPaused: () => false } };
 
 process.env.REDIS_URL = "redis://mock";
@@ -66,6 +67,9 @@ const handlers = {
   // http://localhost:3000 when VERCEL_URL is unset, so run this server on port 3000 for it.
   "/api/generate-protocol": require(path.join(repo, "api/generate-protocol.js")),
   "/api/vpg-engines": require(path.join(repo, "api/vpg-engines.js")),
+  // For scripts/site-health.mjs: the shared AI route and the document library.
+  "/api/synthesize": require(path.join(repo, "api/synthesize.js")),
+  "/api/documents": require(path.join(repo, "api/documents.js")),
 };
 const dist = path.join(repo, "dist");
 const types = { ".js": "text/javascript", ".css": "text/css", ".html": "text/html", ".pdf": "application/pdf", ".json": "application/json", ".svg": "image/svg+xml" };
