@@ -174,9 +174,9 @@ else if (fnCount > 10) warn(`api/: ${fnCount} of 12 server functions used`);
   }
   const closed = 1 - Math.pow(1 - 2 * 0.0013498980316301, 10); // 1-3s alone, no error: closed form
   if (Math.abs(fireProbability(["1-3s"], 0, 10) - closed) > 1e-5) fail("_rule-power.js: 1-3s alone doesn't match its closed form");
-  const eng = read("api/vpg-engines.js");
+  const eng = read("api/_vpg-engines-core.js");
   for (const m of eng.matchAll(/id: "([^"]+)",[^}]*?tier: "reject"/g))
-    if (!SUPPORTED.has(m[1]) && m[1] !== "fail-count") fail(`vpg-engines.js: reject rule "${m[1]}" has no exact detection math in api/_rule-power.js`);
+    if (!SUPPORTED.has(m[1]) && m[1] !== "fail-count") fail(`_vpg-engines-core.js: reject rule "${m[1]}" has no exact detection math in api/_rule-power.js`);
 }
 
 // ── Report ───────────────────────────────────────────────────────────────────

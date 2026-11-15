@@ -1942,6 +1942,8 @@ async function handleGeneratePDF() {
         logicFlags: (state.logicFlags || []).map(f => f.id || f),
         gapFlags: (state.gapFlags || []).map(f => f.message || f),
         documentMeta: [],
+        // your own calendar date, so the protocol isn't dated by the server's clock (UTC)
+        clientDate: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })(),
       }),
     });
 

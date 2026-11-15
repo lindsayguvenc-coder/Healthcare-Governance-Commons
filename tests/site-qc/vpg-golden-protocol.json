@@ -1,0 +1,1120 @@
+{
+ "allGapFlags": [
+  "Autonomy level not set. Say how much stands between its output and the patient; high-autonomy systems get tighter thresholds and an independent sign-off on changes.",
+  "FDA status unknown. Ask the vendor for the clearance number (510(k), De Novo or PMA) or its basis for calling it non-device. It decides which FDA duties apply, including reporting device-related deaths and serious injuries (21 CFR 803).",
+  "Not known whether it uses race, color, national origin, sex, age or disability as an input. Section 1557 (45 CFR 92.210) expects covered entities to find out. Ask the vendor for its input variables.",
+  "No plan to measure whether the outcome it targets changed. Accuracy alone can't show it helps patients. Pick one outcome measure and a data source.",
+  "The contract doesn't secure the performance data you need to monitor it yourself. Without it, monitoring depends on the vendor's reports.",
+  "No contract duty to tell you before a model update goes live. An unannounced update can change performance overnight.",
+  "The contract doesn't limit what the vendor may do with your data or how long it keeps it.",
+  "No written plan for retiring it for good: criteria, who decides, what replaces it, and what happens to its data.",
+  "Validation counts not provided, so no confidence intervals. A sensitivity from 30 positive cases carries roughly ±15 points of uncertainty; one from 3,000 carries about ±1.5. Enter the four counts to see which you have.",
+  "No stop-using point set for sensitivity. The tool no longer invents one. Set the lowest sensitivity you would accept from intended use and harm; until then there is no hard stop on missed cases.",
+  "Net benefit not computed: the trade-off question (false alarms accepted per caught case) was not answered.",
+  "VENDOR_DEMOGRAPHICS_NOT_RECORDED: What the vendor disclosed about the patients in its training data isn't recorded (Section 1), so the compatibility table can't be completed. Get it from the vendor (model card or contract).",
+  "NO_MODEL_CARD: No model card or equivalent disclosure. Since HTI-5 (effective Dec 28, 2026) certified EHRs no longer have to provide one, so ask for it in the contract: intended use, training data and its demographics, validation results with sample sizes, known limits, and notice before model updates. Until then, bias assessment rests on the vendor's word and your own local numbers.",
+  "RECORDING_INCONSISTENCIES: race_ethnicity have known recording inconsistencies that limit audit reliability."
+ ],
+ "biasSummaryRating": "critical",
+ "logicFlags": [],
+ "meta": {
+  "commonsVersion": "Healthcare Governance Commons v1",
+  "deploymentName": "Example Sepsis Alert",
+  "generatedDate": "November 14, 2026",
+  "institution": "Example County Medical Center",
+  "isFullProtocol": true,
+  "protocolMode": "Full Validation Protocol",
+  "shelfLifeStatement": "This document has a shelf life. A validation protocol that is never updated is not a governance document — it is a record of past intentions.",
+  "title": "Validation Protocol: Example Sepsis Alert",
+  "useType": "triage_prioritization",
+  "useTypeLabel": "Triage / prioritization",
+  "version": "1.0"
+ },
+ "overallRating": null,
+ "sections": [
+  {
+   "sectionNumber": 1,
+   "subsections": [
+    {
+     "content": {
+      "department": "Emergency Department",
+      "deploymentDate": "Not asked by this tool. Fill in by hand.",
+      "deploymentName": "Example Sepsis Alert",
+      "institution": "Example County Medical Center",
+      "modelVersion": "4.2",
+      "useType": "Triage / prioritization — direct impact on care sequencing",
+      "vendor": "Example Vendor Inc."
+     },
+     "title": "Deployment Identification"
+    },
+    {
+     "content": {
+      "aiMessagesToPatients": "Not answered",
+      "autonomyLevel": "Not answered",
+      "clinicalSetting": "Emergency department",
+      "decisionWindow": "minutes",
+      "intendedUseDescription": "Triage / prioritization — direct impact on care sequencing",
+      "patientVolumeAffected": "Not asked by this tool. Fill in by hand.",
+      "protectedInputs": "Not answered",
+      "targetPopulation": "Predominantly adult (18–65)"
+     },
+     "title": "Clinical Context"
+    },
+    {
+     "content": {
+      "documentCount": "None. Document upload is paused; this protocol is built from answers only.",
+      "documents": [],
+      "noDocumentsNote": "No documents were uploaded during elicitation. Protocol is based on responses only."
+     },
+     "title": "Documents Reviewed"
+    },
+    {
+     "content": {
+      "protocolType": "Full Validation Protocol",
+      "scopeNote": "This protocol covers full quantitative validation, bias assessment with mapping function, Westgard-adapted monitoring tiers, and Commons node risk assessment."
+     },
+     "title": "Protocol Scope"
+    }
+   ],
+   "title": "Deployment Context & Scope"
+  },
+  {
+   "sectionNumber": 2,
+   "subsections": [
+    {
+     "content": {
+      "fdaStatus": "Not answered",
+      "modelArchitecture": "Not asked by this tool. Fill in by hand.",
+      "modelCardAvailable": "Not answered",
+      "trainingDataDescription": "Not asked by this tool. Fill in by hand.",
+      "vendorDisclosedPatientGroups": "Not answered",
+      "vendorValidationSummary": "Not asked by this tool. Fill in by hand."
+     },
+     "title": "Vendor-Reported Characteristics"
+    },
+    {
+     "content": {
+      "aurocNote": "Not provided",
+      "calibration": "Not answered",
+      "localValidationPerformed": "Yes",
+      "metricsNote": null,
+      "performanceByGroup": "Not answered",
+      "prevalence": "10.0% (local estimate)",
+      "sensitivity": "78.0% (no interval: counts not given)",
+      "specificity": "84.0% (no interval: counts not given)",
+      "validationCohortDescription": "Not asked by this tool. Fill in by hand.",
+      "validationCohortSize": "Not provided (enter the four counts to get this and the confidence intervals)"
+     },
+     "title": "Local Validation Baseline"
+    },
+    {
+     "content": {
+      "knownLimitsAndContraindications": "None entered. Ask the vendor for known limits, and add what your own testing found."
+     },
+     "title": "Known Limitations"
+    }
+   ],
+   "title": "Model Characterization & Performance Baseline"
+  },
+  {
+   "biasGapFlags": [
+    "VENDOR_DEMOGRAPHICS_NOT_RECORDED: What the vendor disclosed about the patients in its training data isn't recorded (Section 1), so the compatibility table can't be completed. Get it from the vendor (model card or contract).",
+    "NO_MODEL_CARD: No model card or equivalent disclosure. Since HTI-5 (effective Dec 28, 2026) certified EHRs no longer have to provide one, so ask for it in the contract: intended use, training data and its demographics, validation results with sample sizes, known limits, and notice before model updates. Until then, bias assessment rests on the vendor's word and your own local numbers.",
+    "RECORDING_INCONSISTENCIES: race_ethnicity have known recording inconsistencies that limit audit reliability."
+   ],
+   "mode": "full",
+   "principleStatement": "Bias assessment is required regardless of model card availability or vendor disclosure posture. Absence of data is itself a finding.",
+   "sectionNumber": 3,
+   "subsections": [
+    {
+     "content": {
+      "localMethodology": {
+       "inconsistencies": [
+        "race_ethnicity"
+       ],
+       "note": "Recording inconsistencies documented — compatibility assessment will reflect known gaps.",
+       "recorded": [
+        "age",
+        "sex_gender",
+        "race_ethnicity",
+        "socioeconomic"
+       ],
+       "unknown": false
+      },
+      "modelCardAvailable": "Not answered",
+      "vendorDemographics": {
+       "notAsked": true,
+       "notDisclosed": true,
+       "note": "Not recorded: what the vendor disclosed about the patients in its training data. Ask the vendor, and put it in the contract.",
+       "reported": []
+      }
+     },
+     "title": "Training Data Demographic Coverage"
+    },
+    {
+     "content": {
+      "compatibilityTable": {
+       "columns": [
+        "Demographic Axis",
+        "Risk Weight",
+        "Vendor Reported",
+        "Local Recorded",
+        "Compatibility",
+        "Mismatch Risk",
+        "Recommended Action"
+       ],
+       "rows": [
+        {
+         "axis": "Race / Ethnicity",
+         "compatibility": "unknown",
+         "compatibilityDisplay": {
+          "bgColor": "#f2f2f2",
+          "color": "#6c757d",
+          "label": "Unknown",
+          "textColor": "#495057"
+         },
+         "localRecorded": "Yes",
+         "mismatchRisk": "high",
+         "recommendedAction": "What the vendor disclosed about Race / Ethnicity isn't recorded yet, so compatibility can't be assessed. Your site records this axis. Ask the vendor; until then treat it as a possible mismatch.",
+         "riskWeight": "high",
+         "vendorReported": "No / Not Disclosed"
+        },
+        {
+         "axis": "Sex / Gender",
+         "compatibility": "unknown",
+         "compatibilityDisplay": {
+          "bgColor": "#f2f2f2",
+          "color": "#6c757d",
+          "label": "Unknown",
+          "textColor": "#495057"
+         },
+         "localRecorded": "Yes",
+         "mismatchRisk": "high",
+         "recommendedAction": "What the vendor disclosed about Sex / Gender isn't recorded yet, so compatibility can't be assessed. Your site records this axis. Ask the vendor; until then treat it as a possible mismatch.",
+         "riskWeight": "high",
+         "vendorReported": "No / Not Disclosed"
+        },
+        {
+         "axis": "Age",
+         "compatibility": "unknown",
+         "compatibilityDisplay": {
+          "bgColor": "#f2f2f2",
+          "color": "#6c757d",
+          "label": "Unknown",
+          "textColor": "#495057"
+         },
+         "localRecorded": "Yes",
+         "mismatchRisk": "high",
+         "recommendedAction": "What the vendor disclosed about Age isn't recorded yet, so compatibility can't be assessed. Your site records this axis. Ask the vendor; until then treat it as a possible mismatch.",
+         "riskWeight": "high",
+         "vendorReported": "No / Not Disclosed"
+        },
+        {
+         "axis": "Socioeconomic Status / Insurance",
+         "compatibility": "unknown",
+         "compatibilityDisplay": {
+          "bgColor": "#f2f2f2",
+          "color": "#6c757d",
+          "label": "Unknown",
+          "textColor": "#495057"
+         },
+         "localRecorded": "Yes",
+         "mismatchRisk": "high",
+         "recommendedAction": "What the vendor disclosed about Socioeconomic Status / Insurance isn't recorded yet, so compatibility can't be assessed. Your site records this axis. Ask the vendor; until then treat it as a possible mismatch.",
+         "riskWeight": "high",
+         "vendorReported": "No / Not Disclosed"
+        },
+        {
+         "axis": "Language / English Proficiency",
+         "compatibility": "unknown",
+         "compatibilityDisplay": {
+          "bgColor": "#f2f2f2",
+          "color": "#6c757d",
+          "label": "Unknown",
+          "textColor": "#495057"
+         },
+         "localRecorded": "No",
+         "mismatchRisk": "moderate",
+         "recommendedAction": "What the vendor disclosed about Language / English Proficiency isn't recorded yet, so compatibility can't be assessed. Your site's recording of this axis was not documented. Ask the vendor; until then treat it as a possible mismatch.",
+         "riskWeight": "moderate",
+         "vendorReported": "No / Not Disclosed"
+        },
+        {
+         "axis": "Geographic Origin (training data region)",
+         "compatibility": "unknown",
+         "compatibilityDisplay": {
+          "bgColor": "#f2f2f2",
+          "color": "#6c757d",
+          "label": "Unknown",
+          "textColor": "#495057"
+         },
+         "localRecorded": "No",
+         "mismatchRisk": "moderate",
+         "recommendedAction": "What the vendor disclosed about Geographic Origin (training data region) isn't recorded yet, so compatibility can't be assessed. Your site's recording of this axis was not documented. Ask the vendor; until then treat it as a possible mismatch.",
+         "riskWeight": "moderate",
+         "vendorReported": "No / Not Disclosed"
+        },
+        {
+         "axis": "Comorbidity Profile",
+         "compatibility": "unknown",
+         "compatibilityDisplay": {
+          "bgColor": "#f2f2f2",
+          "color": "#6c757d",
+          "label": "Unknown",
+          "textColor": "#495057"
+         },
+         "localRecorded": "No",
+         "mismatchRisk": "moderate",
+         "recommendedAction": "What the vendor disclosed about Comorbidity Profile isn't recorded yet, so compatibility can't be assessed. Your site's recording of this axis was not documented. Ask the vendor; until then treat it as a possible mismatch.",
+         "riskWeight": "moderate",
+         "vendorReported": "No / Not Disclosed"
+        },
+        {
+         "axis": "Disability Status",
+         "compatibility": "unknown",
+         "compatibilityDisplay": {
+          "bgColor": "#f2f2f2",
+          "color": "#6c757d",
+          "label": "Unknown",
+          "textColor": "#495057"
+         },
+         "localRecorded": "No",
+         "mismatchRisk": "moderate",
+         "recommendedAction": "What the vendor disclosed about Disability Status isn't recorded yet, so compatibility can't be assessed. Your site's recording of this axis was not documented. Ask the vendor; until then treat it as a possible mismatch.",
+         "riskWeight": "moderate",
+         "vendorReported": "No / Not Disclosed"
+        },
+        {
+         "axis": "BMI / Body Habitus",
+         "compatibility": "unknown",
+         "compatibilityDisplay": {
+          "bgColor": "#f2f2f2",
+          "color": "#6c757d",
+          "label": "Unknown",
+          "textColor": "#495057"
+         },
+         "localRecorded": "No",
+         "mismatchRisk": "moderate",
+         "recommendedAction": "What the vendor disclosed about BMI / Body Habitus isn't recorded yet, so compatibility can't be assessed. Your site's recording of this axis was not documented. Ask the vendor; until then treat it as a possible mismatch.",
+         "riskWeight": "low",
+         "vendorReported": "No / Not Disclosed"
+        },
+        {
+         "axis": "Social Determinants of Health (SDOH)",
+         "compatibility": "unknown",
+         "compatibilityDisplay": {
+          "bgColor": "#f2f2f2",
+          "color": "#6c757d",
+          "label": "Unknown",
+          "textColor": "#495057"
+         },
+         "localRecorded": "No",
+         "mismatchRisk": "high",
+         "recommendedAction": "What the vendor disclosed about Social Determinants of Health (SDOH) isn't recorded yet, so compatibility can't be assessed. Your site's recording of this axis was not documented. Ask the vendor; until then treat it as a possible mismatch.",
+         "riskWeight": "high",
+         "vendorReported": "No / Not Disclosed"
+        }
+       ],
+       "summary": {
+        "counts": {
+         "compatible": 0,
+         "incompatible": 0,
+         "not_tracked": 0,
+         "partial": 0,
+         "unknown": 10
+        },
+        "highRiskIncompatibleAxes": [
+         "Race / Ethnicity",
+         "Sex / Gender",
+         "Age",
+         "Socioeconomic Status / Insurance",
+         "Social Determinants of Health (SDOH)"
+        ],
+        "highRiskIncompatibleCount": 5,
+        "overallRating": "critical"
+       }
+      },
+      "tableSummary": {
+       "counts": {
+        "compatible": 0,
+        "incompatible": 0,
+        "not_tracked": 0,
+        "partial": 0,
+        "unknown": 10
+       },
+       "highRiskIncompatibleAxes": [
+        "Race / Ethnicity",
+        "Sex / Gender",
+        "Age",
+        "Socioeconomic Status / Insurance",
+        "Social Determinants of Health (SDOH)"
+       ],
+       "highRiskIncompatibleCount": 5,
+       "overallRating": "critical"
+      }
+     },
+     "title": "Compatibility Assessment"
+    },
+    {
+     "content": {
+      "flagCount": 5,
+      "flags": [
+       {
+        "axis": "Race / Ethnicity",
+        "compatibility": "unknown",
+        "flag": "Race / Ethnicity: High mismatch risk — What the vendor disclosed about Race / Ethnicity isn't recorded yet, so compatibility can't be assessed. Your site records this axis. Ask the vendor; until then treat it as a possible mismatch.",
+        "risk": "high"
+       },
+       {
+        "axis": "Sex / Gender",
+        "compatibility": "unknown",
+        "flag": "Sex / Gender: High mismatch risk — What the vendor disclosed about Sex / Gender isn't recorded yet, so compatibility can't be assessed. Your site records this axis. Ask the vendor; until then treat it as a possible mismatch.",
+        "risk": "high"
+       },
+       {
+        "axis": "Age",
+        "compatibility": "unknown",
+        "flag": "Age: High mismatch risk — What the vendor disclosed about Age isn't recorded yet, so compatibility can't be assessed. Your site records this axis. Ask the vendor; until then treat it as a possible mismatch.",
+        "risk": "high"
+       },
+       {
+        "axis": "Socioeconomic Status / Insurance",
+        "compatibility": "unknown",
+        "flag": "Socioeconomic Status / Insurance: High mismatch risk — What the vendor disclosed about Socioeconomic Status / Insurance isn't recorded yet, so compatibility can't be assessed. Your site records this axis. Ask the vendor; until then treat it as a possible mismatch.",
+        "risk": "high"
+       },
+       {
+        "axis": "Social Determinants of Health (SDOH)",
+        "compatibility": "unknown",
+        "flag": "Social Determinants of Health (SDOH): High mismatch risk — What the vendor disclosed about Social Determinants of Health (SDOH) isn't recorded yet, so compatibility can't be assessed. Your site's recording of this axis was not documented. Ask the vendor; until then treat it as a possible mismatch.",
+        "risk": "high"
+       }
+      ]
+     },
+     "title": "Mismatch Flags"
+    },
+    {
+     "content": {
+      "risks": [
+       {
+        "description": "SDOH factors are systematically underrepresented in most ML training datasets and are inconsistently recorded in EHR systems. Models trained without SDOH representation may perform worse for high-SDOH-burden patients — who are often the highest-need patients in safety-net settings.",
+        "mitigationOptions": [
+         "Flag SDOH gap in monitoring plan.",
+         "Stratify performance review by payer mix or neighborhood deprivation index as SDOH proxy.",
+         "Engage equity/diversity team to review SDOH risk for this deployment."
+        ],
+        "risk": "Social Determinants of Health (SDOH) gap",
+        "severity": "high"
+       }
+      ]
+     },
+     "title": "Unaddressed Risks"
+    }
+   ],
+   "title": "Bias & Fairness Assessment",
+   "vendorNonDisclosure": false
+  },
+  {
+   "sectionNumber": 4,
+   "subsections": [
+    {
+     "content": {
+      "metrics": {
+       "alertRate": 0.22200000000000006,
+       "alertRateDisplay": "22.2 of every 100 patients flagged; about 3 evaluated per true case",
+       "alertsPer100": 22.2,
+       "auc": null,
+       "calculable": true,
+       "calibrationDisplay": "Not answered",
+       "hasCounts": false,
+       "likelihoodRatioNeg": 0.26190476190476186,
+       "likelihoodRatioPos": 4.874999999999999,
+       "lrNegDisplay": "0.262",
+       "lrPosDisplay": "4.87",
+       "netBenefit": null,
+       "netBenefitTreatAll": null,
+       "npv": 0.9717223650385604,
+       "npvDisplay": "97.2%",
+       "numberToEvaluate": 2.8461538461538463,
+       "overrideDisplay": "Not answered",
+       "ppv": 0.3513513513513513,
+       "ppvDisplay": "35.1%",
+       "prevalence": 0.1,
+       "prevalenceDisplay": "10.0% (local estimate)",
+       "prevalenceSource": "local estimate",
+       "sensDisplay": "78.0% (no interval: counts not given)",
+       "sensitivity": 0.78,
+       "specDisplay": "84.0% (no interval: counts not given)",
+       "specificity": 0.84,
+       "subgroupDisplay": "Not answered"
+      },
+      "metricsNote": "Intervals are 95% Wilson intervals from the counts entered. PPV, NPV, alert rate and net benefit are computed at the prevalence shown; recompute if it changes. AUROC, if shown, averages over every threshold, including ones you will never use; judge the model by the numbers at your threshold. Measures follow the Commons Agent QC picker (Nov 2026)."
+     },
+     "title": "Performance Metrics Baseline"
+    },
+    {
+     "content": {
+      "rationale": [
+       "Missed cases are the higher-harm error for this use type. Set a stop-using point for sensitivity; once set, it is a hard stop.",
+       "PPV below 60% — thresholds tightened to reduce false positive burden.",
+       "Urgent decision window — thresholds tightened for time-sensitive clinical context."
+      ],
+      "riskClass": "high",
+      "thresholds": {
+       "action": 10,
+       "source": "set by organization",
+       "warning": 5
+      },
+      "tierSensitivity": "high"
+     },
+     "title": "Tier Profile"
+    },
+    {
+     "content": {
+      "phaseInNote": "Allowable error (% degradation) is separate from these QC limits: it governs how much change is tolerable when a model or configuration changes and sets reject levels for periodic evaluation.",
+      "rules": [
+       {
+        "active": true,
+        "id": "1-2s",
+        "mlTranslation": "One control result beyond ±2 SD of the baseline control mean",
+        "response": "Warning. Inspect with the other rules before acting. No stop.",
+        "threshold": "±2 SD (SD measured across baseline control runs)",
+        "tier": "warning",
+        "westgardAnalog": "1₂ₛ (Warning rule)"
+       },
+       {
+        "active": true,
+        "id": "1-3s",
+        "mlTranslation": "One control result beyond ±3 SD",
+        "response": "Reject the run. Execute the predetermined response (backup, contingency or hold) and notify the corrective action owner.",
+        "threshold": "±3 SD",
+        "tier": "reject",
+        "westgardAnalog": "1₃ₛ (Rejection rule)"
+       },
+       {
+        "active": true,
+        "id": "2-2s",
+        "mlTranslation": "Two consecutive control results beyond 2 SD on the same side",
+        "response": "Reject. Systematic error: check what changed (model version, prompt, configuration, data pipeline).",
+        "threshold": "2 consecutive beyond 2 SD, same side",
+        "tier": "reject",
+        "westgardAnalog": "2₂ₛ (Systematic rule)"
+       },
+       {
+        "active": true,
+        "id": "R-4s",
+        "mlTranslation": "Two consecutive control results more than 4 SD apart, on opposite sides",
+        "response": "Reject. Random error: inspect components (input handling, tools, sampling settings). Subgroup differences are checked separately (see stratified limits).",
+        "threshold": "Range > 4 SD between consecutive results",
+        "tier": "reject",
+        "westgardAnalog": "R₄ₛ (Random-error rule)"
+       },
+       {
+        "active": true,
+        "id": "4-1s",
+        "mlTranslation": "Four consecutive control results beyond 1 SD on the same side",
+        "note": null,
+        "response": "Warning by default (reject if the validated rule set says so). Early systematic shift: investigate before it crosses 2 SD.",
+        "threshold": "4 consecutive beyond 1 SD, same side",
+        "tier": "warning",
+        "westgardAnalog": "4₁ₛ (Shift rule)"
+       },
+       {
+        "active": true,
+        "id": "10x",
+        "mlTranslation": "Ten consecutive control results on the same side of the baseline mean",
+        "note": null,
+        "response": "Reject. Sustained systematic drift: hold, find the cause, and classify the change (re-baseline, verification or revalidation).",
+        "threshold": "10 consecutive, same side of mean",
+        "tier": "reject",
+        "westgardAnalog": "10ₓ (Drift rule)"
+       },
+       {
+        "active": true,
+        "id": "fail-count",
+        "mlTranslation": "Failed known-answer controls in the last 20 runs, against exact binomial limits from the baseline pass rate",
+        "response": "Binary results have no distance from the mean, so they are judged as a count. Baseline rate starts provisional and is established with cumulative in-control runs.",
+        "threshold": "Warn at ~5% false-alarm limit; reject at ~0.3%",
+        "tier": "reject",
+        "westgardAnalog": "Fail count (binary controls)"
+       },
+       {
+        "active": false,
+        "mlTranslation": "Sensitivity on known-positive controls drops below an absolute floor",
+        "note": "False-negative bias declared for this use type. The floor is a hard stop, not a warning.",
+        "response": "Immediate stop. Missed true positives carry the higher harm for this use type. Failover to human review.",
+        "threshold": "No floor set. The organization must set one; the tool does not supply a default.",
+        "tier": "stop",
+        "westgardAnalog": "Stop-using point: sensitivity (adapted)"
+       }
+      ]
+     },
+     "title": "Westgard-Adapted Monitoring Rules"
+    },
+    {
+     "content": {
+      "gaps": [],
+      "rationale": [
+       "Subgroup flags need a minimum number of cases per subgroup per window before they count; small subgroups are noisy.",
+       "Checking many subgroups at once guarantees some false flags by chance. Adjust for the number of comparisons, or confirm a flag on the next window before acting.",
+       "Population-stratified control limits serve as the middle path between fixed and adaptive thresholds.",
+       "Fixed aggregate thresholds can mask subgroup-specific performance degradation that does not surface until harm occurs.",
+       "Fully adaptive thresholds require longitudinal data that is often unavailable at deployment.",
+       "Stratified monitoring allows aggregate thresholds to govern overall stop/action decisions while disaggregated tracking provides early warning of differential performance.",
+       "Whoever reviews subgroup performance data owns the governance decision about whether differential performance is acceptable — this is not a technical question."
+      ],
+      "stratifiedGroups": [
+       {
+        "axis": "Age",
+        "dataRequirement": "Local EHR stratification by Age required. If unavailable, flag as monitoring gap.",
+        "monitoringRecommendation": "Disaggregate monitoring metrics by Age. Flag a subgroup for review when its error rate is at least 1.5 times the aggregate error rate (ratio set at validation; 1.5 is the starting value in the Commons Agent QC Setup) and the lower bound of its 95% interval is above the aggregate rate, confirmed on the next review window. A gap that meets the ratio but not the interval is watched, not acted on.",
+        "priority": "high",
+        "subgroups": [
+         "Pediatric (<18)",
+         "Adult (18–64)",
+         "Geriatric (65+)"
+        ]
+       },
+       {
+        "axis": "Sex/Gender",
+        "dataRequirement": "Local EHR stratification by Sex/Gender required. If unavailable, flag as monitoring gap.",
+        "monitoringRecommendation": "Disaggregate monitoring metrics by Sex/Gender. Flag a subgroup for review when its error rate is at least 1.5 times the aggregate error rate (ratio set at validation; 1.5 is the starting value in the Commons Agent QC Setup) and the lower bound of its 95% interval is above the aggregate rate, confirmed on the next review window. A gap that meets the ratio but not the interval is watched, not acted on.",
+        "priority": "high",
+        "subgroups": [
+         "Male",
+         "Female",
+         "Non-binary/other"
+        ]
+       },
+       {
+        "axis": "Race/Ethnicity",
+        "dataRequirement": "Local EHR stratification by Race/Ethnicity required. If unavailable, flag as monitoring gap.",
+        "monitoringRecommendation": "Disaggregate monitoring metrics by Race/Ethnicity. Flag a subgroup for review when its error rate is at least 1.5 times the aggregate error rate (ratio set at validation; 1.5 is the starting value in the Commons Agent QC Setup) and the lower bound of its 95% interval is above the aggregate rate, confirmed on the next review window. A gap that meets the ratio but not the interval is watched, not acted on.",
+        "priority": "high",
+        "subgroups": [
+         "Based on local demographic mix"
+        ]
+       },
+       {
+        "axis": "Socioeconomic/Insurance status",
+        "dataRequirement": "Local EHR stratification by Socioeconomic/Insurance status required. If unavailable, flag as monitoring gap.",
+        "monitoringRecommendation": "Monitor Socioeconomic/Insurance status subgroups quarterly or when aggregate threshold crossings occur.",
+        "priority": "moderate",
+        "subgroups": [
+         "Based on payer mix"
+        ]
+       },
+       {
+        "axis": "Language",
+        "dataRequirement": "Local EHR stratification by Language required. If unavailable, flag as monitoring gap.",
+        "monitoringRecommendation": "Monitor Language subgroups quarterly or when aggregate threshold crossings occur.",
+        "priority": "moderate",
+        "subgroups": [
+         "English",
+         "Non-English primary"
+        ]
+       },
+       {
+        "axis": "Comorbidity burden",
+        "dataRequirement": "Local EHR stratification by Comorbidity burden required. If unavailable, flag as monitoring gap.",
+        "monitoringRecommendation": "Monitor Comorbidity burden subgroups quarterly or when aggregate threshold crossings occur.",
+        "priority": "moderate",
+        "subgroups": [
+         "Low",
+         "Moderate",
+         "High"
+        ]
+       }
+      ]
+     },
+     "title": "Population-Stratified Control Limits"
+    },
+    {
+     "content": {
+      "ownershipStatement": {
+       "escalationPath": "For high-risk use types, corrective actions require co-signature from a clinical governance authority (e.g., CMO, patient safety officer, or equivalent). Single-role sign-off is insufficient.",
+       "owner": "CMIO",
+       "principleStatement": "Whoever signs the corrective action owns the governance decision. Threshold values are inputs to that decision, not substitutes for it.",
+       "statement": "The individual who signs the corrective action plan for this deployment is CMIO. This is a governance decision, not a technical one. Threshold values in this tier framework are recommendations — the authority to accept, modify, or reject them rests with CMIO."
+      }
+     },
+     "title": "Governance Ownership"
+    },
+    {
+     "content": {
+      "rationale": [
+       "Daily QC runs on known-answer control tasks, the same way a lab runs control material. It does not wait for production outcomes, which often arrive late or never.",
+       "Control tasks are built under the approved on-site validation plan, drawn from local cases with verified answers, and run on a fixed schedule.",
+       "Production outcomes feed periodic evaluation and lookback, not the daily rules.",
+       "Each control result is the model's output on a case whose true answer is known."
+      ]
+     },
+     "title": "Control Material"
+    },
+    {
+     "content": {
+      "rationale": [
+       "For the reject rules on now (1₃ₛ, 2₂ₛ, R₄ₛ, 10ₓ), over a window of 10 control runs:",
+       "With no error present, they fire in 6.4% of windows (false rejection).",
+       "A 1 SD shift is caught within 10 runs 44.0% of the time; a 2 SD shift 98.6%.",
+       "This assumes control results are independent and spread roughly normally around their baseline mean. Scores bunched near a ceiling, or runs that affect each other, can make the real rates different; check the baseline runs before leaning on these.",
+       "These are calculated exactly from the rules, not simulated, so they don't change from one protocol to the next. They change only when the rules do, for example when the drift rule switches on after 20 baseline runs.",
+       "These are the monitor's own sensitivity and specificity, separate from the model's. Its PPV depends on how often real errors occur: when they are rare, most rejects are false alarms.",
+       "Tuning the rule set trades systematic-error detection against random-error detection. Any change to the rule set is a locked-parameter change: logged old → new, re-signed by the independent authority, and the affected controls re-baselined."
+      ]
+     },
+     "title": "Monitoring Rule Set Performance"
+    },
+    {
+     "content": {
+      "rationale": [
+       "Track local prevalence and the model's positive-call rate as monitored metrics in their own right.",
+       "PPV and NPV move when prevalence moves, even if the model has not changed. Without this, a prevalence shift reads as model drift.",
+       "Validated PPV 35.1% and NPV 97.2% hold only at the prevalence entered; recompute when prevalence changes."
+      ]
+     },
+     "title": "Prevalence & Positive-Call Rate"
+    },
+    {
+     "content": {
+      "rationale": [
+       "Change control is risk-based and decided in advance, by the system's classification and the type of change (like FDA change control plans and IQCP). Three tiers, used precisely, so routine changes stay proportionate and full revalidation stays rare.",
+       "Re-baseline: a new or replaced control item, or a new lot of control material. Establish a new mean and SD for that control only, run alongside the current material; each control has its own chart, so the others are unaffected. No performance claim is re-proven. Signed by the operator.",
+       "Verification: the agent changed but its intended use did not (a vendor model version, or a prompt or configuration change within validated scope). Requires the control set and a sample of real tasks, judged against the existing acceptance limits with criteria set in advance; controls alone are only QC. The real-task sample is sized to what the decision needs (larger for this high-risk use), not maximized. Pass: re-baseline and release. Fail: the change does not go live. Signed by the independent authority, because a model change is a locked-parameter change.",
+       "Revalidation: the claim changed (new intended use, population, data source or retrieval corpus, or a modification to how the agent works). Spec, acceptance limits, accuracy, precision, subgroup performance and validated range are set again under a new on-site plan. Signed by the independent authority and clinical leadership.",
+       "Any change to locked validation parameters (limits, rule set, acceptable cutoffs) is logged old → new and re-signed by the independent authority."
+      ]
+     },
+     "title": "Change Control (Risk-Based)"
+    },
+    {
+     "content": {
+      "rationale": [
+       "After a reject, re-review only outputs that could cause harm, defined at validation from intended use (worst-case severity and likelihood). Not everything.",
+       "Lookback window: from the last acceptable QC run to the hold. If a backup or contingency carried the load, its output during the hold is a second lane.",
+       "Misses are the higher-harm error here: prioritize negatives the model issued during the window.",
+       "If validation parameters changed during the hold, re-judge past results under the new settings."
+      ]
+     },
+     "title": "Lookback Scope"
+    },
+    {
+     "content": {
+      "rationale": [
+       "Auto-release: results release without human review only when no rejection rule has fired, no warning is past its acknowledgment deadline, the model version is unchanged, and no locked parameter has changed. Acknowledged warnings do not block auto-release.",
+       "First response to a rejection: hold, and route the agent's work to the human queue. One automatic rerun is allowed only when random error is suspected; repeated reruns until a run passes conceal real error. Alternatives: fail over to a backup that carries its own QC, or switch to the contingency procedure.",
+       "Warnings: set an acknowledgment deadline at validation (starting value in the Commons Agent QC Setup: 1 business day). A warning not acknowledged in time holds the agent like a rejection, with a defined walk-back (escalate, then log).",
+       "Human queue: owned by a named role, with a response time set at validation (starting value: the response time staff already meet for the same work; same shift if none is defined). If the owner does not respond in time, the item escalates to a named backup role, then to the independent authority. The same timer applies to every approval in this layer, so nothing waits on one person.",
+       "Release authority: the operator may release after a first-line fix (non-analytic cause or clean correction, no failover, no locked parameter changed). Release requires sign-off by CMIO (the independent authority) if the agent failed over, the cause was not found, a rerun failed, or a locked parameter changed during the hold. The person who loosened a limit does not also release under it.",
+       "Corrected outputs: decide at validation who is told when a released output is found wrong, and how (clinician, patient, chart correction). Fixing the agent does not fix outputs already acted on.",
+       "Contingency: time on the manual procedure is monitored, with escalating reminders at intervals set at validation (starting value: 24 hours, 72 hours, 7 days), so contingency does not become the permanent workflow.",
+       "A failure the QC missed triggers a QC design review, not an automatic new control: were the controls at the right decision points, and were the rules strong enough for the method's sigma? Move or replace a control before adding one. Size the set by decision points: one control near each boundary that matters, plus a few anchors and drift sensors. Each added control adds false alarms.",
+       "Outward reporting: confirmed failures go to the vendor and the organization's safety event reporting; optionally to the Commons Peer Challenge Registry once registration reopens (it is browse-only while paused), until a standard registry exists."
+      ]
+     },
+     "title": "Response Layer"
+    },
+    {
+     "content": {
+      "rationale": [
+       "Repeat-run precision: the same inputs can give different outputs. Run a fixed case set several times and measure the spread, rather than inferring precision from one validation run.",
+       "Baselines from thin data start provisional and are established with cumulative in-control runs; flagged runs never feed the baseline."
+      ]
+     },
+     "title": "AI-Specific Validation Additions"
+    }
+   ],
+   "tierGapFlags": [
+    "Validation counts not provided, so no confidence intervals. A sensitivity from 30 positive cases carries roughly ±15 points of uncertainty; one from 3,000 carries about ±1.5. Enter the four counts to see which you have.",
+    "No stop-using point set for sensitivity. The tool no longer invents one. Set the lowest sensitivity you would accept from intended use and harm; until then there is no hard stop on missed cases.",
+    "Net benefit not computed: the trade-off question (false alarms accepted per caught case) was not answered."
+   ],
+   "title": "Monitoring Framework & Tier Thresholds"
+  },
+  {
+   "sectionNumber": 5,
+   "subsections": [
+    {
+     "content": {
+      "narrativeSummary": "This section used to grade your answers against areas of the Commons governance map. That grading is being rebuilt against the current map and is switched off, so this protocol gives no overall governance rating. Use the map at https://healthcare-governance-commons.vercel.app to walk through the areas that apply to this deployment: who watches it, who can stop it, how disputes and complaints are handled, equity monitoring, and vendor risk, among others."
+     },
+     "title": "Governance areas for this deployment"
+    }
+   ],
+   "title": "Governance Map"
+  },
+  {
+   "overallRating": {
+    "label": "Not ready to go live: 1 required condition open",
+    "rationale": "Close the required conditions below, then re-run this protocol.",
+    "status": "conditional"
+   },
+   "sectionNumber": 6,
+   "subsections": [
+    {
+     "content": {
+      "items": [
+       {
+        "item": "Local validation performed or formally deferred with documented rationale",
+        "status": "complete"
+       },
+       {
+        "item": "Monitoring owner named and notified",
+        "status": "complete"
+       },
+       {
+        "item": "Stop criteria defined and documented",
+        "status": "complete"
+       },
+       {
+        "item": "Failover workflow documented",
+        "status": "incomplete"
+       },
+       {
+        "item": "Staff training completed or scheduled",
+        "status": "complete"
+       },
+       {
+        "item": "Use policy approved",
+        "status": "complete"
+       },
+       {
+        "item": "Patient consent process defined (if applicable)",
+        "status": "incomplete"
+       },
+       {
+        "item": "Bias assessment reviewed by clinical governance",
+        "status": "recommended"
+       },
+       {
+        "item": "Corrective action owner designated",
+        "status": "complete"
+       },
+       {
+        "item": "Change triggers and tiers defined",
+        "status": "not-asked"
+       }
+      ],
+      "note": "* recommended, ! required. ? means this tool does not ask about it; confirm by hand."
+     },
+     "title": "Pre-Deployment Checklist"
+    },
+    {
+     "content": {
+      "items": [
+       {
+        "item": "Policies and governance structure: a body that reviews AI",
+        "status": "complete"
+       },
+       {
+        "item": "Patient privacy and transparency: patients told when AI is used",
+        "status": "recommended"
+       },
+       {
+        "item": "Data security and data use: review completed",
+        "status": "recommended"
+       },
+       {
+        "item": "Ongoing quality monitoring: named owner and a review cadence",
+        "status": "complete"
+       },
+       {
+        "item": "Safety event reporting: a defined path for AI events",
+        "status": "recommended"
+       },
+       {
+        "item": "Risk and bias assessment: Section 3 reviewed by clinical governance",
+        "status": "recommended"
+       },
+       {
+        "item": "Education and training: staff trained before go-live",
+        "status": "complete"
+       }
+      ],
+      "note": "The seven elements of the Joint Commission + CHAI Responsible Use of AI guidance (Sept 2025), the basis of the voluntary certification launched June 1, 2026. * means partly in place or still to review. Current as of October 29, 2026. Rules and standards change; check the current source before relying on this."
+     },
+     "title": "Joint Commission / CHAI Elements Checklist"
+    },
+    {
+     "content": {
+      "conditions": [
+       "REQUIRED BEFORE GO-LIVE: Document failover workflow."
+      ]
+     },
+     "title": "Deployment Conditions"
+    },
+    {
+     "content": {
+      "dataUseAndRetention": "Not answered",
+      "note": "These terms decide whether you can monitor it yourself and react to updates. They matter more since HTI-5 removed the federal model-card requirement for certified EHRs.",
+      "noticeBeforeModelUpdates": "Not answered",
+      "performanceDataAccess": "Not answered",
+      "suspendWithoutPenalty": "Not answered"
+     },
+     "title": "Contract Terms"
+    },
+    {
+     "content": {
+      "outcomeMeasure": "Not answered",
+      "retirementPlan": "Not answered"
+     },
+     "title": "Outcomes and Retirement"
+    },
+    {
+     "content": {
+      "note": "Each trigger leads to one of three tiers (see Change Control in Section 4): re-baseline, verification or revalidation. Not every change is a revalidation.",
+      "triggers": [
+       "Vendor model version change → verification (control set plus a real-task sample; independent authority signs)",
+       "Prompt or configuration change within validated scope → verification",
+       "New or replaced control item, or new control lot → re-baseline of that control (operator signs)",
+       "Change to intended use, patient population, data source or retrieval corpus → revalidation (independent authority and clinical leadership sign)",
+       "Monitoring rejection or sustained drift → hold and corrective action; once the cause is found, classify the change into one of the tiers above",
+       "Change in clinical workflow, merger or reorganization → review, then classify into a tier",
+       "Additional site-specific trigger: [not defined — complete before deployment]"
+      ]
+     },
+     "title": "Change Triggers and Tiers"
+    }
+   ],
+   "title": "Implementation Readiness & Deployment Conditions"
+  },
+  {
+   "sectionNumber": 7,
+   "subsections": [
+    {
+     "content": {
+      "approvedBy": "Not asked by this tool. Fill in by hand.",
+      "assessmentDate": "November 14, 2026",
+      "protocolPreparedBy": "Not asked by this tool. Fill in by hand.",
+      "reviewedBy": "Not asked by this tool. Fill in by hand."
+     },
+     "title": "Preparation and Sign-off"
+    },
+    {
+     "content": {
+      "flags": [
+       "Autonomy level not set. Say how much stands between its output and the patient; high-autonomy systems get tighter thresholds and an independent sign-off on changes.",
+       "FDA status unknown. Ask the vendor for the clearance number (510(k), De Novo or PMA) or its basis for calling it non-device. It decides which FDA duties apply, including reporting device-related deaths and serious injuries (21 CFR 803).",
+       "Not known whether it uses race, color, national origin, sex, age or disability as an input. Section 1557 (45 CFR 92.210) expects covered entities to find out. Ask the vendor for its input variables.",
+       "No plan to measure whether the outcome it targets changed. Accuracy alone can't show it helps patients. Pick one outcome measure and a data source.",
+       "The contract doesn't secure the performance data you need to monitor it yourself. Without it, monitoring depends on the vendor's reports.",
+       "No contract duty to tell you before a model update goes live. An unannounced update can change performance overnight.",
+       "The contract doesn't limit what the vendor may do with your data or how long it keeps it.",
+       "No written plan for retiring it for good: criteria, who decides, what replaces it, and what happens to its data.",
+       "Validation counts not provided, so no confidence intervals. A sensitivity from 30 positive cases carries roughly ±15 points of uncertainty; one from 3,000 carries about ±1.5. Enter the four counts to see which you have.",
+       "No stop-using point set for sensitivity. The tool no longer invents one. Set the lowest sensitivity you would accept from intended use and harm; until then there is no hard stop on missed cases.",
+       "Net benefit not computed: the trade-off question (false alarms accepted per caught case) was not answered.",
+       "VENDOR_DEMOGRAPHICS_NOT_RECORDED: What the vendor disclosed about the patients in its training data isn't recorded (Section 1), so the compatibility table can't be completed. Get it from the vendor (model card or contract).",
+       "NO_MODEL_CARD: No model card or equivalent disclosure. Since HTI-5 (effective Dec 28, 2026) certified EHRs no longer have to provide one, so ask for it in the contract: intended use, training data and its demographics, validation results with sample sizes, known limits, and notice before model updates. Until then, bias assessment rests on the vendor's word and your own local numbers.",
+       "RECORDING_INCONSISTENCIES: race_ethnicity have known recording inconsistencies that limit audit reliability."
+      ],
+      "noGapsNote": null,
+      "totalGaps": 14
+     },
+     "title": "Consolidated Gap Flags"
+    },
+    {
+     "content": {
+      "items": [
+       {
+        "description": "Autonomy level not set. Say how much stands between its output and the patient; high-autonomy systems get tighter thresholds and an independent sign-off on changes.",
+        "number": 1,
+        "owner": "Unassigned",
+        "status": "Open",
+        "targetDate": "Not set"
+       },
+       {
+        "description": "FDA status unknown. Ask the vendor for the clearance number (510(k), De Novo or PMA) or its basis for calling it non-device. It decides which FDA duties apply, including reporting device-related deaths and serious injuries (21 CFR 803).",
+        "number": 2,
+        "owner": "Unassigned",
+        "status": "Open",
+        "targetDate": "Not set"
+       },
+       {
+        "description": "Not known whether it uses race, color, national origin, sex, age or disability as an input. Section 1557 (45 CFR 92.210) expects covered entities to find out. Ask the vendor for its input variables.",
+        "number": 3,
+        "owner": "Unassigned",
+        "status": "Open",
+        "targetDate": "Not set"
+       },
+       {
+        "description": "No plan to measure whether the outcome it targets changed. Accuracy alone can't show it helps patients. Pick one outcome measure and a data source.",
+        "number": 4,
+        "owner": "Unassigned",
+        "status": "Open",
+        "targetDate": "Not set"
+       },
+       {
+        "description": "The contract doesn't secure the performance data you need to monitor it yourself. Without it, monitoring depends on the vendor's reports.",
+        "number": 5,
+        "owner": "Unassigned",
+        "status": "Open",
+        "targetDate": "Not set"
+       },
+       {
+        "description": "No contract duty to tell you before a model update goes live. An unannounced update can change performance overnight.",
+        "number": 6,
+        "owner": "Unassigned",
+        "status": "Open",
+        "targetDate": "Not set"
+       },
+       {
+        "description": "The contract doesn't limit what the vendor may do with your data or how long it keeps it.",
+        "number": 7,
+        "owner": "Unassigned",
+        "status": "Open",
+        "targetDate": "Not set"
+       },
+       {
+        "description": "No written plan for retiring it for good: criteria, who decides, what replaces it, and what happens to its data.",
+        "number": 8,
+        "owner": "Unassigned",
+        "status": "Open",
+        "targetDate": "Not set"
+       },
+       {
+        "description": "Validation counts not provided, so no confidence intervals. A sensitivity from 30 positive cases carries roughly ±15 points of uncertainty; one from 3,000 carries about ±1.5. Enter the four counts to see which you have.",
+        "number": 9,
+        "owner": "Unassigned",
+        "status": "Open",
+        "targetDate": "Not set"
+       },
+       {
+        "description": "No stop-using point set for sensitivity. The tool no longer invents one. Set the lowest sensitivity you would accept from intended use and harm; until then there is no hard stop on missed cases.",
+        "number": 10,
+        "owner": "Unassigned",
+        "status": "Open",
+        "targetDate": "Not set"
+       },
+       {
+        "description": "Net benefit not computed: the trade-off question (false alarms accepted per caught case) was not answered.",
+        "number": 11,
+        "owner": "Unassigned",
+        "status": "Open",
+        "targetDate": "Not set"
+       },
+       {
+        "description": "VENDOR_DEMOGRAPHICS_NOT_RECORDED: What the vendor disclosed about the patients in its training data isn't recorded (Section 1), so the compatibility table can't be completed. Get it from the vendor (model card or contract).",
+        "number": 12,
+        "owner": "Unassigned",
+        "status": "Open",
+        "targetDate": "Not set"
+       },
+       {
+        "description": "NO_MODEL_CARD: No model card or equivalent disclosure. Since HTI-5 (effective Dec 28, 2026) certified EHRs no longer have to provide one, so ask for it in the contract: intended use, training data and its demographics, validation results with sample sizes, known limits, and notice before model updates. Until then, bias assessment rests on the vendor's word and your own local numbers.",
+        "number": 13,
+        "owner": "Unassigned",
+        "status": "Open",
+        "targetDate": "Not set"
+       },
+       {
+        "description": "RECORDING_INCONSISTENCIES: race_ethnicity have known recording inconsistencies that limit audit reliability.",
+        "number": 14,
+        "owner": "Unassigned",
+        "status": "Open",
+        "targetDate": "Not set"
+       }
+      ],
+      "note": "Open items should be assigned to named owners with target resolution dates before this protocol is considered complete."
+     },
+     "title": "Open Items Log"
+    },
+    {
+     "content": {
+      "monitoringReviewCadence": "Monthly",
+      "nextReviewDate": "Not asked by this tool. Fill in by hand.",
+      "protocolDocumentReview": "Review this protocol at least annually, and at every verification or revalidation",
+      "reviewOwner": "CMIO"
+     },
+     "title": "Next Scheduled Review"
+    },
+    {
+     "content": {
+      "rationale": [
+       "Section 1557, 45 CFR 92.210: identify and mitigate discrimination risk in decision support tools (since May 1, 2025; in force). Applies to: covered entities.",
+       "FDA premarket review (510(k), De Novo, PMA) for device AI. Applies to: device makers.",
+       "FDA medical device reporting, 21 CFR 803: hospitals report device-related deaths to FDA and serious injuries to the maker within 10 work days. Applies to: device makers, hospitals.",
+       "FDA CDS guidance (Jan 2026): non-device status requires clinicians can independently review the basis. Applies to: software makers.",
+       "California AB 3030 (2025): disclose generative AI in patient communications. Applies to: providers.",
+       "Joint Commission + CHAI guidance (Sept 2025): local validation. Applies to: hospitals."
+      ],
+      "source": "Chosen from your answers, out of the Commons regulatory map (as of 2026-10-27; Section 1557, AB 3030 and the FDA CDS guidance re-checked November 13, 2026). The same map is on each node page of the Commons. Not legal advice; check the current source."
+     },
+     "title": "Regulatory References for This Deployment"
+    },
+    {
+     "content": {
+      "commonsUrl": "healthcare-governance-commons.vercel.app",
+      "generatedBy": "Healthcare Governance Commons — Validation Protocol Generator",
+      "referencesAsOf": "Regulatory and standards references in this protocol: Joint Commission + CHAI elements checked October 29, 2026; ONC HTI-5 (model cards) and ambient-scribe recording-consent cases checked November 12, 2026; Section 1557 §92.210, California AB 3030 and the FDA clinical decision support guidance checked November 13, 2026. Rules and standards change; check the current source before relying on this.",
+      "shelfLifeStatement": "This document has a shelf life. A validation protocol that is never updated is not a governance document — it is a record of past intentions.",
+      "versionStatement": "Version 1.0. Update this document at every verification or revalidation or when organizational context changes materially."
+     },
+     "title": "Protocol Provenance"
+    }
+   ],
+   "title": "Governance Summary & Open Items"
+  }
+ ],
+ "summary": {
+  "facts": [
+   [
+    "System",
+    "Example Sepsis Alert"
+   ],
+   [
+    "Use",
+    "Triage / prioritization"
+   ],
+   [
+    "Autonomy",
+    "Not answered"
+   ],
+   [
+    "FDA status",
+    "Not answered"
+   ],
+   [
+    "Risk class",
+    "high (sets how tight the monitoring is)"
+   ],
+   [
+    "Local sensitivity",
+    "78.0% (no interval: counts not given)"
+   ],
+   [
+    "Local specificity",
+    "84.0% (no interval: counts not given)"
+   ],
+   [
+    "Bias table",
+    "0 compatible, 0 partial, 0 incompatible, 10 unknown"
+   ],
+   [
+    "Who can stop it",
+    "CMIO"
+   ],
+   [
+    "Monitoring owner",
+    "CMIO"
+   ]
+  ],
+  "required": [
+   "Document failover workflow."
+  ],
+  "topItems": [
+   "Autonomy level not set. Say how much stands between its output and the patient; high-autonomy systems get tighter thresholds and an independent sign-off on changes.",
+   "FDA status unknown. Ask the vendor for the clearance number (510(k), De Novo or PMA) or its basis for calling it non-device. It decides which FDA duties apply, including reporting device-related deaths and serious injuries (21 CFR 803).",
+   "Not known whether it uses race, color, national origin, sex, age or disability as an input. Section 1557 (45 CFR 92.210) expects covered entities to find out. Ask the vendor for its input variables.",
+   "No plan to measure whether the outcome it targets changed. Accuracy alone can't show it helps patients. Pick one outcome measure and a data source.",
+   "The contract doesn't secure the performance data you need to monitor it yourself. Without it, monitoring depends on the vendor's reports.",
+   "No contract duty to tell you before a model update goes live. An unannounced update can change performance overnight."
+  ],
+  "totalOpen": 14,
+  "verdict": {
+   "label": "Not ready to go live: 1 required condition open",
+   "rationale": "Close the required conditions below, then re-run this protocol.",
+   "status": "conditional"
+  }
+ }
+}
