@@ -6,6 +6,7 @@
 // POST body: { engine: 'westgard' | 'bias' | 'nodes', answers, logicFlags, gapFlags }
 
 const { mapAnswers } = require("./_answer-map.js");
+const { fireProbability, zRejectRules } = require("./_rule-power.js");
 
 // Numeric answer or null. Unlike `parseFloat(x) || null`, a real 0 survives.
 const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
@@ -91,7 +92,7 @@ function buildWestgardTiers({ answers, logicFlags, gapFlags }) {
 
   // AI-specific additions (Commons review, Oct 2026)
   const controlMaterial = buildControlMaterial(tierProfile);
-  const ruleSetPerformance = simulateRuleSetPerformance();
+  const ruleSetPerformance = ruleSetPerformanceFor(westgardMapping.rules);
   const prevalenceMonitoring = buildPrevalenceMonitoring(metrics);
   const changeControl = buildChangeControl(tierProfile);
   const lookback = buildLookback(tierProfile, answers);
@@ -424,6 +425,7 @@ function mapWestgardRules(tierProfile, metrics, priorAuditData) {
   // incorrect) use a count of failures per window against exact binomial limits instead.
   const rules = [
     {
+      id: "1-2s",
       westgardAnalog: "1₂ₛ (Warning rule)",
       mlTranslation: "One control result beyond ±2 SD of the baseline control mean",
       threshold: "±2 SD (SD measured across baseline control runs)",
@@ -432,6 +434,7 @@ function mapWestgardRules(tierProfile, metrics, priorAuditData) {
       active: true,
     },
     {
+      id: "1-3s",
       westgardAnalog: "1₃ₛ (Rejection rule)",
       mlTranslation: "One control result beyond ±3 SD",
       threshold: "±3 SD",
@@ -440,6 +443,7 @@ function mapWestgardRules(tierProfile, metrics, priorAuditData) {
       active: true,
     },
     {
+      id: "2-2s",
       westgardAnalog: "2₂ₛ (Systematic rule)",
       mlTranslation: "Two consecutive control results beyond 2 SD on the same side",
       threshold: "2 consecutive beyond 2 SD, same side",
@@ -448,6 +452,7 @@ function mapWestgardRules(tierProfile, metrics, priorAuditData) {
       active: true,
     },
     {
+      id: "R-4s",
       westgardAnalog: "R₄ₛ (Random-error rule)",
       mlTranslation: "Two consecutive control results more than 4 SD apart, on opposite sides",
       threshold: "Range > 4 SD between consecutive results",
@@ -456,6 +461,7 @@ function mapWestgardRules(tierProfile, metrics, priorAuditData) {
       active: true,
     },
     {
+      id: "4-1s",
       westgardAnalog: "4₁ₛ (Shift rule)",
       mlTranslation: "Four consecutive control results beyond 1 SD on the same side",
       threshold: "4 consecutive beyond 1 SD, same side",
@@ -465,6 +471,7 @@ function mapWestgardRules(tierProfile, metrics, priorAuditData) {
       note: priorAuditData ? null : "Phased in once a baseline of at least 20 control runs exists.",
     },
     {
+      id: "10x",
       westgardAnalog: "10ₓ (Drift rule)",
       mlTranslation: "Ten consecutive control results on the same side of the baseline mean",
       threshold: "10 consecutive, same side of mean",
@@ -474,6 +481,7 @@ function mapWestgardRules(tierProfile, metrics, priorAuditData) {
       note: priorAuditData ? null : "Phased in once a baseline of at least 20 control runs exists.",
     },
     {
+      id: "fail-count",
       westgardAnalog: "Fail count (binary controls)",
       mlTranslation: "Failed known-answer controls in the last 20 runs, against exact binomial limits from the baseline pass rate",
       threshold: "Warn at ~5% false-alarm limit; reject at ~0.3%",
@@ -517,28 +525,30 @@ function buildControlMaterial(tierProfile) {
   };
 }
 
-// Simulates how often the rule set fires with no error (false rejection) and how often
-// it catches a 1 SD and 2 SD shift within a 10-run window. Same rules as above.
-function simulateRuleSetPerformance() {
-  const W = 10, N = 4000;
-  const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
-  const fires = (zs) => {
-    for (let i = 0; i < zs.length; i++) {
-      const z = zs[i], p = i ? zs[i - 1] : null;
-      if (Math.abs(z) > 3) return true;
-      if (p !== null && ((z > 2 && p > 2) || (z < -2 && p < -2))) return true;
-      if (p !== null && Math.abs(z - p) > 4 && z * p < 0) return true;
-      if (i >= 9) { const w = zs.slice(i - 9, i + 1); if (w.every((x) => x > 0) || w.every((x) => x < 0)) return true; }
-    }
-    return false;
-  };
-  const rate = (shift) => { let k = 0; for (let t = 0; t < N; t++) { if (fires(Array.from({ length: W }, () => gauss() + shift))) k++; } return k / N; };
-  const pfr = rate(0), ped1 = rate(1), ped2 = rate(2);
+// How often the protocol's own active reject rules fire with no error (false
+// rejection) and how often they catch a 1 SD and 2 SD shift within a 10-run
+// window. Calculated exactly from the rules turned on for this protocol (see
+// api/_rule-power.js), so the same answers always give the same numbers and a
+// phased-in rule is only counted once it is on. Replaced a random simulation
+// with its own copy of the rules (Nov 14, 2026).
+function ruleSetPerformanceFor(rules) {
+  const W = 10;
+  const ids = zRejectRules(rules);
+  const names = rules.filter((r) => ids.includes(r.id)).map((r) => r.westgardAnalog.split(" ")[0]);
+  let pfr, ped1, ped2;
+  try {
+    pfr = fireProbability(ids, 0, W); ped1 = fireProbability(ids, 1, W); ped2 = fireProbability(ids, 2, W);
+  } catch (e) {
+    return { rationale: [`The detection rates for this rule set can't be calculated yet (${e.message}). Work them out before relying on the rules.`] };
+  }
   const p = (x) => `${(x * 100).toFixed(1)}%`;
   return {
+    rules: ids, window: W, falseRejection: pfr, detect1SD: ped1, detect2SD: ped2,
     rationale: [
-      `With no error present, the reject rules fire in about ${p(pfr)} of 10-run windows (false rejection).`,
-      `A 1 SD shift is caught within 10 runs about ${p(ped1)} of the time; a 2 SD shift about ${p(ped2)}.`,
+      `For the reject rules on now (${names.join(", ")}), over a window of ${W} control runs:`,
+      `With no error present, they fire in ${p(pfr)} of windows (false rejection).`,
+      `A 1 SD shift is caught within ${W} runs ${p(ped1)} of the time; a 2 SD shift ${p(ped2)}.`,
+      "These are calculated exactly from the rules, not simulated, so they don't change from one protocol to the next. They change only when the rules do, for example when the drift rule switches on after 20 baseline runs.",
       "These are the monitor's own sensitivity and specificity, separate from the model's. Its PPV depends on how often real errors occur: when they are rare, most rejects are false alarms.",
       "Tuning the rule set trades systematic-error detection against random-error detection. Any change to the rule set is a locked-parameter change: logged old → new, re-signed by the independent authority, and the affected controls re-baselined.",
     ],
