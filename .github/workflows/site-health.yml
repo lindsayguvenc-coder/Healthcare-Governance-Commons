@@ -25,7 +25,7 @@ jobs:
       SITE: https://healthcare-governance-commons.vercel.app
       # The switch (docs/site-qc-switches.md). Repository variables, set in
       # Settings > Secrets and variables > Actions > Variables. Unset means off.
-      MODE: ${{ vars.SITE_QC_DAILY || vars.SITE_QC_MODE || 'off' }}
+      MODE: ${{ vars.SITE_QC_DAILY || vars.SITE_QC_MODE || 'quiet' }}
       SITE_QC_SKIP: ${{ vars.SITE_QC_SKIP }}
     steps:
       - name: Switch is ${{ env.MODE }}
