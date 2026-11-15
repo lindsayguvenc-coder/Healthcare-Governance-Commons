@@ -1,10 +1,12 @@
 name: Site checks (weekly)
 
-# Batch 3 of the Site QC crosswalk: outside links, the Validation Protocol
+# Batch 3 of the Site QC crosswalk. Plain-code part (scripts/site-weekly.mjs): outside links, the Validation Protocol
 # Generator's fixed test case (live site vs this repo vs the saved
 # fingerprint), as-of dates, known holes in packages, and the contribution
-# reviewers' agreement. scripts/site-weekly.mjs has the checks and their
-# seeded controls.
+# reviewers' agreement, stranded commits. Browser part
+# (scripts/site-browser.mjs): script errors and outside requests on every page,
+# accessibility and phone width against a saved baseline, the protocol PDF, and
+# the Local Validation Kit sending nothing. Both carry seeded controls.
 #
 # Failures, or a planted control that wasn't caught, open (or update) one
 # GitHub issue, which emails Lindsay; warnings ride along in it. When a week
@@ -38,7 +40,7 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           npm run build
-          (cd tests/replay && npm install --no-audit --no-fund ioredis-mock@8)
+          (cd tests/replay && npm install --no-audit --no-fund --no-save ioredis-mock@8 playwright jspdf@2.5.1 axe-core@4)
           (cd tests/replay && nohup node server.js ../.. 3000 > /tmp/local-api.log 2>&1 &)
           sleep 3
 
@@ -47,6 +49,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/site-weekly.mjs
+        continue-on-error: true
+
+      - name: Run the browser checks (pages, accessibility, PDF, the kit)
+        id: browser
+        env:
+          CHROME: /usr/bin/google-chrome
+        run: node scripts/site-browser.mjs
         continue-on-error: true
 
       - name: Keep the log
@@ -66,6 +75,13 @@ jobs:
         run: |
           title_prefix="Site weekly:"
           open=$(gh issue list -R "$REPO" --state open --search "\"$title_prefix\" in:title" --json number --jq '.[0].number // empty')
+          # one combined view of the plain-code and browser checks
+          if [ -f qc-out/site-weekly.json ] && [ -f qc-out/site-browser.json ]; then
+            jq -s '{failedSite: (.[0].failedSite + .[1].failedSite), failedControls: (.[0].failedControls + .[1].failedControls), results: (.[0].results + .[1].results)}' qc-out/site-weekly.json qc-out/site-browser.json > qc-out/combined.json
+            mv qc-out/combined.json qc-out/site-weekly.json
+          elif [ -f qc-out/site-weekly.json ]; then
+            jq '.results += [{"level":"fail","kind":"check","id":"F1","check":"Browser checks did not finish","detail":"see the run log"}] | .failedSite += 1' qc-out/site-weekly.json > qc-out/c.json && mv qc-out/c.json qc-out/site-weekly.json
+          fi
           if [ ! -f qc-out/site-weekly.json ]; then
             title="$title_prefix checker didn't run (Today)"
             body="The weekly site checks didn't finish, so nothing was checked this week. Run log: $RUN @lindsayguvenc-coder"
@@ -99,5 +115,5 @@ jobs:
           fi
 
       - name: Mark the run failed if anything failed
-        if: steps.run.outcome == 'failure'
+        if: steps.run.outcome == 'failure' || steps.browser.outcome == 'failure'
         run: exit 1

@@ -59,6 +59,10 @@ body:not(.kit-paused) #howto{display:none}
 </style>
 <script>
 /* Paused until clinician sign-off and statistician review. Reviewers: add ?review=1 */
+// DECISION(kit-soft-pause): the pause is a soft lock on purpose (Nov 14, 2026). Anyone who
+//   adds ?review=1, or reads the public code, can open the kit; someone working that hard
+//   to load an unreviewed kit into their own systems is past what a lock could stop. The
+//   pause is for ordinary visitors, and the daily site health check makes sure it stays on.
 if (!/[?&]review=1\b/.test(location.search)) document.documentElement.classList.add('kit-paused-root');
 document.addEventListener('DOMContentLoaded', function(){ if (document.documentElement.classList.contains('kit-paused-root')) document.body.classList.add('kit-paused'); else { var p=document.getElementById('paused'); if (p) p.querySelector('.paused-msg').textContent='Review mode. This kit is paused for everyone else until the sepsis rules are signed off by a clinician and the math is checked by a statistician. Don\u2019t use these results for a real decision yet.'; } });
 </script>
