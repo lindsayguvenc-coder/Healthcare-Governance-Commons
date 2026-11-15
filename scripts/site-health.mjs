@@ -28,7 +28,11 @@ const require = createRequire(import.meta.url);
 const SITE = (process.env.SITE || "https://healthcare-governance-commons.vercel.app").replace(/\/$/, "");
 const AGENT = "Site health (daily)";
 const results = []; // {id, check, kind:'check'|'control', ok, detail}
-const rec = (id, check, kind, ok, detail = "") => results.push({ id, check, kind, ok: Boolean(ok), detail });
+// Checks switched off by the SITE_QC_SKIP repository variable (comma list of ids,
+// e.g. "N3,F3"). Their results are left out and the run says they were skipped.
+const SKIP = new Set(String(process.env.SITE_QC_SKIP || "").split(",").map(s => s.trim().toUpperCase()).filter(Boolean));
+const skipped = new Set();
+const rec = (id, check, kind, ok, detail = "") => { if (SKIP.has(id)) { skipped.add(id); return; } results.push({ id, check, kind, ok: Boolean(ok), detail }); };
 
 async function get(path, opts = {}) {
   try {
@@ -195,4 +199,5 @@ for (const [id, rs] of Object.entries(byId)) {
   for (const r of rs.filter(r => !r.ok)) console.log(`  ✗ ${r.kind === "control" ? "[control] " : ""}${r.check}${r.detail ? " — " + r.detail : ""}`);
 }
 console.log(`\nChecks passed ${summary.checksPassed}% · controls caught ${summary.controlsCaught}%`);
+if (skipped.size) console.log(`Skipped by SITE_QC_SKIP: ${[...skipped].join(", ")}`);
 process.exit(failed.length ? 1 : 0);

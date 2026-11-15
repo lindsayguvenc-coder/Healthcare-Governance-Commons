@@ -27,16 +27,32 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       SITE: https://healthcare-governance-commons.vercel.app
+      # The switch (docs/site-qc-switches.md). Repository variables, set in
+      # Settings > Secrets and variables > Actions > Variables. Unset means off.
+      MODE: ${{ vars.SITE_QC_WEEKLY || vars.SITE_QC_MODE || 'off' }}
+      SITE_QC_SKIP: ${{ vars.SITE_QC_SKIP }}
       LOCAL: http://localhost:3000
     steps:
+      - name: Switch is ${{ env.MODE }}
+        run: |
+          case "$MODE" in
+            off) echo "::notice::Site checks (weekly) is switched off (MODE=off). Nothing was checked. Turn it on with the SITE_QC_MODE repository variable: quiet or on." ;;
+            quiet) echo "::notice::Quiet mode: checks run and the log is kept, but no issue is opened and no email is sent." ;;
+            on) echo "On: checks run; failures open or update one GitHub issue, which emails Lindsay." ;;
+            *) echo "::error::Unknown MODE '$MODE'. Use off, quiet or on."; exit 1 ;;
+          esac
+
       - uses: actions/checkout@v5
+        if: env.MODE != 'off'
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v5
+        if: env.MODE != 'off'
         with:
           node-version: 20
 
       - name: Install, build, and start this repo's copy of the API
+        if: env.MODE != 'off'
         run: |
           npm install --no-audit --no-fund
           npm run build
@@ -45,6 +61,7 @@ jobs:
           sleep 3
 
       - name: Run the checks
+        if: env.MODE != 'off'
         id: run
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -52,6 +69,7 @@ jobs:
         continue-on-error: true
 
       - name: Run the browser checks (pages, accessibility, PDF, the kit)
+        if: env.MODE != 'off'
         id: browser
         env:
           CHROME: /usr/bin/google-chrome
@@ -59,15 +77,29 @@ jobs:
         continue-on-error: true
 
       - name: Keep the log
-        if: always()
+        if: always() && env.MODE != 'off'
         uses: actions/upload-artifact@v4
         with:
           name: site-weekly-${{ github.run_id }}
           path: qc-out/
           retention-days: 180
 
+      - name: Quiet mode, results on this page only
+        if: always() && env.MODE == 'quiet'
+        run: |
+          f=qc-out/site-weekly.json
+          {
+            echo "## Quiet mode: no issue opened, no email"
+            if [ -f qc-out/site-browser.json ] && [ "$f" = "qc-out/site-weekly.json" ]; then extra=qc-out/site-browser.json; else extra=; fi
+            if [ ! -f "$f" ]; then echo "The checks didn't finish. See the log above."; exit 0; fi
+            echo
+            jq -r '.results[] | select((.level // (if .ok then "ok" else "fail" end)) != "ok") | "- **" + (.level // "fail") + "** " + (if .kind=="control" then "[control] " else "" end) + .id + " · " + .check + (if (.detail // "") != "" then " — " + .detail else "" end)' "$f" $extra
+            echo
+            echo "Nothing above means everything passed."
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Open, update or close the issue
-        if: always()
+        if: always() && env.MODE == 'on'
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
@@ -115,5 +147,5 @@ jobs:
           fi
 
       - name: Mark the run failed if anything failed
-        if: steps.run.outcome == 'failure' || steps.browser.outcome == 'failure'
+        if: env.MODE == 'on' && (steps.run.outcome == 'failure' || steps.browser.outcome == 'failure')
         run: exit 1

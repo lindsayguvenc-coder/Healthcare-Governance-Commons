@@ -22,7 +22,10 @@ jobs:
           node-version: 20
       - name: Drift checks
         run: node scripts/check.mjs
-      - name: PR guards (disclaimers, privacy inventory, outside scripts, secrets)
+      - name: PR guards (disclaimers, privacy inventory, outside scripts, secrets, decisions)
         run: node scripts/pr-guards.mjs
+        # Repository variable SITE_QC_PR=warn shows failures without failing the
+        # check (docs/site-qc-switches.md). Unset or "enforce": failures fail it.
+        continue-on-error: ${{ vars.SITE_QC_PR == 'warn' }}
       - name: Build
         run: npm install --no-audit --no-fund && npm run build
