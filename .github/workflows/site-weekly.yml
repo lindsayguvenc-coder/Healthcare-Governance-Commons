@@ -1,0 +1,100 @@
+name: Site checks (weekly)
+
+# Batch 3 of the Site QC crosswalk: outside links, the Validation Protocol
+# Generator's fixed test case (live site vs this repo vs the saved
+# fingerprint), as-of dates, known holes in packages, and the contribution
+# reviewers' agreement. scripts/site-weekly.mjs has the checks and their
+# seeded controls.
+#
+# Failures, or a planted control that wasn't caught, open (or update) one
+# GitHub issue, which emails Lindsay; warnings ride along in it. When a week
+# passes clean, it closes the issue.
+
+on:
+  schedule:
+    - cron: "37 15 * * 1"   # Mondays 15:37 UTC = 7:37 AM Pacific, before the Monday review
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  weekly:
+    runs-on: ubuntu-24.04
+    env:
+      SITE: https://healthcare-governance-commons.vercel.app
+      LOCAL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Install, build, and start this repo's copy of the API
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+          (cd tests/replay && npm install --no-audit --no-fund ioredis-mock@8)
+          (cd tests/replay && nohup node server.js ../.. 3000 > /tmp/local-api.log 2>&1 &)
+          sleep 3
+
+      - name: Run the checks
+        id: run
+        run: node scripts/site-weekly.mjs
+        continue-on-error: true
+
+      - name: Keep the log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-weekly-${{ github.run_id }}
+          path: qc-out/
+          retention-days: 180
+
+      - name: Open, update or close the issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title_prefix="Site weekly:"
+          open=$(gh issue list -R "$REPO" --state open --search "\"$title_prefix\" in:title" --json number --jq '.[0].number // empty')
+          if [ ! -f qc-out/site-weekly.json ]; then
+            title="$title_prefix checker didn't run (Today)"
+            body="The weekly site checks didn't finish, so nothing was checked this week. Run log: $RUN @lindsayguvenc-coder"
+          else
+            site=$(jq '.failedSite' qc-out/site-weekly.json)
+            ctl=$(jq '.failedControls' qc-out/site-weekly.json)
+            if [ "$site" -eq 0 ] && [ "$ctl" -eq 0 ]; then
+              if [ -n "$open" ]; then gh issue close "$open" -R "$REPO" --comment "This week's checks pass. Closing. $RUN"; fi
+              echo "All clear."; exit 0
+            fi
+            fails=$(jq -r '.results[] | select(.level=="fail") | "- " + (if .kind=="control" then "**[control]** " else "" end) + .id + " · " + .check + (if .detail != "" then " — " + .detail else "" end)' qc-out/site-weekly.json)
+            warns=$(jq -r '.results[] | select(.level=="warn") | "- " + .id + " · " + .check + (if .detail != "" then " — " + .detail else "" end)' qc-out/site-weekly.json)
+            if [ "$ctl" -gt 0 ]; then what="$ctl planted control(s) were not caught: a checker is broken, so don't trust its all-clear lines until it's fixed."; else what="$site check(s) failed."; fi
+            title="$title_prefix $((site + ctl)) failing (This week)"
+            body="$what
+
+          $fails
+
+          Also worth a look (warnings):
+          $warns
+
+          Run log and CSV for the Agent Fleet QC page: $RUN
+
+          Closes itself the first week everything passes. @lindsayguvenc-coder"
+          fi
+          if [ -n "$open" ]; then
+            gh issue edit "$open" -R "$REPO" --title "$title"
+            gh issue comment "$open" -R "$REPO" --body "$body"
+          else
+            gh issue create -R "$REPO" --title "$title" --body "$body"
+          fi
+
+      - name: Mark the run failed if anything failed
+        if: steps.run.outcome == 'failure'
+        run: exit 1
