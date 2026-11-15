@@ -1330,7 +1330,7 @@ export default function GovernanceCommons() {
   if (pageNodeId) {
     return (
       <div style={{ background: C.bg, minHeight: "100vh", color: C.text }}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap'); body { margin: 0; background: ${C.bg}; } a:focus-visible, button:focus-visible { outline: 2px solid ${C.commons}; outline-offset: 2px; }`}</style>
+        <style>{`@import url('/fonts/fonts.css'); body { margin: 0; background: ${C.bg}; } a:focus-visible, button:focus-visible { outline: 2px solid ${C.commons}; outline-offset: 2px; }`}</style>
         <div style={{ position: "sticky", top: 0, zIndex: 9000, padding: "7px 20px", background: C.handoffDim, borderBottom: `1px solid ${C.border}`, fontFamily: C.mono, fontSize: 10.5, color: C.textDim, lineHeight: 1.5 }}>
           <span style={{ color: C.handoff }}>WORKING PROTOTYPE</span> · built by one person · AI answers are generated, not reviewed · <a href="/privacy" style={{ color: C.textDim }}>what's live</a>
         </div>
@@ -1752,7 +1752,7 @@ export default function GovernanceCommons() {
       </div>
 
 <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap');
+        @import url('/fonts/fonts.css');
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }

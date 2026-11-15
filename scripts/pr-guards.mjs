@@ -103,6 +103,19 @@ for (const f of code) {
   for (const k of browserKeys(src)) { seen.browser.add(k); if (browserUnlisted([k]).length) fail("P2", `${f}: browser storage key "${k}" isn't in docs/privacy-inventory.json`); }
   for (const d of outsideDomains(src)) { seen.domains.add(d); if (domainUnlisted([d]).length) fail("P4", `${f}: loads from ${d}, which isn't in docs/privacy-inventory.json`); }
 }
+// Stale lines: everything listed must still be in the code, and every notice
+// line it points to must really be in the privacy notice.
+const noticeText = read("public/privacy/index.html").replace(/<[^>]+>/g, " ").replace(/&#39;|&rsquo;/g, "'").replace(/\s+/g, " ");
+const staleRedis = (listed, seenKeys) => listed.filter(l => ![...seenKeys].some(k => l.re.test(k) || l.pattern === k));
+control("P2", "a planted inventory entry for a key the code no longer uses",
+  staleRedis([{ pattern: "qc-control:gone", re: globRe("qc-control:gone") }], new Set(["suggest:pending"])).length === 1);
+control("P2", "a planted notice line that isn't in the privacy notice", !noticeText.includes("QC control line that is not in the notice"));
+for (const l of staleRedis(redisListed, seen.redis)) fail("P2", `"${l.pattern}" is in the inventory but no longer in the code: take its line out of the privacy notice and docs/privacy-inventory.json`);
+for (const b of inv.browserStorage) if (!seen.browser.has(b.key)) fail("P2", `browser key "${b.key}" is in the inventory but no longer in the code: take its line out of the privacy notice and the inventory`);
+for (const o of inv.outsideDomains) if (!seen.domains.has(o.domain)) fail("P4", `${o.domain} is in the inventory but nothing loads from it now: take it out of the privacy notice and the inventory`);
+for (const x of [...inv.redisKeys, ...inv.browserStorage, ...inv.outsideDomains])
+  if (x.notice && !noticeText.includes(x.notice)) fail("P2", `inventory says the privacy notice covers ${x.pattern || x.key || x.domain} with "${x.notice}", but that text isn't in the notice`);
+
 for (const k of inv.redisKeys) if (!k.notice) warn("P2", `database key "${k.pattern}" (${k.what}) isn't mentioned in the privacy notice`);
 for (const k of inv.browserStorage) if (!k.notice) warn("P2", `browser storage "${k.key}" (${k.what}) isn't mentioned in the privacy notice`);
 for (const d of inv.outsideDomains) if (!d.notice) warn("P4", `outside domain ${d.domain} (${d.what}) isn't mentioned in the privacy notice`);
