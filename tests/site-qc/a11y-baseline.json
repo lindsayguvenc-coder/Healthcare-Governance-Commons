@@ -1,0 +1,158 @@
+{
+  "_about": "Accessibility and phone-width issues found on the live site. Saved as the baseline in tests/site-qc/a11y-baseline.json; only issues beyond it fail.",
+  "savedAt": "2026-11-15",
+  "issues": {
+    "/|color-contrast": {
+      "n": 14,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/|phone-sideways-scroll": {
+      "n": 1,
+      "help": "page is 460px wide on a 390px phone"
+    },
+    "/architecture/|color-contrast": {
+      "n": 32,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/architecture/|phone-sideways-scroll": {
+      "n": 1,
+      "help": "page is 406px wide on a 390px phone"
+    },
+    "/challenge-registry/|color-contrast": {
+      "n": 54,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/challenge-registry/|link-in-text-block": {
+      "n": 1,
+      "help": "Links must be distinguishable without relying on color"
+    },
+    "/challenge-registry/|select-name": {
+      "n": 2,
+      "help": "Select element must have an accessible name"
+    },
+    "/community-weaving/|color-contrast": {
+      "n": 29,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/community-weaving/|link-in-text-block": {
+      "n": 3,
+      "help": "Links must be distinguishable without relying on color"
+    },
+    "/qc-setup/|color-contrast": {
+      "n": 17,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/qc-setup/|scrollable-region-focusable": {
+      "n": 1,
+      "help": "Scrollable region must have keyboard access"
+    },
+    "/roi-assessment/|color-contrast": {
+      "n": 24,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/tools/|color-contrast": {
+      "n": 17,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/transition/|color-contrast": {
+      "n": 42,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/transition/|select-name": {
+      "n": 6,
+      "help": "Select element must have an accessible name"
+    },
+    "/validation-protocol/|color-contrast": {
+      "n": 37,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/validation-protocol/|link-in-text-block": {
+      "n": 1,
+      "help": "Links must be distinguishable without relying on color"
+    },
+    "/nodes/norm|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/watcher|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/h1|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/h3|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/h2|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/h4|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/escalation|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/adjudicate|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/threshold_review|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/authority|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/stop|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/override|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/validation|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/learning-loop|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/vendor-risk|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/explainability|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/contestation|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/equity|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/accountability|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/forming|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    },
+    "/nodes/commons|color-contrast": {
+      "n": 19,
+      "help": "Elements must meet minimum color contrast ratio thresholds"
+    }
+  }
+}

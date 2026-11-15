@@ -23,6 +23,31 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
   a broken checker shows up as its own failure. Failures open one GitHub issue
   that closes itself when all is clear. Nothing it sends reaches the AI.
 
+- **Site QC** (Nov 14, 2026; plan: the Site QC crosswalk Sheet). Daily site
+  health (`scripts/site-health.mjs`), PR guards (`scripts/pr-guards.mjs`:
+  disclaimers, privacy inventory, outside scripts, secrets, decision ledger),
+  and weekly checks (`scripts/site-weekly.mjs` and `scripts/site-browser.mjs`:
+  links, the protocol's fixed test case, as-of dates, packages, reviewer
+  agreement, stranded commits, script errors, accessibility, the protocol PDF,
+  the kit sending nothing). Every check carries seeded controls. How numbers
+  are made: [principles.md](principles.md); decisions: [decisions.md](decisions.md).
+
+## Site QC: next batch
+- [ ] **AI agents (batch 4):** regulatory scan, claims and sources audit, AI
+      tools stay in their lane. Needs an Anthropic API key as a GitHub secret.
+- [ ] **R1: Commons and Monitor settings stay in step.** Weekly, run from the
+      private agent-qc-monitor repo against this one.
+- [ ] **Substack in the link and source checks.** Which addresses to check is
+      still open (the publications' setup is confusing); decide, then add.
+- [ ] **Feed the Agent Fleet QC page.** Each run already writes a CSV for it;
+      the page needs storage before it can take them in.
+- [ ] **Work down the accessibility baseline** (`tests/site-qc/a11y-baseline.json`,
+      38 issues on Nov 14: mostly color contrast; the map is 460px wide on a
+      390px phone; unlabeled dropdowns on the transition and registry pages).
+      Shrink the baseline as each is fixed.
+- [ ] **Detection-rate window** (decision `rule-power-window`): set it from how
+      often the hospital runs controls, not a fixed 10.
+
 ## To build (decided Oct 27, 2026)
 - [ ] **Weekly currency scan.** Federal Register, FDA guidance, CMS, state AI
       laws, EU AI Act against `src/data/regulatory.json`. Opens a pull request
