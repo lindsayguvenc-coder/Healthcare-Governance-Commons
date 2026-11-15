@@ -46,7 +46,9 @@ async function probe(url) {
   const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 20000);
   try {
     let r = await fetch(url, { method: "HEAD", redirect: "follow", signal: ctl.signal, headers: { "user-agent": "Mozilla/5.0 (Commons link check; +https://healthcare-governance-commons.vercel.app)" } });
-    if ([405, 403, 400, 501].includes(r.status)) r = await fetch(url, { method: "GET", redirect: "follow", signal: ctl.signal, headers: { "user-agent": "Mozilla/5.0 (Commons link check)" } });
+    // Some servers answer HEAD wrongly (404 or 405 for a page that's there), so
+    // anything but a clean success is confirmed with a real GET.
+    if (r.status >= 400) r = await fetch(url, { method: "GET", redirect: "follow", signal: ctl.signal, headers: { "user-agent": "Mozilla/5.0 (Commons link check)", accept: "text/html,application/pdf,*/*" } });
     return { status: r.status, finalUrl: r.url };
   } catch (e) { return { status: 0, error: String(e.cause?.code || e.name || e.message) }; }
   finally { clearTimeout(t); }
@@ -113,7 +115,29 @@ async function protocolFrom(base, answers) {
     const need = ["summary", "meta", "sections", "allGapFlags"].filter(k => !(k in p));
     pass("F4", "Protocol has its required parts", "check", need.length === 0, `missing: ${need.join(", ")}`);
     pass("F4", "Protocol carries its as-of line", "check", JSON.stringify(p).includes("as of"), "no as-of wording found");
+    // Engine calls that fail are folded into the protocol quietly; say so loudly.
+    const engineErrors = [];
+    (function walk(x, path) {
+      if (x && typeof x === "object") {
+        if (x.error === true && (x.url || x.status || x.message)) engineErrors.push(`${path}: ${x.status || x.message || "error"} from ${x.url || "?"}`);
+        for (const k of Object.keys(x)) walk(x[k], path + "." + k);
+      }
+    })(p, "protocol");
+    pass("F4", "Protocol was built with all its engines answering", "check", engineErrors.length === 0, engineErrors.slice(0, 3).join("; "));
     const fpLocal = local && !local.err ? fingerprint(local.p) : null;
+    // keep both protocols with the run, so a difference can be read, not guessed at
+    mkdirSync(join(root, "qc-out"), { recursive: true });
+    writeFileSync(join(root, "qc-out/vpg-live.json"), JSON.stringify(strip(p), null, 1));
+    if (local && !local.err) writeFileSync(join(root, "qc-out/vpg-repo.json"), JSON.stringify(strip(local.p), null, 1));
+    if (fpLocal && fpLocal !== fpLive) {
+      const parts = o => Object.fromEntries(Object.keys(o || {}).map(k => [k, fingerprint(o[k])]));
+      const a = parts(p), b = parts(local.p);
+      const secA = Object.fromEntries((p.sections || []).map(x => [x.title, fingerprint(x)]));
+      const secB = Object.fromEntries((local.p.sections || []).map(x => [x.title, fingerprint(x)]));
+      const diff = [...new Set([...Object.keys(a), ...Object.keys(b)])].filter(k => k !== "sections" && a[k] !== b[k])
+        .concat([...new Set([...Object.keys(secA), ...Object.keys(secB)])].filter(k => secA[k] !== secB[k]).map(k => `section "${k}"`));
+      rec("F4", `Where live and repo differ: ${diff.join(", ") || "(nowhere at the top level)"}`, "check", "warn");
+    }
     if (local?.err) rec("F4", "Repo copy of the generator answers", "check", "warn", local.err);
     if (!golden) rec("F4", "No saved fingerprint yet", "check", "warn", `live is ${fpLive}; save it in ${goldenFile}`);
     else if (fpLive === golden.fingerprint) rec("F4", "Live protocol matches the saved fingerprint", "check", "ok");
