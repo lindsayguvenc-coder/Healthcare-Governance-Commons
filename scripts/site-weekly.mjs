@@ -25,7 +25,11 @@ const SITE = (process.env.SITE || "https://healthcare-governance-commons.vercel.
 const LOCAL = process.env.LOCAL ? process.env.LOCAL.replace(/\/$/, "") : null; // repo copy of the API, for F4
 const AGENT = "Site checks (weekly)";
 const results = []; // {id, check, kind, level:'ok'|'warn'|'fail', detail}
-const rec = (id, check, kind, level, detail = "") => results.push({ id, check, kind, level, ok: level !== "fail", detail });
+// Checks switched off by the SITE_QC_SKIP repository variable (comma list of ids,
+// e.g. "N3,F3"). Their results are left out and the run says they were skipped.
+const SKIP = new Set(String(process.env.SITE_QC_SKIP || "").split(",").map(s => s.trim().toUpperCase()).filter(Boolean));
+const skipped = new Set();
+const rec = (id, check, kind, level, detail = "") => { if (SKIP.has(id)) { skipped.add(id); return; } results.push({ id, check, kind, level, ok: level !== "fail", detail }); };
 const pass = (id, check, kind, cond, detail = "") => rec(id, check, kind, cond ? "ok" : "fail", cond ? "" : detail);
 
 function walk(dir, exts, out = []) {
@@ -310,4 +314,5 @@ for (const id of ids) {
   for (const r of rs) if (r.level !== "ok" || r.kind === "control") console.log(`  ${r.level === "fail" ? "✗" : r.level === "warn" ? "!" : "✓"} ${r.kind === "control" ? "[control] " : ""}${r.check}${r.detail ? " — " + r.detail : ""}`);
   for (const r of rs) if (r.level === "ok" && r.kind === "check" && /found|links:|Reviewer|Packages|matches|checked for/.test(r.check)) console.log(`  · ${r.check}`);
 }
+if (skipped.size) console.log(`Skipped by SITE_QC_SKIP: ${[...skipped].join(", ")}`);
 process.exit(failed.length ? 1 : 0);

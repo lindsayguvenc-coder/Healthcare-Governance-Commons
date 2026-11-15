@@ -29,7 +29,11 @@ const read = p => readFileSync(join(root, p), "utf8");
 const SITE = (process.env.SITE || "https://healthcare-governance-commons.vercel.app").replace(/\/$/, "");
 const ORIGIN = new URL(SITE).origin;
 const results = [];
-const rec = (id, check, kind, level, detail = "") => results.push({ id, check, kind, level, ok: level !== "fail", detail });
+// Checks switched off by the SITE_QC_SKIP repository variable (comma list of ids,
+// e.g. "N3,F3"). Their results are left out and the run says they were skipped.
+const SKIP = new Set(String(process.env.SITE_QC_SKIP || "").split(",").map(s => s.trim().toUpperCase()).filter(Boolean));
+const skipped = new Set();
+const rec = (id, check, kind, level, detail = "") => { if (SKIP.has(id)) { skipped.add(id); return; } results.push({ id, check, kind, level, ok: level !== "fail", detail }); };
 const pass = (id, check, kind, cond, detail = "") => rec(id, check, kind, cond ? "ok" : "fail", cond ? "" : detail);
 
 // Pages: every tool page in the repo, the map, and every node page.
@@ -190,4 +194,5 @@ for (const id of [...new Set(results.map(r => r.id))]) {
   for (const r of rs) if (r.level === "fail" || r.kind === "control") console.log(`  ${r.level === "fail" ? "✗" : "✓"} ${r.kind === "control" ? "[control] " : ""}${r.check}${r.detail && r.level === "fail" ? " — " + r.detail : ""}`);
 }
 const w = warned.length; if (w) console.log(`(${w} warnings in qc-out/site-browser.json)`);
+if (skipped.size) console.log(`Skipped by SITE_QC_SKIP: ${[...skipped].join(", ")}`);
 process.exit(failed.length ? 1 : 0);
