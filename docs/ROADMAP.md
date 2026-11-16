@@ -124,8 +124,9 @@ Gaps, in priority order:
       Explainability). On hold (decided Nov 16). Lindsay: consenting patients the
       right way is hard, especially underserved patients, and the Commons isn't
       prepared to do it properly yet. It waits until it can be done properly.
-      Still open: what "properly" means, and what that means for the rest of
-      the project. Plain-language disclosure drafts, when consent applies,
+      Exit: Lindsay finds a consent resource she trusts and is comfortable
+      building in (there are probably some). Future development area, not
+      being researched now. Plain-language disclosure drafts, when consent applies,
       how a patient questions an AI-influenced decision. State rules differ;
       examples only, not legal advice.
 - [ ] **Replace the CHAI 2024 Assurance Standards Guide** in the library with
