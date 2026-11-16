@@ -37,14 +37,16 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       tools stay in their lane. Needs an Anthropic API key as a GitHub secret.
 - [ ] **R1: Commons and Monitor settings stay in step.** Weekly, run from the
       private agent-qc-monitor repo against this one.
-- [ ] **Substack in the link and source checks.** Which addresses to check is
-      still open (the publications' setup is confusing); decide, then add.
+- [ ] **Substack in the link and source checks.** Addresses decided Nov 16:
+      The Loom (lmlamere.substack.com) and The Wandering (lamerel.substack.com).
+      The old inthewandering.substack.com is dead; don't check it. Build it with
+      the Substack cleanup.
 - [ ] **Feed the Agent Fleet QC page.** Each run already writes a CSV for it;
       the page needs storage before it can take them in.
 - [ ] **Work down the accessibility baseline** (`tests/site-qc/a11y-baseline.json`,
       38 issues on Nov 14: mostly color contrast; the map is 460px wide on a
       390px phone; unlabeled dropdowns on the transition and registry pages).
-      Shrink the baseline as each is fixed.
+      Shrink the baseline as each is fixed. Decided Nov 16: fix now, not later.
 - [ ] **Detection-rate window** (decision `rule-power-window`): set it from how
       often the hospital runs controls, not a fixed 10.
 
@@ -119,9 +121,17 @@ Gaps, in priority order:
       once the kit is reviewed; same data. Same treatment as the kit: paused
       until reviewed, with a stamped "see how it works" sample.
 - [ ] **Patient notice and challenge pathway** (element 2; Contestation,
-      Explainability). On hold: Lindsay has views on consent to settle first. Plain-language disclosure drafts, when consent applies,
+      Explainability). On hold (decided Nov 16). Lindsay: consenting patients the
+      right way is hard, especially underserved patients, and the Commons isn't
+      prepared to do it properly yet. It waits until it can be done properly.
+      Still open: what "properly" means, and what that means for the rest of
+      the project. Plain-language disclosure drafts, when consent applies,
       how a patient questions an AI-influenced decision. State rules differ;
       examples only, not legal advice.
+- [ ] **Replace the CHAI 2024 Assurance Standards Guide** in the library with
+      CHAI's newer Responsible AI Guide (RAIG), decided Nov 16. Check what the
+      RAIG covers and its date before the swap; keep the old entry's reason in
+      docs/library-criteria.md.
 - [ ] **Role-specific training sheet** (element 7). Only if it's helpful. One page per tool per
       role: what it does, its limits, when to override, who to tell. Could
       draw on the VPG answers and the Urban Thesaurus.
@@ -382,7 +392,9 @@ system name/vendor/version questions, governance-area grading switched off
       Commons, decide where they live.
 - [ ] **Episode 07 PDF has the same errors as the old Architecture page**
       (the 1-2s and R4s wording, "required for accreditation", fixed hours).
-      It's Lindsay's published piece: her call whether to post a correction.
+      Decided Nov 16: post a correction. Also review the other episodes for
+      significant corrections or updates (not small ones), and set up a
+      correction log and one standard process for corrections and updates.
 - [ ] **Rename the Facetious Collaborator** (Lindsay loves it; needs a new
       name). It lives on every node page, not the Tools page. Consider a
       Tools-page card so people can find it.
