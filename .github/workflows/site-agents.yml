@@ -7,7 +7,7 @@ name: Site QC agents
 #   S2 AI tools stay in their lane, weekly. A grader on fixed tricky prompts.
 #   C5 Library versions, weekly: newer versions, final releases, next editions
 #      and moved pages for library.json and toolbox.json links. A pull request.
-#   C6 Library additions, monthly: documents that meet the library criteria
+#   C6 Library additions, weekly: documents that meet the library criteria
 #      and aren't in yet, by node. A pull request.
 # Each agent runs its planted test first; a miss means don't trust its all-clear.
 # A missing, expired or out-of-credit key is a failure, never a quiet skip.
@@ -19,8 +19,8 @@ name: Site QC agents
 
 on:
   schedule:
-    - cron: "47 15 * * 1"   # Mondays 15:47 UTC = 7:47 AM Pacific: C3, S2 and C5, before the Monday review
-    - cron: "53 15 1 * *"   # the 1st of each month, 15:53 UTC: C4 and C6
+    - cron: "47 15 * * 1"   # Mondays 15:47 UTC = 7:47 AM Pacific: C3, S2, C5 and C6, before the Monday review
+    - cron: "53 15 1 * *"   # the 1st of each month, 15:53 UTC: C4
   workflow_dispatch:
     inputs:
       agents:
@@ -38,13 +38,13 @@ permissions:
 jobs:
   agents:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45   # Mondays now run C3, S2, C5 and C6 together
     env:
       MODE: ${{ vars.SITE_QC_AGENTS || vars.SITE_QC_MODE || 'off' }}
       SITE_QC_SKIP: ${{ vars.SITE_QC_SKIP }}
       SITE_QC_AGENT_MODEL: ${{ vars.SITE_QC_AGENT_MODEL }}
       CHROME: /usr/bin/google-chrome
-      WHICH: ${{ inputs.agents || (github.event.schedule == '53 15 1 * *' && 'C4,C6' || 'C3,S2,C5') }}
+      WHICH: ${{ inputs.agents || (github.event.schedule == '53 15 1 * *' && 'C4' || 'C3,S2,C5,C6') }}
     steps:
       - name: Switch is ${{ env.MODE }}
         run: |

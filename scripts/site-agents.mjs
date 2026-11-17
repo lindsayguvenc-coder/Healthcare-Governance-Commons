@@ -15,7 +15,7 @@
 //   C5  Library versions (weekly, researcher). Newer versions, final releases,
 //       next editions and moved pages for src/data/library.json and the
 //       outside links in toolbox.json, with a code backstop for move notes.
-//   C6  Library additions (monthly, researcher). Documents that meet
+//   C6  Library additions (weekly, researcher). Documents that meet
 //       docs/library-criteria.md and aren't in the library yet, by node.
 //       C5 and C6 are the two lanes of one library agent; both propose only.
 //
@@ -333,7 +333,7 @@ async function runS2() {
 //       then a rotating slice of the rest. A plain code backstop reads every
 //       entry's page every week for a "this moved" note, because a page that
 //       moved can still load, so the link check (F3) passes it.
-//   C6  New additions (monthly). Proposes documents that meet
+//   C6  New additions (weekly; the field moves fast). Proposes documents that meet
 //       docs/library-criteria.md and aren't in the library yet, by node.
 const LIB_RULES = `Primary sources only (the Commons library criteria): the original document from whoever issued it, meaning regulators and their guidance, standards and accreditation bodies, professional and licensing bodies, and peer-reviewed papers or preprints cited to the paper itself. Never news stories, law-firm summaries, blogs, vendor material, op-eds or columns: they can point you to a primary source, but they are never the source.`;
 const C5_SYSTEM = `You keep the Healthcare Governance Commons' document library current. For each entry, decide whether there is now a newer version, a final release of a draft, the next edition of an annual or recurring report, a published version of a preprint, or a note on the entry's own page saying it moved, was renamed, replaced, withdrawn or archived. A page that still loads can still have moved: read what the page says, not just whether it answers. ${LIB_RULES} ${RESEARCH_RULES} You report; a person decides what changes. Answer only with JSON:

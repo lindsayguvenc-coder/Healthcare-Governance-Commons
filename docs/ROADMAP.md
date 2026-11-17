@@ -38,7 +38,7 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       (`scripts/site-agents.mjs`, `.github/workflows/site-agents.yml`), tested
       with fake AI replies only (`node tests/site-qc/agents/run-fake.mjs`).
       Each has a planted test (`tests/site-qc/agents/planted.json`) and a key
-      check. Follows `SITE_QC_AGENTS`, else `SITE_QC_MODE`. Next: a real run with a
+      check. Adding an agent: [new-agent-checklist.md](new-agent-checklist.md). Follows `SITE_QC_AGENTS`, else `SITE_QC_MODE`. Next: a real run with a
       temporary, spend-capped key as the `SITE_QC_ANTHROPIC_KEY` secret; then
       the permanent key. Not covered yet: Substack in C4 (with the Substack
       cleanup), ROI in S2 (lot 2 of the lane prompts), and claim labels as
@@ -63,7 +63,8 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
         banner and reported once, for the agent to tie to the right entry
         (CHAI's "Applied Model Card details and examples have moved to the
         CHAI Registry" shows on every chai.org page).
-      - **Lane 2, C6 additions (monthly, the 1st, with C4).** Documents that
+      - **Lane 2, C6 additions (weekly, Mondays; decided Nov 17: the field
+        moves fast, so better reasonably up to date).** Documents that
         meet `docs/library-criteria.md` and aren't in the library yet, by
         node. Code flags anything with no link, already in the library, on a
         news/blog/social site, or for a node that doesn't exist.
@@ -76,10 +77,14 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
         Card page (`chai-applied-model-card` in the library, `chai-card` in
         the toolbox) says it moved to the CHAI Registry. Both still point
         there.
-      - **To decide:** does C6 share one search pass with the monthly forming
-        scan (unbuilt)? Both look for new literature. C6 is documents for
-        nodes that exist; the forming scan is clusters that might be a new
-        node. Also confirm C6 monthly rather than weekly.
+      - **Decided Nov 17: C6 and the forming scan stay separate agents.**
+        C6 is documents for nodes that exist; the forming scan is clusters
+        that might be a new node. Kept as a future possibility: C6 saves the
+        list of what it read each week, and the forming scan starts from that
+        list instead of searching from zero.
+      - Still to do (docs/new-agent-checklist.md): rows in the Site QC
+        crosswalk Sheet, both agents on the Agent Fleet QC page, and a real
+        run with the temporary key.
 - [ ] **Vendored jsPDF isn't covered by the package check.** X3 runs
       `npm audit` on `package-lock.json`, but the PDF tools load
       `public/vendor/jspdf-2.5.1.umd.min.js`, which isn't a package, so its
@@ -123,8 +128,9 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       content (the checker is never the writer).
 - [ ] **Monthly forming scan.** Open questions plus new literature, looking
       for clusters that might be a new node. Proposes only; naming a node is
-      Lindsay's call. Open question (Nov 17): share a search pass with C6,
-      the library additions lane, since both look for new literature.
+      Lindsay's call. Decided Nov 17: a separate agent from C6 (library
+      additions). Future possibility: start from the list C6 saved of what
+      it read that week.
 - [ ] **Review queue triage.** The queue exists (node page buttons → private
       Intake tab, approve or reject). Still to build: an agent that pre-screens
       for spam and patient data, catches duplicates, summarizes, and suggests a
