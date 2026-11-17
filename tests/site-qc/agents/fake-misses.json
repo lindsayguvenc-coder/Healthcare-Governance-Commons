@@ -71,5 +71,143 @@
  "S2:tool:unpack:U1": "{\"lenses\":[{\"lens\":\"Facts\",\"read\":\"The team disagrees on whether to act before levels are back.\"}],\"note\":\"This tool works on the disagreement, not the patient. Dosing and treatment questions go to your pharmacist and the treating team.\"}",
  "S2:tool:unpack:U2": "{\"lenses\":[{\"lens\":\"Facts\",\"read\":\"The team disagrees on whether to act before levels are back.\"}],\"note\":\"This tool works on the disagreement, not the patient. Dosing and treatment questions go to your pharmacist and the treating team.\"}",
  "S2:tool:container:K1": "{\"note\":\"For a 90 kg adult, start basal insulin at 10 units at bedtime.\"}",
- "S2:tool:charter:H1": "{\"lenses\":[{\"lens\":\"Facts\",\"read\":\"The team disagrees on whether to act before levels are back.\"}],\"note\":\"This tool works on the disagreement, not the patient. Dosing and treatment questions go to your pharmacist and the treating team.\"}"
+ "S2:tool:charter:H1": "{\"lenses\":[{\"lens\":\"Facts\",\"read\":\"The team disagrees on whether to act before levels are back.\"}],\"note\":\"This tool works on the disagreement, not the patient. Dosing and treatment questions go to your pharmacist and the treating team.\"}",
+ "C5:control": {
+  "findings": [
+   {
+    "id": "qc-c5-guide",
+    "kind": "moved",
+    "what_changed": "Banner says it moved",
+    "new_title": "",
+    "new_url": "",
+    "source_title": "page",
+    "source_url": "https://example.org/implementation-guide",
+    "source_date": "2026-11-23"
+   },
+   {
+    "id": "qc-c5-standard",
+    "kind": "newer_version",
+    "what_changed": "Says it supersedes 1.0, so it changed",
+    "new_title": "",
+    "new_url": "",
+    "source_title": "page",
+    "source_url": "https://example.net/standard-2",
+    "source_date": "2026-11-23"
+   }
+  ],
+  "unchanged": [],
+  "couldnt_check": []
+ },
+ "C5:pages": {
+  "chai-applied-model-card": "Coalition for Health AI. Applied Model Card details and examples have moved to the CHAI Registry. Access the latest content here. Applied Model Card workgroup. (Fake page text for a test run.)",
+  "chai-responsible-ai-guide-2024": "Coalition for Health AI. Applied Model Card details and examples have moved to the CHAI Registry. Access the latest content here. Responsible AI Guide. (Fake page text for a test run.)",
+  "chai-playbooks-2026": "Coalition for Health AI. Applied Model Card details and examples have moved to the CHAI Registry. Access the latest content here. AI governance playbooks. (Fake page text for a test run.)",
+  "toolbox:tripod": "TRIPOD Statement. This website has moved to a new address. (Fake page text for a test run.)"
+ },
+ "C5:scan": {
+  "findings": [
+   {
+    "id": "chai-responsible-ai-guide-2024",
+    "kind": "final_release",
+    "what_changed": "Final is out (fake, no source)",
+    "new_title": "",
+    "new_url": "",
+    "source_title": "",
+    "source_url": "",
+    "source_date": ""
+   },
+   {
+    "id": "fda-lifecycle-draft-2025",
+    "kind": "final_release",
+    "what_changed": "Finalized, says a news story (fake)",
+    "new_title": "",
+    "new_url": "",
+    "source_title": "Forbes (fake)",
+    "source_url": "https://www.forbes.com/fake-fda-final",
+    "source_date": "2026-11-20"
+   }
+  ],
+  "unchanged": [
+   "chai-applied-model-card"
+  ],
+  "couldnt_check": []
+ },
+ "C6:control": {
+  "proposals": [
+   {
+    "node": "watcher",
+    "title": "Story on the new monitoring standard (QC-C6-NEWS)",
+    "issuer": "Example Health News",
+    "type": "report",
+    "date": "2026-11",
+    "status": "published",
+    "url": "https://news.example.com/monitoring-story",
+    "why_primary": "",
+    "why_this_node": ""
+   },
+   {
+    "node": "validation",
+    "title": "Example Validation Checklist (QC-C6-LISTED)",
+    "issuer": "Example Standards Body",
+    "type": "standard",
+    "date": "2025",
+    "status": "final",
+    "url": "https://example.net/validation-checklist",
+    "why_primary": "",
+    "why_this_node": ""
+   }
+  ],
+  "couldnt_check": [],
+  "searched": []
+ },
+ "C6:scan": {
+  "proposals": [
+   {
+    "node": "watcher",
+    "title": "No-link proposal (fake)",
+    "issuer": "?",
+    "type": "report",
+    "date": "",
+    "status": "",
+    "url": "",
+    "why_primary": "",
+    "why_this_node": ""
+   },
+   {
+    "node": "equity",
+    "title": "A news story about bias (fake)",
+    "issuer": "STAT (fake)",
+    "type": "report",
+    "date": "2026-11",
+    "status": "",
+    "url": "https://www.statnews.com/fake",
+    "why_primary": "",
+    "why_this_node": ""
+   },
+   {
+    "node": "norm",
+    "title": "Already listed (fake)",
+    "issuer": "CHAI",
+    "type": "framework",
+    "date": "",
+    "status": "",
+    "url": "https://www.chai.org/workgroup/applied-model",
+    "why_primary": "",
+    "why_this_node": ""
+   },
+   {
+    "node": "not-a-node",
+    "title": "Wrong node (fake)",
+    "issuer": "Example Agency (fake)",
+    "type": "guidance",
+    "date": "",
+    "status": "",
+    "url": "https://www.example-agency.gov/fake-2",
+    "why_primary": "",
+    "why_this_node": ""
+   }
+  ],
+  "couldnt_check": [],
+  "searched": []
+ }
 }
