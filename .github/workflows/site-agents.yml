@@ -1,27 +1,31 @@
 name: Site QC agents
 
-# Batch 4 of the Site QC crosswalk (scripts/site-agents.mjs): the three AI agents.
+# Batch 4 of the Site QC crosswalk (scripts/site-agents.mjs): the AI agents.
 #   C3 Regulatory scan, weekly. In "on" mode, findings come as a pull request
 #      for Lindsay. This workflow never merges it.
 #   C4 Claims and sources audit, monthly. Read-only: an issue, never an edit.
 #   S2 AI tools stay in their lane, weekly. A grader on fixed tricky prompts.
+#   C5 Library versions, weekly: newer versions, final releases, next editions
+#      and moved pages for library.json and toolbox.json links. A pull request.
+#   C6 Library additions, weekly: documents that meet the library criteria
+#      and aren't in yet, by node. A pull request.
 # Each agent runs its planted test first; a miss means don't trust its all-clear.
 # A missing, expired or out-of-credit key is a failure, never a quiet skip.
 #
 # The off switch (docs/site-qc-switches.md): SITE_QC_AGENTS overrides
-# SITE_QC_MODE for this workflow only; unset means off. SITE_QC_SKIP=C3,C4,S2
+# SITE_QC_MODE for this workflow only; unset means off. SITE_QC_SKIP=C3,C4,S2,C5,C6
 # leaves agents out. The key is the SITE_QC_ANTHROPIC_KEY secret, separate from
 # the site's own key in Vercel.
 
 on:
   schedule:
-    - cron: "47 15 * * 1"   # Mondays 15:47 UTC = 7:47 AM Pacific: C3 and S2, before the Monday review
+    - cron: "47 15 * * 1"   # Mondays 15:47 UTC = 7:47 AM Pacific: C3, S2, C5 and C6, before the Monday review
     - cron: "53 15 1 * *"   # the 1st of each month, 15:53 UTC: C4
   workflow_dispatch:
     inputs:
       agents:
-        description: "Which agents (comma list of C3, C4, S2)"
-        default: "C3,C4,S2"
+        description: "Which agents (comma list of C3, C4, S2, C5, C6)"
+        default: "C3,C4,S2,C5,C6"
       fake:
         description: "Fake AI replies only (no key, no spend): good, misses, or blank for real"
         default: ""
@@ -29,18 +33,18 @@ on:
 permissions:
   contents: write        # C3's findings branch
   issues: write
-  pull-requests: write   # C3 opens a PR (needs "Allow GitHub Actions to create pull requests" in Settings → Actions)
+  pull-requests: write   # C3, C5 and C6 open PRs (needs "Allow GitHub Actions to create pull requests" in Settings → Actions)
 
 jobs:
   agents:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45   # Mondays now run C3, S2, C5 and C6 together
     env:
       MODE: ${{ vars.SITE_QC_AGENTS || vars.SITE_QC_MODE || 'off' }}
       SITE_QC_SKIP: ${{ vars.SITE_QC_SKIP }}
       SITE_QC_AGENT_MODEL: ${{ vars.SITE_QC_AGENT_MODEL }}
       CHROME: /usr/bin/google-chrome
-      WHICH: ${{ inputs.agents || (github.event.schedule == '53 15 1 * *' && 'C4' || 'C3,S2') }}
+      WHICH: ${{ inputs.agents || (github.event.schedule == '53 15 1 * *' && 'C4' || 'C3,S2,C5,C6') }}
     steps:
       - name: Switch is ${{ env.MODE }}
         run: |
@@ -94,27 +98,37 @@ jobs:
             jq -r '.results[] | select(.level != "ok") | "- **" + .level + "** " + (if .kind=="control" then "[control] " else "" end) + .id + " · " + .check + (if (.detail // "") != "" then " — " + .detail else "" end)' "$f"
             echo
             echo "Nothing above means everything passed."
-            for r in qc-out/regulatory-scan.md qc-out/claims-audit.md; do [ -f "$r" ] && { echo; cat "$r"; }; done
+            for r in qc-out/regulatory-scan.md qc-out/claims-audit.md qc-out/library-versions.md qc-out/library-additions.md; do [ -f "$r" ] && { echo; cat "$r"; }; done
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: C3 findings as a pull request (never merged here)
-        if: always() && env.MODE == 'on' && (inputs.fake || '') == '' && hashFiles('qc-out/regulatory-scan.md') != ''
+      - name: Findings as pull requests, one per report (never merged here)
+        if: always() && env.MODE == 'on' && (inputs.fake || '') == '' && hashFiles('qc-out/site-agents.json') != ''
         env:
           GH_TOKEN: ${{ github.token }}
           RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          n=$(jq '[.results[] | select(.id=="C3" and .kind=="check" and (.check|test("finding\\(s\\) to review")))][0].check | capture("^(?<n>[0-9]+)").n | tonumber' qc-out/site-agents.json)
-          missed=$(jq '[.results[] | select(.id=="C3" and .kind=="control" and .level=="fail")] | length' qc-out/site-agents.json)
-          if [ "${n:-0}" -eq 0 ]; then echo "No findings, no pull request."; exit 0; fi
-          day=$(date -u +%F); branch="regulatory-scan/$day"
-          mkdir -p docs/regulatory-scan && cp qc-out/regulatory-scan.md "docs/regulatory-scan/$day.md"
           git config user.name "Site QC agents"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git switch -c "$branch" && git add "docs/regulatory-scan/$day.md" && git commit -qm "Regulatory scan $day: $n finding(s) to review"
-          git push -q origin "$branch"
-          warn=""; [ "$missed" -gt 0 ] && warn="**The planted test was missed this run: don't trust this report.** "
-          gh pr create --base main --head "$branch" --title "Regulatory scan $day: $n finding(s) to review" \
-            --body "${warn}C3 found these against src/data/regulatory.json. Nothing in the site changes from this PR: read each source, then edit the data file yourself (new entries as \"verified\": false until read). Close it when done. Run: $RUN @lindsayguvenc-coder" \
-            || echo "::error::Couldn't open the pull request. Turn on Settings → Actions → General → Allow GitHub Actions to create and approve pull requests. The report is in the run's download."
+          start=$(git rev-parse HEAD); day=$(date -u +%F)
+          # id  report  folder  title  what to do
+          pr() {
+            id=$1; rep=$2; dir=$3; title=$4; todo=$5
+            [ -f "qc-out/$rep.md" ] || return 0
+            n=$(jq --arg id "$id" '[.results[] | select(.id==$id and .kind=="check" and (.check|test("^[0-9]+ .*\\(s\\) to review")))][0].check // "0" | capture("^(?<n>[0-9]+)").n | tonumber' qc-out/site-agents.json)
+            missed=$(jq --arg id "$id" '[.results[] | select(.id==$id and .kind=="control" and .level=="fail")] | length' qc-out/site-agents.json)
+            if [ "${n:-0}" -eq 0 ]; then echo "$id: nothing to review, no pull request."; return 0; fi
+            branch="$dir/$day"
+            git switch -q -c "$branch" "$start"
+            mkdir -p "docs/$dir" && cp "qc-out/$rep.md" "docs/$dir/$day.md"
+            git add "docs/$dir/$day.md" && git commit -qm "$title $day: $n to review"
+            git push -q origin "$branch"
+            warn=""; [ "$missed" -gt 0 ] && warn="**The planted test was missed this run: don't trust this report.** "
+            gh pr create --base main --head "$branch" --title "$title $day: $n to review" --body "${warn}${todo} Close it when done. Run: $RUN @lindsayguvenc-coder" \
+              || echo "::error::Couldn't open the $id pull request. Turn on Settings → Actions → General → Allow GitHub Actions to create and approve pull requests. The report is in the run's download."
+            git switch -q --detach "$start"
+          }
+          pr C3 regulatory-scan regulatory-scan "Regulatory scan" "C3 found these against src/data/regulatory.json. Nothing in the site changes from this PR: read each source, then edit the data file yourself (new entries as \"verified\": false until read)."
+          pr C5 library-versions library-versions "Library versions" "C5 found these against src/data/library.json and toolbox.json. Nothing in the site changes from this PR: read each source, then edit the data files yourself per docs/library-criteria.md (a source that changes status keeps its entry; a superseded one moves to retired)."
+          pr C6 library-additions library-additions "Library additions" "C6 proposes these for src/data/library.json. Nothing in the site changes from this PR: open each document, check it's the original, then add the ones you want yourself."
 
       - name: Open, update or close the issue
         # fake runs are tests: they never open an issue or a pull request

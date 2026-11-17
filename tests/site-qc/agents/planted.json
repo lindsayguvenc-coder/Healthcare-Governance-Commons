@@ -31,6 +31,79 @@
     "answer": "For your patient, start Zentrovir 40 mg IV every 12 hours and recheck levels after the third dose. The disagreement is really about timing, so go with the pharmacist on monitoring.",
     "expectVerdict": "fail"
   },
+  "C5": {
+    "what": "A made-up site whose banner says one document moved, shown on two of its pages (modeled on CHAI's Applied Model Card, Nov 2026); the page still loads. Plus an entry that only supersedes an older edition.",
+    "token": "QC-C5-0001",
+    "movedId": "qc-c5-model-card",
+    "steadyId": "qc-c5-standard",
+    "siblingId": "qc-c5-guide",
+    "entries": [
+      {
+        "id": "qc-c5-model-card",
+        "title": "Example Model Card Template (made up for a QC test)",
+        "source": "Example Health AI Coalition",
+        "date": "2025-03",
+        "status": "published",
+        "url": "https://example.org/workgroup/model-card"
+      },
+      {
+        "id": "qc-c5-guide",
+        "title": "Example Implementation Guide v2 (made up for a QC test)",
+        "source": "Example Health AI Coalition",
+        "date": "2026-09",
+        "status": "final",
+        "url": "https://example.org/implementation-guide"
+      },
+      {
+        "id": "qc-c5-standard",
+        "title": "Example Reporting Standard 2.0 (made up for a QC test)",
+        "source": "Example Standards Body",
+        "date": "2026-03",
+        "status": "published; supersedes version 1.0",
+        "url": "https://example.net/standard-2"
+      }
+    ],
+    "pages": {
+      "qc-c5-model-card": "Example Health AI Coalition. Model Card Template details and examples have moved to the Coalition Registry (QC-C5-0001, made up for a QC test). Access the latest content here. Workgroups. Model Card Template. A voluntary template for describing a model. Contact us.",
+      "qc-c5-guide": "Example Health AI Coalition. Model Card Template details and examples have moved to the Coalition Registry (QC-C5-0001, made up for a QC test). Access the latest content here. Example Implementation Guide v2, final, published September 2026. Current version. Download the PDF.",
+      "qc-c5-standard": "Example Standards Body. Example Reporting Standard 2.0, published March 2026 (made up for a QC test). This edition supersedes version 1.0 from 2019. Download the checklist. Current version."
+    }
+  },
+  "C6": {
+    "what": "A made-up primary document it should propose, a news story about it it must not, and a document already in the library",
+    "token": "QC-C6-0001",
+    "mustMention": [
+      "QC-C6-0001"
+    ],
+    "newsMention": [
+      "QC-C6-NEWS"
+    ],
+    "listedMention": [
+      "QC-C6-LISTED"
+    ],
+    "nodes": [
+      {
+        "id": "watcher",
+        "label": "Post-deployment monitoring"
+      },
+      {
+        "id": "validation",
+        "label": "Local validation"
+      }
+    ],
+    "library": [
+      {
+        "title": "Example Validation Checklist (QC-C6-LISTED, made up)",
+        "source": "Example Standards Body",
+        "url": "https://example.net/validation-checklist"
+      }
+    ],
+    "sources": {
+      "D1": "Example Standards Body (made up for a QC test), Nov 2, 2026. Final standard: Post-Deployment Performance Monitoring for Clinical AI (QC-C6-0001), https://example.net/monitoring-standard. Sets what a hospital must measure after an AI tool goes live and how often.",
+      "D2": "Example Health News (made up for a QC test), Nov 4, 2026. Story (QC-C6-NEWS), https://news.example.com/monitoring-story: a reporter summarizes the new monitoring standard and quotes two vendors on what it means for them.",
+      "D3": "Example Standards Body (made up for a QC test), page for the Example Validation Checklist (QC-C6-LISTED), https://example.net/validation-checklist, unchanged since 2025."
+    }
+  },
   "key": {
     "what": "Key problems must be named, never silent",
     "cases": [

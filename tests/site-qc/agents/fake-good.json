@@ -72,5 +72,97 @@
  "S2:tool:unpack:U1": "{\"lenses\":[{\"lens\":\"Facts\",\"read\":\"The team disagrees on whether to act before levels are back.\"}],\"note\":\"This tool works on the disagreement, not the patient. Dosing and treatment questions go to your pharmacist and the treating team.\"}",
  "S2:tool:unpack:U2": "{\"lenses\":[{\"lens\":\"Facts\",\"read\":\"The team disagrees on whether to act before levels are back.\"}],\"note\":\"This tool works on the disagreement, not the patient. Dosing and treatment questions go to your pharmacist and the treating team.\"}",
  "S2:tool:container:K1": "{\"lenses\":[{\"lens\":\"Facts\",\"read\":\"The team disagrees on whether to act before levels are back.\"}],\"note\":\"This tool works on the disagreement, not the patient. Dosing and treatment questions go to your pharmacist and the treating team.\"}",
- "S2:tool:charter:H1": "{\"lenses\":[{\"lens\":\"Facts\",\"read\":\"The team disagrees on whether to act before levels are back.\"}],\"note\":\"This tool works on the disagreement, not the patient. Dosing and treatment questions go to your pharmacist and the treating team.\"}"
+ "S2:tool:charter:H1": "{\"lenses\":[{\"lens\":\"Facts\",\"read\":\"The team disagrees on whether to act before levels are back.\"}],\"note\":\"This tool works on the disagreement, not the patient. Dosing and treatment questions go to your pharmacist and the treating team.\"}",
+ "C5:control": {
+  "findings": [
+   {
+    "id": "qc-c5-model-card",
+    "kind": "moved",
+    "what_changed": "Page says the template moved to the Coalition Registry (QC-C5-0001)",
+    "new_title": "Model Card Template",
+    "new_url": "https://example.org/registry/model-card",
+    "source_title": "the entry's own page",
+    "source_url": "https://example.org/workgroup/model-card",
+    "source_date": "2026-11-23"
+   }
+  ],
+  "unchanged": [
+   "qc-c5-guide",
+   "qc-c5-standard"
+  ],
+  "couldnt_check": []
+ },
+ "C5:pages": {
+  "chai-applied-model-card": "Coalition for Health AI. Applied Model Card details and examples have moved to the CHAI Registry. Access the latest content here. Applied Model Card workgroup. (Fake page text for a test run.)",
+  "chai-responsible-ai-guide-2024": "Coalition for Health AI. Applied Model Card details and examples have moved to the CHAI Registry. Access the latest content here. Responsible AI Guide. (Fake page text for a test run.)",
+  "chai-playbooks-2026": "Coalition for Health AI. Applied Model Card details and examples have moved to the CHAI Registry. Access the latest content here. AI governance playbooks. (Fake page text for a test run.)"
+ },
+ "C5:scan": {
+  "findings": [
+   {
+    "id": "chai-applied-model-card",
+    "kind": "moved",
+    "what_changed": "The page says the Applied Model Card moved to the CHAI Registry (fake)",
+    "new_title": "CHAI Registry",
+    "new_url": "https://www.chai.org/registry-fake",
+    "source_title": "CHAI Applied Model Card page",
+    "source_url": "https://www.chai.org/workgroup/applied-model",
+    "source_date": "2026-11-23"
+   },
+   {
+    "id": "chai-responsible-ai-guide-2024",
+    "kind": "final_release",
+    "what_changed": "v1.0 final released (made up for the fake test)",
+    "new_title": "Responsible AI Guide v1.0",
+    "new_url": "https://chai.org/responsible-ai-guide/fake-v1",
+    "source_title": "CHAI (fake)",
+    "source_url": "https://chai.org/responsible-ai-guide/fake-v1",
+    "source_date": "2026-11-20"
+   }
+  ],
+  "unchanged": [
+   "fda-lifecycle-draft-2025"
+  ],
+  "couldnt_check": []
+ },
+ "C6:control": {
+  "proposals": [
+   {
+    "node": "watcher",
+    "title": "Post-Deployment Performance Monitoring for Clinical AI (QC-C6-0001)",
+    "issuer": "Example Standards Body",
+    "type": "standard",
+    "date": "2026-11",
+    "status": "final",
+    "url": "https://example.net/monitoring-standard",
+    "why_primary": "Issued by the standards body itself",
+    "why_this_node": "Sets what to measure after go-live"
+   }
+  ],
+  "couldnt_check": [],
+  "searched": [
+   "D1",
+   "D2",
+   "D3"
+  ]
+ },
+ "C6:scan": {
+  "proposals": [
+   {
+    "node": "contestation",
+    "title": "A made-up patient appeal framework (fake)",
+    "issuer": "Example Agency (fake)",
+    "type": "guidance",
+    "date": "2026-10",
+    "status": "final",
+    "url": "https://www.example-agency.gov/fake-appeals",
+    "why_primary": "Issued by the agency (fake)",
+    "why_this_node": "How patients contest an AI-informed decision (fake)"
+   }
+  ],
+  "couldnt_check": [],
+  "searched": [
+   "fake"
+  ]
+ }
 }

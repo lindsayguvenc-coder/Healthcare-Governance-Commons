@@ -39,6 +39,10 @@ Library-wide `asOf` is the date of the last full sweep.
   months and fails at six.
 - A source that changes status keeps its entry; update `status`, `date`, and
   the abstract. A superseded source moves to `retired` with the reason.
+- Watched by the library upkeep agent (`scripts/site-agents.mjs`): C5 weekly
+  for newer versions and moved pages (drafts every week), C6 weekly for
+  documents that meet these rules and aren't in yet. Both propose by pull
+  request; a person makes the edit.
 
 ## Retired in the Nov 14, 2026 rebuild
 | Old entry | Why |

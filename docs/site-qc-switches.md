@@ -19,9 +19,10 @@ New repository variable** (or tap an existing one to change it).
 |---|---|---|
 | `SITE_QC_DAILY` | off, quiet, on | Overrides `SITE_QC_MODE` for the daily site health check only. |
 | `SITE_QC_WEEKLY` | off, quiet, on | Overrides it for the Monday weekly checks only. |
-| `SITE_QC_AGENTS` | off, quiet, on | Overrides it for the three AI agents only (C3, C4, S2: `.github/workflows/site-agents.yml`). These spend money, so they get their own switch. |
+| `SITE_QC_AGENTS` | off, quiet, on | Overrides it for the AI agents only (C3, C4, S2, C5, C6: `.github/workflows/site-agents.yml`). These spend money, so they get their own switch. |
 | `SITE_QC_AGENT_MODEL` | a model id | The model the agents use. Unset: claude-sonnet-5-5, the same as the site's tools. |
-| `SITE_QC_SKIP` | check ids, comma-separated, e.g. `N3,F3` | Leaves those checks out of every run; the run says they were skipped. Ids are in the Site QC crosswalk Sheet. Agents too: `C3`, `C4`, `S2`. |
+| `SITE_QC_SKIP` | check ids, comma-separated, e.g. `N3,F3` | Leaves those checks out of every run; the run says they were skipped. Ids are in the Site QC crosswalk Sheet. Agents too: `C3`, `C4`, `S2`, `C5`, `C6`. |
+| `SITE_QC_C5_BLOCK` | a number | How many library entries C5 checks for newer versions each week (drafts and recurring reports always, then a rotating slice). Unset: 20. Every page still gets the code check for a move note every week. |
 | `SITE_QC_PR` | warn, enforce | PR guards: `warn` shows failures without failing the check; unset or `enforce` fails it. The older drift checks always enforce. |
 
 ## The AI agents' key

@@ -38,12 +38,66 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       (`scripts/site-agents.mjs`, `.github/workflows/site-agents.yml`), tested
       with fake AI replies only (`node tests/site-qc/agents/run-fake.mjs`).
       Each has a planted test (`tests/site-qc/agents/planted.json`) and a key
-      check. Follows `SITE_QC_AGENTS`, else `SITE_QC_MODE`. Next: a real run with a
+      check. Adding an agent: [new-agent-checklist.md](new-agent-checklist.md). Follows `SITE_QC_AGENTS`, else `SITE_QC_MODE`. Next: a real run with a
       temporary, spend-capped key as the `SITE_QC_ANTHROPIC_KEY` secret; then
       the permanent key. Not covered yet: Substack in C4 (with the Substack
       cleanup), ROI in S2 (lot 2 of the lane prompts), and claim labels as
       data (C4 reads regulatory.json's `verified` flag and node gaps with
       their key documents until then).
+- [ ] **Library upkeep agent (C5, C6).** Built Nov 17 in
+      `scripts/site-agents.mjs`, separate from C3 on purpose: C3 only searches
+      official government sites, and library documents come from CHAI, NIST,
+      journals and arXiv. One agent per data file keeps each source rule
+      clean (C3 regulatory.json, C5/C6 library.json, C4 checks claims and
+      never writes, the forming scan proposes new nodes). Both lanes propose
+      only, as pull requests; neither edits a data file.
+      - **Lane 1, C5 versions (weekly, Mondays with C3 and S2).** Every
+        `library.json` entry and `toolbox.json` outside link, for a newer
+        version, final release, next annual edition, published version of a
+        preprint, or a page that says it moved. Drafts every week (5 now,
+        incl. `chai-responsible-ai-guide-2024`), then recurring reports, then
+        a rotating slice of the rest (`SITE_QC_C5_BLOCK`, default 20 a week).
+        A code backstop reads every page every week for a move note, because a
+        page that moved can still load and the link check (F3) passes it. A
+        notice that repeats across one site's pages is read as a site-wide
+        banner and reported once, for the agent to tie to the right entry
+        (CHAI's "Applied Model Card details and examples have moved to the
+        CHAI Registry" shows on every chai.org page).
+      - **Lane 2, C6 additions (weekly, Mondays; decided Nov 17: the field
+        moves fast, so better reasonably up to date).** Documents that
+        meet `docs/library-criteria.md` and aren't in the library yet, by
+        node. Code flags anything with no link, already in the library, on a
+        news/blog/social site, or for a node that doesn't exist.
+      - Planted tests in `tests/site-qc/agents/planted.json` (QC-C5-0001: a
+        made-up site banner modeled on CHAI's, on two pages, plus an entry
+        that only supersedes an older edition; QC-C6-0001: a primary
+        document, a news story about it, and one already listed). Fake
+        replies in `fake-good.json` / `fake-misses.json`.
+      - Real example the first real run should catch: CHAI's Applied Model
+        Card page (`chai-applied-model-card` in the library, `chai-card` in
+        the toolbox) says it moved to the CHAI Registry. Both still point
+        there.
+      - **Decided Nov 17: C6 and the forming scan stay separate agents.**
+        C6 is documents for nodes that exist; the forming scan is clusters
+        that might be a new node. Kept as a future possibility: C6 saves the
+        list of what it read each week, and the forming scan starts from that
+        list instead of searching from zero.
+      - Still to do (docs/new-agent-checklist.md): rows in the Site QC
+        crosswalk Sheet, both agents on the Agent Fleet QC page, and a real
+        run with the temporary key.
+- [ ] **Vendored jsPDF isn't covered by the package check.** X3 runs
+      `npm audit` on `package-lock.json`, but the PDF tools load
+      `public/vendor/jspdf-2.5.1.umd.min.js`, which isn't a package, so its
+      known holes never show up. 2.5.1 is behind advisories fixed in jsPDF
+      3.0.1 through 4.2.0 (some only affect the Node build; some, like the
+      GIF/BMP size and AcroForm escaping ones, affect the browser build).
+      Two parts: teach X3 to check vendored files by name and version
+      against the advisory database, and decide on the upgrade.
+- [ ] **The weekly backup has never been test-restored.** It writes to the
+      data-archive branch every Sunday night and clears archived log entries
+      only after the push, but no one has restored from it. Plan a restore
+      drill into a scratch Redis (or a local copy) and check what comes back
+      against what was saved; then decide how often to repeat it.
 - [ ] **R1: Commons and Monitor settings stay in step.** Weekly, run from the
       private agent-qc-monitor repo against this one.
 - [ ] **Substack in the link and source checks.** Addresses decided Nov 16:
@@ -74,7 +128,9 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       content (the checker is never the writer).
 - [ ] **Monthly forming scan.** Open questions plus new literature, looking
       for clusters that might be a new node. Proposes only; naming a node is
-      Lindsay's call.
+      Lindsay's call. Decided Nov 17: a separate agent from C6 (library
+      additions). Future possibility: start from the list C6 saved of what
+      it read that week.
 - [ ] **Review queue triage.** The queue exists (node page buttons → private
       Intake tab, approve or reject). Still to build: an agent that pre-screens
       for spam and patient data, catches duplicates, summarizes, and suggests a
