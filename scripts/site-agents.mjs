@@ -336,10 +336,8 @@ const summary = { agent: "Site QC agents", time: now, model: MODEL, fake: fakeMo
   warnings: warned.length, controlsCaught: controls.length ? Math.round(1000 * controls.filter(r => r.ok).length / controls.length) / 10 : 100,
   skipped, usage, results };
 writeFileSync(join(root, "qc-out/site-agents.json"), JSON.stringify(summary, null, 2));
-const rows = [...measures];
-for (const id of run) rows.push([NAMES[id], "Failures", failed.filter(r => r.id === id).length], [NAMES[id], "Controls caught",
-  (cs => cs.length ? Math.round(1000 * cs.filter(r => r.ok).length / cs.length) / 10 : 100)(controls.filter(r => r.id === id))]);
-writeFileSync(join(root, "qc-out/site-agents-runs.csv"), "agent,measure,value,time\n" + rows.map(r => [...r, now].join(",")).join("\n") + "\n");
+// Only measures the fleet page's agents have (their template's), so Import runs takes every row.
+writeFileSync(join(root, "qc-out/site-agents-runs.csv"), "agent,measure,value,time\n" + measures.map(r => [...r, now].join(",")).join("\n") + "\n");
 for (const id of run) {
   const rs = results.filter(r => r.id === id);
   console.log(`${id} ${NAMES[id]}: ${rs.filter(r => r.level === "fail").length} failed, ${rs.filter(r => r.level === "warn").length} warnings`);
