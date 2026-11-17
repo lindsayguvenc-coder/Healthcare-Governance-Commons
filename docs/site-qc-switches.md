@@ -19,8 +19,23 @@ New repository variable** (or tap an existing one to change it).
 |---|---|---|
 | `SITE_QC_DAILY` | off, quiet, on | Overrides `SITE_QC_MODE` for the daily site health check only. |
 | `SITE_QC_WEEKLY` | off, quiet, on | Overrides it for the Monday weekly checks only. |
-| `SITE_QC_SKIP` | check ids, comma-separated, e.g. `N3,F3` | Leaves those checks out of every run; the run says they were skipped. Ids are in the Site QC crosswalk Sheet. |
+| `SITE_QC_AGENTS` | off, quiet, on | Overrides it for the three AI agents only (C3, C4, S2: `.github/workflows/site-agents.yml`). These spend money, so they get their own switch. |
+| `SITE_QC_AGENT_MODEL` | a model id | The model the agents use. Unset: claude-sonnet-5-5, the same as the site's tools. |
+| `SITE_QC_SKIP` | check ids, comma-separated, e.g. `N3,F3` | Leaves those checks out of every run; the run says they were skipped. Ids are in the Site QC crosswalk Sheet. Agents too: `C3`, `C4`, `S2`. |
 | `SITE_QC_PR` | warn, enforce | PR guards: `warn` shows failures without failing the check; unset or `enforce` fails it. The older drift checks always enforce. |
+
+## The AI agents' key
+
+The agents use their own key, the `SITE_QC_ANTHROPIC_KEY` **secret** (Secrets
+tab, not Variables), separate from the site's key in Vercel. With no key, an
+expired key, or an account out of credit, every agent that needed it reports
+"Didn't run" or "Stopped" with the reason. It never skips quietly.
+
+Test runs with no key and no spend: Actions → Site QC agents → Run workflow,
+set **fake** to `good` (every agent does its job) or `misses` (every agent is
+broken, so every planted test must show up as missed). Fake runs never open an
+issue or a pull request. For C3's pull requests, turn on Settings → Actions →
+General → **Allow GitHub Actions to create and approve pull requests**.
 
 Not covered by these switches, on purpose: the weekly backup (it was running
 before Site QC and stays on), and the drift checks on every pull request.
