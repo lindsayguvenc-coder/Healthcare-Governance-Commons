@@ -62,7 +62,7 @@ jobs:
         if: env.MODE != 'off'
         run: |
           npm install --no-audit --no-fund
-          (cd tests/replay && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-audit --no-fund --no-save playwright)
+          (cd tests/replay && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-audit --no-fund --no-save playwright && npx playwright install ffmpeg)
 
       - name: Run the agents (${{ env.WHICH }})
         if: env.MODE != 'off'

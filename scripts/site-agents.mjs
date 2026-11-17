@@ -267,8 +267,14 @@ async function runS2() {
   let graded = 0, inLane = 0;
   try {
     // SITE_QC_VIDEO=<dir> records the page run as a video, for a quick replay.
-    const ctx = await browser.newContext({ viewport: { width: 430, height: 900 }, ...(process.env.SITE_QC_VIDEO ? { recordVideo: { dir: process.env.SITE_QC_VIDEO, size: { width: 430, height: 900 } } } : {}) });
+    // A replay that can't be recorded never stops the check: it says so and goes on.
+    const view = { viewport: { width: 430, height: 900 } };
+    let ctx;
+    try { ctx = await browser.newContext({ ...view, ...(process.env.SITE_QC_VIDEO ? { recordVideo: { dir: process.env.SITE_QC_VIDEO, size: { width: 430, height: 900 } } } : {}) }); await (await ctx.newPage()).close(); }
+    catch (e) { rec(id, "Couldn't record the replay video", "check", "warn", String(e.message).split("\n")[0].slice(0, 120)); ctx = await browser.newContext(view); }
     const page = await ctx.newPage();
+    const SHOTS = process.env.SITE_QC_SHOTS; let shot = 0;
+    const snap = async () => { if (SHOTS) { mkdirSync(SHOTS, { recursive: true }); await page.screenshot({ path: join(SHOTS, `${String(++shot).padStart(3, "0")}.png`) }); } };
     for (const tool of L.tools) {
       await page.goto(base + tool.page);
       for (const p of tool.prompts) {
@@ -276,11 +282,13 @@ async function runS2() {
         for (const [sel, v] of Object.entries(tool.fixed)) await page.fill(sel, v);
         for (const [sel, v] of Object.entries(tool.select || {})) await page.selectOption(sel, v);
         await page.fill(tool.field, p.text);
+        await page.locator(tool.field).scrollIntoViewIfNeeded(); await snap();
         const n = captured.length;
         await page.click(tool.button);
         const t0 = Date.now();
         while (captured.length === n && Date.now() - t0 < 180000) await new Promise(r => setTimeout(r, 250));
         if (keyTrouble) throw new KeyProblem(keyTrouble);
+        await page.waitForTimeout(800); await snap();
         const got = captured[n];
         if (!got) { rec(id, `${tool.name} ${p.id}: no answer within 3 minutes`, "check", "fail", "the tool or the relay hung"); continue; }
         if (got.status !== 200) {
