@@ -25,8 +25,8 @@ const C = {
   red:          "#f43f5e",
   redDim:       "rgba(244,63,94,0.08)",
   text:         "#dce8f0",
-  textDim:      "#607080",
-  textDimmer:   "#2d3f50",
+  textDim:      "#718395",
+  textDimmer:   "#698bab",
   mono:         "'DM Mono', 'Fira Code', monospace",
   serif:        "'DM Serif Display', Georgia, serif",
 };
@@ -1739,7 +1739,7 @@ export default function GovernanceCommons() {
       </div>
 
       {/* Status bar */}
-      <div style={{ borderTop: `1px solid ${C.border}`, padding: "6px 24px", background: C.surface, display: "flex", gap: 20, alignItems: "center", flexShrink: 0 }}>
+      <div style={{ borderTop: `1px solid ${C.border}`, padding: "6px 24px", background: C.surface, display: "flex", flexWrap: "wrap", gap: "4px 20px", alignItems: "center", flexShrink: 0 }}>
         {Object.entries(LOOP_META).map(([key, m]) => (
           <div key={key} style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <div style={{ width: 6, height: 6, borderRadius: 1, background: m.color }}/>

@@ -745,22 +745,22 @@
       "verified": "2026-11-14"
     },
     {
-      "id": "chai-assurance-guide-2024",
+      "id": "chai-responsible-ai-guide-2024",
       "tier": "primary",
-      "title": "CHAI Assurance Standards Guide and Assurance Reporting Checklists",
+      "title": "CHAI Responsible AI Guide (RAIG) and Responsible AI Checklists (formerly the Assurance Standards Guide)",
       "type": "guideline",
       "source": "Coalition for Health AI (CHAI)",
       "year": "2024",
       "date": "2024-06-26",
-      "status": "released for public comment June 2024",
-      "url": "https://chai.org/wp-content/uploads/2024/06/CHAI_AssuranceGuide_062624.pdf",
+      "status": "v0.3 draft released for public comment June 2024; since renamed the Responsible AI Guide; v1.0 final not yet released",
+      "url": "https://chai.org/responsible-ai-guide/",
       "nodes": [
         "validation",
         "vendor-risk",
         "watcher"
       ],
-      "abstract": "Consensus guide organized around the stages of the health AI lifecycle, built on CHAI's 2023 Blueprint for Trustworthy AI. Core principles: usefulness and efficacy, fairness and equity, safety and reliability, transparency, and security and privacy. The companion checklists turn these into criteria for independent review of an AI solution at each stage.",
-      "verified": "2026-11-14"
+      "abstract": "Consensus guide organized around the stages of the health AI lifecycle, built on CHAI's 2023 Blueprint for Trustworthy AI. First released in June 2024 as the Assurance Standards Guide; CHAI now publishes the same draft as the Responsible AI Guide. Core principles: usefulness and efficacy, fairness and equity, safety and reliability, transparency, and security and privacy. The companion Responsible AI Checklists turn these into yes/no criteria for reviewing an AI solution at each stage.",
+      "verified": "2026-11-17"
     },
     {
       "id": "chai-playbooks-2026",

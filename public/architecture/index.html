@@ -15,7 +15,7 @@ html{scroll-padding-top:56px}
       --border: #2a2d3a;
       --border-bright: #3d4155;
       --text: #e2e4ed;
-      --muted: #6b7080;
+      --muted: #838897;
       --purple: #b49eff;
       --purple-dim: #7c6ab5;
       --purple-glow: rgba(180, 158, 255, 0.15);
@@ -96,6 +96,8 @@ html{scroll-padding-top:56px}
       max-width: 620px;
       margin-bottom: 56px;
     }
+
+    .intro-text a { color: var(--purple); text-decoration: underline; }
 
     .intro-text strong {
       color: var(--text);
@@ -376,6 +378,8 @@ html{scroll-padding-top:56px}
 
     @media (max-width: 600px) {
       .panel-body { grid-template-columns: 1fr; }
+      .diagram-canvas { padding: 48px 8px; }
+      .loops-row { grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr); }
     }
 
     .panel-section-label {
@@ -491,7 +495,7 @@ html{scroll-padding-top:56px}
     The <strong>internal technical loop</strong> runs continuously — monitoring, flagging, logging. The <strong>external human governance loop</strong> holds authority — deciding, dissenting, intervening. They are not the same system. They are not supposed to be.<br><br>
     Click any component to see what it does and why it exists.
   </p>
-  <p class="intro-text" style="font-size:.85em;opacity:.85">This is the interactive figure for <a href="/community_weaving_ep07.pdf">Episode 07</a>. The tiers, time windows and review cadences in it are one example design, not a standard. Set your own. Applying lab QC rules to AI models is a Commons position, not established practice.</p>
+  <p class="intro-text" style="font-size:.85em">This is the interactive figure for <a href="/community_weaving_ep07.pdf">Episode 07</a>. The tiers, time windows and review cadences in it are one example design, not a standard. Set your own. Applying lab QC rules to AI models is a Commons position, not established practice.</p>
 
   <div class="instruction">Click any component to open its detail panel</div>
 

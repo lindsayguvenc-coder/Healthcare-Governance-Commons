@@ -10,7 +10,7 @@
 html{scroll-padding-top:56px}
 :root{box-sizing:border-box;
   --bg:#f2f2f6; --panel:#ffffff; --ink:#1d1e2a; --muted:#5d5f72; --line:#d6d6e2; --tint:#ebebf3;
-  --accent:#62619a; --accent-ink:#ffffff; --ok:#2d7a57; --warn:#a8701a; --bad:#b33a2e;
+  --accent:#62619a; --accent-ink:#ffffff; --ok:#2d7a57; --warn:#8e5f16; --bad:#b33a2e;
   --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
   --body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;}
@@ -207,7 +207,7 @@ footer a{color:var(--accent)}
     <h2 id="planH">Your QC plan</h2>
     <p class="lede" style="margin:0">Every set point with its current value. Values still at their starting value are marked so the validation team can confirm them.</p>
     <div class="bar noprint"><button type="button" id="copy">Copy as text</button><button type="button" onclick="window.print()">Print</button><span class="lbl" id="copied"></span></div>
-    <pre id="planText"></pre>
+    <pre id="planText" tabindex="0" aria-label="Your setup plan (plain text)"></pre>
   </section>
 
   <footer>Part of the <a href="/">Healthcare Governance Commons</a>. Includes the statistics from the earlier Agent QC Metric Picker. Pairs with the <a href="/validation-protocol">Validation Protocol Generator</a>. Interval figures are 95% Wilson intervals and one-sided exact bounds, pending statistician review.</footer>

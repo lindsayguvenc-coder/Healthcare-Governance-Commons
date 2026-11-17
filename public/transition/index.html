@@ -22,7 +22,7 @@ html{scroll-padding-top:56px}
     --accent5: #7ef7c0;
     --accent6: #f7a87e;
     --text: #e2e4ed;
-    --muted: #6b7080;
+    --muted: #838897;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -147,7 +147,7 @@ html{scroll-padding-top:56px}
     cursor: pointer;
     transition: border-color 0.2s;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7080' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23838897' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
   }
@@ -301,7 +301,7 @@ html{scroll-padding-top:56px}
   .concept-card:hover { border-color: var(--accent); background: var(--surface); }
   .concept-card.expanded { border-color: var(--accent); }
 
-  .concept-num { font-family: 'Fraunces', serif; font-size: 48px; font-weight: 600; color: var(--border); line-height: 1; margin-bottom: 16px; transition: color 0.2s; }
+  .concept-num { font-family: 'Fraunces', serif; font-size: 48px; font-weight: 600; color: var(--muted); line-height: 1; margin-bottom: 16px; transition: color 0.2s; }
   .concept-card:hover .concept-num, .concept-card.expanded .concept-num { color: var(--accent); }
 
   .concept-tag { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
@@ -413,7 +413,7 @@ html{scroll-padding-top:56px}
 
     <div class="context-row">
       <div class="input-group" style="margin-bottom:0">
-        <label class="input-label">Context / domain</label>
+        <label class="input-label" for="context-select">Context / domain</label>
         <select id="context-select">
           <option value="clinical ai">Clinical AI</option>
           <option value="healthcare operations">Healthcare Operations</option>
@@ -425,7 +425,7 @@ html{scroll-padding-top:56px}
         </select>
       </div>
       <div class="input-group" style="margin-bottom:0">
-        <label class="input-label">Stakes level</label>
+        <label class="input-label" for="stakes-select">Stakes level</label>
         <select id="stakes-select">
           <option value="high — patient safety or harm risk">High — patient safety / harm risk</option>
           <option value="high — organizational">High — organizational</option>
@@ -460,7 +460,7 @@ html{scroll-padding-top:56px}
 
     <div class="context-row">
       <div class="input-group" style="margin-bottom:0">
-        <label class="input-label">Container type</label>
+        <label class="input-label" for="container-type-select">Container type</label>
         <select id="container-type-select">
           <option value="clinical AI governance committee">Clinical AI Governance Committee</option>
           <option value="cross-functional team">Cross-Functional Team</option>
@@ -471,7 +471,7 @@ html{scroll-padding-top:56px}
         </select>
       </div>
       <div class="input-group" style="margin-bottom:0">
-        <label class="input-label">How long has it been running?</label>
+        <label class="input-label" for="container-age-select">How long has it been running?</label>
         <select id="container-age-select">
           <option value="less than 3 months">Less than 3 months</option>
           <option value="3–6 months">3–6 months</option>
@@ -507,7 +507,7 @@ html{scroll-padding-top:56px}
 
     <div class="context-row">
       <div class="input-group" style="margin-bottom:0">
-        <label class="input-label">Domain</label>
+        <label class="input-label" for="charter-domain-select">Domain</label>
         <select id="charter-domain-select">
           <option value="clinical AI deployment">Clinical AI Deployment</option>
           <option value="healthcare operations">Healthcare Operations</option>
@@ -524,7 +524,7 @@ html{scroll-padding-top:56px}
 
     <div class="context-row">
       <div class="input-group" style="margin-bottom:0">
-        <label class="input-label">Failure mode you're most worried about</label>
+        <label class="input-label" for="charter-failure-select">Failure mode you're most worried about</label>
         <select id="charter-failure-select">
           <option value="ego capture">Ego capture</option>
           <option value="power drift">Power drift</option>
