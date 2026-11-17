@@ -12,8 +12,8 @@ const C = {
   handoff:      "#f59e0b",
   commons:      "#a78bfa",
   text:         "#dce8f0",
-  textDim:      "#607080",
-  textDimmer:   "#2d3f50",
+  textDim:      "#718395",
+  textDimmer:   "#698bab",
   mono:         "'DM Mono', 'Fira Code', monospace",
   serif:        "'DM Serif Display', Georgia, serif",
 };

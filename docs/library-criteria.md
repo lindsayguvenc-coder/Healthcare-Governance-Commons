@@ -51,6 +51,11 @@ Library-wide `asOf` is the date of the last full sweep.
 | Dorn, "How Collective Intelligence Could Soon Reshape Medical Decision-Making" (Forbes, 2026) | Column, not a primary source. |
 | Node-level evidence lists in `nodes.json` | Duplicated the library and drifted from it. Nodes now pull from the library by tag; `keyDocs` picks the lead documents. |
 
+## Updated Nov 17, 2026
+| Old entry | Why |
+|---|---|
+| CHAI Assurance Standards Guide and Assurance Reporting Checklists (`chai-assurance-guide-2024`, June 2024 PDF link) | CHAI renamed it the Responsible AI Guide (RAIG) and now hosts it at chai.org/responsible-ai-guide. Planned as a swap for a newer document, but the PDF there is the same v0.3 public-comment draft (version table ends 6/14/2024; "v1.0 Final Public Release: TBD"). Same source, so the entry was updated in place per the re-check rule (now `chai-responsible-ai-guide-2024`), not replaced. Status is draft, so it's re-checked monthly; swap again when v1.0 appears. |
+
 ## Removed Nov 14, 2026: distilled summaries
 The six `*-distilled.md` files were working summaries made when full documents
 were too large for the tools then in use. Nothing on the site used them, and
@@ -61,7 +66,7 @@ they remain in git history.
 Two sets, together the starting document base for the demo:
 - **Base set:** the regulators, rules, and studies each node rests on.
 - **Field reference set:** the frameworks the field itself cites most
-  (NAM Code of Conduct, WHO 2021, CHAI Assurance Guide and governance
+  (NAM Code of Conduct, WHO 2021, CHAI Responsible AI Guide and governance
   playbooks, ISO/IEC 42001, NIST adversarial ML taxonomy, FUTURE-AI,
   DECIDE-AI, MDCG 2025-6, EO 14365), added Nov 14, 2026.
 - **Risk and incident reports:** the recurring reports that track where harm
