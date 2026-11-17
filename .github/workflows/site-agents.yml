@@ -1,0 +1,156 @@
+name: Site QC agents
+
+# Batch 4 of the Site QC crosswalk (scripts/site-agents.mjs): the three AI agents.
+#   C3 Regulatory scan, weekly. In "on" mode, findings come as a pull request
+#      for Lindsay. This workflow never merges it.
+#   C4 Claims and sources audit, monthly. Read-only: an issue, never an edit.
+#   S2 AI tools stay in their lane, weekly. A grader on fixed tricky prompts.
+# Each agent runs its planted test first; a miss means don't trust its all-clear.
+# A missing, expired or out-of-credit key is a failure, never a quiet skip.
+#
+# The off switch (docs/site-qc-switches.md): SITE_QC_AGENTS overrides
+# SITE_QC_MODE for this workflow only; unset means off. SITE_QC_SKIP=C3,C4,S2
+# leaves agents out. The key is the SITE_QC_ANTHROPIC_KEY secret, separate from
+# the site's own key in Vercel.
+
+on:
+  schedule:
+    - cron: "47 15 * * 1"   # Mondays 15:47 UTC = 7:47 AM Pacific: C3 and S2, before the Monday review
+    - cron: "53 15 1 * *"   # the 1st of each month, 15:53 UTC: C4
+  workflow_dispatch:
+    inputs:
+      agents:
+        description: "Which agents (comma list of C3, C4, S2)"
+        default: "C3,C4,S2"
+      fake:
+        description: "Fake AI replies only (no key, no spend): good, misses, or blank for real"
+        default: ""
+
+permissions:
+  contents: write        # C3's findings branch
+  issues: write
+  pull-requests: write   # C3 opens a PR (needs "Allow GitHub Actions to create pull requests" in Settings → Actions)
+
+jobs:
+  agents:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      MODE: ${{ vars.SITE_QC_AGENTS || vars.SITE_QC_MODE || 'off' }}
+      SITE_QC_SKIP: ${{ vars.SITE_QC_SKIP }}
+      SITE_QC_AGENT_MODEL: ${{ vars.SITE_QC_AGENT_MODEL }}
+      CHROME: /usr/bin/google-chrome
+      WHICH: ${{ inputs.agents || (github.event.schedule == '53 15 1 * *' && 'C4' || 'C3,S2') }}
+    steps:
+      - name: Switch is ${{ env.MODE }}
+        run: |
+          case "$MODE" in
+            off) echo "::notice::Site QC agents are switched off (MODE=off). Nothing ran and nothing was spent. Turn on with SITE_QC_AGENTS or SITE_QC_MODE: quiet or on." ;;
+            quiet) echo "::notice::Quiet mode: the agents run and the log is kept, but no issue or pull request is opened and no email is sent." ;;
+            on) echo "On: failures open or update one issue; C3 findings come as a pull request." ;;
+            *) echo "::error::Unknown MODE '$MODE'. Use off, quiet or on."; exit 1 ;;
+          esac
+
+      - uses: actions/checkout@v5
+        if: env.MODE != 'off'
+      - uses: actions/setup-node@v5
+        if: env.MODE != 'off'
+        with:
+          node-version: 20
+
+      - name: Install (the lane check drives the real pages)
+        if: env.MODE != 'off'
+        run: |
+          npm install --no-audit --no-fund
+          (cd tests/replay && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-audit --no-fund --no-save playwright)
+
+      - name: Run the agents (${{ env.WHICH }})
+        if: env.MODE != 'off'
+        id: run
+        env:
+          SITE_QC_ANTHROPIC_KEY: ${{ (inputs.fake || '') == '' && secrets.SITE_QC_ANTHROPIC_KEY || '' }}
+          SITE_QC_FAKE_AI: ${{ (inputs.fake || '') != '' && format('tests/site-qc/agents/fake-{0}.json', inputs.fake) || '' }}
+          SITE_QC_VIDEO: qc-out/video
+        run: node scripts/site-agents.mjs --only "$WHICH"
+        continue-on-error: true
+
+      - name: Keep the log, the reports and the replay
+        if: always() && env.MODE != 'off'
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-agents-${{ github.run_id }}
+          path: qc-out/
+          retention-days: 180
+
+      - name: Results on this page
+        if: always() && env.MODE != 'off'
+        run: |
+          f=qc-out/site-agents.json
+          {
+            echo "## Site QC agents ($MODE mode)"
+            if [ ! -f "$f" ]; then echo "The agents didn't finish. See the log above."; exit 0; fi
+            jq -r '"Model: \(.model)\(if .fake then " (fake replies: a test run)" else "" end) · key: \(.key)"' "$f"
+            echo
+            jq -r '.results[] | select(.level != "ok") | "- **" + .level + "** " + (if .kind=="control" then "[control] " else "" end) + .id + " · " + .check + (if (.detail // "") != "" then " — " + .detail else "" end)' "$f"
+            echo
+            echo "Nothing above means everything passed."
+            for r in qc-out/regulatory-scan.md qc-out/claims-audit.md; do [ -f "$r" ] && { echo; cat "$r"; }; done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: C3 findings as a pull request (never merged here)
+        if: always() && env.MODE == 'on' && (inputs.fake || '') == '' && hashFiles('qc-out/regulatory-scan.md') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          n=$(jq '[.results[] | select(.id=="C3" and .kind=="check" and (.check|test("finding\\(s\\) to review")))][0].check | capture("^(?<n>[0-9]+)").n | tonumber' qc-out/site-agents.json)
+          missed=$(jq '[.results[] | select(.id=="C3" and .kind=="control" and .level=="fail")] | length' qc-out/site-agents.json)
+          if [ "${n:-0}" -eq 0 ]; then echo "No findings, no pull request."; exit 0; fi
+          day=$(date -u +%F); branch="regulatory-scan/$day"
+          mkdir -p docs/regulatory-scan && cp qc-out/regulatory-scan.md "docs/regulatory-scan/$day.md"
+          git config user.name "Site QC agents"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch" && git add "docs/regulatory-scan/$day.md" && git commit -qm "Regulatory scan $day: $n finding(s) to review"
+          git push -q origin "$branch"
+          warn=""; [ "$missed" -gt 0 ] && warn="**The planted test was missed this run: don't trust this report.** "
+          gh pr create --base main --head "$branch" --title "Regulatory scan $day: $n finding(s) to review" \
+            --body "${warn}C3 found these against src/data/regulatory.json. Nothing in the site changes from this PR: read each source, then edit the data file yourself (new entries as \"verified\": false until read). Close it when done. Run: $RUN @lindsayguvenc-coder" \
+            || echo "::error::Couldn't open the pull request. Turn on Settings → Actions → General → Allow GitHub Actions to create and approve pull requests. The report is in the run's download."
+
+      - name: Open, update or close the issue
+        # fake runs are tests: they never open an issue or a pull request
+        if: always() && env.MODE == 'on' && (inputs.fake || '') == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title_prefix="Site agents:"
+          open=$(gh issue list -R "$REPO" --state open --search "\"$title_prefix\" in:title" --json number --jq '.[0].number // empty')
+          f=qc-out/site-agents.json
+          if [ ! -f "$f" ]; then
+            title="$title_prefix agents didn't run (Today)"; body="The Site QC agents didn't finish, so nothing was checked. Run log: $RUN @lindsayguvenc-coder"
+          else
+            site=$(jq '.failedSite' "$f"); ctl=$(jq '.failedControls' "$f")
+            if [ "$site" -eq 0 ] && [ "$ctl" -eq 0 ]; then
+              if [ -n "$open" ]; then gh issue close "$open" -R "$REPO" --comment "The agents pass. Closing. $RUN"; fi
+              echo "All clear."; exit 0
+            fi
+            fails=$(jq -r '.results[] | select(.level=="fail") | "- " + (if .kind=="control" then "**[control]** " else "" end) + .id + " · " + .check + (if .detail != "" then " — " + .detail else "" end)' "$f")
+            warns=$(jq -r '.results[] | select(.level=="warn") | "- " + .id + " · " + .check + (if .detail != "" then " — " + .detail else "" end)' "$f")
+            if [ "$ctl" -gt 0 ]; then what="$ctl planted test(s) were missed: an agent is broken, so don't trust its all-clear lines until it's fixed."; else what="$site finding(s) need you."; fi
+            title="$title_prefix $((site + ctl)) need you (This week)"
+            body="$what
+
+          $fails
+
+          Also worth a look:
+          $warns
+
+          Reports, run log and CSV for the Agent Fleet QC page: $RUN @lindsayguvenc-coder"
+          fi
+          if [ -n "$open" ]; then gh issue edit "$open" -R "$REPO" --title "$title"; gh issue comment "$open" -R "$REPO" --body "$body"
+          else gh issue create -R "$REPO" --title "$title" --body "$body"; fi
+
+      - name: Mark the run failed if anything failed
+        if: env.MODE == 'on' && steps.run.outcome == 'failure'
+        run: exit 1

@@ -33,8 +33,17 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
   are made: [principles.md](principles.md); decisions: [decisions.md](decisions.md).
 
 ## Site QC: next batch
-- [ ] **AI agents (batch 4):** regulatory scan, claims and sources audit, AI
-      tools stay in their lane. Needs an Anthropic API key as a GitHub secret.
+- [ ] **AI agents (batch 4):** regulatory scan (C3), claims and sources
+      audit (C4), AI tools stay in their lane (S2). Built Nov 16
+      (`scripts/site-agents.mjs`, `.github/workflows/site-agents.yml`), tested
+      with fake AI replies only (`node tests/site-qc/agents/run-fake.mjs`).
+      Each has a planted test (`tests/site-qc/agents/planted.json`) and a key
+      check. Follows `SITE_QC_AGENTS`, else `SITE_QC_MODE`. Next: a real run with a
+      temporary, spend-capped key as the `SITE_QC_ANTHROPIC_KEY` secret; then
+      the permanent key. Not covered yet: Substack in C4 (with the Substack
+      cleanup), ROI in S2 (lot 2 of the lane prompts), and claim labels as
+      data (C4 reads regulatory.json's `verified` flag and node gaps with
+      their key documents until then).
 - [ ] **R1: Commons and Monitor settings stay in step.** Weekly, run from the
       private agent-qc-monitor repo against this one.
 - [ ] **Substack in the link and source checks.** Addresses decided Nov 16:
