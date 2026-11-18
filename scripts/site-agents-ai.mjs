@@ -91,7 +91,7 @@ export async function callClaude({ agent, label, system, messages, tools, max_to
     return { text: typeof ans === "string" ? ans : JSON.stringify(ans), stop: "end_turn", raw: null };
   }
   if (!key()) throw new KeyProblem(classifyKeyProblem("missing"));
-  const body = { model: MODEL, max_tokens, temperature: 0, system, messages };
+  const body = { model: MODEL, max_tokens, system, messages };
   if (tools) body.tools = tools;
   let r, j;
   for (let attempt = 0; attempt < 2; attempt++) { // one retry, for an overloaded API only
