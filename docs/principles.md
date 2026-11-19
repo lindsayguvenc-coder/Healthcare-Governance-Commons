@@ -47,3 +47,28 @@ A commit pushed to a pull request's branch after the PR merges never reaches
 main, and nothing says so. It happened twice on Nov 14, 2026 (the fixes meant
 for #58 and #59). The weekly site checks (O4) now look for it. Before saying
 a PR is ready, check it's still open and its head is the last commit pushed.
+
+## A hard stop over trust
+
+Set Nov 19, 2026. Applies to every tool and agent here, and to Lindsay's other
+builds.
+
+Where safety is at stake and it's reasonable to build one, a hard stop goes in
+the code instead of trusting a person to remember. That includes the person
+building it. A switch, a setting, or a note someone has to read is trust. A
+hard stop is something the code refuses to do.
+
+- **Safety means:** anything that could expose people's data, spend past a
+  cap, publish something unchecked, or let an agent act outside its job.
+- **A hard stop:** the code refuses the input or the action and says why. No
+  variable or switch can turn it off. Changing it takes a code change through
+  a pull request, where it's seen and recorded.
+- **Where reasonable:** if a hard stop would block ordinary use, use the
+  strongest guard that doesn't, and mark the choice with a `DECISION(id):`
+  comment so it's on the ledger.
+- **Already in place:** never-events are code, not trust
+  ([new-agent-checklist.md](new-agent-checklist.md)). An agent with no key, or
+  a dead one, reports "Didn't run" or "Stopped" and never skips quietly.
+- **Next:** the review-queue triage agent gets built to read only its planted
+  test file. Pointing it at real submissions waits until someone owns
+  security.
