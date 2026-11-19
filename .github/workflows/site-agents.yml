@@ -32,6 +32,9 @@ on:
       fake:
         description: "Fake AI replies only (no key, no spend): good, misses, or blank for real"
         default: ""
+      key_check:
+        description: "Key check only: type yes to check the agents' key is ready (a free check, then one 1-token message, a tiny fraction of a cent; nothing else runs)"
+        default: ""
       pages_only:
         description: "Library pages only: type yes to read every library page, compare its top with last run's, and print what was seen (no AI, no spend; the agents box is ignored)"
         default: ""
@@ -82,7 +85,7 @@ jobs:
       - name: Last run's page tops (C5 layer 1's baseline)
         # The newest "library-tops" download from an earlier run. None, or a
         # failed pull, means layer 1 says so in its results; it's never skipped quietly.
-        if: env.MODE != 'off' && (inputs.fake || '') == '' && (inputs.pages_only == 'yes' || contains(env.WHICH, 'C5'))
+        if: env.MODE != 'off' && inputs.key_check != 'yes' && (inputs.fake || '') == '' && (inputs.pages_only == 'yes' || contains(env.WHICH, 'C5'))
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
@@ -94,12 +97,21 @@ jobs:
           gh run download "$1" -R "$REPO" -n library-tops -D qc-out/baseline
           echo "Baseline: page tops saved by run $1 ($2)."
 
+      - name: Key check only
+        if: env.MODE != 'off' && inputs.key_check == 'yes'
+        env:
+          SITE_QC_ANTHROPIC_KEY: ${{ secrets.SITE_QC_ANTHROPIC_KEY }}
+        run: |
+          node scripts/site-agents.mjs --key-check | tee qc-out-key.txt
+          { echo "## Site QC agents: key check only"; cat qc-out-key.txt; } >> "$GITHUB_STEP_SUMMARY"
+          grep -q "key is ready" qc-out-key.txt
+
       - name: Library pages only (no AI)
-        if: env.MODE != 'off' && inputs.pages_only == 'yes'
+        if: env.MODE != 'off' && inputs.key_check != 'yes' && inputs.pages_only == 'yes'
         run: node scripts/site-agents.mjs --pages-only
 
       - name: Run the agents (${{ env.WHICH }})
-        if: env.MODE != 'off' && inputs.pages_only != 'yes'
+        if: env.MODE != 'off' && inputs.key_check != 'yes' && inputs.pages_only != 'yes'
         id: run
         env:
           SITE_QC_ANTHROPIC_KEY: ${{ (inputs.fake || '') == '' && secrets.SITE_QC_ANTHROPIC_KEY || '' }}
@@ -109,7 +121,7 @@ jobs:
         continue-on-error: true
 
       - name: Keep the log, the reports and the replay
-        if: always() && env.MODE != 'off'
+        if: always() && env.MODE != 'off' && inputs.key_check != 'yes'
         uses: actions/upload-artifact@v4
         with:
           name: site-agents-${{ github.run_id }}
@@ -125,7 +137,7 @@ jobs:
           retention-days: 90
 
       - name: Results on this page
-        if: always() && env.MODE != 'off'
+        if: always() && env.MODE != 'off' && inputs.key_check != 'yes'
         run: |
           f=qc-out/site-agents.json
           {
@@ -171,7 +183,7 @@ jobs:
 
       - name: Open, update or close the issue
         # fake runs are tests: they never open an issue or a pull request
-        if: always() && env.MODE == 'on' && (inputs.fake || '') == '' && inputs.pages_only != 'yes'
+        if: always() && env.MODE == 'on' && inputs.key_check != 'yes' && (inputs.fake || '') == '' && inputs.pages_only != 'yes'
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}

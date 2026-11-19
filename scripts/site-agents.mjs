@@ -43,7 +43,7 @@ import { join, extname } from "node:path";
 import { createRequire } from "node:module";
 import http from "node:http";
 import { randomInt } from "node:crypto";
-import { keyCheck, callClaude, readJson, classifyKeyProblem, KeyProblem, usage, fakeMode, MODEL } from "./site-agents-ai.mjs";
+import { keyCheck, creditCheck, CHECK_MODEL, callClaude, readJson, classifyKeyProblem, KeyProblem, usage, fakeMode, MODEL } from "./site-agents-ai.mjs";
 
 const root = new URL("..", import.meta.url).pathname;
 const read = p => readFileSync(join(root, p), "utf8");
@@ -869,6 +869,18 @@ async function runC6() {
 
 // ── Run ──────────────────────────────────────────────────────────────────────
 mkdirSync(join(root, "qc-out"), { recursive: true });
+// --key-check: is the agents' key ready for the next real run? The free model
+// list first, then one 1-token message for credit and cap. Nothing else runs,
+// nothing is written, nothing opens. Exits 1 if the key isn't ready.
+if (process.argv.includes("--key-check")) {
+  const a = await keyCheck();
+  console.log(`${a.ok ? "✓" : "✗"} Key: ${a.say}${a.problem ? ` (${a.problem})` : ""}`);
+  const b = a.ok ? await creditCheck() : null;
+  if (b) console.log(`${b.ok ? "✓" : "✗"} Credit: ${b.say}${b.problem ? ` (${b.problem})` : ""}`);
+  console.log(a.ok && b?.ok ? "\nThe key is ready for the next real run." : "\nThe key is NOT ready: fix it before the next real run.");
+  process.exit(a.ok && b?.ok ? 0 : 1);
+}
+
 // --pages-only: read every library page the way C5 does and print what was
 // seen. No AI, no key, no spend: for tracing a missed move note.
 if (process.argv.includes("--pages-only")) {
