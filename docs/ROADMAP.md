@@ -131,6 +131,13 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
 - [ ] **Detection-rate window** (decision `rule-power-window`): set it from how
       often the hospital runs controls, not a fixed 10.
 
+## Principles: restructure and re-orient (added Nov 19, 2026, for another day)
+- [ ] **Re-orient the Commons to its principles.** A quick check first: does
+      each tool and agent follow [principles.md](principles.md) (decide late and
+      out loud, a hard stop over trust, merged means merged)? Then a note on how
+      to restructure where it doesn't. Same check for the private
+      agent-qc-monitor repo against its own principles doc. Not scheduled yet.
+
 ## To build (decided Oct 27, 2026)
 - [ ] **Weekly currency scan.** Federal Register, FDA guidance, CMS, state AI
       laws, EU AI Act against `src/data/regulatory.json`. Opens a pull request
