@@ -35,6 +35,12 @@ tab, not Variables), separate from the site's key in Vercel. With no key, an
 expired key, or an account out of credit, every agent that needed it reports
 "Didn't run" or "Stopped" with the reason. It never skips quietly.
 
+Is the key ready before a real run? Actions → Site QC agents → Run workflow,
+set **key check only** to `yes`. It does the free key check, then one 1-token
+message on Haiku (a tiny fraction of a cent) to prove the account has credit
+and the key is under its cap. Nothing else runs and nothing opens. The run goes
+red if the key isn't ready, even in quiet mode, and says why on its page.
+
 Test runs with no key and no spend: Actions → Site QC agents → Run workflow,
 set **fake** to `good` (every agent does its job) or `misses` (every agent is
 broken, so every planted test must show up as missed). Fake runs never open an

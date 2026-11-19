@@ -68,6 +68,24 @@ export async function keyCheck() {
   }
 }
 
+// The "key check only" run: the free check above, then one 1-token message on
+// the cheapest model, because a key that's accepted but out of credit or over
+// its cap only shows on a real call. Costs a tiny fraction of a cent.
+export const CHECK_MODEL = process.env.SITE_QC_CHECK_MODEL || "claude-haiku-5-5";
+export async function creditCheck() {
+  if (FAKE) return { ok: true, say: "Fake AI: no key used." };
+  try {
+    const r = await fetch(`${API}/messages`, { method: "POST",
+      headers: { "x-api-key": key(), "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model: CHECK_MODEL, max_tokens: 1, messages: [{ role: "user", content: "Hi" }] }) });
+    const body = await r.json().catch(() => ({}));
+    if (r.ok) return { ok: true, say: `A 1-token message on ${CHECK_MODEL} went through, so the account has credit and the key is under its cap.` };
+    return { ok: false, ...(classifyKeyProblem(r.status, body) || { problem: "unknown", say: `The 1-token message got HTTP ${r.status}: ${body?.error?.message || "no reason given"}` }) };
+  } catch (e) {
+    return { ok: false, problem: "unreachable", say: `Couldn't reach the API for the 1-token message (${e.cause?.code || e.message}).` };
+  }
+}
+
 // Spend and size, per agent, so the run can report them and stop at its limit.
 export const usage = {};
 const tally = (agent, u = {}, searches = 0) => {
