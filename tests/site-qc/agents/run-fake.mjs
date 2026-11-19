@@ -19,7 +19,7 @@ const ok = (name, cond, extra = "") => { console.log(`${cond ? "✓" : "✗"} ${
 const has = (s, id, kind, level, re) => s.results.some(r => r.id === id && r.kind === kind && r.level === level && re.test(r.check + " " + r.detail));
 
 const good = run({ SITE_QC_FAKE_AI: `${here}/fake-good.json` });
-ok("Good replies: every planted test caught", good.failedControls === 0 && good.results.filter(r => r.kind === "control").length === 35, JSON.stringify(good.results.filter(r => r.kind === "control" && !r.ok)));
+ok("Good replies: every planted test caught", good.failedControls === 0 && good.results.filter(r => r.kind === "control").length === 37, JSON.stringify(good.results.filter(r => r.kind === "control" && !r.ok)));
 ok("Good replies: no failures", good.failedSite === 0, JSON.stringify(good.results.filter(r => r.level === "fail")));
 ok("Good replies: C3 report names the finding", readFileSync(join(root, "qc-out/regulatory-scan.md"), "utf8").includes("HTI-6"));
 ok("Good replies: C4 flags the found source for a Needs-source claim", has(good, "C4", "check", "warn", /Possible source/));
