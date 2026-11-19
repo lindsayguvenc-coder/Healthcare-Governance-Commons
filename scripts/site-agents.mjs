@@ -477,6 +477,29 @@ function pickBlock(items, flagged) {
 const itemLine = (it, page, wide) => `- ${it.id}: ${it.title} (${it.source}${it.date ? ", " + it.date : ""}). Status as listed: ${it.status || "none given"}. ${it.url}\n  page now: ${page?.pdf ? "(a PDF; no page text)" : page?.text ? `"${page.text.slice(0, 3000)}"` : `(couldn't read it: ${page?.status || page?.error || "no answer"})`}${wide ? `\n  note: this notice shows on ${wide.ids.length} pages from ${wide.site}, so it's a site-wide banner and may concern only one of them: "${wide.note}"` : ""}`;
 const wideFor = (notes, eid) => notes.siteWide.find(g => g.ids.includes(eid));
 
+// Every library page: a plain fetch, then a browser re-read for any page with
+// no move note. Writes qc-out/library-pages.csv (how each page was read) and
+// returns the pages the backstop and the agent see.
+async function readLibraryPages(items) {
+  const pages = await readPages(items);
+  const again = items.filter(it => !pages[it.id]?.pdf && !movedNote(pages[it.id]?.text));
+  const rendered = await renderPages(again);
+  for (const [k, v] of Object.entries(rendered.out)) {
+    const fetched = pages[k] || {};
+    const b = { status: v.status, characters: (v.text || "").length, error: v.error || "", note: movedNote(v.text) || "" };
+    if (v.text && (b.note || !fetched.text)) pages[k] = { ...v, how: "browser", fetch: { status: fetched.status, characters: (fetched.text || "").length, error: fetched.error || "" } };
+    else pages[k] = { ...fetched, browser: b };
+  }
+  const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const rows = items.map(it => {
+    const pg = pages[it.id] || {};
+    const other = pg.browser ? `browser ${pg.browser.status || pg.browser.error || "no answer"}, ${pg.browser.characters} chars` : pg.fetch ? `fetch ${pg.fetch.status || pg.fetch.error || "no answer"}, ${pg.fetch.characters} chars` : "";
+    return { id: it.id, url: it.url, status: pg.status ?? pg.error ?? "", how: pg.pdf ? "pdf" : pg.how || "fetch", chars: (pg.text || "").length, other, note: movedNote(pg.text) || "", start: (pg.text || "").slice(0, 120) };
+  });
+  if (!fakeMode()) writeFileSync(join(root, "qc-out/library-pages.csv"), "id,url,status,read by,characters,other read,move note,page starts\n" + rows.map(r => [r.id, r.url, r.status, r.how, r.chars, r.other, r.note, r.start].map(q).join(",")).join("\n") + "\n");
+  return { pages, rendered, rows };
+}
+
 async function runC5() {
   const id = "C5", P = PLANTED.C5;
   // Planted test: closed book. A made-up site whose banner says one document
@@ -500,19 +523,9 @@ async function runC5() {
 
   // Every page, every week, through the code backstop.
   const { asOf, items } = libraryItems();
-  const pages = await readPages(items);
-  const again = items.filter(it => !pages[it.id]?.pdf && !movedNote(pages[it.id]?.text));
-  const rendered = await renderPages(again);
+  const { pages, rendered } = await readLibraryPages(items);
   if (rendered.error) rec(id, "Couldn't start the browser to re-read pages; plain fetch only", "check", "warn", rendered.error);
-  for (const [k, v] of Object.entries(rendered.out)) {
-    if (v.text && (movedNote(v.text) || !pages[k]?.text)) pages[k] = { ...v, how: "browser" };
-  }
   const notes = moveNotes(items, pages);
-  if (!fakeMode()) writeFileSync(join(root, "qc-out/library-pages.csv"), "id,url,status,read by,characters,move note\n" + items.map(it => {
-    const pg = pages[it.id] || {};
-    const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    return [it.id, it.url, pg.status ?? "", pg.pdf ? "pdf" : pg.how || "fetch", (pg.text || "").length, movedNote(pg.text) || ""].map(q).join(",");
-  }).join("\n") + "\n");
   const flagged = new Set([...Object.keys(notes.own), ...notes.siteWide.flatMap(g => g.ids)]);
   const unread = items.filter(it => !pages[it.id]?.pdf && !pages[it.id]?.text);
   if (!fakeMode() && unread.length > items.length / 2) rec(id, `Most library pages couldn't be read (${unread.length} of ${items.length}); network blocked on the runner?`, "check", "warn");
@@ -614,6 +627,18 @@ async function runC6() {
 
 // ── Run ──────────────────────────────────────────────────────────────────────
 mkdirSync(join(root, "qc-out"), { recursive: true });
+// --pages-only: read every library page the way C5 does and print what was
+// seen. No AI, no key, no spend: for tracing a missed move note.
+if (process.argv.includes("--pages-only")) {
+  const { items } = libraryItems();
+  const { pages, rendered, rows } = await readLibraryPages(items);
+  const notes = moveNotes(items, pages);
+  console.log(`Library pages only: ${items.length} pages. Browser: ${rendered.error ? "couldn't start: " + rendered.error : "re-read " + Object.keys(rendered.out).length + " pages"}.`);
+  for (const r of rows) console.log(`${r.note ? "!" : r.chars ? "✓" : "✗"} ${r.id} · ${r.how} ${r.status} · ${r.chars} chars${r.other ? " · other: " + r.other : ""}${r.note ? " · MOVE NOTE: " + r.note : ""}\n    ${r.url}\n    starts: ${r.start}`);
+  for (const g of notes.siteWide) console.log(`Site-wide notice on ${g.site} (${g.ids.join(", ")}): ${g.note}`);
+  for (const [k, n] of Object.entries(notes.own)) console.log(`Own move note on ${k}: ${n}`);
+  process.exit(0);
+}
 const agents = { C3: runC3, C4: runC4, S2: runS2, C5: runC5, C6: runC6 };
 const want = ONLY.filter(a => agents[a]);
 const skipped = want.filter(a => SKIP.has(a));

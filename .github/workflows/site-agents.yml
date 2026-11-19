@@ -29,6 +29,9 @@ on:
       fake:
         description: "Fake AI replies only (no key, no spend): good, misses, or blank for real"
         default: ""
+      pages_only:
+        description: "Library pages only: type yes to read every library page and print what was seen (no AI, no spend; the agents box is ignored)"
+        default: ""
 
 permissions:
   contents: write        # C3's findings branch
@@ -68,8 +71,12 @@ jobs:
           npm install --no-audit --no-fund
           (cd tests/replay && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-audit --no-fund --no-save playwright && npx playwright install ffmpeg)
 
+      - name: Library pages only (no AI)
+        if: env.MODE != 'off' && inputs.pages_only == 'yes'
+        run: node scripts/site-agents.mjs --pages-only
+
       - name: Run the agents (${{ env.WHICH }})
-        if: env.MODE != 'off'
+        if: env.MODE != 'off' && inputs.pages_only != 'yes'
         id: run
         env:
           SITE_QC_ANTHROPIC_KEY: ${{ (inputs.fake || '') == '' && secrets.SITE_QC_ANTHROPIC_KEY || '' }}
@@ -92,13 +99,14 @@ jobs:
           f=qc-out/site-agents.json
           {
             echo "## Site QC agents ($MODE mode)"
+            if [ "${{ inputs.pages_only }}" = "yes" ]; then echo "Library pages only: see the log of the step above."; exit 0; fi
             if [ ! -f "$f" ]; then echo "The agents didn't finish. See the log above."; exit 0; fi
             jq -r '"Model: \(.model)\(if .fake then " (fake replies: a test run)" else "" end) · key: \(.key)"' "$f"
             echo
             jq -r '.results[] | select(.level != "ok") | "- **" + .level + "** " + (if .kind=="control" then "[control] " else "" end) + .id + " · " + .check + (if (.detail // "") != "" then " — " + .detail else "" end)' "$f"
             echo
             echo "Nothing above means everything passed."
-            for r in qc-out/regulatory-scan.md qc-out/claims-audit.md qc-out/library-versions.md qc-out/library-additions.md; do [ -f "$r" ] && { echo; cat "$r"; }; done
+            for r in qc-out/regulatory-scan.md qc-out/claims-audit.md qc-out/library-versions.md qc-out/library-additions.md; do if [ -f "$r" ]; then echo; cat "$r"; fi; done
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Findings as pull requests, one per report (never merged here)
@@ -132,7 +140,7 @@ jobs:
 
       - name: Open, update or close the issue
         # fake runs are tests: they never open an issue or a pull request
-        if: always() && env.MODE == 'on' && (inputs.fake || '') == ''
+        if: always() && env.MODE == 'on' && (inputs.fake || '') == '' && inputs.pages_only != 'yes'
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
