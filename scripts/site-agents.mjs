@@ -367,9 +367,13 @@ const cell = s => String(s || "").replace(/\|/g, "/").replace(/\n/g, " ");
 // MA plans" (42 CFR 422.101, first real run); "is superseded by" and "has
 // moved" are. Returns the sentence that says so.
 const MOVED = /\b(?:has|have|we've|we have) (?:been )?(?:moved|relocated|migrated)\b|\bmoved (?:to|over to|into)\b|\bnow (?:lives|hosted|housed|located) (?:at|on|in)\b|\bnew home\b|\bhas been (?:replaced|superseded|retired|archived|withdrawn|discontinued|deprecated|sunset)\b|\b(?:is|was|are|were|been|now) superseded by\b|\bno longer (?:maintained|available|updated|supported)\b|\bthis (?:page|site|resource) is (?:no longer|archived)\b/i;
+// Short arrow notices count too (CHAI changed its banner in Nov 2026 to
+// "Update Applied Model Card → Registry", which has no "moved" in it). Calls
+// to action ("join us →", "read more →") don't.
+const ARROW = /(?<!\blast )\b(?:update|moved|relocated)\s*:?\s+(?![^→>\n]*\b(?:join|sign up|subscribe|register|donate|apply|learn more|read more|contact|shop|buy)\b)[^.→\n]{2,60}?\s*(?:→|->)\s*[\w-]+/i;
 function movedNote(text) {
   const t = String(text || "").slice(0, 20000), m = t.match(MOVED);
-  if (!m) return null;
+  if (!m) { const a = t.match(ARROW); return a ? a[0].replace(/\s+/g, " ").trim() : null; }
   const a = Math.max(t.lastIndexOf(". ", m.index), t.lastIndexOf("! ", m.index), t.lastIndexOf("? ", m.index));
   const e = t.slice(m.index + m[0].length).search(/[.!?](\s|$)/);
   return t.slice(a < 0 ? 0 : a + 2, e < 0 ? m.index + m[0].length + 200 : m.index + m[0].length + e + 1).trim().slice(0, 300);
@@ -518,6 +522,8 @@ async function runC5() {
   pass(id, "Control: the code backstop reads the planted move note", "control", Boolean(movedNote(P.pages[P.movedId])));
   pass(id, "Control: the code backstop reads a notice on two pages of one site as one site-wide banner", "control", pn.siteWide.length === 1 && [P.movedId, P.siblingId].every(x => pn.siteWide[0].ids.includes(x)), JSON.stringify(pn.siteWide.map(g => g.ids)));
   pass(id, "Control: the code backstop leaves a page that only supersedes an older edition alone", "control", !movedNote(P.pages[P.steadyId]));
+  pass(id, "Control: the code backstop reads CHAI's Nov 2026 arrow banner as a move note", "control", movedNote("Applied Model Card - Applied Model Card | CHAI Update Applied Model Card → Registry About Us Our Work ▾ Cybersecurity") === "Update Applied Model Card → Registry");
+  pass(id, "Control: the code backstop leaves calls to action with an arrow alone", "control", !movedNote("Updated quarterly: join us → Membership. Read more → News") && !movedNote("Last update March 2026 Contents → Section 1") && !movedNote("Learn more → About"));
   pass(id, "Control: the code backstop leaves regulation text (\"unless superseded by\") alone", "control", !movedNote("( b ) Comply with— ( 1 ) CMS's national coverage determinations; ( 2 ) General coverage and benefit conditions included in Traditional Medicare laws, unless superseded by laws applicable to MA plans."));
   measures.push([NAMES[id], "Planted items found", caught ? 100 : 0]);
 
