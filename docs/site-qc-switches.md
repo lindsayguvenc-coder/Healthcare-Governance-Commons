@@ -22,7 +22,10 @@ New repository variable** (or tap an existing one to change it).
 | `SITE_QC_AGENTS` | off, quiet, on | Overrides it for the AI agents only (C3, C4, S2, C5, C6: `.github/workflows/site-agents.yml`). These spend money, so they get their own switch. |
 | `SITE_QC_AGENT_MODEL` | a model id | The model the agents use. Unset: claude-sonnet-5-5, the same as the site's tools. |
 | `SITE_QC_SKIP` | check ids, comma-separated, e.g. `N3,F3` | Leaves those checks out of every run; the run says they were skipped. Ids are in the Site QC crosswalk Sheet. Agents too: `C3`, `C4`, `S2`, `C5`, `C6`. |
-| `SITE_QC_C5_BLOCK` | a number | How many library entries C5 checks for newer versions each week (drafts and recurring reports always, then a rotating slice). Unset: 20. Every page still gets the code check for a move note every week. |
+| `SITE_QC_C5_BLOCK` | a number | How many library entries C5 checks for newer versions each week (drafts and recurring reports always, then a rotating slice). Unset: 20. Every page still gets all three move checks every week (layer 1 baseline compare, layer 2 AI reader, layer 3 word pattern), and any page they flag goes to the front of the block. |
+| `SITE_QC_C5_TOP_CHARS` | a number | C5 layer 1 (baseline compare): how many characters at the top of each page count. A new or changed word there is flagged. Unset: 600. **To loosen** if it flags too often, lower it (the very top, where banners go). Lowering it is safe any time; raising it can flag extra changes for one run, until the next baseline is saved. |
+| `SITE_QC_C5_TOP_IGNORE` | a pattern (regex) | C5 layer 1: each run of new or gone words is checked against it, and a match is ignored. E.g. `^(\w+ )?\d{1,2},?( \d{4})?$` ignores a changed date ("Nov 25," for "Nov 18,") and nothing else. Unset: nothing ignored. The other way to loosen it. |
+| `SITE_QC_C5_READER_CHARS` | a number | C5 layer 2 (the closed-book AI reader): how much of each page's top it reads. Unset: 2500 (about $0.15 a week for ~58 pages). |
 | `SITE_QC_PR` | warn, enforce | PR guards: `warn` shows failures without failing the check; unset or `enforce` fails it. The older drift checks always enforce. |
 
 ## The AI agents' key

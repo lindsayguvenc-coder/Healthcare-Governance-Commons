@@ -63,6 +63,24 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
         banner and reported once, for the agent to tie to the right entry
         (CHAI's "Applied Model Card details and examples have moved to the
         CHAI Registry" shows on every chai.org page).
+        **Three move checks (Nov 18), every page every week**, because CHAI
+        changed its banner to "Update Applied Model Card → Registry" and the
+        word pattern alone missed it:
+        1. *Baseline compare.* Each run saves the top text of every page
+           (the `library-tops` download) and compares it with the last run's,
+           pulled from that run's saved files. New or changed words are
+           flagged by site; the same change on several pages of one site is
+           one change. No baseline is said out loud. Tight to start; loosen
+           with `SITE_QC_C5_TOP_CHARS` or `SITE_QC_C5_TOP_IGNORE`.
+        2. *Closed-book AI reader.* One call (about $0.15) over the top of
+           all ~58 pages, search off: which say they moved, were replaced or
+           have a new version? A planted page with a banner in made-up
+           wording that changes every run rides in the same call, beside a
+           clean page that only supersedes an old edition. Quotes are checked
+           against the page in code.
+        3. *Word pattern* (#77), kept underneath.
+        Planted tests: QC-C5T-0001 (layer 1, code only, free) and the
+        reader's rotating banner (seed in the report).
       - **Lane 2, C6 additions (weekly, Mondays; decided Nov 17: the field
         moves fast, so better reasonably up to date).** Documents that
         meet `docs/library-criteria.md` and aren't in the library yet, by

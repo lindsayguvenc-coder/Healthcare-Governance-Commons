@@ -19,7 +19,7 @@ const ok = (name, cond, extra = "") => { console.log(`${cond ? "✓" : "✗"} ${
 const has = (s, id, kind, level, re) => s.results.some(r => r.id === id && r.kind === kind && r.level === level && re.test(r.check + " " + r.detail));
 
 const good = run({ SITE_QC_FAKE_AI: `${here}/fake-good.json` });
-ok("Good replies: every planted test caught", good.failedControls === 0 && good.results.filter(r => r.kind === "control").length === 37, JSON.stringify(good.results.filter(r => r.kind === "control" && !r.ok)));
+ok("Good replies: every planted test caught", good.failedControls === 0 && good.results.filter(r => r.kind === "control").length === 47, JSON.stringify(good.results.filter(r => r.kind === "control" && !r.ok)));
 ok("Good replies: no failures", good.failedSite === 0, JSON.stringify(good.results.filter(r => r.level === "fail")));
 ok("Good replies: C3 report names the finding", readFileSync(join(root, "qc-out/regulatory-scan.md"), "utf8").includes("HTI-6"));
 ok("Good replies: C4 flags the found source for a Needs-source claim", has(good, "C4", "check", "warn", /Possible source/));
@@ -27,6 +27,10 @@ ok("Good replies: C5 reports the planted page that moved but still loads, and th
 ok("Good replies: C5 names both files to fix for a link the library and toolbox share", readFileSync(join(root, "qc-out/library-versions.md"), "utf8").includes("library.json: chai-applied-model-card; toolbox.json: chai-card"));
 ok("Good replies: C5 reads CHAI's banner as one site-wide notice and the agent ties it to the model card", has(good, "C5", "check", "ok", /Site-wide notice on chai.org \(3 pages\), tied by the agent to chai-applied-model-card/));
 ok("Good replies: C5 raises no backstop warning when the agent reported the move", !has(good, "C5", "check", "warn", /says it moved|Site-wide/));
+ok("Good replies: C5 layer 1 flags CHAI's new banner once, by site, against last run's tops", has(good, "C5", "check", "warn", /Top of the page changed since 2026-11-16 on chai\.org \(3 pages, the same change on each\).*moved to the CHAI Registry/));
+ok("Good replies: C5 layer 1's change is explained by the agent's finding, so it adds nothing to review", has(good, "C5", "check", "ok", /Top-of-page change on chai\.org \(3 pages\) explained/));
+ok("Good replies: C5 saves this run's page tops for next time", JSON.parse(readFileSync(join(root, "qc-out/library-tops.json"), "utf8")).pages["chai-applied-model-card"]?.top.includes("CHAI Registry"));
+ok("Good replies: C5 report says how each of the three layers looked, and the reader's planted banner", ["Layer 1, baseline compare:** against 2026-11-16", "Layer 2, closed-book AI reader:** read", "Planted banner (seed 1118)", "Layer 3, word pattern"].every(t => readFileSync(join(root, "qc-out/library-versions.md"), "utf8").includes(t)));
 ok("Good replies: C6 report lists the proposal under its node", readFileSync(join(root, "qc-out/library-additions.md"), "utf8").includes("## contestation"));
 ok("Good replies: S2 graded all four tool answers", has(good, "S2", "check", "ok", /4 tool answer\(s\) graded, 4 in their lane/));
 
@@ -46,6 +50,12 @@ ok("Broken agents: C5 pinning the planted banner on the wrong page is a control 
 ok("Broken agents: C5 move note the agent didn't report is caught by the code backstop", has(miss, "C5", "check", "warn", /says it moved: toolbox:tripod.*agent didn't report/));
 ok("Broken agents: C5 site-wide notice the agent didn't tie to any entry warns", has(miss, "C5", "check", "warn", /Site-wide notice on chai.org \(3 pages\) the agent didn't tie/));
 ok("Broken agents: C5 report still lists the backstop's move", readFileSync(join(root, "qc-out/library-versions.md"), "utf8").includes("code backstop"));
+ok("Broken agents: C5 with no saved baseline says so out loud", has(miss, "C5", "check", "warn", /Layer 1 \(baseline compare\) had nothing to compare against/) && readFileSync(join(root, "qc-out/library-versions.md"), "utf8").includes("**nothing to compare against"));
+ok("Broken agents: C5's AI reader missing the planted banner is a control failure", has(miss, "C5", "control", "fail", /AI reader flags the planted banner in made-up wording/));
+ok("Broken agents: C5's AI reader flagging the page that only supersedes an old edition is a control failure", has(miss, "C5", "control", "fail", /AI reader leaves the planted page/));
+ok("Broken agents: C5's AI reader quoting words that aren't on the page warns", has(miss, "C5", "check", "warn", /AI reader's quote isn't on the page: toolbox:tripod/));
+ok("Broken agents: C5's AI reader flagging a page it wasn't given warns", has(miss, "C5", "check", "warn", /page it wasn't given: qc-c5-not-a-page/));
+ok("Broken agents: C5's AI reader flag the agent didn't report warns and goes in the report", has(miss, "C5", "check", "warn", /AI reader says the page says it moved: toolbox:tripod.*agent didn't report/) && readFileSync(join(root, "qc-out/library-versions.md"), "utf8").includes("layer 2, AI reader"));
 ok("Broken agents: C6 missing the planted document is a control failure", has(miss, "C6", "control", "fail", /QC-C6-0001/));
 ok("Broken agents: C6 proposing the news story is a control failure", has(miss, "C6", "control", "fail", /news story/));
 ok("Broken agents: C6 re-proposing a listed document is a control failure", has(miss, "C6", "control", "fail", /already in the library/));
