@@ -104,6 +104,25 @@
   "chai-playbooks-2026": "Coalition for Health AI. Applied Model Card details and examples have moved to the CHAI Registry. Access the latest content here. AI governance playbooks. (Fake page text for a test run.)",
   "toolbox:tripod": "TRIPOD Statement. This website has moved to a new address. (Fake page text for a test run.)"
  },
+ "C5:reader": {
+  "flags": [
+   {
+    "id": "{{steady}}",
+    "kind": "new_version",
+    "says": "This edition supersedes version 2.0"
+   },
+   {
+    "id": "toolbox:tripod",
+    "kind": "moved",
+    "says": "TRIPOD will close this site at the end of the year."
+   },
+   {
+    "id": "qc-c5-not-a-page",
+    "kind": "moved",
+    "says": "made up"
+   }
+  ]
+ },
  "C5:scan": {
   "findings": [
    {

@@ -7,6 +7,9 @@ name: Site QC agents
 #   S2 AI tools stay in their lane, weekly. A grader on fixed tricky prompts.
 #   C5 Library versions, weekly: newer versions, final releases, next editions
 #      and moved pages for library.json and toolbox.json links. A pull request.
+#      Moves are looked for three ways: each page's top against last run's
+#      (the "library-tops" download, pulled before the run and saved after),
+#      a closed-book AI reader over every page, and a word pattern.
 #   C6 Library additions, weekly: documents that meet the library criteria
 #      and aren't in yet, by node. A pull request.
 # Each agent runs its planted test first; a miss means don't trust its all-clear.
@@ -30,13 +33,14 @@ on:
         description: "Fake AI replies only (no key, no spend): good, misses, or blank for real"
         default: ""
       pages_only:
-        description: "Library pages only: type yes to read every library page and print what was seen (no AI, no spend; the agents box is ignored)"
+        description: "Library pages only: type yes to read every library page, compare its top with last run's, and print what was seen (no AI, no spend; the agents box is ignored)"
         default: ""
 
 permissions:
   contents: write        # C3's findings branch
   issues: write
   pull-requests: write   # C3, C5 and C6 open PRs (needs "Allow GitHub Actions to create pull requests" in Settings → Actions)
+  actions: read          # C5 pulls last run's page tops (the "library-tops" download)
 
 jobs:
   agents:
@@ -46,6 +50,10 @@ jobs:
       MODE: ${{ vars.SITE_QC_AGENTS || vars.SITE_QC_MODE || 'off' }}
       SITE_QC_SKIP: ${{ vars.SITE_QC_SKIP }}
       SITE_QC_AGENT_MODEL: ${{ vars.SITE_QC_AGENT_MODEL }}
+      SITE_QC_C5_BLOCK: ${{ vars.SITE_QC_C5_BLOCK }}
+      SITE_QC_C5_TOP_CHARS: ${{ vars.SITE_QC_C5_TOP_CHARS }}
+      SITE_QC_C5_TOP_IGNORE: ${{ vars.SITE_QC_C5_TOP_IGNORE }}
+      SITE_QC_C5_READER_CHARS: ${{ vars.SITE_QC_C5_READER_CHARS }}
       CHROME: /usr/bin/google-chrome
       WHICH: ${{ inputs.agents || (github.event.schedule == '53 15 1 * *' && 'C4' || 'C3,S2,C5,C6') }}
     steps:
@@ -71,6 +79,21 @@ jobs:
           npm install --no-audit --no-fund
           (cd tests/replay && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-audit --no-fund --no-save playwright && npx playwright install ffmpeg)
 
+      - name: Last run's page tops (C5 layer 1's baseline)
+        # The newest "library-tops" download from an earlier run. None, or a
+        # failed pull, means layer 1 says so in its results; it's never skipped quietly.
+        if: env.MODE != 'off' && (inputs.fake || '') == '' && (inputs.pages_only == 'yes' || contains(env.WHICH, 'C5'))
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          a=$(gh api "repos/$REPO/actions/artifacts?name=library-tops&per_page=30" --jq '[.artifacts[] | select(.expired | not)] | sort_by(.created_at) | reverse | .[0] // empty | "\(.workflow_run.id) \(.created_at)"')
+          if [ -z "$a" ]; then echo "::warning::No saved page tops from an earlier run, so C5 layer 1 has nothing to compare against this time. It says so in its results, and this run's tops are saved for next time."; exit 0; fi
+          set -- $a
+          gh run download "$1" -R "$REPO" -n library-tops -D qc-out/baseline
+          echo "Baseline: page tops saved by run $1 ($2)."
+
       - name: Library pages only (no AI)
         if: env.MODE != 'off' && inputs.pages_only == 'yes'
         run: node scripts/site-agents.mjs --pages-only
@@ -92,6 +115,14 @@ jobs:
           name: site-agents-${{ github.run_id }}
           path: qc-out/
           retention-days: 180
+
+      - name: Save this run's page tops for next time (C5 layer 1)
+        if: always() && env.MODE != 'off' && (inputs.fake || '') == '' && hashFiles('qc-out/library-tops.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: library-tops
+          path: qc-out/library-tops.json
+          retention-days: 90
 
       - name: Results on this page
         if: always() && env.MODE != 'off'

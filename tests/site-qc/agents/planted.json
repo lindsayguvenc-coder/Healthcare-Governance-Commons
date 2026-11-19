@@ -69,6 +69,46 @@
       "qc-c5-standard": "Example Standards Body. Example Reporting Standard 2.0, published March 2026 (made up for a QC test). This edition supersedes version 1.0 from 2019. Download the checklist. Current version."
     }
   },
+  "C5tops": {
+    "what": "Layer 1 (baseline compare), code only: a made-up site gains one banner near the top of two pages (one change for the site; the words pushed past the cutoff aren't 'gone'), a page that didn't change, and a page that's new since the baseline.",
+    "token": "QC-C5T-0001",
+    "site": "example.org",
+    "bannerIds": [
+      "qc-c5t-card",
+      "qc-c5t-guide"
+    ],
+    "steadyId": "qc-c5t-standard",
+    "newId": "qc-c5t-new",
+    "entries": [
+      {
+        "id": "qc-c5t-card",
+        "url": "https://example.org/workgroup/model-card"
+      },
+      {
+        "id": "qc-c5t-guide",
+        "url": "https://example.org/implementation-guide"
+      },
+      {
+        "id": "qc-c5t-standard",
+        "url": "https://example.net/standard-2"
+      },
+      {
+        "id": "qc-c5t-new",
+        "url": "https://example.net/new-report"
+      }
+    ],
+    "before": {
+      "qc-c5t-card": "Example Health AI Coalition. Home About Us Our Work Workgroups Resources Events News Members Contact Search. Model Card Template. A voluntary template for describing what a model does, the data it learned from, where it was tested, and where it should not be used. The template has seven sections: intended use, out-of-scope use, training data, evaluation data, performance by subgroup, known limits, and update history. Each section has prompts and an example filled in for a made-up sepsis alert. Teams can download it as a document or a spreadsheet. Questions go to the workgroup chairs listed below. Workgroup chairs and members. Meeting notes. Related resources. Privacy policy. Terms of use.",
+      "qc-c5t-guide": "Example Health AI Coalition. Home About Us Our Work Workgroups Resources Events News Members Contact Search. Implementation Guide v2, final, published September 2026. The guide walks a health system through choosing, testing, deploying and monitoring an AI tool, with checklists for each stage, roles and sign-offs, and examples from member sites of different sizes. Chapter one covers intake and the first review; chapter two covers local testing before go-live; chapter three covers monitoring and when to pull a tool back. Download the PDF. Download the checklists. Earlier versions are kept on the archive page. Questions go to the guide's editors. Privacy policy. Terms of use.",
+      "qc-c5t-standard": "Example Standards Body. Home Standards Membership Contact. Example Reporting Standard 2.0, published March 2026 (made up for a QC test). This edition supersedes version 1.0 from 2019. Download the checklist. Current version."
+    },
+    "after": {
+      "qc-c5t-card": "Example Health AI Coalition. Home About Us Our Work Workgroups Resources Events News Members Contact Search. Notice (QC-C5T-0001, made up for a QC test): the Model Card Template now lives in the Coalition Registry. Model Card Template. A voluntary template for describing what a model does, the data it learned from, where it was tested, and where it should not be used. The template has seven sections: intended use, out-of-scope use, training data, evaluation data, performance by subgroup, known limits, and update history. Each section has prompts and an example filled in for a made-up sepsis alert. Teams can download it as a document or a spreadsheet. Questions go to the workgroup chairs listed below. Workgroup chairs and members. Meeting notes. Related resources. Privacy policy. Terms of use.",
+      "qc-c5t-guide": "Example Health AI Coalition. Home About Us Our Work Workgroups Resources Events News Members Contact Search. Notice (QC-C5T-0001, made up for a QC test): the Model Card Template now lives in the Coalition Registry. Implementation Guide v2, final, published September 2026. The guide walks a health system through choosing, testing, deploying and monitoring an AI tool, with checklists for each stage, roles and sign-offs, and examples from member sites of different sizes. Chapter one covers intake and the first review; chapter two covers local testing before go-live; chapter three covers monitoring and when to pull a tool back. Download the PDF. Download the checklists. Earlier versions are kept on the archive page. Questions go to the guide's editors. Privacy policy. Terms of use.",
+      "qc-c5t-standard": "Example Standards Body. Home Standards Membership Contact. Example Reporting Standard 2.0, published March 2026 (made up for a QC test). This edition supersedes version 1.0 from 2019. Download the checklist. Current version.",
+      "qc-c5t-new": "Example Annual Report 2026 (made up for a QC test). Download."
+    }
+  },
   "C6": {
     "what": "A made-up primary document it should propose, a news story about it it must not, and a document already in the library",
     "token": "QC-C6-0001",

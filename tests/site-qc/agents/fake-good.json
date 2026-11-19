@@ -97,6 +97,38 @@
   "chai-responsible-ai-guide-2024": "Coalition for Health AI. Applied Model Card details and examples have moved to the CHAI Registry. Access the latest content here. Responsible AI Guide. (Fake page text for a test run.)",
   "chai-playbooks-2026": "Coalition for Health AI. Applied Model Card details and examples have moved to the CHAI Registry. Access the latest content here. AI governance playbooks. (Fake page text for a test run.)"
  },
+ "C5:baseline": {
+  "today": "2026-11-16",
+  "run": "fake",
+  "pages": {
+   "chai-applied-model-card": {
+    "url": "https://www.chai.org/workgroup/applied-model",
+    "top": "Coalition for Health AI. Applied Model Card workgroup. (Fake page text for a test run.)"
+   },
+   "chai-responsible-ai-guide-2024": {
+    "url": "https://chai.org/responsible-ai-guide/",
+    "top": "Coalition for Health AI. Responsible AI Guide. (Fake page text for a test run.)"
+   },
+   "chai-playbooks-2026": {
+    "url": "https://www.chai.org/workgroup/cross-cutting/ai-governance",
+    "top": "Coalition for Health AI. AI governance playbooks. (Fake page text for a test run.)"
+   }
+  }
+ },
+ "C5:reader": {
+  "flags": [
+   {
+    "id": "{{planted}}",
+    "kind": "moved",
+    "says": "{{banner}}"
+   },
+   {
+    "id": "chai-applied-model-card",
+    "kind": "moved",
+    "says": "Applied Model Card details and examples have moved to the CHAI Registry."
+   }
+  ]
+ },
  "C5:scan": {
   "findings": [
    {
