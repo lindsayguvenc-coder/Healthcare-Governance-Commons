@@ -191,7 +191,7 @@ pre-deployment validation (VPG, kit when it reopens), value (ROI).
 Gaps, in priority order:
 - [ ] **Monitoring: bring the healthcare version home** (element 4; Watcher,
       Threshold Review, Equity nodes). Lindsay: already made. The Commons has
-      step 1 (Agent QC Setup, marked Prototype); the general version became her
+      step 1 (Agent QC Setup, live Nov 20); the general version became her
       own Agent QC Monitor (tool maker, runner, dashboard). Make the
       healthcare-specific monitor available here once those steps prove out.
 - [ ] **AI inventory and risk tiering** (element 1; Accountability,
@@ -248,6 +248,14 @@ Gaps, in priority order:
       Subgroup trigger decided Nov 12: both tools use a ratio on the error rate
       (starting value 1.5× aggregate) for size, plus the group's 95% interval
       clearing the aggregate rate, confirmed on the next window, for evidence. `/agent-qc` now forwards to `/qc-setup` (Nov 12); the old page's file stays in the repo for reference.
+- [x] **Agent QC Setup once-over** (Nov 20). Brought level with the Monitor's
+      setup page: all 13 harness parts (D16), the D18 tools wording, input
+      fingerprint fixed at every run, and a hard stop on pasted keys (D110: a
+      key-shaped value isn't saved, and a plan file carrying one is refused).
+      Harness moved under the stakes questions, closed by default. Tools card
+      now Live; the prototype banner and the statistician item stay. Still
+      open: the Agent Fleet QC page doesn't import setup-page plans yet
+      ("load your setup-page plans", Fleet next steps).
 - [ ] **Statistician: hire before the first of these.** Someone uses a tool's
       numbers to set up QC on a real system (e.g. a hospital sizing its
       baseline); a published piece cites a tool's numbers as evidence; or work
