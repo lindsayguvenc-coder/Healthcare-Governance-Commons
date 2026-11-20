@@ -139,7 +139,8 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       agent-qc-monitor repo against its own principles doc. Not scheduled yet.
 
 ## To build (decided Oct 27, 2026)
-- [ ] **Weekly currency scan.** Federal Register, FDA guidance, CMS, state AI
+Updated Nov 19: C3 and C4 are built, so the monthly forming scan and review queue triage are the only upkeep agents still unbuilt.
+- [x] **Weekly currency scan.** Built Nov 16 as **C3**, the regulatory scan (Site QC batch 4, above). Federal Register, FDA guidance, CMS, state AI
       laws, EU AI Act against `src/data/regulatory.json`. Opens a pull request
       or report for review. Feeds the Movement box.
       - *Option B (Oct 29, to decide Nov 4):* broader weekly sweep, one lane
@@ -148,7 +149,7 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
         Commons cites (starting with `REFERENCES_AS_OF` in
         `api/generate-protocol.js`) and flags what moved. Lindsay reviews the
         findings as they come in and adjusts plans from them.
-- [ ] **Monthly claims audit.** Re-verify everything labeled Sourced; chase
+- [x] **Monthly claims audit.** Built Nov 16 as **C4**, the claims and sources audit (Site QC batch 4, above). Re-verify everything labeled Sourced; chase
       Needs-source items. Must be a separate agent from anything that writes
       content (the checker is never the writer).
 - [ ] **Monthly forming scan.** Open questions plus new literature, looking
