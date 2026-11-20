@@ -1,6 +1,6 @@
 # Shared setting names
 
-As of 2026-11-14. Generated from the Agent QC settings registry; don't edit by hand.
+As of 2026-11-15. Generated from the Agent QC settings registry; don't edit by hand.
 
 The Commons tools that ask about QC settings use one name, unit and option list for each.
 This is the list, with each tool's own question or key.
@@ -56,8 +56,17 @@ This is the list, with each tool's own question or key.
 | `stakes.use_type` | What the output is used for | choice: VP list | set by owner | n/a | q2_usetype, 11 options (Diagnostic support, Administrative / operational and Other added Nov 14) | q_use_type, same 11 options in the same order |  |
 | `harness.model` | Model and version | text | recorded every run | h.model (added Nov 14) | q1_version |  |  |
 | `harness.prompt` | Prompt | text, fingerprinted | recorded every run | h.prompt (added Nov 14) |  |  |  |
-| `harness.tools` | Tools it can call | list | set per agent | h.tools (added Nov 14) | qa_toolcalls (asks if checked, not which) |  |  |
+| `harness.tools` | Tools it can call | list | set per agent | h.tools; descriptor same as MS (Nov 20) | qa_toolcalls (asks if checked, not which) |  |  |
 | `harness.actions_allowed` | Actions allowed | list: read | write | send | change, each with needs-confirmation yes/no | none until set | h.actions (added Nov 14) | qa_irreversible, qa_approval, qa_permissions | q_agent_actions |  |
+| `harness.sampling` | Model settings | text | none set; recorded every run | h.sampling, text (added Nov 20, same as MS) |  |  |  |
+| `harness.memory` | What it keeps between runs | choice: none | notes | history | none | h.memory, text (added Nov 20, same as MS) |  |  |  |
+| `harness.outputs` | Where its output goes | text (list) | none | h.outputs, text (added Nov 20, same as MS) |  |  |  |
+| `harness.trigger` | What starts a run | choice: on demand | on a schedule | when something happens | called by another agent, plus detail text | on demand | h.trigger, text (added Nov 20, same as MS) |  |  |  |
+| `harness.runtime` | Where it runs | text | none | h.runtime, text (added Nov 20, same as MS) |  |  |  |
+| `harness.credentials` | Keys it uses | list: name, what it can reach, kept in, kind (temporary test | permanent), expires | none | h.keys, text (added Nov 20, same as MS); refuses key-shaped text (D110) |  |  |  |
+| `harness.spend_cap` | Spend cap | $ per month, or no cap (chosen on purpose) | none set (required before validation and before going live; no cap must be chosen, not left blank) | h.spendcap, text (added Nov 20, same as MS) |  |  |  |
+| `harness.run_limits` | Run limits | steps per run, minutes per run | 25 steps, 10 minutes | h.limits, text (added Nov 20, same as MS) |  |  |  |
+| `harness.off_switch` | Off switch | fixed pause + text | pause always there; how-to none | h.off, text (added Nov 20, same as MS) |  |  |  |
 | `metric.output_type` | What one run produces | choice: binary | cat | graded | cont | text | agent | image | none | k1.type |  |  |  |
 | `metric.accuracy` | Accuracy metric | index into the metric list for the type | first listed | k1.accuracy |  |  |  |
 | `metric.precision` | Precision metric | index | first listed | k1.precision |  |  |  |
@@ -109,7 +118,7 @@ This is the list, with each tool's own question or key.
 | `escalation.over_asking` | Unnecessary asking: upper limit | % of runs | set at validation | esc.over |  |  |  |
 | `input.register` | Input register | list | example list | input.reg |  |  |  |
 | `input.notify` | Notification source per input | text | named per input | input.notify |  |  |  |
-| `input.fingerprint` | Input fingerprint | choice | every run | input.fp, still allows control runs only |  |  |  |
+| `input.fingerprint` | Input fingerprint | choice | every run | input.fp fixed: every run (Nov 20) |  |  |  |
 | `input.live` | Live input monitoring | text | prevalence, missing fields, language mix | input.live |  |  |  |
 | `injection.controls` | Prompt-injection controls | list, fixed once added | a few distinct styles | input.inj |  |  |  |
 | `subgroup.groups` | Groups to report | list | groups recorded reliably | sub.groups | q40_subgroup, q_subgroup | q_equity_populations | groupby |

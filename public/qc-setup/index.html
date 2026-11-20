@@ -160,7 +160,7 @@ footer a{color:var(--accent)}
 
   <section class="lanes" id="dials" aria-labelledby="dialsH">
     <div class="mhead"><span class="lbl">Start here</span><h2 id="dialsH">The agent and its stakes</h2>
-    <p class="qq" style="margin:0;color:var(--muted)">Three questions set how much of the setup applies and its starting values. How much applies follows consequence, closeness and exposure: a low-stakes agent can still need close monitoring.</p></div>
+    <p class="qq" style="margin:0;color:var(--muted)">Four questions about stakes, then the agent's harness. Three of the four set how much of the setup applies and its starting values; how much applies follows consequence, closeness and exposure: a low-stakes agent can still need close monitoring.</p></div>
     <div class="bar noprint"><span class="lbl">Example</span><button type="button" data-ex="triage">Nurse-line triage agent</button><button type="button" data-ex="note">Discharge-summary drafter</button><span class="start" id="exNote"></span></div>
     <ul class="points" id="dialList"></ul>
     <p class="sub" id="dialSummary"></p>
@@ -558,7 +558,7 @@ const M = [
   points:[
    {id:"reg", label:"Input register", type:"text", start:"Reference ranges, data feeds and EHR fields, retrieval documents, prompt templates and tools, units", desc:"Every input that can change without the agent changing. Anything on this list can move results while the agent is unchanged."},
    {id:"notify", label:"Notification source, per input", type:"text", start:"Named for each input (e.g., laboratory informatics for reference ranges)", desc:"Who tells you when it changes. An input with no named source changes silently."},
-   {id:"fp", label:"Input fingerprint", type:"select", options:["Every run","Every control run only"], start:"Every run", desc:"Each run records the versions of its inputs. A mismatch with the validated configuration is flagged before that run's results count. This is how a shift is traced to its cause in minutes instead of days."},
+   {id:"fp", label:"Input fingerprint", type:"fixed", start:"Every run", desc:"Required: without it, drift can't be told apart from a change someone made. Each run records the versions of its inputs. A mismatch with the validated configuration is flagged before that run's results count. This is how a shift is traced to its cause in minutes instead of days."},
    {id:"attr", label:"Attribution rule", type:"fixed", start:"When a control shifts, check the input fingerprint before the agent", desc:"Inputs changed and agent unchanged: an input change. A change to a reference range or spec is a clinical decision about the lanes; a new data source is revalidation. Monitoring the agent alone blames it for changes it did not make."},
    {id:"inj", label:"Prompt-injection controls", type:"text", start:"A few controls with planted instructions, one per attack style", desc:"Anything the agent reads can carry hidden instructions. Following one is a never-event. Controls stay fixed once added; new attack styles are added as new controls, each with its own baseline."},
    {id:"live", label:"Live input monitoring", type:"text", start:"Prevalence, missing-field rate, language mix", desc:"Moving averages on a few properties of real traffic. A prevalence shift changes PPV with no change to the agent; it should not read as model drift."}
@@ -606,7 +606,7 @@ const M = [
    {id:"autoacc", label:"Auto-accept for warnings", type:"select", options:["On, once validation is locked","Off"], start:"On, once validation is locked", desc:"A 1-2s, 4-1s or spread warning clears on its own only if every locked condition holds: no rejections in the last 10 runs, inputs unchanged, no gap between conditions, same model version. It is logged, and checked again 10 runs later."},
    {id:"ack", label:"Warning acknowledgment deadline", type:"select", options:["1 business day","Same shift","4 hours","By the next periodic review"], start:d=>d.cons==="low"?"By the next periodic review":"1 business day", desc:"A warning not acknowledged by the deadline holds the agent like a rejection. The deadline is what gives a warning consequence."},
    {id:"queue", label:"Human queue: owner and response time", type:"text", need:d=>d.cons!=="low", start:"Named role; the response time staff already meet for the same work (same shift if none is defined)", desc:"While held, the agent's work goes to this queue, so the response time is how long patients wait for a human. If the owner does not respond in time, the item goes to a named backup role, then to the independent authority."},
-   {id:"relAck", label:"Who may acknowledge a warning", type:"select", options:["Operator","Owner","Independent authority"], start:d=>d.cons==="low"?"Owner":"Operator", desc:"Release authority is set per power. Solo, every row can be the owner; the rows are here for the day someone else helps."},
+   {id:"relAck", label:"Who may acknowledge a warning", type:"select", options:["Operator","Owner","Independent authority"], start:d=>d.cons==="low"?"Owner":"Operator", desc:"Release authority is set per power, so each row can name a different role. A small team can name the owner in every row and split them later."},
    {id:"relFirst", label:"Who may release after a first-line fix", type:"select", options:["Operator","Owner","Independent authority"], start:d=>d.cons==="low"?"Owner":"Operator", desc:"A first-line fix: the cause is known, no failover happened, and no locked parameter changed. Record what changed."},
    {id:"relHard", label:"Who may release after failover, an unknown cause, a failed rerun, or a locked-parameter change", type:"select", options:["Operator","Owner","Independent authority"], start:d=>d.cons==="high"?"Independent authority":"Owner", desc:"The person who loosened a limit does not also release under it."},
    {id:"relOver", label:"Who may sign a version-gate override", type:"select", options:["Operator","Owner","Independent authority"], start:d=>d.cons==="high"?"Independent authority":"Owner", desc:"Accepting a version that failed the gate makes it the new baseline. It is a loosening change, so it waits for approval on a different day, unless it is an emergency."},
@@ -626,6 +626,7 @@ const CHIP={opt:["opt","Optional at this level"],here:["here","Set here"],picker
 // ---------- state ----------
 const KEY="qcSetup.v1"; let S={};
 try{S=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){S={}}
+Object.keys(S).forEach(k=>{if(k.startsWith("h.")&&looksLikeSecret(S[k]))delete S[k];}); // never keep a key, even one saved before the guard
 function loadRules(){ljMode={...LJ_DEFAULT,...(S["rules.westgard"]||{})};}
 loadRules();
 // Warning and Rejection limits (Change detection) set the 1-2s and 1-3s rules.
@@ -739,15 +740,30 @@ const DIALS=[
 const HARNESS=[
  {k:"model",label:"Model and version",ph:"e.g. the model name and the version or date pinned",desc:"The version the plan was validated on. Any other version goes through the version gate."},
  {k:"prompt",label:"Prompt",ph:"Name and version of the prompt or instructions",desc:"Part of the input fingerprint. A prompt change is a change to the agent: control run before results count."},
- {k:"tools",label:"Tools it can call",ph:"One per line",desc:"Fewer tools is a tightening change and applies now. Adding one is a loosening change."},
- {k:"actions",label:"Actions allowed",ph:"One per line: action, and whether it needs confirmation first (e.g. Draft a calendar event — no confirmation; Send an email — confirmation)",desc:"What it may read, write, send or change. Narrowing applies now. Widening waits for approval on a different day and needs a passing control run on the new permissions. Recorded with every run."}
+ {k:"tools",label:"Tools it can call",ph:"One per line",desc:"Removing a tool applies now. Adding one is a new version (verification runs) and also waits for approval on a different day."},
+ {k:"actions",label:"Actions allowed",ph:"One per line: action, and whether it needs confirmation first (e.g. Draft a calendar event — no confirmation; Send an email — confirmation)",desc:"What it may read, write, send or change. Narrowing applies now. Widening waits for approval on a different day and needs a passing control run on the new permissions. Recorded with every run."},
+ {k:"sampling",label:"Model settings",ph:"e.g. temperature 0, up to 2,000 output tokens",desc:"Temperature and anything else sent with each call. A higher temperature widens repeat spread. Any change is a new version: verification runs before results count."},
+ {k:"memory",label:"What it keeps between runs",ph:"Nothing, its own notes, or past runs",desc:"Carryover: what one run leaves can change the next. Pick the least it needs. Any change is a new version."},
+ {k:"outputs",label:"Where its output goes",ph:"One per line: people, the chart, inboxes, files, other agents",desc:"A lookback uses this to find what already went out. A new place waits for approval on a different day. (What it reads is the input register, under Input stability.)"},
+ {k:"keys",label:"Keys it uses",ph:"One per line: name, what it can reach, where it's kept, test or permanent, expiry",desc:"Names only, never the key itself: this page refuses to save anything that looks like a key. Test with a temporary key with a spending cap and short expiry first. A new key or wider reach waits for approval and a passing control run; removing one applies now."},
+ {k:"trigger",label:"What starts a run",ph:"On demand, on a schedule, when something happens, or called by another agent, and the detail",desc:"When real work runs; control runs follow the control schedule. On demand to anything automatic waits for approval."},
+ {k:"runtime",label:"Where it runs",ph:"e.g. the vendor's cloud, or a server on the hospital's network",desc:"Moving it is like moving an instrument: a new version, with verification runs."},
+ {k:"spendcap",label:"Spend cap",ph:"$ per month, or \"no cap\" chosen on purpose",desc:"No default. At the cap the agent holds. The plan isn't complete until it's set; no cap has to be written in, not left blank. Raising it waits for approval; lowering applies now."},
+ {k:"limits",label:"Run limits",ph:"Steps and minutes per run (starting point: 25 steps, 10 minutes)",desc:"A run that hits a limit is stopped and counted as a machine failure, kept out of QC. Raising waits; lowering applies now."},
+ {k:"off",label:"Off switch",ph:"How to stop it if the dashboard is down: which trigger to turn off, which key to revoke",desc:"Pause always works, for anyone, at once. Required when the agent can send or change things, or acts without approval."}
 ];
-function harnessHTML(){return `<li class="pt" style="display:block"><h3 style="margin:0 0 8px">The agent's harness</h3><div style="display:grid;gap:10px">${HARNESS.map(x=>`<div class="pt" style="border-top:none;padding-top:0"><div class="ctl"><label class="lbl" for="h_${x.k}">${x.label}</label><textarea rows="${x.k==="actions"?4:2}" id="h_${x.k}" data-h="${x.k}" placeholder="${esc(x.ph)}">${esc(S["h."+x.k]||"")}</textarea></div><div class="desc"><i>Descriptor</i>${x.desc}</div></div>`).join("")}</div></li>`;}
+function harnessHTML(){return `<li class="pt" style="display:block"><details id="harnessBox"${(document.getElementById("harnessBox")||{}).open?" open":""}><summary><h3 style="display:inline;margin:0">The agent's harness</h3> · ${HARNESS.filter(x=>S["h."+x.k]).length} of ${HARNESS.length} filled in. What it runs on, what it can do, and how to stop it.</summary><div style="display:grid;gap:10px;margin-top:10px">${HARNESS.map(x=>`<div class="pt" style="border-top:none;padding-top:0"><div class="ctl"><label class="lbl" for="h_${x.k}">${x.label}</label><textarea rows="${x.k==="actions"?4:2}" id="h_${x.k}" data-h="${x.k}" placeholder="${esc(x.ph)}">${esc(S["h."+x.k]||"")}</textarea></div><div class="desc"><i>Descriptor</i>${x.desc}</div></div>`).join("")}</div></details></li>`;}
 function harnessPlan(){return ["THE AGENT'S HARNESS",...HARNESS.map(x=>`   ${x.label}: ${(S["h."+x.k]||"NOT SET").replace(/\n/g,"; ")}`),""].join("\n");}
-document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.h;if(!k)return;S["h."+k]=e.target.value;save();renderPlan();});
+// Hard stop: a key itself is never saved or exported here, only its name (registry harness.credentials floor).
+// Same test as the Agent Fleet QC page.
+function looksLikeSecret(s){return /\b(sk-[a-z0-9_-]{8,}|ghp_[A-Za-z0-9]{10,}|xox[abp]-[A-Za-z0-9-]{8,}|AKIA[0-9A-Z]{12,})|(?=[A-Za-z0-9_]*\d)[A-Za-z0-9_]{32,}/.test(String(s||""));}
+const KEY_REFUSED="Not saved: this looks like a key itself. Put only its name here; the key goes in the service's secret store. Delete it from this box.";
+function keyNote(el,bad){let n=el.parentNode.querySelector(".keynote");if(!bad){if(n)n.remove();return;}if(!n){n=document.createElement("span");n.className="start keynote";n.setAttribute("role","alert");n.style.color="var(--bad)";el.after(n);}n.textContent=KEY_REFUSED;}
+document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.h;if(!k)return;const bad=looksLikeSecret(e.target.value);keyNote(e.target,bad);if(bad)return;S["h."+k]=e.target.value;save();renderPlan();});
+function hasSecretDeep(v){if(typeof v==="string")return looksLikeSecret(v);if(v&&typeof v==="object")return Object.values(v).some(hasSecretDeep);return false;}
 function renderDials(){
   const d=D();
-  document.getElementById("dialList").innerHTML=harnessHTML()+DIALS.map(x=>`<li class="pt"><div class="dialq"><h3>${x.q}</h3><div class="types">${x.opts.map(o=>`<label><input type="radio" name="d_${x.k}" value="${o[0]}"${d[x.k]===o[0]?" checked":""}>${o[1]}<small>${o[2]}</small></label>`).join("")}</div></div><div class="desc"><i>Descriptor</i>${x.desc}</div></li>`).join("");
+  document.getElementById("dialList").innerHTML=DIALS.map(x=>`<li class="pt"><div class="dialq"><h3>${x.q}</h3><div class="types">${x.opts.map(o=>`<label><input type="radio" name="d_${x.k}" value="${o[0]}"${d[x.k]===o[0]?" checked":""}>${o[1]}<small>${o[2]}</small></label>`).join("")}</div></div><div class="desc"><i>Descriptor</i>${x.desc}</div></li>`).join("")+harnessHTML();
   const opt=M.filter(m=>needM(m)!==true).map(m=>m.name);
   document.getElementById("dialSummary").textContent=`At these settings, ${9-opt.length} of the nine measures apply.`+(opt.length?` Optional, shown closed: ${opt.join("; ")}.`:"");
 }
@@ -796,6 +812,7 @@ document.getElementById("importFile").onchange=async e=>{
     let p;try{p=JSON.parse(await f.text());}catch(e){p=null;}
     const why=planProblem(p);if(why){const er=new Error(why);er.plan=1;throw er;}
     if(!PLAN_FORMATS.includes(p.format)||typeof p.settings!=="object"||!p.lanes) throw new Error("not a plan file");
+    if(hasSecretDeep(p.settings)||hasSecretDeep(p.lanes)){const er=new Error("something in it looks like a key itself. Take the key out of the file (keep only its name) and load it again");er.plan=1;throw er;}
     S=p.settings; L=p.lanes; loadRules(); syncLim();
     localStorage.setItem(KEY,JSON.stringify(S)); localStorage.setItem("qcSetup.lanes.v3",JSON.stringify(L));
     renderLanes(); render();

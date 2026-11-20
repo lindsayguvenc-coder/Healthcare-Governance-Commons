@@ -70,7 +70,7 @@
   "browserStorage": [
     {
       "key": "qcSetup.lanes.v3",
-      "what": "Agent QC Setup remembers your lanes in your own browser; never sent",
+      "what": "Agent QC Setup remembers your settings and lanes in your own browser; never sent; refuses key-shaped text",
       "notice": "Saved in your browser only"
     },
     {
