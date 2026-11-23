@@ -12,23 +12,25 @@ name: Site QC agents
 #      a closed-book AI reader over every page, and a word pattern.
 #   C6 Library additions, weekly: documents that meet the library criteria
 #      and aren't in yet, by node. A pull request.
+#   C7 Forming scan, monthly with C4: clusters in the field that might be a
+#      new node in nodes.json. A pull request; naming a node is Lindsay's call.
 # Each agent runs its planted test first; a miss means don't trust its all-clear.
 # A missing, expired or out-of-credit key is a failure, never a quiet skip.
 #
 # The off switch (docs/site-qc-switches.md): SITE_QC_AGENTS overrides
-# SITE_QC_MODE for this workflow only; unset means off. SITE_QC_SKIP=C3,C4,S2,C5,C6
+# SITE_QC_MODE for this workflow only; unset means off. SITE_QC_SKIP=C3,C4,S2,C5,C6,C7
 # leaves agents out. The key is the SITE_QC_ANTHROPIC_KEY secret, separate from
 # the site's own key in Vercel.
 
 on:
   schedule:
     - cron: "47 15 * * 1"   # Mondays 15:47 UTC = 7:47 AM Pacific: C3, S2, C5 and C6, before the Monday review
-    - cron: "53 15 1 * *"   # the 1st of each month, 15:53 UTC: C4
+    - cron: "53 15 1 * *"   # the 1st of each month, 15:53 UTC: C4 and C7
   workflow_dispatch:
     inputs:
       agents:
-        description: "Which agents (comma list of C3, C4, S2, C5, C6)"
-        default: "C3,C4,S2,C5,C6"
+        description: "Which agents (comma list of C3, C4, S2, C5, C6, C7)"
+        default: "C3,C4,S2,C5,C6,C7"
       fake:
         description: "Fake AI replies only (no key, no spend): good, misses, or blank for real"
         default: ""
@@ -42,13 +44,13 @@ on:
 permissions:
   contents: write        # C3's findings branch
   issues: write
-  pull-requests: write   # C3, C5 and C6 open PRs (needs "Allow GitHub Actions to create pull requests" in Settings → Actions)
+  pull-requests: write   # C3, C5, C6 and C7 open PRs (needs "Allow GitHub Actions to create pull requests" in Settings → Actions)
   actions: read          # C5 pulls last run's page tops (the "library-tops" download)
 
 jobs:
   agents:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45   # Mondays now run C3, S2, C5 and C6 together
+    timeout-minutes: 45   # Mondays now run C3, S2, C5 and C6 together (the 1st: C4 and C7, shorter)
     env:
       MODE: ${{ vars.SITE_QC_AGENTS || vars.SITE_QC_MODE || 'off' }}
       SITE_QC_SKIP: ${{ vars.SITE_QC_SKIP }}
@@ -58,7 +60,7 @@ jobs:
       SITE_QC_C5_TOP_IGNORE: ${{ vars.SITE_QC_C5_TOP_IGNORE }}
       SITE_QC_C5_READER_CHARS: ${{ vars.SITE_QC_C5_READER_CHARS }}
       CHROME: /usr/bin/google-chrome
-      WHICH: ${{ inputs.agents || (github.event.schedule == '53 15 1 * *' && 'C4' || 'C3,S2,C5,C6') }}
+      WHICH: ${{ inputs.agents || (github.event.schedule == '53 15 1 * *' && 'C4,C7' || 'C3,S2,C5,C6') }}
     steps:
       - name: Switch is ${{ env.MODE }}
         run: |
@@ -149,7 +151,7 @@ jobs:
             jq -r '.results[] | select(.level != "ok") | "- **" + .level + "** " + (if .kind=="control" then "[control] " else "" end) + .id + " · " + .check + (if (.detail // "") != "" then " — " + .detail else "" end)' "$f"
             echo
             echo "Nothing above means everything passed."
-            for r in qc-out/regulatory-scan.md qc-out/claims-audit.md qc-out/library-versions.md qc-out/library-additions.md; do if [ -f "$r" ]; then echo; cat "$r"; fi; done
+            for r in qc-out/regulatory-scan.md qc-out/claims-audit.md qc-out/library-versions.md qc-out/library-additions.md qc-out/forming-scan.md; do if [ -f "$r" ]; then echo; cat "$r"; fi; done
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Findings as pull requests, one per report (never merged here)
@@ -180,6 +182,7 @@ jobs:
           pr C3 regulatory-scan regulatory-scan "Regulatory scan" "C3 found these against src/data/regulatory.json. Nothing in the site changes from this PR: read each source, then edit the data file yourself (new entries as \"verified\": false until read)."
           pr C5 library-versions library-versions "Library versions" "C5 found these against src/data/library.json and toolbox.json. Nothing in the site changes from this PR: read each source, then edit the data files yourself per docs/library-criteria.md (a source that changes status keeps its entry; a superseded one moves to retired)."
           pr C6 library-additions library-additions "Library additions" "C6 proposes these for src/data/library.json. Nothing in the site changes from this PR: open each document, check it's the original, then add the ones you want yourself."
+          pr C7 forming-scan forming-scan "Forming scan" "C7 proposes these clusters as possible new nodes. Nothing in the site changes from this PR: open each document; naming a node, or not, is your call, made in src/data/nodes.json yourself."
 
       - name: Open, update or close the issue
         # fake runs are tests: they never open an issue or a pull request

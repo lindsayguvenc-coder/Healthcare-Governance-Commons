@@ -22,9 +22,14 @@
 //   C6  Library additions (weekly, researcher). Documents that meet
 //       docs/library-criteria.md and aren't in the library yet, by node.
 //       C5 and C6 are the two lanes of one library agent; both propose only.
+//   C7  Forming scan (monthly, researcher). Open questions (each node's gap,
+//       Forming Territory's loose concepts) plus new literature, for clusters
+//       that might be a new node in src/data/nodes.json. Proposes only;
+//       naming a node is Lindsay's call. Never edits nodes.json.
 //
 // One agent per data file keeps each source rule clean: C3 regulatory.json
-// (official sites only), C5/C6 library.json, C4 checks claims and never writes.
+// (official sites only), C5/C6 library.json, C4 checks claims and never writes,
+// C7 nodes.json (proposes new nodes).
 //
 // Each agent runs its planted test first (tests/site-qc/agents/planted.json). A
 // miss is a control failure: the agent is broken, so its all-clear lines can't
@@ -35,7 +40,7 @@
 // SITE_QC_SKIP=C3,S2 leaves agents out here, and the run says so.
 // Writes qc-out/site-agents.json, qc-out/site-agents-runs.csv, and the reports
 // qc-out/regulatory-scan.md, qc-out/claims-audit.md, qc-out/library-versions.md
-// and qc-out/library-additions.md, plus qc-out/library-tops.json (C5's saved
+// qc-out/library-additions.md and qc-out/forming-scan.md, plus qc-out/library-tops.json (C5's saved
 // page tops, next run's baseline). Exits 1 on a failure.
 
 import { readFileSync, mkdirSync, writeFileSync, existsSync, statSync, createReadStream } from "node:fs";
@@ -50,10 +55,11 @@ const read = p => readFileSync(join(root, p), "utf8");
 const json = p => JSON.parse(read(p));
 const PLANTED = json("tests/site-qc/agents/planted.json");
 const TODAY = process.env.SITE_QC_TODAY || new Date().toISOString().slice(0, 10);
-const NAMES = { C3: "Commons regulatory scan", C4: "Commons claims audit", S2: "Commons AI tools lane check", C5: "Commons library versions", C6: "Commons library additions" };
+const NAMES = { C3: "Commons regulatory scan", C4: "Commons claims audit", S2: "Commons AI tools lane check", C5: "Commons library versions", C6: "Commons library additions",
+  C7: "Commons forming scan" };
 
 const arg = (k) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : null; };
-const ONLY = (arg("--only") || "C3,C4,S2,C5,C6").split(",").map(s => s.trim().toUpperCase()).filter(Boolean);
+const ONLY = (arg("--only") || "C3,C4,S2,C5,C6,C7").split(",").map(s => s.trim().toUpperCase()).filter(Boolean);
 const SKIP = new Set(String(process.env.SITE_QC_SKIP || "").split(",").map(s => s.trim().toUpperCase()).filter(Boolean));
 
 const results = [];
@@ -867,6 +873,78 @@ async function runC6() {
   ].join("\n"));
 }
 
+// ── C7: forming scan ─────────────────────────────────────────────────────────
+// Watches src/data/nodes.json, proposes only. Separate from C6 (decided Nov 17):
+// C6 is documents for nodes that exist; C7 is clusters that might be a new node.
+// Its source rule is the library's (primary documents only), so a cluster is
+// two or more primary documents treating one question as its own.
+const C7_SYSTEM = `You look for governance concepts in healthcare AI that might need a new node in the Healthcare Governance Commons. A node is a governance question the field keeps asking that no existing node answers. Start from the open questions the Commons lists (each node's gap, and the concepts it holds loosely in Forming Territory), then what has been published since the last scan. Propose a cluster only when at least two primary documents treat it as its own question, and say which existing nodes it's closest to and why none of them already holds it. A concept an existing node already covers is not a new node: list it under covered, with the node that holds it. ${LIB_RULES} ${RESEARCH_RULES} You propose; naming a node, or not, is a person's call. Answer only with JSON:
+{"clusters":[{"working_name":"","question":"the governance question, one sentence","forming_component":"the Forming Territory concept it grows from, or null","closest_nodes":["node ids"],"why_not_existing":"one sentence","evidence":[{"title":"","issuer":"","date":"YYYY-MM","url":"link to the document itself"}]}],"covered":[{"concept":"","node":"node id"}],"couldnt_check":[],"searched":[]}
+If nothing qualifies, clusters is an empty list.`;
+const plainWords = s => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+function formingQuestions(nodes) {
+  const forming = nodes.find(n => n.id === "forming");
+  return {
+    gaps: nodes.filter(n => !["forming", "commons"].includes(n.id)).map(n => `- ${n.id} (${n.label}): ${n.question || ""}${n.gap ? `\n  open: ${n.gap}` : ""}`).join("\n"),
+    loose: (forming?.components || []).map(c => `- ${c}`).join("\n"),
+  };
+}
+// The code's half: a cluster with no document fails; one document, a news or
+// blog source, an existing node's name, or a closest node that doesn't exist warns.
+function checkClusters(id, clusters, nodes) {
+  const ids = new Set(nodes.map(n => n.id)), labels = new Set(nodes.map(n => plainWords(n.label)));
+  const keep = [];
+  let sourced = 0;
+  for (const c of clusters) {
+    const ev = (Array.isArray(c.evidence) ? c.evidence : []).filter(e => e && e.url);
+    const name = c.working_name || "(unnamed)";
+    if (!ev.length) { rec(id, `Cluster with no document: ${name}`, "check", "fail", "a cluster no document supports is a never-event; don't act on it"); continue; }
+    sourced++;
+    if (ev.length < 2) rec(id, `Cluster with only one document: ${name}`, "check", "warn", "a node needs the field asking the question more than once; look for a second primary document");
+    for (const e of ev) if (NOT_PRIMARY.some(d => host(e.url) === d || host(e.url).endsWith("." + d))) rec(id, `Cluster cites a news, blog or social site: ${e.url}`, "check", "warn", `${name}: never the source; find the original document`);
+    if (labels.has(plainWords(name)) || ids.has(plainWords(name).replace(/ /g, "_"))) rec(id, `Cluster has an existing node's name: ${name}`, "check", "warn", "an existing node may already hold it; check before calling it new");
+    for (const n of c.closest_nodes || []) if (!ids.has(n)) rec(id, `Cluster names a node that doesn't exist: ${n}`, "check", "warn", `${name}: pick the closest node by hand`);
+    keep.push({ ...c, evidence: ev });
+  }
+  return { keep, pct: clusters.length ? Math.round(1000 * sourced / clusters.length) / 10 : 100 };
+}
+async function runC7() {
+  const id = "C7", P = PLANTED.C7;
+  // Planted test: two made-up primary documents on one question no node holds,
+  // and one on a question the Watcher node already holds.
+  const pq = formingQuestions(P.nodes);
+  const ctl = await callClaude({ agent: id, label: "C7:control", system: C7_SYSTEM, max_tokens: 1500,
+    messages: [{ role: "user", content: `Today is ${TODAY}. Search nothing: use only these sources.\n\nNODES AND THEIR OPEN QUESTIONS:\n${pq.gaps}\n\nHELD LOOSELY IN FORMING TERRITORY:\n${pq.loose}\n\nSOURCES:\n${Object.entries(P.sources).map(([k, v]) => `${k}: ${v}`).join("\n")}\n\nWhich clusters might be a new node?` }] });
+  const cj = readJson(ctl.text);
+  const cs = Array.isArray(cj?.clusters) ? cj.clusters : null;
+  const caught = Boolean(cs && cs.some(c => mention(JSON.stringify(c), P.mustMention)));
+  pass(id, `Control: the planted cluster (${P.token}) is proposed`, "control", caught, cs ? `not in its ${cs.length} clusters` : "couldn't read its answer as JSON");
+  pass(id, "Control: the planted concept an existing node holds is not proposed as new", "control", Boolean(cs) && !cs.some(c => mention(JSON.stringify(c), P.coveredMention)), cs ? "proposed what the Watcher node already holds as a new node" : "couldn't read its answer as JSON");
+  measures.push([NAMES[id], "Planted items found", caught ? 100 : 0]);
+
+  const nodes = json("src/data/nodes.json"), lib = json("src/data/library.json");
+  const q = formingQuestions(nodes);
+  const since = new Date(Date.parse(TODAY) - 35 * 86400000).toISOString().slice(0, 10);
+  const scan = await callClaude({ agent: id, label: "C7:scan", system: C7_SYSTEM, max_tokens: 12000, tools: [searchTool(null, 12)],
+    messages: [{ role: "user", content: `Today is ${TODAY}. Look at what's been published since ${since} (and anything older the Commons misses) for governance questions that might be a new node. At most 5 clusters, the strongest first. The library already holds ${(lib.documents || []).length} documents for the nodes below; a cluster is a question, not a document.\n\nNODES AND THEIR OPEN QUESTIONS:\n${q.gaps}\n\nHELD LOOSELY IN FORMING TERRITORY:\n${q.loose}` }] });
+  const sj = readJson(scan.text);
+  if (!sj || !Array.isArray(sj.clusters)) { rec(id, "Forming scan answered", "check", "fail", `couldn't read its answer as JSON (stop: ${scan.stop})`); return; }
+  if (scan.stop === "max_tokens") rec(id, "Forming scan was cut off at its length limit", "check", "warn", "some clusters may be missing");
+  const { keep, pct } = checkClusters(id, sj.clusters, nodes);
+  for (const c of sj.couldnt_check || []) rec(id, `Couldn't check: ${c}`, "check", "warn");
+  rec(id, `${keep.length} cluster(s) to review${keep.length ? " (report attached; in on mode, a pull request)" : ""}`, "check", "ok");
+  measures.push([NAMES[id], "Findings with a real source", pct], [NAMES[id], "Sources read per question", usage[id]?.searches || 0]);
+  writeFileSync(join(root, "qc-out/forming-scan.md"), [
+    `# Forming scan, ${TODAY}`, "",
+    `C7 (${NAMES[id]}). Clusters in the field that might be a new node, from the open questions in \`src/data/nodes.json\` and what's been published since ${since}. The agent proposes; nothing here changes the site. **Naming a node, or not, is Lindsay's call.** Open each document first. A cluster can also mean a Forming Territory concept is ready for a node, or that it isn't.`, "",
+    `Planted test ${P.token}: ${caught ? "found" : "**missed (don't trust this report)**"}. Model: ${MODEL}${fakeMode() ? " (fake replies: a test run)" : ""}.`, "",
+    keep.length ? keep.map(c => `## ${cell(c.working_name)}\n\n${cell(c.question)}\n\n- Grows from: ${cell(c.forming_component) || "nothing held in Forming Territory"}\n- Closest nodes: ${(c.closest_nodes || []).join(", ") || "none named"}\n- Why not one of them: ${cell(c.why_not_existing)}\n\n| Document | Issuer | Date |\n|---|---|---|\n` +
+      c.evidence.map(e => `| [${cell(e.title || e.url)}](${e.url}) | ${cell(e.issuer)} | ${cell(e.date)} |`).join("\n")).join("\n\n") : "No new clusters this month.", "",
+    (sj.covered || []).length ? `Already held by a node: ${sj.covered.map(c => `${c.concept} (${c.node})`).join("; ")}` : "",
+    (sj.couldnt_check || []).length ? `Couldn't check: ${sj.couldnt_check.join("; ")}` : "", "",
+  ].join("\n"));
+}
+
 // ── Run ──────────────────────────────────────────────────────────────────────
 mkdirSync(join(root, "qc-out"), { recursive: true });
 // --key-check: is the agents' key ready for the next real run? The free model
@@ -898,7 +976,7 @@ if (process.argv.includes("--pages-only")) {
   console.log("Layer 2 (the AI reader) doesn't run in a pages-only run: no AI, no spend.");
   process.exit(0);
 }
-const agents = { C3: runC3, C4: runC4, S2: runS2, C5: runC5, C6: runC6 };
+const agents = { C3: runC3, C4: runC4, S2: runS2, C5: runC5, C6: runC6, C7: runC7 };
 const want = ONLY.filter(a => agents[a]);
 const skipped = want.filter(a => SKIP.has(a));
 const run = want.filter(a => !SKIP.has(a));

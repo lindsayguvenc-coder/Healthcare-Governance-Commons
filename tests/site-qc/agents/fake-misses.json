@@ -228,5 +228,83 @@
   ],
   "couldnt_check": [],
   "searched": []
+ },
+ "C7:control": {
+  "clusters": [
+   {
+    "working_name": "Drift intervals",
+    "question": "How often to check drift (QC-C7-COVERED)",
+    "forming_component": null,
+    "closest_nodes": [
+     "watcher"
+    ],
+    "why_not_existing": "new",
+    "evidence": [
+     {
+      "title": "Drift Monitoring Intervals (QC-C7-COVERED)",
+      "issuer": "Example Standards Body",
+      "date": "2026-10",
+      "url": "https://example.net/drift-intervals"
+     }
+    ]
+   }
+  ],
+  "covered": [],
+  "couldnt_check": [],
+  "searched": []
+ },
+ "C7:scan": {
+  "clusters": [
+   {
+    "working_name": "A cluster with no document (broken)",
+    "question": "?",
+    "closest_nodes": [
+     "watcher"
+    ],
+    "why_not_existing": "",
+    "evidence": []
+   },
+   {
+    "working_name": "A cluster from a news story (broken)",
+    "question": "?",
+    "closest_nodes": [
+     "watcher"
+    ],
+    "why_not_existing": "",
+    "evidence": [
+     {
+      "title": "A story",
+      "issuer": "STAT",
+      "date": "2026-11",
+      "url": "https://www.statnews.com/2026/11/01/fake"
+     },
+     {
+      "title": "Another",
+      "issuer": "Example",
+      "date": "2026-11",
+      "url": "https://example.org/another-fake"
+     }
+    ]
+   },
+   {
+    "working_name": "Explainability",
+    "question": "Can the clinician understand it? (broken: already a node)",
+    "closest_nodes": [
+     "nope"
+    ],
+    "why_not_existing": "",
+    "evidence": [
+     {
+      "title": "One document only",
+      "issuer": "Example",
+      "date": "2026-11",
+      "url": "https://example.org/only-one-fake"
+     }
+    ]
+   }
+  ],
+  "covered": [],
+  "couldnt_check": [],
+  "searched": []
  }
 }

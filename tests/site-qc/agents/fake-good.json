@@ -196,5 +196,74 @@
   "searched": [
    "fake"
   ]
+ },
+ "C7:control": {
+  "clusters": [
+   {
+    "working_name": "Model retirement",
+    "question": "How does a hospital retire a clinical AI model and keep a record of it?",
+    "forming_component": "Model decommissioning",
+    "closest_nodes": [
+     "stop",
+     "watcher"
+    ],
+    "why_not_existing": "Stop is switching off in the moment and Watcher is noticing trouble; retirement and its record are their own step (QC-C7-0001).",
+    "evidence": [
+     {
+      "title": "Retiring Clinical AI Models, Registries and Records (QC-C7-0001)",
+      "issuer": "Example Health Agency",
+      "date": "2026-10",
+      "url": "https://example.gov/retiring-models"
+     },
+     {
+      "title": "Lifecycle Records for Decommissioned Algorithms (QC-C7-0001)",
+      "issuer": "Example Standards Body",
+      "date": "2026-11",
+      "url": "https://example.net/decommission-standard"
+     }
+    ]
+   }
+  ],
+  "covered": [
+   {
+    "concept": "Drift monitoring intervals (QC-C7-COVERED)",
+    "node": "watcher"
+   }
+  ],
+  "couldnt_check": [],
+  "searched": []
+ },
+ "C7:scan": {
+  "clusters": [
+   {
+    "working_name": "Patient notice when AI is used (fake)",
+    "question": "When and how is a patient told an AI tool was part of their care? (fake)",
+    "forming_component": "Consent and disclosure",
+    "closest_nodes": [
+     "explainability",
+     "accountability"
+    ],
+    "why_not_existing": "Explainability is about the clinician understanding the output; this is about the patient being told (fake).",
+    "evidence": [
+     {
+      "title": "A made-up disclosure rule (fake)",
+      "issuer": "Example Agency (fake)",
+      "date": "2026-10",
+      "url": "https://www.example-agency.gov/disclosure-fake"
+     },
+     {
+      "title": "A made-up disclosure standard (fake)",
+      "issuer": "Example Standards Body (fake)",
+      "date": "2026-11",
+      "url": "https://example.org/disclosure-standard-fake"
+     }
+    ]
+   }
+  ],
+  "covered": [],
+  "couldnt_check": [],
+  "searched": [
+   "fake"
+  ]
  }
 }

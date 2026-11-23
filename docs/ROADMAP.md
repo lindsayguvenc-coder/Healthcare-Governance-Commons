@@ -139,7 +139,7 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       agent-qc-monitor repo against its own principles doc. Not scheduled yet.
 
 ## To build (decided Oct 27, 2026)
-Updated Nov 19: C3 and C4 are built, so the monthly forming scan and review queue triage are the only upkeep agents still unbuilt.
+Updated Nov 23: C3, C4 and the forming scan (C7) are built, so review queue triage is the only upkeep agent still unbuilt.
 - [x] **Weekly currency scan.** Built Nov 16 as **C3**, the regulatory scan (Site QC batch 4, above). Federal Register, FDA guidance, CMS, state AI
       laws, EU AI Act against `src/data/regulatory.json`. Opens a pull request
       or report for review. Feeds the Movement box.
@@ -152,11 +152,25 @@ Updated Nov 19: C3 and C4 are built, so the monthly forming scan and review queu
 - [x] **Monthly claims audit.** Built Nov 16 as **C4**, the claims and sources audit (Site QC batch 4, above). Re-verify everything labeled Sourced; chase
       Needs-source items. Must be a separate agent from anything that writes
       content (the checker is never the writer).
-- [ ] **Monthly forming scan.** Open questions plus new literature, looking
-      for clusters that might be a new node. Proposes only; naming a node is
-      Lindsay's call. Decided Nov 17: a separate agent from C6 (library
-      additions). Future possibility: start from the list C6 saved of what
-      it read that week.
+- [x] **Monthly forming scan.** Built Nov 23 as **C7** in
+      `scripts/site-agents.mjs`, monthly with C4 (the 1st). Open questions
+      (each node's gap, Forming Territory's loose concepts) plus what's been
+      published in the last five weeks, looking for clusters that might be a
+      new node in `src/data/nodes.json`. Proposes only, as a pull request
+      (`docs/forming-scan/`); naming a node is Lindsay's call, and it never
+      edits nodes.json. Its source rule is the library's: a cluster is two or
+      more primary documents treating one question as its own. Code fails a
+      cluster with no document, and warns on one document, a news or blog
+      source, an existing node's name, or a closest node that doesn't exist.
+      Planted test QC-C7-0001: two made-up primary documents on model
+      retirement (a cluster it should propose) and one on drift intervals,
+      which the Watcher node already holds (it must not call that new).
+      Decided Nov 17: a separate agent from C6 (library additions). Future
+      possibility: start from the list C6 saved of what it read that week.
+      Still to do (docs/new-agent-checklist.md): a row in the Site QC
+      crosswalk Sheet, the agent on the Agent Fleet QC page, a real run with
+      the temporary key (about 2 calls and up to 12 searches a month), then a
+      month in quiet mode before on.
 - [ ] **Review queue triage.** The queue exists (node page buttons → private
       Intake tab, approve or reject). Still to build: an agent that pre-screens
       for spam and patient data, catches duplicates, summarizes, and suggests a

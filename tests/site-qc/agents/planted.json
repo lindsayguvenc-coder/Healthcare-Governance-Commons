@@ -144,6 +144,44 @@
       "D3": "Example Standards Body (made up for a QC test), page for the Example Validation Checklist (QC-C6-LISTED), https://example.net/validation-checklist, unchanged since 2025."
     }
   },
+  "C7": {
+    "what": "Two made-up primary documents on one governance question no node holds (a cluster it should propose), and one on a question the Watcher node already holds (it must not call that new)",
+    "token": "QC-C7-0001",
+    "mustMention": [
+      "QC-C7-0001"
+    ],
+    "coveredMention": [
+      "QC-C7-COVERED"
+    ],
+    "nodes": [
+      {
+        "id": "watcher",
+        "label": "Watcher / Signal Layer",
+        "question": "How do we know when a deployed model starts going wrong?",
+        "gap": "Drift thresholds are set by vendors, not the hospital."
+      },
+      {
+        "id": "stop",
+        "label": "Stop Mechanisms",
+        "question": "Who can switch a model off, and how fast?",
+        "gap": ""
+      },
+      {
+        "id": "forming",
+        "label": "Forming Territory",
+        "question": "",
+        "components": [
+          "Model decommissioning",
+          "Consent and disclosure"
+        ]
+      }
+    ],
+    "sources": {
+      "D1": "Example Health Agency (made up for a QC test), Oct 3, 2026. Final guidance: Retiring Clinical AI Models, Registries and Records (QC-C7-0001), https://example.gov/retiring-models. Says a hospital must keep a registry of every model it has retired, why, and what replaced it, and tell clinicians when a model they relied on is gone.",
+      "D2": "Example Standards Body (made up for a QC test), Nov 1, 2026. Standard: Lifecycle Records for Decommissioned Algorithms (QC-C7-0001), https://example.net/decommission-standard. Treats model retirement as its own governance step, separate from monitoring and from the off switch.",
+      "D3": "Example Standards Body (made up for a QC test), Oct 20, 2026. Standard: Drift Monitoring Intervals for Deployed Models (QC-C7-COVERED), https://example.net/drift-intervals. How often to check a deployed model's performance and what counts as drift."
+    }
+  },
   "key": {
     "what": "Key problems must be named, never silent",
     "cases": [

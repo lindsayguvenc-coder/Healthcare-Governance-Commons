@@ -9,7 +9,7 @@ import { join } from "node:path";
 
 const root = new URL("../../..", import.meta.url).pathname;
 const here = "tests/site-qc/agents";
-function run(env, only = "C3,C4,S2,C5,C6") {
+function run(env, only = "C3,C4,S2,C5,C6,C7") {
   rmSync(join(root, "qc-out/site-agents.json"), { force: true });
   try { execFileSync("node", ["scripts/site-agents.mjs", "--only", only], { cwd: root, env: { ...process.env, SITE_QC_TODAY: "2026-11-23", SITE_QC_SKIP: "", ...env }, stdio: "pipe" }); } catch {}
   return JSON.parse(readFileSync(join(root, "qc-out/site-agents.json"), "utf8"));
@@ -19,7 +19,7 @@ const ok = (name, cond, extra = "") => { console.log(`${cond ? "✓" : "✗"} ${
 const has = (s, id, kind, level, re) => s.results.some(r => r.id === id && r.kind === kind && r.level === level && re.test(r.check + " " + r.detail));
 
 const good = run({ SITE_QC_FAKE_AI: `${here}/fake-good.json` });
-ok("Good replies: every planted test caught", good.failedControls === 0 && good.results.filter(r => r.kind === "control").length === 47, JSON.stringify(good.results.filter(r => r.kind === "control" && !r.ok)));
+ok("Good replies: every planted test caught", good.failedControls === 0 && good.results.filter(r => r.kind === "control").length === 53, JSON.stringify(good.results.filter(r => r.kind === "control" && !r.ok)));
 ok("Good replies: no failures", good.failedSite === 0, JSON.stringify(good.results.filter(r => r.level === "fail")));
 ok("Good replies: C3 report names the finding", readFileSync(join(root, "qc-out/regulatory-scan.md"), "utf8").includes("HTI-6"));
 ok("Good replies: C4 flags the found source for a Needs-source claim", has(good, "C4", "check", "warn", /Possible source/));
@@ -32,6 +32,8 @@ ok("Good replies: C5 layer 1's change is explained by the agent's finding, so it
 ok("Good replies: C5 saves this run's page tops for next time", JSON.parse(readFileSync(join(root, "qc-out/library-tops.json"), "utf8")).pages["chai-applied-model-card"]?.top.includes("CHAI Registry"));
 ok("Good replies: C5 report says how each of the three layers looked, and the reader's planted banner", ["Layer 1, baseline compare:** against 2026-11-16", "Layer 2, closed-book AI reader:** read", "Planted banner (seed 1118)", "Layer 3, word pattern"].every(t => readFileSync(join(root, "qc-out/library-versions.md"), "utf8").includes(t)));
 ok("Good replies: C6 report lists the proposal under its node", readFileSync(join(root, "qc-out/library-additions.md"), "utf8").includes("## contestation"));
+ok("Good replies: C7 report lists the planted-free cluster with its documents, and says naming a node is Lindsay's call", ["## Patient notice when AI is used (fake)", "Naming a node, or not, is Lindsay's call", "example-agency.gov/disclosure-fake"].every(t => readFileSync(join(root, "qc-out/forming-scan.md"), "utf8").includes(t)));
+ok("Good replies: C7 has one cluster to review and no warnings", has(good, "C7", "check", "ok", /^1 cluster\(s\) to review/) && !good.results.some(r => r.id === "C7" && r.level !== "ok"));
 ok("Good replies: S2 graded all four tool answers", has(good, "S2", "check", "ok", /4 tool answer\(s\) graded, 4 in their lane/));
 
 const miss = run({ SITE_QC_FAKE_AI: `${here}/fake-misses.json` });
@@ -63,17 +65,23 @@ ok("Broken agents: C6 proposal with no link fails", has(miss, "C6", "check", "fa
 ok("Broken agents: C6 proposal from a news site warns", has(miss, "C6", "check", "warn", /news, blog or social.*statnews/));
 ok("Broken agents: C6 proposal already in the library warns and is left out", has(miss, "C6", "check", "warn", /already holds/) && !readFileSync(join(root, "qc-out/library-additions.md"), "utf8").includes("Already listed (fake)]"));
 ok("Broken agents: C6 proposal for a node that doesn't exist warns", has(miss, "C6", "check", "warn", /node that doesn't exist/));
-ok("Broken agents: the reports say not to trust them", ["regulatory-scan", "library-versions", "library-additions"].every(f => readFileSync(join(root, `qc-out/${f}.md`), "utf8").includes("don't trust this report")));
+ok("Broken agents: C7 missing the planted cluster is a control failure", has(miss, "C7", "control", "fail", /QC-C7-0001/));
+ok("Broken agents: C7 proposing what an existing node holds is a control failure", has(miss, "C7", "control", "fail", /existing node holds/));
+ok("Broken agents: C7 cluster with no document fails", has(miss, "C7", "check", "fail", /Cluster with no document/));
+ok("Broken agents: C7 cluster from a news site warns", has(miss, "C7", "check", "warn", /news, blog or social site.*statnews/));
+ok("Broken agents: C7 cluster with one document, an existing node's name, and a node that doesn't exist warns", ["only one document", "existing node's name: Explainability", "node that doesn't exist: nope"].every(t => has(miss, "C7", "check", "warn", new RegExp(t))));
+ok("Broken agents: the reports say not to trust them", ["regulatory-scan", "library-versions", "library-additions", "forming-scan"].every(f => readFileSync(join(root, `qc-out/${f}.md`), "utf8").includes("don't trust this report")));
 
 for (const [k, re] of [["missing", /No API key is set/], ["expired", /expired, deleted, or mistyped/], ["broke", /out of credit/], ["limit", /spending cap/]]) {
   const s = run({ SITE_QC_FAKE_AI: `${here}/fake-good.json`, SITE_QC_FAKE_KEY: k });
-  ok(`Key ${k}: every agent says so, none goes quiet`, ["C3", "C4", "S2", "C5", "C6"].every(id => has(s, id, "check", "fail", re)) && s.failedSite === 5);
+  ok(`Key ${k}: every agent says so, none goes quiet`, ["C3", "C4", "S2", "C5", "C6", "C7"].every(id => has(s, id, "check", "fail", re)) && s.failedSite === 6);
 }
 const real = run({ SITE_QC_FAKE_AI: "", SITE_QC_ANTHROPIC_KEY: "" }, "C3");
 ok("Real mode with no key set: says the key is missing", has(real, "C3", "check", "fail", /No API key is set/) && real.key === "missing");
 
-const skip = run({ SITE_QC_FAKE_AI: `${here}/fake-good.json`, SITE_QC_SKIP: "C4,S2,C5,C6" });
-ok("SITE_QC_SKIP=C4,S2,C5,C6: only C3 runs, and the run lists what it skipped", skip.skipped.join() === "C4,S2,C5,C6" && !skip.results.some(r => r.id !== "C3"));
+const skip = run({ SITE_QC_FAKE_AI: `${here}/fake-good.json`, SITE_QC_SKIP: "C4,S2,C5,C6,C7" });
+ok("SITE_QC_SKIP=C4,S2,C5,C6,C7: only C3 runs, and the run lists what it skipped", skip.skipped.join() === "C4,S2,C5,C6,C7" && !skip.results.some(r => r.id !== "C3"));
+
 
 console.log(bad ? `\n${bad} failed` : "\nAll passed");
 process.exit(bad ? 1 : 0);
