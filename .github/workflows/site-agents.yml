@@ -14,6 +14,8 @@ name: Site QC agents
 #      and aren't in yet, by node. A pull request.
 #   C7 Forming scan, monthly with C4: clusters in the field that might be a
 #      new node in nodes.json. A pull request; naming a node is Lindsay's call.
+# The review queue triage agent isn't here on purpose: it has no schedule and
+# reads only its planted test file (scripts/site-agents.mjs, its hard stop).
 # Each agent runs its planted test first; a miss means don't trust its all-clear.
 # A missing, expired or out-of-credit key is a failure, never a quiet skip.
 #

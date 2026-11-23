@@ -139,7 +139,7 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
       agent-qc-monitor repo against its own principles doc. Not scheduled yet.
 
 ## To build (decided Oct 27, 2026)
-Updated Nov 23: C3, C4 and the forming scan (C7) are built, so review queue triage is the only upkeep agent still unbuilt.
+Updated Nov 23: C3, C4, the forming scan (C7) and review queue triage (C8, on its planted test file only) are built.
 - [x] **Weekly currency scan.** Built Nov 16 as **C3**, the regulatory scan (Site QC batch 4, above). Federal Register, FDA guidance, CMS, state AI
       laws, EU AI Act against `src/data/regulatory.json`. Opens a pull request
       or report for review. Feeds the Movement box.
@@ -172,9 +172,28 @@ Updated Nov 23: C3, C4 and the forming scan (C7) are built, so review queue tria
       the temporary key (about 2 calls and up to 12 searches a month), then a
       month in quiet mode before on.
 - [ ] **Review queue triage.** The queue exists (node page buttons → private
-      Intake tab, approve or reject). Still to build: an agent that pre-screens
-      for spam and patient data, catches duplicates, summarizes, and suggests a
-      node, so review is faster. Lindsay still decides.
+      Intake tab, approve or reject). Built Nov 23 as **C8** in
+      `scripts/site-agents.mjs`, **on its planted test file only**: it
+      pre-screens for spam and patient data, catches duplicates, summarizes,
+      and suggests a node. Lindsay still decides; it never approves, rejects
+      or publishes. **Hard stop, in code:** its only input is
+      `tests/site-qc/agents/planted.json` (C8.queue, every id `qc-c8-…`); it
+      refuses to run if a variable or argument tries to hand it anything
+      else; it has no schedule, isn't in the workflow, and its code never
+      loads the queue, Redis or the network beyond the AI call (the fake test
+      checks the source for that). Code backstops beside the AI: the site's
+      own patient-data patterns (`api/_phi.js`) on every item and every
+      summary, duplicate links, and any field that tries to decide. Planted
+      test QC-C8-0001: one clean source, the same source again, patient
+      details no pattern catches (an age and a bed), a patient name, and spam.
+      Fake replies only.
+      - **Waiting on:** someone who owns the queue's security. Real
+        submissions then take a code change through a pull request (not a
+        switch): what it may read, where its output goes, who sees the
+        summaries.
+      - Then (docs/new-agent-checklist.md): a row in the Site QC crosswalk
+        Sheet, the agent on the Agent Fleet QC page, a schedule and a
+        workflow entry, and a real run with the temporary key.
 - [x] **Two-reader recommendation (Oct 27).** Each contribution gets two
       independent AI reads (fit, skeptic). Agreement: one click accepts it.
       Split: Lindsay breaks the tie. Every decision is logged without content
