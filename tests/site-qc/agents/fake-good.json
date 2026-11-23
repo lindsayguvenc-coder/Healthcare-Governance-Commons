@@ -265,5 +265,59 @@
   "searched": [
    "fake"
   ]
+ },
+ "C8:triage": {
+  "items": [
+   {
+    "id": "qc-c8-clean",
+    "spam": false,
+    "patient_data": false,
+    "patient_data_why": "",
+    "duplicate_of": null,
+    "summary": "A monitoring standard on what to measure after a model goes live.",
+    "suggested_node": "watcher",
+    "why_node": "Post-deployment measurement."
+   },
+   {
+    "id": "qc-c8-dup",
+    "spam": false,
+    "patient_data": false,
+    "patient_data_why": "",
+    "duplicate_of": "qc-c8-clean",
+    "summary": "The same monitoring standard, sent from another page.",
+    "suggested_node": "watcher",
+    "why_node": "Same document as qc-c8-clean."
+   },
+   {
+    "id": "qc-c8-weak-phi",
+    "spam": false,
+    "patient_data": true,
+    "patient_data_why": "an age with a bed and unit could point to one patient",
+    "duplicate_of": null,
+    "summary": "A question on how to monitor a sepsis alert that fires without a response.",
+    "suggested_node": "watcher",
+    "why_node": "Alert monitoring."
+   },
+   {
+    "id": "qc-c8-strong-phi",
+    "spam": false,
+    "patient_data": true,
+    "patient_data_why": "names a patient",
+    "duplicate_of": null,
+    "summary": "A note that a readmission model keeps missing one kind of patient.",
+    "suggested_node": "equity",
+    "why_node": "Who the model misses."
+   },
+   {
+    "id": "qc-c8-spam",
+    "spam": true,
+    "patient_data": false,
+    "patient_data_why": "",
+    "duplicate_of": null,
+    "summary": "An ad for buying social media followers.",
+    "suggested_node": "watcher",
+    "why_node": "Sent from the Watcher page; it fits nowhere."
+   }
+  ]
  }
 }

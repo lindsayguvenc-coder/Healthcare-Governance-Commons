@@ -306,5 +306,58 @@
   "covered": [],
   "couldnt_check": [],
   "searched": []
+ },
+ "C8:triage": {
+  "items": [
+   {
+    "id": "qc-c8-clean",
+    "spam": true,
+    "patient_data": false,
+    "duplicate_of": null,
+    "summary": "Spam.",
+    "suggested_node": "nowhere"
+   },
+   {
+    "id": "qc-c8-dup",
+    "spam": false,
+    "patient_data": false,
+    "duplicate_of": null,
+    "summary": "A standard.",
+    "suggested_node": "watcher"
+   },
+   {
+    "id": "qc-c8-weak-phi",
+    "spam": false,
+    "patient_data": false,
+    "duplicate_of": null,
+    "summary": "The 71-year-old in bed 12 on 4 West was flagged twice.",
+    "suggested_node": "watcher"
+   },
+   {
+    "id": "qc-c8-strong-phi",
+    "spam": false,
+    "patient_data": false,
+    "duplicate_of": null,
+    "summary": "Patient: Jane Doe was missed by the model.",
+    "suggested_node": "equity",
+    "decision": "approve"
+   },
+   {
+    "id": "qc-c8-spam",
+    "spam": false,
+    "patient_data": false,
+    "duplicate_of": null,
+    "summary": "A tool.",
+    "suggested_node": "watcher"
+   },
+   {
+    "id": "qc-c8-made-up",
+    "spam": false,
+    "patient_data": false,
+    "duplicate_of": null,
+    "summary": "Not in the queue.",
+    "suggested_node": "watcher"
+   }
+  ]
  }
 }

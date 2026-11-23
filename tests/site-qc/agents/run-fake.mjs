@@ -4,12 +4,12 @@
 // (S2 drives the real pages, so it needs playwright in tests/replay and Chrome:
 // CHROME=/usr/bin/google-chrome.)
 import { execFileSync } from "node:child_process";
-import { readFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 
 const root = new URL("../../..", import.meta.url).pathname;
 const here = "tests/site-qc/agents";
-function run(env, only = "C3,C4,S2,C5,C6,C7") {
+function run(env, only = "C3,C4,S2,C5,C6,C7,C8") {
   rmSync(join(root, "qc-out/site-agents.json"), { force: true });
   try { execFileSync("node", ["scripts/site-agents.mjs", "--only", only], { cwd: root, env: { ...process.env, SITE_QC_TODAY: "2026-11-23", SITE_QC_SKIP: "", ...env }, stdio: "pipe" }); } catch {}
   return JSON.parse(readFileSync(join(root, "qc-out/site-agents.json"), "utf8"));
@@ -19,7 +19,7 @@ const ok = (name, cond, extra = "") => { console.log(`${cond ? "✓" : "✗"} ${
 const has = (s, id, kind, level, re) => s.results.some(r => r.id === id && r.kind === kind && r.level === level && re.test(r.check + " " + r.detail));
 
 const good = run({ SITE_QC_FAKE_AI: `${here}/fake-good.json` });
-ok("Good replies: every planted test caught", good.failedControls === 0 && good.results.filter(r => r.kind === "control").length === 53, JSON.stringify(good.results.filter(r => r.kind === "control" && !r.ok)));
+ok("Good replies: every planted test caught", good.failedControls === 0 && good.results.filter(r => r.kind === "control").length === 64, JSON.stringify(good.results.filter(r => r.kind === "control" && !r.ok)));
 ok("Good replies: no failures", good.failedSite === 0, JSON.stringify(good.results.filter(r => r.level === "fail")));
 ok("Good replies: C3 report names the finding", readFileSync(join(root, "qc-out/regulatory-scan.md"), "utf8").includes("HTI-6"));
 ok("Good replies: C4 flags the found source for a Needs-source claim", has(good, "C4", "check", "warn", /Possible source/));
@@ -34,6 +34,8 @@ ok("Good replies: C5 report says how each of the three layers looked, and the re
 ok("Good replies: C6 report lists the proposal under its node", readFileSync(join(root, "qc-out/library-additions.md"), "utf8").includes("## contestation"));
 ok("Good replies: C7 report lists the planted-free cluster with its documents, and says naming a node is Lindsay's call", ["## Patient notice when AI is used (fake)", "Naming a node, or not, is Lindsay's call", "example-agency.gov/disclosure-fake"].every(t => readFileSync(join(root, "qc-out/forming-scan.md"), "utf8").includes(t)));
 ok("Good replies: C7 has one cluster to review and no warnings", has(good, "C7", "check", "ok", /^1 cluster\(s\) to review/) && !good.results.some(r => r.id === "C7" && r.level !== "ok"));
+ok("Good replies: C8 triages the planted queue only, and says so", has(good, "C8", "check", "ok", /5 planted item\(s\) triaged \(the planted test file only/) && readFileSync(join(root, "qc-out/queue-triage.md"), "utf8").includes("Planted test file only"));
+ok("Good replies: C8's report holds back the summary of an item with patient data", readFileSync(join(root, "qc-out/queue-triage.md"), "utf8").includes("(held back: patient data)") && !readFileSync(join(root, "qc-out/queue-triage.md"), "utf8").includes("bed 12"));
 ok("Good replies: S2 graded all four tool answers", has(good, "S2", "check", "ok", /4 tool answer\(s\) graded, 4 in their lane/));
 
 const miss = run({ SITE_QC_FAKE_AI: `${here}/fake-misses.json` });
@@ -70,18 +72,38 @@ ok("Broken agents: C7 proposing what an existing node holds is a control failure
 ok("Broken agents: C7 cluster with no document fails", has(miss, "C7", "check", "fail", /Cluster with no document/));
 ok("Broken agents: C7 cluster from a news site warns", has(miss, "C7", "check", "warn", /news, blog or social site.*statnews/));
 ok("Broken agents: C7 cluster with one document, an existing node's name, and a node that doesn't exist warns", ["only one document", "existing node's name: Explainability", "node that doesn't exist: nope"].every(t => has(miss, "C7", "check", "warn", new RegExp(t))));
-ok("Broken agents: the reports say not to trust them", ["regulatory-scan", "library-versions", "library-additions", "forming-scan"].every(f => readFileSync(join(root, `qc-out/${f}.md`), "utf8").includes("don't trust this report")));
+for (const [what, re] of [["spam", /planted spam/], ["patient details no pattern catches", /without a pattern/], ["patient name", /planted patient name/], ["duplicate", /planted duplicate/], ["clean item", /clean item is left alone/], ["node", /clean item's node/], ["summary", /doesn't repeat them/]])
+  ok(`Broken agents: C8 missing the planted ${what} is a control failure`, has(miss, "C8", "control", "fail", re));
+ok("Broken agents: C8's code backstop catches the patient name the agent passed", has(miss, "C8", "check", "fail", /Code backstop found a patient name the agent didn't flag: qc-c8-strong-phi/));
+ok("Broken agents: C8 summary repeating a patient name fails", has(miss, "C8", "check", "fail", /A summary repeats a patient name: qc-c8-strong-phi/));
+ok("Broken agents: C8 trying to decide fails", has(miss, "C8", "check", "fail", /tried to decide on qc-c8-strong-phi/));
+ok("Broken agents: C8 duplicate link the agent missed, a node that doesn't exist, and an item it made up warn", [/Code found a duplicate link the agent didn't: qc-c8-dup and qc-c8-clean/, /node that doesn't exist: nowhere/, /isn't in the queue: qc-c8-made-up/].every(re => has(miss, "C8", "check", "warn", re)));
+ok("Broken agents: the reports say not to trust them", ["regulatory-scan", "library-versions", "library-additions", "forming-scan", "queue-triage"].every(f => readFileSync(join(root, `qc-out/${f}.md`), "utf8").includes("don't trust this report")));
 
 for (const [k, re] of [["missing", /No API key is set/], ["expired", /expired, deleted, or mistyped/], ["broke", /out of credit/], ["limit", /spending cap/]]) {
   const s = run({ SITE_QC_FAKE_AI: `${here}/fake-good.json`, SITE_QC_FAKE_KEY: k });
-  ok(`Key ${k}: every agent says so, none goes quiet`, ["C3", "C4", "S2", "C5", "C6", "C7"].every(id => has(s, id, "check", "fail", re)) && s.failedSite === 6);
+  ok(`Key ${k}: every agent says so, none goes quiet`, ["C3", "C4", "S2", "C5", "C6", "C7", "C8"].every(id => has(s, id, "check", "fail", re)) && s.failedSite === 7);
 }
 const real = run({ SITE_QC_FAKE_AI: "", SITE_QC_ANTHROPIC_KEY: "" }, "C3");
 ok("Real mode with no key set: says the key is missing", has(real, "C3", "check", "fail", /No API key is set/) && real.key === "missing");
 
-const skip = run({ SITE_QC_FAKE_AI: `${here}/fake-good.json`, SITE_QC_SKIP: "C4,S2,C5,C6,C7" });
-ok("SITE_QC_SKIP=C4,S2,C5,C6,C7: only C3 runs, and the run lists what it skipped", skip.skipped.join() === "C4,S2,C5,C6,C7" && !skip.results.some(r => r.id !== "C3"));
+const skip = run({ SITE_QC_FAKE_AI: `${here}/fake-good.json`, SITE_QC_SKIP: "C4,S2,C5,C6,C7,C8" });
+ok("SITE_QC_SKIP=C4,S2,C5,C6,C7,C8: only C3 runs, and the run lists what it skipped", skip.skipped.join() === "C4,S2,C5,C6,C7,C8" && !skip.results.some(r => r.id !== "C3"));
 
+// C8's hard stop (decided Nov 23): it reads only its planted test file, whatever it's handed, and nothing turns it on
+// for real submissions. A variable or an argument that tries to give it another input is refused, and it writes no report.
+for (const [how, env, args] of [["a variable", { SITE_QC_C8_INPUT: "qc-out/real-queue.json" }, []], ["a queue variable", { SITE_QC_QUEUE: "redis://x" }, []], ["an argument", {}, ["--input", "qc-out/real-queue.json"]]]) {
+  rmSync(join(root, "qc-out/queue-triage.md"), { force: true });
+  rmSync(join(root, "qc-out/site-agents.json"), { force: true });
+  try { execFileSync("node", ["scripts/site-agents.mjs", "--only", "C8", ...args], { cwd: root, env: { ...process.env, SITE_QC_TODAY: "2026-11-23", SITE_QC_SKIP: "", SITE_QC_FAKE_AI: `${here}/fake-good.json`, ...env }, stdio: "pipe" }); } catch {}
+  const r = JSON.parse(readFileSync(join(root, "qc-out/site-agents.json"), "utf8"));
+  ok(`C8 hard stop: another input through ${how} is refused, and nothing is triaged`, has(r, "C8", "check", "fail", /Refused to run: something tried to give C8 another input/) && !existsSync(join(root, "qc-out/queue-triage.md")));
+}
+const src = readFileSync(join(root, "scripts/site-agents.mjs"), "utf8");
+const c8 = src.slice(src.indexOf("// ── C8: review queue triage"), src.indexOf("// ── Run ──"));
+ok("C8 hard stop: its code never reaches the real queue (no Redis, no queue code, no fetch, one fixed input)",
+  c8.length > 1000 && !/getRedis|ioredis|_queue|PENDING|suggest:|fetch\(|readFileSync|process\.env\.SITE_QC_C8/.test(c8) && (c8.match(/triageInput\(/g) || []).length === 2 && /triageInput\(C8_ONLY_INPUT\)/.test(c8));
+ok("C8 is in no schedule and no dispatch list: it runs only when named", !/C8/.test(readFileSync(join(root, ".github/workflows/site-agents.yml"), "utf8")) && /"C3,C4,S2,C5,C6,C7"\)\.split/.test(src));
 
 console.log(bad ? `\n${bad} failed` : "\nAll passed");
 process.exit(bad ? 1 : 0);
