@@ -100,9 +100,10 @@ she approves, decides, and stops. Nothing an agent finds goes live without her.
         that might be a new node. Kept as a future possibility: C6 saves the
         list of what it read each week, and the forming scan starts from that
         list instead of searching from zero.
-      - Still to do (docs/new-agent-checklist.md): rows in the Site QC
-        crosswalk Sheet, both agents on the Agent Fleet QC page, and a real
-        run with the temporary key.
+      - Done Nov 27 (docs/new-agent-checklist.md): rows in the Site QC
+        crosswalk Sheet, both agents in the Agent Fleet QC page's Commons
+        upkeep set (v2).
+      - Still to do: a real run with the temporary key.
 - [ ] **Vendored jsPDF isn't covered by the package check.** X3 runs
       `npm audit` on `package-lock.json`, but the PDF tools load
       `public/vendor/jspdf-2.5.1.umd.min.js`, which isn't a package, so its
@@ -167,10 +168,11 @@ Updated Nov 23: C3, C4, the forming scan (C7) and review queue triage (C8, on it
       which the Watcher node already holds (it must not call that new).
       Decided Nov 17: a separate agent from C6 (library additions). Future
       possibility: start from the list C6 saved of what it read that week.
-      Still to do (docs/new-agent-checklist.md): a row in the Site QC
-      crosswalk Sheet, the agent on the Agent Fleet QC page, a real run with
-      the temporary key (about 2 calls and up to 12 searches a month), then a
-      month in quiet mode before on.
+      Done Nov 27 (docs/new-agent-checklist.md): a row in the Site QC
+      crosswalk Sheet (it replaced the old G1 roadmap row), the agent in the
+      Agent Fleet QC page's Commons upkeep set (v2).
+      Still to do: a real run with the temporary key (about 2 calls and up to
+      12 searches a month), then a month in quiet mode before on.
 - [ ] **Review queue triage.** The queue exists (node page buttons → private
       Intake tab, approve or reject). Built Nov 23 as **C8** in
       `scripts/site-agents.mjs`, **on its planted test file only**: it
@@ -191,9 +193,11 @@ Updated Nov 23: C3, C4, the forming scan (C7) and review queue triage (C8, on it
         submissions then take a code change through a pull request (not a
         switch): what it may read, where its output goes, who sees the
         summaries.
-      - Then (docs/new-agent-checklist.md): a row in the Site QC crosswalk
-        Sheet, the agent on the Agent Fleet QC page, a schedule and a
-        workflow entry, and a real run with the temporary key.
+      - Done Nov 27 (docs/new-agent-checklist.md): a row in the Site QC
+        crosswalk Sheet, the agent in the Agent Fleet QC page's Commons
+        upkeep set (v2; it writes only Planted items found).
+      - Then, once the queue has an owner: a schedule and a workflow entry,
+        and a real run with the temporary key.
 - [x] **Two-reader recommendation (Oct 27).** Each contribution gets two
       independent AI reads (fit, skeptic). Agreement: one click accepts it.
       Split: Lindsay breaks the tie. Every decision is logged without content
